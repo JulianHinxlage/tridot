@@ -12,7 +12,7 @@ namespace tridot {
         size = {0, 0};
         position = {0, 0};
         vsync = true;
-        backgroundColor = {1, 1, 1, 1};
+        backgroundColor = Color::white;
         context = nullptr;
     }
 
@@ -20,7 +20,7 @@ namespace tridot {
         size = {0, 0};
         position = {0, 0};
         vsync = true;
-        backgroundColor = {1, 1, 1, 1};
+        backgroundColor = Color::white;
         context = nullptr;
         init(width, height, title);
     }
@@ -87,7 +87,8 @@ namespace tridot {
             }
 
             glfwSwapBuffers(window);
-            glClearColor(backgroundColor.r, backgroundColor.g, backgroundColor.b, backgroundColor.a);
+            glm::vec4 color = backgroundColor.vec();
+            glClearColor(color.r, color.g, color.b, color.a);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         }else{
             Log::warning("window: update called before init or after close");
@@ -138,7 +139,7 @@ namespace tridot {
         return position;
     }
 
-    const glm::vec4 &Window::getBackgroundColor()  const{
+    const Color &Window::getBackgroundColor()  const{
         return backgroundColor;
     }
 
@@ -164,7 +165,7 @@ namespace tridot {
         glfwSetWindowPos((GLFWwindow*)context, position.x, position.y);
     }
 
-    void Window::setBackgroundColor(const glm::vec4 &color) {
+    void Window::setBackgroundColor(const Color &color) {
         this->backgroundColor = color;
     }
 

@@ -5,6 +5,7 @@
 #ifndef TRIDOT_WINDOW_H
 #define TRIDOT_WINDOW_H
 
+#include "Color.h"
 #include "glm/glm.hpp"
 
 namespace tridot {
@@ -23,17 +24,17 @@ namespace tridot {
 
         const glm::vec2 &getSize() const;
         const glm::vec2 &getPosition() const;
-        const glm::vec4 &getBackgroundColor() const;
+        const Color &getBackgroundColor() const;
         bool getVSync() const;
         float getAspectRatio() const;
         void *getContext() const;
         void setSize(const glm::vec2 &size);
         void setPosition(const glm::vec2 &position);
-        void setBackgroundColor(const glm::vec4 &color);
+        void setBackgroundColor(const Color &color);
         void setVSync(bool enabled);
     private:
         bool vsync;
-        glm::vec4 backgroundColor;
+        Color backgroundColor;
         glm::vec2 size;
         glm::vec2 position;
         void *context;
