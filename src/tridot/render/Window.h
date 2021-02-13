@@ -7,15 +7,16 @@
 
 #include "Color.h"
 #include "glm/glm.hpp"
+#include <string>
 
 namespace tridot {
 
     class Window {
     public:
         Window();
-        Window(int width, int height, const char *title);
+        Window(int width, int height, const std::string &title);
         ~Window();
-        void init(int width, int height, const char *title);
+        void init(int width, int height, const std::string &title);
         void update();
         bool isOpen();
         void close();

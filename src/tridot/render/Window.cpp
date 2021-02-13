@@ -4,6 +4,7 @@
 
 #include "Window.h"
 #include "tridot/core/Log.h"
+#include "GL/glew.h"
 #include "GLFW/glfw3.h"
 
 namespace tridot {
@@ -16,7 +17,7 @@ namespace tridot {
         context = nullptr;
     }
 
-    Window::Window(int width, int height, const char *title) {
+    Window::Window(int width, int height, const std::string &title) {
         size = {0, 0};
         position = {0, 0};
         vsync = true;
@@ -31,7 +32,7 @@ namespace tridot {
         }
     }
 
-    void Window::init(int width, int height, const char *title) {
+    void Window::init(int width, int height, const std::string &title) {
         //init glfw
         if(glfwInit() != GLFW_TRUE) {
             Log::error("failed to initialize GLFW");
@@ -39,12 +40,18 @@ namespace tridot {
         }
 
         //create window context
-        GLFWwindow *window = glfwCreateWindow(width, height, title, nullptr, nullptr);
+        GLFWwindow *window = glfwCreateWindow(width, height, title.c_str(), nullptr, nullptr);
         if(!window){
             Log::error("failed to create GLFW window");
             return;
         }
         glfwMakeContextCurrent(window);
+
+        //init glew
+        if(glewInit() != GLEW_OK) {
+            Log::error("failed to initialize GLEW");
+            return;
+        }
 
         //setup callbacks
         glfwSetWindowUserPointer(window, this);
