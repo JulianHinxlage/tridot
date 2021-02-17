@@ -4,7 +4,7 @@ set(CMAKE_CXX_STANDARD 20)
 project(tridot)
 file(GLOB_RECURSE SOURCES src/tridot/*.cpp)
 add_library(${PROJECT_NAME} STATIC ${SOURCES})
-target_include_directories(${PROJECT_NAME} PUBLIC src)
+target_include_directories(${PROJECT_NAME} PUBLIC src extern)
 target_compile_definitions(${PROJECT_NAME} PUBLIC TRI_DEBUG)
 
 #required packages: libglfw3-dev libglew-dev libglm-dev

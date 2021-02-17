@@ -32,6 +32,25 @@ namespace tridot {
         }
     }
 
+    void bindWindow(GLFWwindow* window){
+        static GLFWwindow* currentWindow = nullptr;
+        if(window != currentWindow){
+            glfwMakeContextCurrent(window);
+            currentWindow = window;
+        }
+    }
+
+    void Window::bind() {
+        bindWindow((GLFWwindow*)context);
+        if(context != nullptr){
+            glViewport(0, 0, size.x, size.y);
+        }
+    }
+
+    void Window::unbind() {
+        bindWindow(nullptr);
+    }
+
     void Window::init(int width, int height, const std::string &title) {
         //init glfw
         if(glfwInit() != GLFW_TRUE) {
@@ -45,7 +64,7 @@ namespace tridot {
             Log::error("failed to create GLFW window");
             return;
         }
-        glfwMakeContextCurrent(window);
+        bindWindow(window);
 
         //init glew
         if(glewInit() != GLEW_OK) {
@@ -117,17 +136,6 @@ namespace tridot {
 
     void Window::close() {
         glfwSetWindowShouldClose((GLFWwindow*)context, true);
-    }
-
-    void Window::bind() {
-        glfwMakeContextCurrent((GLFWwindow*)context);
-        if(context != nullptr){
-            glViewport(0, 0, size.x, size.y);
-        }
-    }
-
-    void Window::unbind() {
-        glfwMakeContextCurrent(nullptr);
     }
 
     void Window::clear() {
