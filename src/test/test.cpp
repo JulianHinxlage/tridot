@@ -8,9 +8,11 @@
 #include "tridot/render/VertexArray.h"
 #include "tridot/render/Texture.h"
 #include "tridot/render/FrameBuffer.h"
+#include "tridot/render/Camera.h"
 #include "GL/gl.h"
 #include "GLFW/glfw3.h"
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtx/vector_angle.hpp>
 
 using namespace tridot;
 
@@ -34,6 +36,7 @@ private:
 };
 Time timer;
 
+void cameraController(PerspectiveCamera &cam, bool look, bool lockUp, float speed);
 
 int main(int argc, char *argv[]){
     Log::options.logLevel = Log::TRACE;
@@ -71,9 +74,19 @@ int main(int argc, char *argv[]){
 
     glm::vec2 pos(0, 0);
     glm::vec2 vel(0.1, 0.05);
+    vel *= 0;
 
     FrameBuffer fbo;
     fbo.setTexture(COLOR);
+
+    PerspectiveCamera camera;
+    camera.position.z = 1;
+    camera.forward.z = -1;
+
+    bool look = true;
+    bool cPress = false;
+    bool lockUp = false;
+    bool xPress = false;
 
     while(window.isOpen()){
         if(glfwGetKey((GLFWwindow*)window.getContext(), GLFW_KEY_ESCAPE) == GLFW_PRESS){
@@ -88,9 +101,30 @@ int main(int argc, char *argv[]){
         }
         fbo.clear(window.getBackgroundColor());
 
+        camera.aspectRatio = window.getAspectRatio();
+
+        if(glfwGetKey((GLFWwindow*)window.getContext(), GLFW_KEY_C) == GLFW_PRESS){
+            if(!cPress){
+                look = !look;
+            }
+            cPress = true;
+        }else{
+            cPress = false;
+        }
+
+        if(glfwGetKey((GLFWwindow*)window.getContext(), GLFW_KEY_X) == GLFW_PRESS){
+            if(!xPress){
+                lockUp = !lockUp;
+            }
+            xPress = true;
+        }else{
+            xPress = false;
+        }
+        cameraController(camera, look, lockUp, 2);
+
         shader.bind();
         shader.set("uTransform", glm::translate(glm::mat4(1), glm::vec3(pos, 0)));
-        shader.set("uProjection", glm::scale(glm::mat4(1), glm::vec3(1.0f / window.getAspectRatio(), 1, 1)));
+        shader.set("uProjection", camera.getProjection());
         shader.set("uTexture", 0);
         shader.set("uColor", glm::vec4(0.5, 0.8, 0.5, 1.0));
         texture.bind(0);
@@ -107,3 +141,96 @@ int main(int argc, char *argv[]){
     }
     return 0;
 }
+
+void cameraController(PerspectiveCamera &cam, bool look, bool lockUp, float speed){
+    GLFWwindow  *window = glfwGetCurrentContext();
+    speed *= timer.deltaTime;
+    if(glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS){
+        cam.position += cam.forward * speed;
+    }
+    if(glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS){
+        cam.position -= cam.forward * speed;
+    }
+    if(glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS){
+        cam.position += cam.right * speed;
+    }
+    if(glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS){
+        cam.position -= cam.right * speed;
+    }
+    if(glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS){
+        cam.position += cam.up * speed;
+    }
+    if(glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS){
+        cam.position -= cam.up * speed;
+    }
+
+    float angle = 0;
+    if(glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS){
+        angle += 1;
+    }
+    if(glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS){
+        angle -= 1;
+    }
+    cam.up = glm::rotate(glm::mat4(1), angle * (float)timer.deltaTime, cam.forward) * glm::vec4(cam.up, 1.0f);
+
+    //look
+    static bool lastLook = false;
+    if(look) {
+        static glm::vec2 mousePositionLast = {0, 0};
+
+        if (window != nullptr) {
+            double x = 0;
+            double y = 0;
+
+            if(!lastLook){
+                int width = 0;
+                int height = 0;
+                glfwGetWindowSize(window, &width, &height);
+                glfwSetCursorPos(window, width / 2.0f, height / 2.0f);
+                glfwGetCursorPos(window, &x, &y);
+                mousePositionLast = {x, y};
+            }
+
+            glfwGetCursorPos(window, &x, &y);
+            glm::vec2 mousePosition = {x, y};
+            mousePosition = mousePosition - mousePositionLast;
+            mousePosition /= 750;
+
+            if (!lockUp) {
+                cam.forward = glm::rotate(glm::mat4(1), -mousePosition.x, cam.up) * glm::vec4(cam.forward, 1.0f);
+                glm::vec3 axis = glm::cross(cam.up, cam.forward);
+                cam.forward = glm::rotate(glm::mat4(1), mousePosition.y, axis) * glm::vec4(cam.forward, 1.0f);
+                cam.up = glm::rotate(glm::mat4(1), mousePosition.y, axis) * glm::vec4(cam.up, 1.0f);
+            } else {
+                cam.forward = glm::rotate(glm::mat4(1), -mousePosition.x, {0, 0, 1}) * glm::vec4(cam.forward, 1.0f);
+
+                glm::vec3 dir = cam.forward;
+                dir.z = 0;
+                if(dir.x == 0 && dir.y == 0 && dir.z == 0){
+                    dir = {1, 0, 0};
+                }
+                dir = glm::normalize(dir);
+                float sign = cam.forward.z >= 0 ? 1 : -1;
+                float angle = glm::angle(dir, cam.forward) * sign;
+                glm::vec3 right = glm::cross({0, 0, 1}, dir);
+
+                angle -= mousePosition.y;
+                angle = std::min(angle, glm::radians(89.0f));
+                angle = std::max(angle, glm::radians(-89.0f));
+                cam.forward = glm::rotate(glm::mat4(1), -angle, right) * glm::vec4(dir, 1.0f);
+                cam.up = glm::rotate(glm::mat4(1), -angle, right) * glm::vec4(0, 0, 1, 1.0f);
+            }
+
+            int width = 0;
+            int height = 0;
+            glfwGetWindowSize(window, &width, &height);
+
+            glfwSetCursorPos(window, width / 2.0f, height / 2.0f);
+            glfwGetCursorPos(window, &x, &y);
+            mousePositionLast = {x, y};
+        }
+    }
+    lastLook = look;
+}
+
+
