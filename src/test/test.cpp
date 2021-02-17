@@ -9,6 +9,7 @@
 #include "tridot/render/Texture.h"
 #include "tridot/render/FrameBuffer.h"
 #include "tridot/render/Camera.h"
+#include "tridot/engine/Input.h"
 #include "GL/gl.h"
 #include "GLFW/glfw3.h"
 #include <glm/gtc/matrix_transform.hpp>
@@ -36,6 +37,8 @@ private:
 };
 Time timer;
 
+Input input;
+
 void cameraController(PerspectiveCamera &cam, bool look, bool lockUp, float speed);
 
 int main(int argc, char *argv[]){
@@ -43,6 +46,7 @@ int main(int argc, char *argv[]){
     Log::info("Tridot version ", TRI_VERSION);
     Window window;
     window.init(800, 600, "Tridot " TRI_VERSION);
+    input.init();
 
     Shader shader;
     shader.load("../res/shaders/shader.glsl");
@@ -84,15 +88,15 @@ int main(int argc, char *argv[]){
     camera.forward.z = -1;
 
     bool look = true;
-    bool cPress = false;
     bool lockUp = false;
-    bool xPress = false;
 
     while(window.isOpen()){
-        if(glfwGetKey((GLFWwindow*)window.getContext(), GLFW_KEY_ESCAPE) == GLFW_PRESS){
+        if(input.pressed(tridot::Input::KEY_ESCAPE)){
             window.close();
         }
+
         timer.update();
+        input.update();
         pos += vel * timer.deltaTime;
 
         fbo.bind();
@@ -103,23 +107,13 @@ int main(int argc, char *argv[]){
 
         camera.aspectRatio = window.getAspectRatio();
 
-        if(glfwGetKey((GLFWwindow*)window.getContext(), GLFW_KEY_C) == GLFW_PRESS){
-            if(!cPress){
-                look = !look;
-            }
-            cPress = true;
-        }else{
-            cPress = false;
+        if(input.pressed('C')){
+            look = !look;
+        }
+        if(input.pressed('X')){
+            lockUp = !lockUp;
         }
 
-        if(glfwGetKey((GLFWwindow*)window.getContext(), GLFW_KEY_X) == GLFW_PRESS){
-            if(!xPress){
-                lockUp = !lockUp;
-            }
-            xPress = true;
-        }else{
-            xPress = false;
-        }
         cameraController(camera, look, lockUp, 2);
 
         shader.bind();
@@ -145,30 +139,30 @@ int main(int argc, char *argv[]){
 void cameraController(PerspectiveCamera &cam, bool look, bool lockUp, float speed){
     GLFWwindow  *window = glfwGetCurrentContext();
     speed *= timer.deltaTime;
-    if(glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS){
+    if(input.down('W')){
         cam.position += cam.forward * speed;
     }
-    if(glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS){
+    if(input.down('S')){
         cam.position -= cam.forward * speed;
     }
-    if(glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS){
+    if(input.down('D')){
         cam.position += cam.right * speed;
     }
-    if(glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS){
+    if(input.down('A')){
         cam.position -= cam.right * speed;
     }
-    if(glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS){
+    if(input.down('R')){
         cam.position += cam.up * speed;
     }
-    if(glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS){
+    if(input.down('F')){
         cam.position -= cam.up * speed;
     }
 
     float angle = 0;
-    if(glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS){
+    if(input.down('E')){
         angle += 1;
     }
-    if(glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS){
+    if(input.down('Q')){
         angle -= 1;
     }
     cam.up = glm::rotate(glm::mat4(1), angle * (float)timer.deltaTime, cam.forward) * glm::vec4(cam.up, 1.0f);
