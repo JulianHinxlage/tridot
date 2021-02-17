@@ -43,16 +43,20 @@ namespace tridot {
         }
     }
 
-    uint32_t internalEnum(TextureType type) {
-        switch(type){
-            case COLOR:
-                return GL_COLOR_ATTACHMENT0;
+    uint32_t internalEnum(TextureAttachment attachment) {
+        switch(attachment){
             case DEPTH:
                 return GL_DEPTH_ATTACHMENT;
             case STENCIL:
                 return GL_STENCIL_ATTACHMENT;
+            case COLOR:
+                return GL_COLOR_ATTACHMENT0;
             default:
-                return GL_NONE;
+                if(attachment > COLOR && attachment < COLOR + 16){
+                    return GL_COLOR_ATTACHMENT0 + (attachment - COLOR);
+                }else{
+                    return GL_NONE;
+                }
         }
     }
 

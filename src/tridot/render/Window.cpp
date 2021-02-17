@@ -3,6 +3,7 @@
 //
 
 #include "Window.h"
+#include "FrameBuffer.h"
 #include "tridot/core/Log.h"
 #include "GL/glew.h"
 #include "GLFW/glfw3.h"
@@ -41,6 +42,7 @@ namespace tridot {
     }
 
     void Window::bind() {
+        FrameBuffer::unbind();
         bindWindow((GLFWwindow*)context);
         if(context != nullptr){
             glViewport(0, 0, size.x, size.y);

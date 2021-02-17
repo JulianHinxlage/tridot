@@ -67,6 +67,10 @@ namespace tridot {
     }
 
     void Texture::create(uint32_t width, uint32_t height, TextureFormat format) {
+        if(id != 0){
+            glDeleteTextures(1, &id);
+            glCreateTextures(GL_TEXTURE_2D, 1, &id);
+        }
         if(id == 0){
             glCreateTextures(GL_TEXTURE_2D, 1, &id);
             Log::trace("created texture ", id);
@@ -77,6 +81,7 @@ namespace tridot {
         this->width = width;
         this->height = height;
         this->channels = internalEnumSize(format) / 8;
+        this->format = format;
 
         setMagMin(magNearest, minNearest);
         setWrap(sRepeat, tRepeat);
@@ -139,6 +144,10 @@ namespace tridot {
 
     uint32_t Texture::getChannels() {
         return channels;
+    }
+
+    TextureFormat Texture::getFormat() {
+        return format;
     }
 
 }

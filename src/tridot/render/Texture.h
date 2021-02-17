@@ -32,6 +32,7 @@ namespace tridot {
         uint32_t getWidth();
         uint32_t getHeight();
         uint32_t getChannels();
+        TextureFormat getFormat();
 
     private:
         uint32_t id;
@@ -40,6 +41,7 @@ namespace tridot {
         uint32_t width;
         uint32_t height;
         uint32_t channels;
+        TextureFormat format;
 
         bool magNearest;
         bool minNearest;

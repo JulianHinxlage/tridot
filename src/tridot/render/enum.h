@@ -26,10 +26,10 @@ namespace tridot {
         QUADS,
     };
 
-    enum TextureType{
-        COLOR = 1,
-        DEPTH = 2,
-        STENCIL = 4,
+    enum TextureAttachment{
+        DEPTH,
+        STENCIL,
+        COLOR,
     };
 
     enum TextureFormat{
@@ -47,7 +47,7 @@ namespace tridot {
 
     uint32_t internalEnum(Type type);
     uint32_t internalEnum(Primitive primitive);
-    uint32_t internalEnum(TextureType type);
+    uint32_t internalEnum(TextureAttachment attachment);
     uint32_t internalEnum(TextureFormat format);
 
     uint32_t internalEnumSize(Type type);
