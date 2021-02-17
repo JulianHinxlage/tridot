@@ -20,7 +20,7 @@ namespace tridot {
     Buffer::~Buffer() {
         if(id != 0){
             glDeleteBuffers(1, &id);
-            Log::debug("deleted buffer ", id);
+            Log::trace("deleted buffer ", id);
             id = 0;
         }
     }
@@ -83,7 +83,7 @@ namespace tridot {
         this->indexBuffer = indexBuffer;
         if(id == 0){
             glGenBuffers(1, &id);
-            Log::debug("created buffer ", id);
+            Log::trace("created buffer ", id);
             bind();
         }
         glNamedBufferData(id, size, data, dynamic ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW);

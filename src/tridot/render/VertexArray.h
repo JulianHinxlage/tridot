@@ -7,36 +7,20 @@
 
 #include "tridot/core/Ref.h"
 #include "Buffer.h"
+#include "enum.h"
 #include <vector>
 
 namespace tridot {
-
-    enum Type{
-        NONE,
-        INT8,
-        INT16,
-        INT32,
-        UINT8,
-        UINT16,
-        UINT32,
-        FLOAT,
-    };
-
-    enum Mode{
-        POINTS,
-        LINES,
-        TRIANGLES,
-        QUADS,
-    };
 
     class Attribute {
     public:
         Type type;
         int count;
+        bool normalized;
         int size;
         int offset;
 
-        Attribute(Type type = NONE, int count = 1);
+        Attribute(Type type = FLOAT, int count = 1, bool normalized = false);
     };
 
     class VertexArray {
@@ -52,12 +36,12 @@ namespace tridot {
         void addIndexBuffer(const Ref<Buffer> &indexBuffer, Type type);
         void addVertexBuffer(const Ref<Buffer> &vertexBuffer, std::vector<Attribute> layout, int divisor = 0);
         void submit(int count = -1);
-        void setMode(Mode mode);
+        void setPrimitive(Primitive primitive);
 
     private:
         uint32_t id;
         uint32_t nextAttribute;
-        Mode mode;
+        Primitive primitive;
 
         class IBuffer{
         public:

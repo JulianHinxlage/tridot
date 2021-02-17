@@ -25,7 +25,7 @@ namespace tridot {
     Texture::~Texture() {
         if(id != 0){
             glDeleteTextures(1, &id);
-            Log::debug("deleted texture ", id);
+            Log::trace("deleted texture ", id);
             id = 0;
         }
     }
@@ -66,67 +66,45 @@ namespace tridot {
         this->tRepeat = tRepeat;
     }
 
-    void Texture::create(uint32_t width, uint32_t height, uint32_t channels, bool depth, bool stencil) {
+    void Texture::create(uint32_t width, uint32_t height, TextureFormat format) {
         if(id == 0){
             glCreateTextures(GL_TEXTURE_2D, 1, &id);
-            Log::debug("created texture ", id);
+            Log::trace("created texture ", id);
         }
 
-        GLenum format = GL_RGBA8;
-        if(depth){
-            if(channels == 1){
-                format = GL_DEPTH_COMPONENT24;
-            }else if(channels == 2){
-                format = GL_DEPTH_COMPONENT16;
-            }else if(channels == 3){
-                format = GL_DEPTH_COMPONENT24;
-            }else if(channels == 4){
-                format = GL_DEPTH_COMPONENT32;
-            }
-            if(stencil){
-                format = GL_DEPTH24_STENCIL8;
-            }
-        }else if(stencil){
-            format = GL_DEPTH24_STENCIL8;
-        }else{
-            if(channels == 1){
-                format = GL_R8;
-            }else if(channels == 2){
-                format = GL_RG8;
-            }else if(channels == 3){
-                format = GL_RGB8;
-            }else if(channels == 4){
-                format = GL_RGBA8;
-            }
-        }
-        glTextureStorage2D(id, 1, format, width, height);
+        glTextureStorage2D(id, 1, internalEnum(format), width, height);
 
         this->width = width;
         this->height = height;
-        this->channels = channels;
+        this->channels = internalEnumSize(format) / 8;
 
         setMagMin(magNearest, minNearest);
         setWrap(sRepeat, tRepeat);
     }
 
     bool Texture::load(const Image &image) {
-        create(image.getWidth(), image.getHeight(), image.getChannels());
-        GLenum format = GL_RGBA8;
-        if(channels == 1){
-            format = GL_RED;
-        }else if(channels == 2){
-            format = GL_RG;
-        }else if(channels == 3){
-            format = GL_RGB;
-        }else if(channels == 4){
-            format = GL_RGBA;
+        GLenum dataFormat = GL_RGBA;
+        TextureFormat format = RGBA8;
+        if(image.getChannels() == 1){
+            dataFormat = GL_RED;
+            format = RED8;
+        }else if(image.getChannels() == 2){
+            dataFormat = GL_RG;
+            format = RG8;
+        }else if(image.getChannels() == 3){
+            dataFormat = GL_RGB;
+            format = RGB8;
+        }else if(image.getChannels() == 4){
+            dataFormat = GL_RGBA;
+            format = RGBA8;
         }
 
         if(image.getBitsPerChannel() != 8){
             Log::error("only 8 bits per channel are supported");
         }
 
-        glTextureSubImage2D(id, 0, 0, 0, image.getWidth(), image.getHeight(), format, GL_UNSIGNED_BYTE, image.getData());
+        create(image.getWidth(), image.getHeight(), format);
+        glTextureSubImage2D(id, 0, 0, 0, image.getWidth(), image.getHeight(), dataFormat, GL_UNSIGNED_BYTE, image.getData());
         return true;
     }
 

@@ -98,6 +98,7 @@ namespace tridot {
             data[i] = uc[i];
         }
         stbi_image_free(uc);
+        Log::trace("loaded image ", file);
         return true;
     }
 

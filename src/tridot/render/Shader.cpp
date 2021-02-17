@@ -16,8 +16,8 @@ namespace tridot {
     Shader::~Shader() {
         if(id != 0){
             glDeleteProgram(id);
+            Log::trace("deleted shader ", id, " ", file);
             id = 0;
-            Log::trace("deleted shader ", file);
         }
     }
 
@@ -144,7 +144,7 @@ namespace tridot {
             glDeleteShader(shaderId);
         }
         id = programId;
-        Log::trace("successful compilation of shader ", file);
+        Log::trace("created shader ", id, " ", file);
         return true;
     }
 

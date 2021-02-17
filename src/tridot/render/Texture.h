@@ -6,6 +6,7 @@
 #define TRIDOT_TEXTURE_H
 
 #include "Image.h"
+#include "enum.h"
 #include <cstdint>
 
 namespace tridot {
@@ -19,7 +20,7 @@ namespace tridot {
         void unbind();
         uint32_t getId();
 
-        void create(uint32_t width, uint32_t height, uint32_t channels, bool depth = false, bool stencil = false);
+        void create(uint32_t width, uint32_t height, TextureFormat formal = RGBA8);
         bool load(const Image &image);
         bool load(const std::string &file);
         bool preLoad(const std::string &file);

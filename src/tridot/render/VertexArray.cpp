@@ -8,83 +8,18 @@
 
 namespace tridot {
 
-    GLenum glType(Type type){
-        switch (type) {
-            case NONE:
-                return GL_NONE;
-            case INT8:
-                return GL_BYTE;
-            case INT16:
-                return GL_SHORT;
-            case INT32:
-                return GL_INT;
-            case UINT8:
-                return GL_UNSIGNED_BYTE;
-            case UINT16:
-                return GL_UNSIGNED_SHORT;
-            case UINT32:
-                return GL_UNSIGNED_INT;
-            case FLOAT:
-                return GL_FLOAT;
-            default:
-                return GL_NONE;
-        }
-    }
-
-    GLenum glMode(Mode mode){
-        switch (mode) {
-            case POINTS:
-                return GL_POINTS;
-            case LINES:
-                return GL_LINES;
-            case TRIANGLES:
-                return GL_TRIANGLES;
-            case QUADS:
-                return GL_QUADS;
-            default:
-                return GL_NONE;
-        }
-    }
-
-    Attribute::Attribute(Type type, int count) {
+    Attribute::Attribute(Type type, int count, bool normalized) {
         this->type = type;
         this->count = count;
+        this->normalized = normalized;
         offset = 0;
-        switch (type) {
-            case NONE:
-                size = 0;
-                break;
-            case INT8:
-                size = 1;
-                break;
-            case INT16:
-                size = 2;
-                break;
-            case INT32:
-                size = 4;
-                break;
-            case UINT8:
-                size = 1;
-                break;
-            case UINT16:
-                size = 2;
-                break;
-            case UINT32:
-                size = 4;
-                break;
-            case FLOAT:
-                size = 4;
-                break;
-            default:
-                size = 0;
-                break;
-        }
+        size = internalEnumSize(type);
     }
 
     VertexArray::VertexArray() {
         id = 0;
         nextAttribute = 0;
-        mode = TRIANGLES;
+        primitive = TRIANGLES;
     }
 
     VertexArray::VertexArray(const VertexArray &vertexArray) : VertexArray() {
@@ -99,7 +34,7 @@ namespace tridot {
     VertexArray::~VertexArray() {
         if(id != 0){
             glDeleteVertexArrays(1, &id);
-            Log::debug("deleted vertex array ", id);
+            Log::trace("deleted vertex array ", id);
             id = 0;
         }
     }
@@ -127,7 +62,7 @@ namespace tridot {
     void VertexArray::addIndexBuffer(const Ref<Buffer> &indexBuffer, Type type) {
         if(id == 0){
             glGenVertexArrays(1, &id);
-            Log::debug("created vertex array ", id);
+            Log::trace("created vertex array ", id);
         }
         bind();
         indexBuffer->unbind();
@@ -139,7 +74,7 @@ namespace tridot {
     void VertexArray::addVertexBuffer(const Ref<Buffer> &vertexBuffer, std::vector<Attribute> layout, int divisor) {
         if(id == 0){
             glGenVertexArrays(1, &id);
-            Log::debug("created vertex array ", id);
+            Log::trace("created vertex array ", id);
         }
         bind();
         vertexBuffer->unbind();
@@ -154,7 +89,7 @@ namespace tridot {
 
         for(auto &a : layout){
             glEnableVertexAttribArray(nextAttribute);
-            glVertexAttribPointer(nextAttribute, a.count, glType(a.type), GL_FALSE, stride, (void*)(size_t)a.offset);
+            glVertexAttribPointer(nextAttribute, a.count, internalEnum(a.type), a.normalized ? GL_TRUE : GL_FALSE, stride, (void*)(size_t)a.offset);
             glVertexAttribDivisor(nextAttribute, divisor);
             nextAttribute++;
         }
@@ -174,14 +109,14 @@ namespace tridot {
         }
 
         if(indexBuffer.empty()){
-            glDrawArrays(glMode(mode), 0, count);
+            glDrawArrays(internalEnum(primitive), 0, count);
         }else{
-            glDrawElements(glMode(mode), count, glType(indexBuffer[0].type), nullptr);
+            glDrawElements(internalEnum(primitive), count, internalEnum(indexBuffer[0].type), nullptr);
         }
     }
 
-    void VertexArray::setMode(Mode mode) {
-        this->mode = mode;
+    void VertexArray::setPrimitive(Primitive primitive) {
+        this->primitive = primitive;
     }
 
 }
