@@ -51,7 +51,7 @@ namespace tridot {
     bool Shader::preLoad(const std::string &file) {
         std::ifstream stream(file);
         if(!stream.is_open()){
-            Log::warning("shader: no file ", file, " found");
+            Log::warning("shader: file ", file, " not found");
             return false;
         }
         this->file = file;

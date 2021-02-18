@@ -84,7 +84,7 @@ namespace tridot {
         stbi_uc *uc = stbi_load(file.c_str(), &x, &y, &c, 0);
 
         if(uc == nullptr){
-            Log::warning("could not load image ", file);
+            Log::warning("image: no file ", file, " found");
             return false;
         }
 

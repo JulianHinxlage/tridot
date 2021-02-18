@@ -9,6 +9,8 @@
 #include "tridot/render/Texture.h"
 #include "tridot/render/FrameBuffer.h"
 #include "tridot/render/Camera.h"
+#include "tridot/render/Mesh.h"
+#include "tridot/render/MeshFactory.h"
 #include "tridot/engine/Input.h"
 #include "GL/gl.h"
 #include "GLFW/glfw3.h"
@@ -50,28 +52,15 @@ int main(int argc, char *argv[]){
 
     Shader shader;
     shader.load("../res/shaders/shader.glsl");
-    VertexArray vao;
-    {
-        Ref<Buffer> vbo(true);
-        Ref<Buffer> vio(true);
 
-        float vs[] = {
-                -0.5, -0.5, 0, 1.0, 1.0, 1.0, 0.0, 0.0,
-                -0.5, +0.5, 0, 1.0, 1.0, 1.0, 0.0, 1.0,
-                +0.5, +0.5, 0, 1.0, 1.0, 1.0, 1.0, 1.0,
-                +0.5, -0.5, 0, 1.0, 1.0, 1.0, 1.0, 0.0,
-        };
+    //Ref<Mesh> mesh = MeshFactory::createRegularPolygon(128);
+    //Ref<Mesh> mesh = MeshFactory::createCube();
+    Ref<Mesh> mesh(true);
+    mesh->rescale = true;
+    mesh->load("../res/models/teapot.obj");
 
-        uint32_t is[] = {
-                0, 1, 2,
-                0, 2, 3,
-        };
-
-        vbo->init(vs, sizeof(vs), 6 * 4, false, false);
-        vio->init(is, sizeof(is), 4, true, false);
-        vao.addIndexBuffer(vio, UINT32);
-        vao.addVertexBuffer(vbo, {{FLOAT, 3}, {FLOAT, 3}, {FLOAT, 2}});
-    }
+    Ref<Mesh> cube = MeshFactory::createCube();
+    Ref<Mesh> quad = MeshFactory::createQuad();
 
     Texture texture;
     texture.load("../res/textures/checkerboard.png");
@@ -81,14 +70,19 @@ int main(int argc, char *argv[]){
     vel *= 0;
 
     FrameBuffer fbo;
+    fbo.resize(window.getSize().x, window.getSize().y);
     fbo.setTexture(COLOR);
+    fbo.setTexture(DEPTH);
+    glEnable(GL_DEPTH_TEST);
 
     PerspectiveCamera camera;
-    camera.position.z = 1;
-    camera.forward.z = -1;
+
+    camera.position.x = 1;
+    camera.forward.x = -1;
 
     bool look = true;
     bool lockUp = false;
+    bool wireframe = false;
 
     while(window.isOpen()){
         if(input.pressed(tridot::Input::KEY_ESCAPE)){
@@ -113,23 +107,32 @@ int main(int argc, char *argv[]){
         if(input.pressed('X')){
             lockUp = !lockUp;
         }
+        if(input.pressed('B')){
+            wireframe = !wireframe;
+        }
 
         cameraController(camera, look, lockUp, 2);
 
+        if(wireframe){
+            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        }else{
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        }
         shader.bind();
         shader.set("uTransform", glm::translate(glm::mat4(1), glm::vec3(pos, 0)));
         shader.set("uProjection", camera.getProjection());
         shader.set("uTexture", 0);
         shader.set("uColor", glm::vec4(0.5, 0.8, 0.5, 1.0));
         texture.bind(0);
-        vao.submit();
+        mesh->vertexArray.submit();
 
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         fbo.unbind();
         fbo.getTexture(COLOR)->bind(0);
         shader.set("uTransform", glm::scale(glm::mat4(1), glm::vec3(2, 2, 1)));
         shader.set("uProjection", glm::mat4(1));
         shader.set("uColor", glm::vec4(1.0, 1.0, 1.0, 1.0));
-        vao.submit();
+        quad->vertexArray.submit();
 
         window.update();
     }
