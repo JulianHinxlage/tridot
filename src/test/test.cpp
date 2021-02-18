@@ -11,6 +11,7 @@
 #include "tridot/render/Camera.h"
 #include "tridot/render/Mesh.h"
 #include "tridot/render/MeshFactory.h"
+#include "tridot/render/MeshRenderer.h"
 #include "tridot/engine/Input.h"
 #include "GL/gl.h"
 #include "GLFW/glfw3.h"
@@ -29,12 +30,19 @@ public:
     }
 
     void update(){
-        double t = glfwGetTime();
-        deltaTime = t - lastTime;
-        lastTime = t;
+        lastTime = time;
+        time = glfwGetTime();
+        deltaTime = time - lastTime;
+    }
+
+    bool tick(float interval){
+        int i1 = (int)(time / interval);
+        int i2 = (int)(lastTime / interval);
+        return i1 != i2;
     }
 
 private:
+    double time;
     double lastTime;
 };
 Time timer;
@@ -43,6 +51,35 @@ Input input;
 
 void cameraController(PerspectiveCamera &cam, bool look, bool lockUp, float speed);
 
+class Entity{
+public:
+    glm::vec3 pos;
+    glm::vec3 rot;
+    glm::vec3 scale;
+    glm::vec3 vel;
+    glm::vec3 angular;
+    Color color;
+
+    void update(){
+        pos += vel * timer.deltaTime;
+        rot += angular * timer.deltaTime;
+    }
+};
+
+float randu(){
+    return (double)std::rand() / (double)RAND_MAX;
+}
+
+glm::vec2 randu2(){
+    return glm::vec2(randu(), randu());
+}
+glm::vec3 randu3(){
+    return glm::vec3(randu(), randu(), randu());
+}
+glm::vec4 randu4(){
+    return glm::vec4(randu(), randu(), randu(), randu());
+}
+
 int main(int argc, char *argv[]){
     Log::options.logLevel = Log::TRACE;
     Log::info("Tridot version ", TRI_VERSION);
@@ -50,24 +87,15 @@ int main(int argc, char *argv[]){
     window.init(800, 600, "Tridot " TRI_VERSION);
     input.init();
 
-    Shader shader;
-    shader.load("../res/shaders/shader.glsl");
+    MeshRenderer renderer;
+    renderer.init();
 
-    //Ref<Mesh> mesh = MeshFactory::createRegularPolygon(128);
-    //Ref<Mesh> mesh = MeshFactory::createCube();
     Ref<Mesh> mesh(true);
     mesh->rescale = true;
     mesh->load("../res/models/teapot.obj");
 
-    Ref<Mesh> cube = MeshFactory::createCube();
-    Ref<Mesh> quad = MeshFactory::createQuad();
-
     Texture texture;
     texture.load("../res/textures/checkerboard.png");
-
-    glm::vec2 pos(0, 0);
-    glm::vec2 vel(0.1, 0.05);
-    vel *= 0;
 
     FrameBuffer fbo;
     fbo.resize(window.getSize().x, window.getSize().y);
@@ -76,9 +104,22 @@ int main(int argc, char *argv[]){
     glEnable(GL_DEPTH_TEST);
 
     PerspectiveCamera camera;
+    camera.position.z = 1;
+    camera.forward.z = -1;
 
-    camera.position.x = 1;
-    camera.forward.x = -1;
+    std::vector<Entity> entities;
+
+    int area = 40;
+    for(int i = 0; i < 10000; i++){
+        entities.push_back({});
+        Entity &e = entities.back();
+        e.pos = (randu3() - 0.5f) * (float)area;
+        e.vel = (randu3() - 0.5f) * 0.5f;
+        e.scale = glm::vec3(1, 1, 1) * (randu() * 0.5f + 0.5f);
+        e.rot = randu3();
+        e.angular = (randu3() - 0.5f) * 0.5f;
+        e.color = Color(glm::vec4(randu3() * 0.6f + 0.2f, 1.0));
+    }
 
     bool look = true;
     bool lockUp = false;
@@ -91,7 +132,9 @@ int main(int argc, char *argv[]){
 
         timer.update();
         input.update();
-        pos += vel * timer.deltaTime;
+        if(timer.tick(0.5)){
+            Log::info(1.0f / timer.deltaTime, " fps, ", timer.deltaTime * 1000, " ms");
+        }
 
         fbo.bind();
         if(fbo.getSize() != window.getSize()){
@@ -100,7 +143,6 @@ int main(int argc, char *argv[]){
         fbo.clear(window.getBackgroundColor());
 
         camera.aspectRatio = window.getAspectRatio();
-
         if(input.pressed('C')){
             look = !look;
         }
@@ -110,7 +152,9 @@ int main(int argc, char *argv[]){
         if(input.pressed('B')){
             wireframe = !wireframe;
         }
-
+        if(input.pressed('V')){
+            window.setVSync(!window.getVSync());
+        }
         cameraController(camera, look, lockUp, 2);
 
         if(wireframe){
@@ -118,21 +162,19 @@ int main(int argc, char *argv[]){
         }else{
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         }
-        shader.bind();
-        shader.set("uTransform", glm::translate(glm::mat4(1), glm::vec3(pos, 0)));
-        shader.set("uProjection", camera.getProjection());
-        shader.set("uTexture", 0);
-        shader.set("uColor", glm::vec4(0.5, 0.8, 0.5, 1.0));
-        texture.bind(0);
-        mesh->vertexArray.submit();
+
+        renderer.begin(camera.getProjection(), &fbo);
+        for(auto &e : entities){
+            e.update();
+            renderer.submit({e.pos, e.scale, e.rot, e.color}, nullptr, mesh.get());
+        }
+        renderer.end();
+
 
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-        fbo.unbind();
-        fbo.getTexture(COLOR)->bind(0);
-        shader.set("uTransform", glm::scale(glm::mat4(1), glm::vec3(2, 2, 1)));
-        shader.set("uProjection", glm::mat4(1));
-        shader.set("uColor", glm::vec4(1.0, 1.0, 1.0, 1.0));
-        quad->vertexArray.submit();
+        renderer.begin(glm::mat4(1), nullptr);
+        renderer.submit({{0, 0, 0}, {2, 2, 1}}, fbo.getTexture(COLOR).get());
+        renderer.end();
 
         window.update();
     }

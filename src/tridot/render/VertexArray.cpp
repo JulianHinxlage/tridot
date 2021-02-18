@@ -96,22 +96,30 @@ namespace tridot {
         unbind();
     }
 
-    void VertexArray::submit(int count) {
+    void VertexArray::submit(int vertexCount, int instanceCount) {
         bind();
-        if(count == -1){
+        if(vertexCount == -1){
             if(indexBuffer.empty()){
                 if(!vertexBuffer.empty()){
-                    count = vertexBuffer[0].vertexBuffer->getElementCount();
+                    vertexCount = vertexBuffer[0].vertexBuffer->getElementCount();
                 }
             }else{
-                count = indexBuffer[0].indexBuffer->getElementCount();
+                vertexCount = indexBuffer[0].indexBuffer->getElementCount();
             }
         }
 
-        if(indexBuffer.empty()){
-            glDrawArrays(internalEnum(primitive), 0, count);
+        if(instanceCount == -1) {
+            if (indexBuffer.empty()) {
+                glDrawArrays(internalEnum(primitive), 0, vertexCount);
+            } else {
+                glDrawElements(internalEnum(primitive), vertexCount, internalEnum(indexBuffer[0].type), nullptr);
+            }
         }else{
-            glDrawElements(internalEnum(primitive), count, internalEnum(indexBuffer[0].type), nullptr);
+            if (indexBuffer.empty()) {
+                glDrawArraysInstanced(internalEnum(primitive), 0, vertexCount, instanceCount);
+            } else {
+                glDrawElementsInstanced(internalEnum(primitive), vertexCount, internalEnum(indexBuffer[0].type), nullptr, instanceCount);
+            }
         }
     }
 
