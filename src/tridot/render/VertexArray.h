@@ -37,6 +37,7 @@ namespace tridot {
         void addVertexBuffer(const Ref<Buffer> &vertexBuffer, std::vector<Attribute> layout, int divisor = 0);
         void submit(int vertexCount = -1, int instanceCount = -1);
         void setPrimitive(Primitive primitive);
+        void clear();
 
     private:
         uint32_t id;

@@ -21,6 +21,7 @@ namespace tridot {
         this->maxTextureCount = maxTextureCount;
         this->maxInstanceCount = maxInstanceCount;
         this->mesh = mesh;
+        this->meshId = mesh->vertexArray.getId();
         this->shader = shader;
 
         instanceBuffer = Ref<Buffer>::make();

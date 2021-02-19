@@ -29,7 +29,7 @@ namespace tridot {
             glm::vec2 texCoordsBottomRight = {1, 1};
         };
 
-        void init(uint32_t maxBatchSize = 10000);
+        void init(Ref<Shader> shader, uint32_t maxBatchSize = 10000);
         void begin(glm::mat4 projection = glm::mat4(1), Ref<FrameBuffer> frameBuffer = nullptr);
         void submit(const SubmitCall &call, Texture *texture = nullptr, Mesh *mesh = nullptr, Shader *shader = nullptr);
         void end();

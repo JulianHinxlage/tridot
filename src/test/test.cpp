@@ -12,6 +12,7 @@
 #include "tridot/render/MeshRenderer.h"
 #include "tridot/engine/Input.h"
 #include "tridot/engine/Time.h"
+#include "tridot/engine/ResourceLoader.h"
 #include "GL/gl.h"
 #include "GLFW/glfw3.h"
 #include <glm/gtc/matrix_transform.hpp>
@@ -61,17 +62,23 @@ int main(int argc, char *argv[]){
 
     Window window;
     window.init(800, 600, "Tridot " TRI_VERSION);
+    window.setBackgroundColor(Color(100, 100, 100));
     input.init();
+    timer.init();
+
+    ResourceLoader loader;
+    loader.autoReload = true;
+    loader.addSearchDirectory("../res");
+    loader.addSearchDirectory("../res/textures");
+    loader.addSearchDirectory("../res/models");
+    loader.addSearchDirectory("../res/shaders");
 
     MeshRenderer renderer;
-    renderer.init();
-
-    Ref<Mesh> mesh(true);
+    renderer.init(loader.get<Shader>("mesh.glsl"));
+    Ref<Mesh> mesh = loader.get<Mesh>("teapot.obj");
     mesh->rescale = true;
-    mesh->load("../res/models/teapot.obj");
+    Ref<Texture> texture = loader.get<Texture>("checkerboard.png");
 
-    Texture texture;
-    texture.load("../res/textures/checkerboard.png");
 
     FrameBuffer fbo;
     fbo.resize(window.getSize().x, window.getSize().y);
@@ -84,7 +91,6 @@ int main(int argc, char *argv[]){
     camera.forward.z = -1;
 
     std::vector<Entity> entities;
-
     int area = 40;
     for(int i = 0; i < 5000; i++){
         entities.push_back({});
@@ -97,11 +103,11 @@ int main(int argc, char *argv[]){
         e.color = Color(glm::vec4(randu3() * 0.6f + 0.2f, 1.0));
     }
 
-    window.setBackgroundColor(Color(100, 100, 100));
 
     bool look = true;
     bool lockUp = false;
     bool wireframe = false;
+    float speed = 2;
 
     while(window.isOpen()){
         if(input.pressed(tridot::Input::KEY_ESCAPE)){
@@ -110,6 +116,8 @@ int main(int argc, char *argv[]){
 
         timer.update();
         input.update();
+        loader.update();
+
         if(timer.frameTicks(1.0)){
             Log::info(timer.framesPerSecond, " fps, ", timer.avgFrameTime * 1000, " ms [", timer.minFrameTime * 1000, ", ", timer.maxFrameTime * 1000, "]");
         }
@@ -133,7 +141,8 @@ int main(int argc, char *argv[]){
         if(input.pressed('V')){
             window.setVSync(!window.getVSync());
         }
-        cameraController(camera, look, lockUp, 2);
+        speed *= std::pow(1.3f, input.mouseWheelDelta());
+        cameraController(camera, look, lockUp, speed);
 
         if(wireframe){
             glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -144,7 +153,7 @@ int main(int argc, char *argv[]){
         renderer.begin(camera.getProjection(), &fbo);
         for(auto &e : entities){
             e.update();
-            renderer.submit({e.pos, e.scale, e.rot, e.color}, &texture, mesh.get());
+            renderer.submit({e.pos, e.scale, e.rot, e.color}, texture.get(), mesh.get());
         }
         renderer.end();
 

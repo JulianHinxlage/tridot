@@ -15,7 +15,7 @@ pkg_search_module(GLFW REQUIRED glfw3)
 find_package(GLEW REQUIRED)
 find_package(glm REQUIRED)
 target_include_directories(${PROJECT_NAME} PUBLIC ${OPENGL_INCLUDE_DIRS} ${GLFW_INCLUDE_DIRS} ${GLEW_INCLUDE_DIRS} ${glm_INCLUDE_DIRS})
-target_link_libraries(${PROJECT_NAME} ${OPENGL_LIBRARIES} ${GLFW_LIBRARIES} ${GLEW_LIBRARIES} pthread)
+target_link_libraries(${PROJECT_NAME} ${OPENGL_LIBRARIES} ${GLFW_LIBRARIES} ${GLEW_LIBRARIES} pthread stdc++fs)
 
 project(test-tridot)
 add_executable(${PROJECT_NAME} src/test/test.cpp)

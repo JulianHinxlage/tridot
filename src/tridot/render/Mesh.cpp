@@ -27,6 +27,8 @@ namespace tridot {
     }
 
     void Mesh::create(float *vertices, int vertexCount, int *indices, int indexCount, std::vector<Attribute> layout) {
+        vertexArray.clear();
+
         Ref<Buffer> vertexBuffer(true);
         Ref<Buffer> indexBuffer(true);
 
@@ -233,7 +235,6 @@ namespace tridot {
                     x = x / scale;
                     y = y / scale;
                     z = z / scale;
-
                 }
             }
 

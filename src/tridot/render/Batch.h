@@ -26,6 +26,7 @@ namespace tridot {
 
         Shader *shader;
         Mesh *mesh;
+        uint32_t meshId;
         Ref<VertexArray> vertexArray;
         Ref<Buffer> instanceBuffer;
         std::unordered_map<Texture*, int> textures;

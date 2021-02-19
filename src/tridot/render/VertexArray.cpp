@@ -32,11 +32,7 @@ namespace tridot {
     }
 
     VertexArray::~VertexArray() {
-        if(id != 0){
-            glDeleteVertexArrays(1, &id);
-            Log::trace("deleted vertex array ", id);
-            id = 0;
-        }
+        clear();
     }
 
     void bindVertexArray(uint32_t id){
@@ -125,6 +121,17 @@ namespace tridot {
 
     void VertexArray::setPrimitive(Primitive primitive) {
         this->primitive = primitive;
+    }
+
+    void VertexArray::clear() {
+        if(id != 0){
+            glDeleteVertexArrays(1, &id);
+            Log::trace("deleted vertex array ", id);
+            id = 0;
+        }
+        nextAttribute = 0;
+        vertexBuffer.clear();
+        indexBuffer.clear();
     }
 
 }

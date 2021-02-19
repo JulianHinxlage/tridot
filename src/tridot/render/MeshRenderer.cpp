@@ -4,6 +4,7 @@
 
 #include "MeshRenderer.h"
 #include "MeshFactory.h"
+#include "tridot/core/Log.h"
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/euler_angles.hpp>
 
@@ -26,7 +27,7 @@ namespace tridot {
         maxBatchSize = 10000;
     }
 
-    void MeshRenderer::init(uint32_t maxBatchSize) {
+    void MeshRenderer::init(Ref<Shader> shader, uint32_t maxBatchSize) {
         this->maxBatchSize = maxBatchSize;
         quadMesh = MeshFactory::createQuad();
 
@@ -36,8 +37,7 @@ namespace tridot {
         blankTexture = Ref<Texture>::make();
         blankTexture->load(image);
 
-        this->defaultShader = Ref<Shader>::make();
-        this->defaultShader->load("../res/shaders/mesh.glsl");
+        this->defaultShader = shader;
     }
 
     void MeshRenderer::begin(glm::mat4 projection, Ref<FrameBuffer> frameBuffer) {
@@ -56,16 +56,38 @@ namespace tridot {
             shader = defaultShader.get();
         }
 
+        if(mesh->vertexArray.getId() == 0){
+            return;
+        }
+        if(shader->getId() == 0){
+            return;
+        }
+        if(texture->getId() == 0){
+            return;
+        }
+
         Batch *batch = nullptr;
-        for(auto &b : batches){
+        for(int i = 0; i < batches.size(); i++){
+            auto &b = batches[i];
             if(b){
                 if(b->mesh == mesh && b->shader == shader){
                     batch = b.get();
+                    if(batch){
+                        if(mesh->vertexArray.getId() != batch->meshId){
+                            Log::info("reinit batch");
+                            batches.erase(batches.begin() + i);
+                            i--;
+                            batch = nullptr;
+                            continue;
+                        }
+                    }
+                    break;
                 }
             }
         }
 
-        if(batch == nullptr){
+
+        if(batch == nullptr || mesh->vertexArray.getId() != batch->meshId){
             Ref<Batch> b(true);
             b->init(sizeof(Instance), maxBatchSize, 32, mesh, shader,{
                 {FLOAT, 4}, {FLOAT, 4}, {FLOAT, 4}, {FLOAT, 4},
