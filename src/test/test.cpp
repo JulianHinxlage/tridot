@@ -10,6 +10,7 @@
 #include "tridot/render/Camera.h"
 #include "tridot/render/Mesh.h"
 #include "tridot/render/MeshRenderer.h"
+#include "tridot/render/MeshFactory.h"
 #include "tridot/engine/Input.h"
 #include "tridot/engine/Time.h"
 #include "tridot/engine/ResourceLoader.h"
@@ -55,10 +56,8 @@ glm::vec4 randu4(){
 }
 
 int main(int argc, char *argv[]){
-    Log::addTarget("log.txt", {Log::TRACE, true, true, false});
-    Log::info("Tridot version ", TRI_VERSION);
     Log::options.logLevel = Log::TRACE;
-
+    Log::info("Tridot version ", TRI_VERSION);
 
     Window window;
     window.init(800, 600, "Tridot " TRI_VERSION);
@@ -66,18 +65,24 @@ int main(int argc, char *argv[]){
     input.init();
     timer.init();
 
-    ResourceLoader loader;
-    loader.autoReload = true;
-    loader.addSearchDirectory("../res");
-    loader.addSearchDirectory("../res/textures");
-    loader.addSearchDirectory("../res/models");
-    loader.addSearchDirectory("../res/shaders");
+    ResourceLoader resources;
+    resources.autoReload = true;
+    resources.addSearchDirectory("../res");
+    resources.addSearchDirectory("../res/textures");
+    resources.addSearchDirectory("../res/models");
+    resources.addSearchDirectory("../res/shaders");
 
     MeshRenderer renderer;
-    renderer.init(loader.get<Shader>("mesh.glsl"));
-    Ref<Mesh> mesh = loader.get<Mesh>("teapot.obj");
-    mesh->rescale = true;
-    Ref<Texture> texture = loader.get<Texture>("checkerboard.png");
+    renderer.init(resources.get<Shader>("mesh.glsl"), 1000);
+
+    std::vector<Ref<Mesh>> meshes;
+    meshes.push_back(resources.get<Mesh>("teapot.obj"));
+    meshes.push_back(MeshFactory::createCube());
+    meshes.push_back(MeshFactory::createQuad());
+    meshes.push_back(MeshFactory::createRegularPolygon(3));
+    meshes.push_back(MeshFactory::createRegularPolygon(6));
+    meshes.push_back(MeshFactory::createRegularPolygon(64));
+    Ref<Texture> texture = resources.get<Texture>("checkerboard.png");
 
 
     FrameBuffer fbo;
@@ -91,8 +96,8 @@ int main(int argc, char *argv[]){
     camera.forward.z = -1;
 
     std::vector<Entity> entities;
-    int area = 40;
-    for(int i = 0; i < 5000; i++){
+    int area = 60;
+    for(int i = 0; i < 20000; i++){
         entities.push_back({});
         Entity &e = entities.back();
         e.pos = (randu3() - 0.5f) * (float)area;
@@ -102,7 +107,6 @@ int main(int argc, char *argv[]){
         e.angular = (randu3() - 0.5f) * 0.5f;
         e.color = Color(glm::vec4(randu3() * 0.6f + 0.2f, 1.0));
     }
-
 
     bool look = true;
     bool lockUp = false;
@@ -116,7 +120,7 @@ int main(int argc, char *argv[]){
 
         timer.update();
         input.update();
-        loader.update();
+        resources.update();
 
         if(timer.frameTicks(1.0)){
             Log::info(timer.framesPerSecond, " fps, ", timer.avgFrameTime * 1000, " ms [", timer.minFrameTime * 1000, ", ", timer.maxFrameTime * 1000, "]");
@@ -151,9 +155,13 @@ int main(int argc, char *argv[]){
         }
 
         renderer.begin(camera.getProjection(), &fbo);
-        for(auto &e : entities){
+        for(int i = 0; i < entities.size(); i++){
+            Mesh *mesh = meshes[i % meshes.size()].get();
+            auto &e = entities[i];
             e.update();
-            renderer.submit({e.pos, e.scale, e.rot, e.color}, texture.get(), mesh.get());
+            glm::vec3 size = mesh->boundingMax - mesh->boundingMin;
+            float factor = std::min(size.x, std::min(size.y, size.z));
+            renderer.submit({e.pos, e.scale / factor, e.rot, e.color}, texture.get(), mesh);
         }
         renderer.end();
 

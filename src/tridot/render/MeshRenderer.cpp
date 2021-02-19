@@ -4,7 +4,6 @@
 
 #include "MeshRenderer.h"
 #include "MeshFactory.h"
-#include "tridot/core/Log.h"
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/euler_angles.hpp>
 
@@ -74,7 +73,6 @@ namespace tridot {
                     batch = b.get();
                     if(batch){
                         if(mesh->vertexArray.getId() != batch->meshId){
-                            Log::info("reinit batch");
                             batches.erase(batches.begin() + i);
                             i--;
                             batch = nullptr;

@@ -7,7 +7,7 @@ add_library(${PROJECT_NAME} STATIC ${SOURCES})
 target_include_directories(${PROJECT_NAME} PUBLIC src extern)
 target_compile_definitions(${PROJECT_NAME} PUBLIC TRI_DEBUG)
 
-#required packages: libglfw3-dev libglew-dev libglm-dev
+#required packages: libglfw3-dev libglew-dev libglm-dev pkg-config
 set(OpenGL_GL_PREFERENCE "GLVND")
 find_package(OpenGL REQUIRED)
 find_package(PkgConfig REQUIRED)

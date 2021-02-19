@@ -4,14 +4,14 @@
 
 #include "Mesh.h"
 #include "tridot/core/Log.h"
-#include <glm/glm.hpp>
 #include <fstream>
 #include <map>
 
 namespace tridot {
 
     Mesh::Mesh() {
-        rescale = false;
+        boundingMin = {-0.5, -0.5, -0.5};
+        boundingMax = {+0.5, +0.5, +0.5};
     }
 
     bool Mesh::load(const std::string &file) {
@@ -157,8 +157,8 @@ namespace tridot {
             indexData.clear();
             vertexData.clear();
 
-            glm::vec3 minVertexValues = {0, 0, 0};
-            glm::vec3 maxVertexValues = {0, 0, 0};
+            boundingMin = {0, 0, 0};
+            boundingMax = {0, 0, 0};
 
             for(auto &i : is){
                 auto entry = map.find(i);
@@ -174,17 +174,17 @@ namespace tridot {
                         float z = vs[i.v * 3 + 2];
 
                         if(index == 0){
-                            minVertexValues = {x, y, z};
-                            maxVertexValues = {x, y, z};
+                            boundingMin = {x, y, z};
+                            boundingMax = {x, y, z};
                         }
 
-                        minVertexValues.x = std::min(x, minVertexValues.x);
-                        minVertexValues.y = std::min(y, minVertexValues.y);
-                        minVertexValues.z = std::min(z, minVertexValues.z);
+                        boundingMin.x = std::min(x, boundingMin.x);
+                        boundingMin.y = std::min(y, boundingMin.y);
+                        boundingMin.z = std::min(z, boundingMin.z);
 
-                        maxVertexValues.x = std::max(x, maxVertexValues.x);
-                        maxVertexValues.y = std::max(y, maxVertexValues.y);
-                        maxVertexValues.z = std::max(z, maxVertexValues.z);
+                        boundingMax.x = std::max(x, boundingMax.x);
+                        boundingMax.y = std::max(y, boundingMax.y);
+                        boundingMax.z = std::max(z, boundingMax.z);
 
                         vertexData.push_back(x);
                         vertexData.push_back(y);
@@ -218,24 +218,6 @@ namespace tridot {
                     index = entry->second;
                 }
                 indexData.push_back(index);
-            }
-
-
-            if(rescale) {
-                float scale = std::max(
-                        maxVertexValues.x - minVertexValues.x,
-                        std::max(maxVertexValues.y - minVertexValues.y,
-                                 maxVertexValues.z - minVertexValues.z));
-
-                for (int i = 0; i < vertexData.size(); i += 8) {
-                    float &x = vertexData[i + 0];
-                    float &y = vertexData[i + 1];
-                    float &z = vertexData[i + 2];
-
-                    x = x / scale;
-                    y = y / scale;
-                    z = z / scale;
-                }
             }
 
             Log::trace("loaded mesh ", file);

@@ -6,6 +6,7 @@
 #define TRIDOT_MESH_H
 
 #include "VertexArray.h"
+#include <glm/glm.hpp>
 
 namespace tridot {
 
@@ -19,7 +20,8 @@ namespace tridot {
         void create(float *vertices, int vertexCount, int *indices, int indexCount, std::vector<Attribute> layout = {{FLOAT, 3}, {FLOAT, 3}, {FLOAT, 2}});
 
         VertexArray vertexArray;
-        bool rescale;
+        glm::vec3 boundingMin;
+        glm::vec3 boundingMax;
     private:
         std::vector<float> vertexData;
         std::vector<int> indexData;
