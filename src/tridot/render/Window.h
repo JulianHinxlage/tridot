@@ -32,6 +32,7 @@ namespace tridot {
         void setSize(const glm::vec2 &size);
         void setPosition(const glm::vec2 &position);
         void setBackgroundColor(const Color &color);
+        void setTitle(const std::string &title);
         void setVSync(bool enabled);
     private:
         bool vsync;

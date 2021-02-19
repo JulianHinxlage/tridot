@@ -4,15 +4,14 @@
 
 #include "tridot/core/config.h"
 #include "tridot/render/Window.h"
-#include "tridot/render/Shader.h"
 #include "tridot/render/VertexArray.h"
 #include "tridot/render/Texture.h"
 #include "tridot/render/FrameBuffer.h"
 #include "tridot/render/Camera.h"
 #include "tridot/render/Mesh.h"
-#include "tridot/render/MeshFactory.h"
 #include "tridot/render/MeshRenderer.h"
 #include "tridot/engine/Input.h"
+#include "tridot/engine/Time.h"
 #include "GL/gl.h"
 #include "GLFW/glfw3.h"
 #include <glm/gtc/matrix_transform.hpp>
@@ -20,33 +19,7 @@
 
 using namespace tridot;
 
-class Time{
-public:
-    float deltaTime;
-
-    Time(){
-        lastTime = 0;
-        deltaTime = 0;
-    }
-
-    void update(){
-        lastTime = time;
-        time = glfwGetTime();
-        deltaTime = time - lastTime;
-    }
-
-    bool tick(float interval){
-        int i1 = (int)(time / interval);
-        int i2 = (int)(lastTime / interval);
-        return i1 != i2;
-    }
-
-private:
-    double time;
-    double lastTime;
-};
 Time timer;
-
 Input input;
 
 void cameraController(PerspectiveCamera &cam, bool look, bool lockUp, float speed);
@@ -81,8 +54,11 @@ glm::vec4 randu4(){
 }
 
 int main(int argc, char *argv[]){
-    Log::options.logLevel = Log::TRACE;
+    Log::addTarget("log.txt", {Log::TRACE, true, true, false});
     Log::info("Tridot version ", TRI_VERSION);
+    Log::options.logLevel = Log::TRACE;
+
+
     Window window;
     window.init(800, 600, "Tridot " TRI_VERSION);
     input.init();
@@ -110,7 +86,7 @@ int main(int argc, char *argv[]){
     std::vector<Entity> entities;
 
     int area = 40;
-    for(int i = 0; i < 10000; i++){
+    for(int i = 0; i < 5000; i++){
         entities.push_back({});
         Entity &e = entities.back();
         e.pos = (randu3() - 0.5f) * (float)area;
@@ -120,6 +96,8 @@ int main(int argc, char *argv[]){
         e.angular = (randu3() - 0.5f) * 0.5f;
         e.color = Color(glm::vec4(randu3() * 0.6f + 0.2f, 1.0));
     }
+
+    window.setBackgroundColor(Color(100, 100, 100));
 
     bool look = true;
     bool lockUp = false;
@@ -132,8 +110,8 @@ int main(int argc, char *argv[]){
 
         timer.update();
         input.update();
-        if(timer.tick(0.5)){
-            Log::info(1.0f / timer.deltaTime, " fps, ", timer.deltaTime * 1000, " ms");
+        if(timer.frameTicks(1.0)){
+            Log::info(timer.framesPerSecond, " fps, ", timer.avgFrameTime * 1000, " ms [", timer.minFrameTime * 1000, ", ", timer.maxFrameTime * 1000, "]");
         }
 
         fbo.bind();
@@ -166,16 +144,16 @@ int main(int argc, char *argv[]){
         renderer.begin(camera.getProjection(), &fbo);
         for(auto &e : entities){
             e.update();
-            renderer.submit({e.pos, e.scale, e.rot, e.color}, nullptr, mesh.get());
+            renderer.submit({e.pos, e.scale, e.rot, e.color}, &texture, mesh.get());
         }
         renderer.end();
-
 
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         renderer.begin(glm::mat4(1), nullptr);
         renderer.submit({{0, 0, 0}, {2, 2, 1}}, fbo.getTexture(COLOR).get());
         renderer.end();
 
+        glFinish();
         window.update();
     }
     return 0;

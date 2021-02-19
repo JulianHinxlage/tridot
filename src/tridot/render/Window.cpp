@@ -186,6 +186,10 @@ namespace tridot {
         this->backgroundColor = color;
     }
 
+    void Window::setTitle(const std::string &title) {
+        glfwSetWindowTitle((GLFWwindow*)context, title.c_str());
+    }
+
     void Window::setVSync(bool enabled) {
         this->vsync = enabled;
     }

@@ -5,6 +5,7 @@
 #include "MeshRenderer.h"
 #include "MeshFactory.h"
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtx/euler_angles.hpp>
 
 namespace tridot {
 
@@ -84,16 +85,10 @@ namespace tridot {
 
         glm::mat4 transform(1);
         transform = glm::translate(transform, call.position);
+        if(call.rotation != glm::vec3(0, 0, 0)){
+            transform = transform * glm::eulerAngleXYZ(call.rotation.x, call.rotation.y, call.rotation.z);
+        }
         transform = glm::scale(transform, call.scale);
-        if(call.rotation.x != 0){
-            transform = glm::rotate(transform, call.rotation.x, {1, 0, 0});
-        }
-        if(call.rotation.y != 0){
-            transform = glm::rotate(transform, call.rotation.y, {0, 1, 0});
-        }
-        if(call.rotation.z != 0){
-            transform = glm::rotate(transform, call.rotation.z, {0, 0, 1});
-        }
 
         Instance *i = (Instance*)batch->next();
         i->transform = transform;
