@@ -25,8 +25,6 @@ using namespace tridot;
 Time timer;
 Input input;
 
-void cameraController(PerspectiveCamera &cam, bool look, bool lockUp, float speed);
-
 class Entity{
 public:
     Transform t;
@@ -49,16 +47,27 @@ glm::vec4 randu4(){
     return glm::vec4(randu(), randu(), randu(), randu());
 }
 
+void cameraController(PerspectiveCamera &cam, bool look, bool lockUp, float speed);
+
+void createPhysicsTest(std::vector<Entity> &entities);
+
 int main(int argc, char *argv[]){
+    //logging
     Log::options.logLevel = Log::TRACE;
     Log::info("Tridot version ", TRI_VERSION);
 
+    //window, input, time
     Window window;
     window.init(800, 600, "Tridot " TRI_VERSION);
     window.setBackgroundColor(Color(100, 100, 100));
     input.init();
     timer.init();
 
+    //physics
+    Physics physics;
+    physics.init({0, 0, -10});
+
+    //resource loader
     ResourceLoader resources;
     resources.autoReload = true;
     resources.addSearchDirectory("../res");
@@ -66,90 +75,61 @@ int main(int argc, char *argv[]){
     resources.addSearchDirectory("../res/models");
     resources.addSearchDirectory("../res/shaders");
 
+    //rendering
     MeshRenderer renderer;
     renderer.init(resources.get<Shader>("mesh.glsl"), 1000);
     Ref<Shader> boxShader = resources.get<Shader>("meshTextureScale.glsl");
     Ref<Shader> shader = resources.get<Shader>("mesh.glsl");
-
-    Physics physics;
-    physics.init({0, 0, -2});
-
     Ref<Mesh> cube = MeshFactory::createCube();
     Ref<Mesh> sphere = MeshFactory::createSphere(32, 32);
     Ref<Texture> texture = resources.get<Texture>("checkerboard.png");
 
-    FrameBuffer fbo;
-    fbo.resize(window.getSize().x, window.getSize().y);
-    fbo.setTexture(COLOR);
-    fbo.setTexture(DEPTH);
+    //framebuffer
+    FrameBuffer frameBuffer;
+    frameBuffer.resize(window.getSize().x, window.getSize().y);
+    frameBuffer.setTexture(COLOR);
+    frameBuffer.setTexture(DEPTH);
     glEnable(GL_DEPTH_TEST);
 
+    //camera
     PerspectiveCamera camera;
-    camera.position = {5, 20, 0};
+    camera.position = {0, 20, 0};
     camera.forward = {0, -1, 0};
 
+    //create scene
     std::vector<Entity> entities;
-    int area = 10;
+    createPhysicsTest(entities);
 
-    for(int i = 0; i < area * area * area + 5; i++){
-        entities.push_back({});
-        Entity &e = entities.back();
-        if(i == 0){
-            e.color = Color::white * 0.7f;
-            e.t.scale = {100, 100, 1};
-            e.t.position = {0, 0, -1};
-            e.rb.mass = 0;
-        }else if(i <= 2) {
-            e.color = Color::white * 0.7f;
-            e.t.scale = {1, 18, 7};
-            e.t.position = {i == 1 ? 8.5 : -8.5, 0, 3};
-            e.t.position += glm::vec3(4.5, 4.5, 0);
-            e.rb.mass = 0;
-        }else if(i <= 4) {
-            e.color = Color::white * 0.7f;
-            e.t.scale = {18, 1, 7};
-            e.t.position = {0, i == 3 ? 8.5 : -8.5, 3};
-            e.t.position += glm::vec3(4.5, 4.5, 0);
-            e.t.position += glm::vec3(0.001, 0.001, 0.001);
-            e.rb.mass = 0;
-        }else{
-            e.color = Color(glm::vec4(randu3() * 0.6f + 0.2f, 1.0));
-            e.t.position.x = (i-5) / (area * area);
-            e.t.position.y = (i-5) / (area) % area;
-            e.t.position.z = (i-5) % area;
-            e.collider.type = (i % 2 == 0) ? Collider::SPHERE : Collider::BOX;
-
-            //e.t.position = (randu3() - 0.5f) * (float) area;
-            //e.t.scale = glm::vec3(1, 1, 1) * (randu() * 0.5f + 0.5f);
-            //e.t.rotation = randu3() * 3.1415926f * 2.0f;
-        }
-    }
-
+    //camera mode
     bool look = true;
     bool lockUp = true;
-    bool wireframe = false;
     float speed = 10;
+    bool wireframe = false;
 
     while(window.isOpen()){
         if(input.pressed(tridot::Input::KEY_ESCAPE)){
             window.close();
         }
 
+        //update systems
         timer.update();
         input.update();
         resources.update();
         physics.step(timer.deltaTime);
 
+        //fps info
         if(timer.frameTicks(1.0)){
             Log::info(timer.framesPerSecond, " fps, ", timer.avgFrameTime * 1000, " ms [", timer.minFrameTime * 1000, ", ", timer.maxFrameTime * 1000, "]");
         }
 
-        fbo.bind();
-        if(fbo.getSize() != window.getSize()){
-            fbo.resize(window.getSize().x, window.getSize().y);
+        //clear framebuffer
+        frameBuffer.bind();
+        if(frameBuffer.getSize() != window.getSize()){
+            frameBuffer.resize(window.getSize().x, window.getSize().y);
         }
-        fbo.clear(window.getBackgroundColor());
+        frameBuffer.clear(window.getBackgroundColor());
 
+        //camera
         camera.aspectRatio = window.getAspectRatio();
         if(input.pressed('C')){
             look = !look;
@@ -166,41 +146,118 @@ int main(int argc, char *argv[]){
         speed *= std::pow(1.3f, input.mouseWheelDelta());
         cameraController(camera, look, lockUp, speed);
 
-
+        //shoot spheres
         if(input.pressed(Input::MOUSE_BUTTON_LEFT)){
             entities.push_back({});
             Entity &e = entities.back();
-            e.color = Color(glm::vec4(0.2, 0.2, 0.2, 1.0));
+            e.color = Color(glm::vec4(0.3, 0.3, 0.3, 1.0));
             e.t.position = camera.position + camera.forward * 1.5f;
             e.rb.mass = 200;
-            e.rb.velocity = camera.forward * 30.0f;
+            e.rb.velocity = camera.forward * 300.0f;
+            e.collider.type = Collider::SPHERE;
         }
 
+        //rendering
         if(wireframe){
             glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         }else{
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         }
-
-        renderer.begin(camera.getProjection(), &fbo);
+        renderer.begin(camera.getProjection(), &frameBuffer);
         for(int i = 0; i < entities.size(); i++){
             auto &e = entities[i];
             Mesh *mesh = e.collider.type == Collider::SPHERE ? sphere.get() : cube.get();
             Shader *s = e.collider.type == Collider::SPHERE ? shader.get() : boxShader.get();
-            physics.update(e.rb, e.t, e.collider);
+            physics.update(e.rb, e.t, e.collider, i);
             renderer.submit({e.t.position, e.t.scale, e.t.rotation, e.color, {0, 0}, {0.5, 0.5}}, texture.get(), mesh, s);
         }
         renderer.end();
 
+        //draw frame buffer
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         renderer.begin(glm::mat4(1), nullptr);
-        renderer.submit({{0, 0, 0}, {2, 2, 1}}, fbo.getTexture(COLOR).get());
+        renderer.submit({{0, 0, 0}, {2, 2, 1}}, frameBuffer.getTexture(COLOR).get());
         renderer.end();
 
+        //window
         glFinish();
         window.update();
     }
     return 0;
+}
+
+void createPhysicsTest(std::vector<Entity> &entities){
+    int area = 10;
+
+    //ground
+    {
+        entities.push_back({});
+        Entity &e = entities.back();
+        e.color = Color::white * 0.7f;
+        e.t.scale = {100, 100, 1};
+        e.t.position = {0, 0, -1};
+        e.rb.mass = 0;
+    }
+
+    int wallSize = 4;
+    int wallDistance = 16;
+    //walls
+    {
+        for(int i = 0; i < 4; i++) {
+            entities.push_back({});
+            Entity &e = entities.back();
+            if (i < 2) {
+                e.color = Color::white * 0.7f;
+                e.t.scale = {1, wallDistance + 1, wallSize};
+                e.t.position = {i % 2 == 0 ? wallDistance / 2 : -wallDistance / 2, 0, wallSize / 2 - 0.5};
+                e.rb.mass = 0;
+            } else if (i < 4) {
+                e.color = Color::white * 0.7f;
+                e.t.scale = {18, 1, 7};
+
+                e.t.scale = {wallDistance + 1, 1, wallSize};
+                e.t.position = {0, i % 2 == 0 ? wallDistance / 2 : -wallDistance / 2, wallSize / 2 - 0.5};
+
+                e.t.position += glm::vec3(0.001, 0.001, 0.001);
+                e.rb.mass = 0;
+            }
+        }
+    }
+
+    wallSize = 4;
+    wallDistance = 100;
+    //walls
+    {
+        for(int i = 0; i < 4; i++) {
+            entities.push_back({});
+            Entity &e = entities.back();
+            if (i < 2) {
+                e.color = Color::white * 0.7f;
+                e.t.scale = {1, wallDistance + 1, wallSize};
+                e.t.position = {i % 2 == 0 ? wallDistance / 2 : -wallDistance / 2, 0, wallSize / 2 - 0.5};
+                e.rb.mass = 0;
+            } else if (i < 4) {
+                e.color = Color::white * 0.7f;
+                e.t.scale = {18, 1, 7};
+
+                e.t.scale = {wallDistance + 1, 1, wallSize};
+                e.t.position = {0, i % 2 == 0 ? wallDistance / 2 : -wallDistance / 2, wallSize / 2 - 0.5};
+                e.t.position += glm::vec3(0.001, 0.001, 0.001);
+                e.rb.mass = 0;
+            }
+        }
+    }
+
+    //entities
+    for(int i = 0; i < area * area * area; i++){
+        entities.push_back({});
+        Entity &e = entities.back();
+        e.color = Color(glm::vec4(randu3() * 0.6f + 0.2f, 1.0));
+        e.t.position.x = i / (area * area) - (area / 2);
+        e.t.position.y = i / (area) % area - (area / 2);
+        e.t.position.z = i % area;
+        e.collider.type = (i % 2 == 0) ? Collider::SPHERE : Collider::BOX;
+    }
 }
 
 void cameraController(PerspectiveCamera &cam, bool look, bool lockUp, float speed){
@@ -295,5 +352,3 @@ void cameraController(PerspectiveCamera &cam, bool look, bool lockUp, float spee
     }
     lastLook = look;
 }
-
-

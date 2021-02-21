@@ -7,6 +7,7 @@
 
 #include "tridot/core/Ref.h"
 #include <glm/glm.hpp>
+#include <functional>
 
 namespace tridot {
 
@@ -44,9 +45,10 @@ namespace tridot {
         ~Physics();
         void init(glm::vec3 gravity = {0, 0, -9.81});
         void step(float deltaTime);
-        void update(RigidBody &rb, Transform &t, Collider &collider);
-        void add(RigidBody &rb, Transform &t, Collider &collidery);
+        void update(RigidBody &rb, Transform &t, Collider &collider, int index = -1);
+        void add(RigidBody &rb, Transform &t, Collider &collider, int index = -1);
         void remove(RigidBody &rb);
+        void rayCast(glm::vec3 from, glm::vec3 to, bool firstOnly, std::function<void(const glm::vec3 &pos, int index)> callback);
 
     private:
         class Impl;

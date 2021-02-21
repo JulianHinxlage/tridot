@@ -13,6 +13,7 @@
 #include <BulletCollision/CollisionShapes/btBoxShape.h>
 #include <LinearMath/btDefaultMotionState.h>
 #include <BulletCollision/CollisionShapes/btSphereShape.h>
+#include <BulletDynamics/Dynamics/btDiscreteDynamicsWorld.h>
 
 namespace tridot {
 
@@ -36,7 +37,7 @@ namespace tridot {
 
     class Physics::Impl{
     public:
-        btSimpleDynamicsWorld *world;
+        btDynamicsWorld *world;
         btBroadphaseInterface* broadphase;
         btCollisionDispatcher* dispatcher;
         btSequentialImpulseConstraintSolver* solver;
@@ -54,7 +55,7 @@ namespace tridot {
             dispatcher = new btCollisionDispatcher(collisionConfiguration);
             broadphase = new btDbvtBroadphase();
             solver = new btSequentialImpulseConstraintSolver();
-            world = new btSimpleDynamicsWorld(dispatcher, broadphase, solver, collisionConfiguration);
+            world = new btDiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfiguration);
         }
 
         void clear(){
@@ -107,10 +108,10 @@ namespace tridot {
         }
     }
 
-    void Physics::update(RigidBody &rb, Transform &t, Collider &collider) {
+    void Physics::update(RigidBody &rb, Transform &t, Collider &collider, int index) {
         if(impl && impl->world) {
             if(rb.ref == nullptr){
-                add(rb, t, collider);
+                add(rb, t, collider, index);
             }else{
                 btRigidBody* body = (btRigidBody*)rb.ref;
                 btTransform transform = body->getWorldTransform();
@@ -127,7 +128,7 @@ namespace tridot {
         }
     }
 
-    void Physics::add(RigidBody &rb, Transform &t, Collider &collider) {
+    void Physics::add(RigidBody &rb, Transform &t, Collider &collider, int index) {
         if(impl && impl->world) {
             if(rb.ref == nullptr){
 
@@ -159,9 +160,16 @@ namespace tridot {
                 btRigidBody* body = new btRigidBody(info);
                 body->setFriction(rb.friction);
                 body->setRestitution(rb.restitution);
+                body->setRollingFriction(rb.friction / 100);
+                body->setSpinningFriction(rb.friction / 100);
 
                 body->setAngularVelocity(conv(rb.angular));
                 body->setLinearVelocity(conv(rb.velocity));
+
+                body->setCcdMotionThreshold(1e-7);
+                body->setCcdSweptSphereRadius(0.2);
+
+                body->setUserIndex(index);
                 impl->world->addRigidBody(body);
                 rb.ref = (void*)body;
                 impl->shapes.push_back(shape);
@@ -183,6 +191,24 @@ namespace tridot {
                         break;
                     }
                 }
+            }
+        }
+    }
+
+    void Physics::rayCast(glm::vec3 from, glm::vec3 to, bool firstOnly, std::function<void(const glm::vec3 &pos, int index)> callback) {
+        if(firstOnly){
+            btCollisionWorld::ClosestRayResultCallback results(conv(from), conv(to));
+            impl->world->rayTest(conv(from), conv(to), results);
+            if(results.hasHit()){
+                glm::vec3 pos = conv(conv(from).lerp(conv(to), results.m_closestHitFraction));
+                callback(pos, results.m_collisionObject->getUserIndex());
+            }
+        }else {
+            btCollisionWorld::AllHitsRayResultCallback results(conv(from), conv(to));
+            impl->world->rayTest(conv(from), conv(to), results);
+            for (int i = 0; i < results.m_hitFractions.size(); i++) {
+                glm::vec3 pos = conv(conv(from).lerp(conv(to), results.m_hitFractions[i]));
+                callback(pos, results.m_collisionObjects[i]->getUserIndex());
             }
         }
     }
