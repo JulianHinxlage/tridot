@@ -7,7 +7,12 @@ add_library(${PROJECT_NAME} STATIC ${SOURCES})
 target_include_directories(${PROJECT_NAME} PUBLIC src extern)
 target_compile_definitions(${PROJECT_NAME} PUBLIC TRI_DEBUG)
 
-#required packages: libglfw3-dev libglew-dev libglm-dev pkg-config
+
+#required packages: libglfw3-dev libglew-dev libglm-dev pkg-config libbullet-dev
+find_package(Bullet REQUIRED)
+target_include_directories(${PROJECT_NAME} PUBLIC ${BULLET_INCLUDE_DIR})
+target_link_libraries(${PROJECT_NAME} ${BULLET_LIBRARIES})
+
 set(OpenGL_GL_PREFERENCE "GLVND")
 find_package(OpenGL REQUIRED)
 find_package(PkgConfig REQUIRED)
@@ -20,5 +25,6 @@ target_link_libraries(${PROJECT_NAME} ${OPENGL_LIBRARIES} ${GLFW_LIBRARIES} ${GL
 project(test-tridot)
 add_executable(${PROJECT_NAME} src/test/test.cpp)
 target_link_libraries(${PROJECT_NAME} PUBLIC tridot)
+
 
 project(tridot)

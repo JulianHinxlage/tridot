@@ -14,6 +14,7 @@
 #include "tridot/engine/Input.h"
 #include "tridot/engine/Time.h"
 #include "tridot/engine/ResourceLoader.h"
+#include "tridot/engine/Physics.h"
 #include "GL/gl.h"
 #include "GLFW/glfw3.h"
 #include <glm/gtc/matrix_transform.hpp>
@@ -28,17 +29,10 @@ void cameraController(PerspectiveCamera &cam, bool look, bool lockUp, float spee
 
 class Entity{
 public:
-    glm::vec3 pos;
-    glm::vec3 rot;
-    glm::vec3 scale;
-    glm::vec3 vel;
-    glm::vec3 angular;
+    Transform t;
+    RigidBody rb;
+    Collider collider;
     Color color;
-
-    void update(){
-        pos += vel * timer.deltaTime;
-        rot += angular * timer.deltaTime;
-    }
 };
 
 float randu(){
@@ -74,16 +68,15 @@ int main(int argc, char *argv[]){
 
     MeshRenderer renderer;
     renderer.init(resources.get<Shader>("mesh.glsl"), 1000);
+    Ref<Shader> boxShader = resources.get<Shader>("meshTextureScale.glsl");
+    Ref<Shader> shader = resources.get<Shader>("mesh.glsl");
 
-    std::vector<Ref<Mesh>> meshes;
-    meshes.push_back(resources.get<Mesh>("teapot.obj"));
-    meshes.push_back(MeshFactory::createCube());
-    meshes.push_back(MeshFactory::createQuad());
-    meshes.push_back(MeshFactory::createRegularPolygon(3));
-    meshes.push_back(MeshFactory::createRegularPolygon(6));
-    meshes.push_back(MeshFactory::createRegularPolygon(64));
+    Physics physics;
+    physics.init({0, 0, -2});
+
+    Ref<Mesh> cube = MeshFactory::createCube();
+    Ref<Mesh> sphere = MeshFactory::createSphere(32, 32);
     Ref<Texture> texture = resources.get<Texture>("checkerboard.png");
-
 
     FrameBuffer fbo;
     fbo.resize(window.getSize().x, window.getSize().y);
@@ -92,26 +85,50 @@ int main(int argc, char *argv[]){
     glEnable(GL_DEPTH_TEST);
 
     PerspectiveCamera camera;
-    camera.position.z = 1;
-    camera.forward.z = -1;
+    camera.position = {5, 20, 0};
+    camera.forward = {0, -1, 0};
 
     std::vector<Entity> entities;
-    int area = 60;
-    for(int i = 0; i < 20000; i++){
+    int area = 10;
+
+    for(int i = 0; i < area * area * area + 5; i++){
         entities.push_back({});
         Entity &e = entities.back();
-        e.pos = (randu3() - 0.5f) * (float)area;
-        e.vel = (randu3() - 0.5f) * 0.5f;
-        e.scale = glm::vec3(1, 1, 1) * (randu() * 0.5f + 0.5f);
-        e.rot = randu3();
-        e.angular = (randu3() - 0.5f) * 0.5f;
-        e.color = Color(glm::vec4(randu3() * 0.6f + 0.2f, 1.0));
+        if(i == 0){
+            e.color = Color::white * 0.7f;
+            e.t.scale = {100, 100, 1};
+            e.t.position = {0, 0, -1};
+            e.rb.mass = 0;
+        }else if(i <= 2) {
+            e.color = Color::white * 0.7f;
+            e.t.scale = {1, 18, 7};
+            e.t.position = {i == 1 ? 8.5 : -8.5, 0, 3};
+            e.t.position += glm::vec3(4.5, 4.5, 0);
+            e.rb.mass = 0;
+        }else if(i <= 4) {
+            e.color = Color::white * 0.7f;
+            e.t.scale = {18, 1, 7};
+            e.t.position = {0, i == 3 ? 8.5 : -8.5, 3};
+            e.t.position += glm::vec3(4.5, 4.5, 0);
+            e.t.position += glm::vec3(0.001, 0.001, 0.001);
+            e.rb.mass = 0;
+        }else{
+            e.color = Color(glm::vec4(randu3() * 0.6f + 0.2f, 1.0));
+            e.t.position.x = (i-5) / (area * area);
+            e.t.position.y = (i-5) / (area) % area;
+            e.t.position.z = (i-5) % area;
+            e.collider.type = (i % 2 == 0) ? Collider::SPHERE : Collider::BOX;
+
+            //e.t.position = (randu3() - 0.5f) * (float) area;
+            //e.t.scale = glm::vec3(1, 1, 1) * (randu() * 0.5f + 0.5f);
+            //e.t.rotation = randu3() * 3.1415926f * 2.0f;
+        }
     }
 
     bool look = true;
-    bool lockUp = false;
+    bool lockUp = true;
     bool wireframe = false;
-    float speed = 2;
+    float speed = 10;
 
     while(window.isOpen()){
         if(input.pressed(tridot::Input::KEY_ESCAPE)){
@@ -121,6 +138,7 @@ int main(int argc, char *argv[]){
         timer.update();
         input.update();
         resources.update();
+        physics.step(timer.deltaTime);
 
         if(timer.frameTicks(1.0)){
             Log::info(timer.framesPerSecond, " fps, ", timer.avgFrameTime * 1000, " ms [", timer.minFrameTime * 1000, ", ", timer.maxFrameTime * 1000, "]");
@@ -148,6 +166,16 @@ int main(int argc, char *argv[]){
         speed *= std::pow(1.3f, input.mouseWheelDelta());
         cameraController(camera, look, lockUp, speed);
 
+
+        if(input.pressed(Input::MOUSE_BUTTON_LEFT)){
+            entities.push_back({});
+            Entity &e = entities.back();
+            e.color = Color(glm::vec4(0.2, 0.2, 0.2, 1.0));
+            e.t.position = camera.position + camera.forward * 1.5f;
+            e.rb.mass = 200;
+            e.rb.velocity = camera.forward * 30.0f;
+        }
+
         if(wireframe){
             glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         }else{
@@ -156,12 +184,11 @@ int main(int argc, char *argv[]){
 
         renderer.begin(camera.getProjection(), &fbo);
         for(int i = 0; i < entities.size(); i++){
-            Mesh *mesh = meshes[i % meshes.size()].get();
             auto &e = entities[i];
-            e.update();
-            glm::vec3 size = mesh->boundingMax - mesh->boundingMin;
-            float factor = std::min(size.x, std::min(size.y, size.z));
-            renderer.submit({e.pos, e.scale / factor, e.rot, e.color}, texture.get(), mesh);
+            Mesh *mesh = e.collider.type == Collider::SPHERE ? sphere.get() : cube.get();
+            Shader *s = e.collider.type == Collider::SPHERE ? shader.get() : boxShader.get();
+            physics.update(e.rb, e.t, e.collider);
+            renderer.submit({e.t.position, e.t.scale, e.t.rotation, e.color, {0, 0}, {0.5, 0.5}}, texture.get(), mesh, s);
         }
         renderer.end();
 
@@ -236,7 +263,9 @@ void cameraController(PerspectiveCamera &cam, bool look, bool lockUp, float spee
                 cam.forward = glm::rotate(glm::mat4(1), mousePosition.y, axis) * glm::vec4(cam.forward, 1.0f);
                 cam.up = glm::rotate(glm::mat4(1), mousePosition.y, axis) * glm::vec4(cam.up, 1.0f);
             } else {
-                cam.forward = glm::rotate(glm::mat4(1), -mousePosition.x, {0, 0, 1}) * glm::vec4(cam.forward, 1.0f);
+                glm::vec3 up = {0, 0, 1};
+
+                cam.forward = glm::rotate(glm::mat4(1), -mousePosition.x, up) * glm::vec4(cam.forward, 1.0f);
 
                 glm::vec3 dir = cam.forward;
                 dir.z = 0;
@@ -246,13 +275,13 @@ void cameraController(PerspectiveCamera &cam, bool look, bool lockUp, float spee
                 dir = glm::normalize(dir);
                 float sign = cam.forward.z >= 0 ? 1 : -1;
                 float angle = glm::angle(dir, cam.forward) * sign;
-                glm::vec3 right = glm::cross({0, 0, 1}, dir);
+                glm::vec3 right = glm::cross(up, dir);
 
                 angle -= mousePosition.y;
                 angle = std::min(angle, glm::radians(89.0f));
                 angle = std::max(angle, glm::radians(-89.0f));
                 cam.forward = glm::rotate(glm::mat4(1), -angle, right) * glm::vec4(dir, 1.0f);
-                cam.up = glm::rotate(glm::mat4(1), -angle, right) * glm::vec4(0, 0, 1, 1.0f);
+                cam.up = glm::rotate(glm::mat4(1), -angle, right) * glm::vec4(up, 1.0f);
             }
 
             int width = 0;

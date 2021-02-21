@@ -145,4 +145,69 @@ namespace tridot {
         return mesh;
     }
 
+    Ref<Mesh> MeshFactory::createSphere(int vertexCountX, int vertexCountY) {
+        Ref<Mesh> mesh(true);
+
+        std::vector<float> vs;
+        std::vector<int> is;
+
+
+        for(int x = 0;  x < vertexCountX + 1; x++){
+            for(int y = 0; y < vertexCountY + 1; y++){
+                float angleX = glm::radians(((float)x / (float)vertexCountX) * 360);
+                float angleY = glm::radians(((float)y / (float)vertexCountY) * 360);
+
+                float vx = sin(angleX) * cos(angleY) / 2.0f;
+                float vy = cos(angleX) / 2.0f;
+                float vz = sin(angleX) * sin(angleY) / 2.0f;
+                if(x > (vertexCountX + 1) / 2){
+                    vx = sin(angleX) * sin(angleY) / 2.0f;
+                    vy = cos(angleX) / 2.0f;
+                    vz = sin(angleX) * cos(angleY) / 2.0f;
+                }
+
+                vs.push_back(vx);
+                vs.push_back(vy);
+                vs.push_back(vz);
+
+                vs.push_back(vx * 2.0f);
+                vs.push_back(vy * 2.0f);
+                vs.push_back(vz * 2.0f);
+
+                vs.push_back(glm::degrees(angleX) / 90);
+                vs.push_back(glm::degrees(angleY) / 90);
+            }
+        }
+
+        for(int x = 0;  x < vertexCountX; x++){
+            for(int y = 0; y < vertexCountY; y++){
+                /*
+                int i1 = x * vertexCountY + y;
+                int i2 = x * vertexCountY + (y + 1) % vertexCountY;
+
+                int i3 = ((x + 1) % vertexCountX) * vertexCountY + y;
+                int i4 = ((x + 1) % vertexCountX) * vertexCountY + (y + 1) % vertexCountY;
+                */
+
+                int i1 = x * (vertexCountY + 1) + y;
+                int i2 = x * (vertexCountY + 1) + y + 1;
+
+                int i3 = (x + 1) * (vertexCountY + 1) + y;
+                int i4 = (x + 1) * (vertexCountY + 1) + y + 1;
+
+
+                is.push_back(i1);
+                is.push_back(i2);
+                is.push_back(i3);
+
+                is.push_back(i2);
+                is.push_back(i4);
+                is.push_back(i3);
+            }
+        }
+
+        mesh->create(vs.data(), vs.size(), is.data(), is.size(), {{FLOAT, 3}, {FLOAT, 3}, {FLOAT, 2}});
+        return mesh;
+    }
+
 }

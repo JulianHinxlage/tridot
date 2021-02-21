@@ -14,6 +14,7 @@ namespace tridot {
         static Ref<Mesh> createQuad();
         static Ref<Mesh> createCube();
         static Ref<Mesh> createRegularPolygon(int vertexCount);
+        static Ref<Mesh> createSphere(int vertexCountX, int vertexCountY);
     };
 
 }
