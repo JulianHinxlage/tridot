@@ -35,6 +35,28 @@ public:
     glm::vec2 textureScale = {0.5, 0.5};
 };
 
+class Material{
+public:
+    Ref<Shader> shader;
+    Color ambient;
+    Color diffuse;
+    Color specular;
+    float shininess;
+    bool textureWrapByScale = false;
+};
+
+class MaterialInstance{
+    Ref<Material> material;
+    Ref<Texture> texture;
+    Color color = Color::white;
+    glm::vec2 texCoordsBottomRight = {0, 0};
+    glm::vec2 texCoordsTopLeft = {1, 1};
+};
+
+class DirectionalLight{
+    glm::vec3 direction;
+};
+
 float randu(){
     return (double)std::rand() / (double)RAND_MAX;
 }
@@ -55,6 +77,7 @@ void createTestScene(std::vector<Entity> &entities, ResourceLoader &resources);
 
 void createPhysicsTest(std::vector<Entity> &entities, ResourceLoader &resources);
 
+void shootSphere(std::vector<Entity> &entities, PerspectiveCamera &camera);
 
 int main(int argc, char *argv[]){
     //logging
@@ -82,9 +105,11 @@ int main(int argc, char *argv[]){
 
     //rendering
     MeshRenderer renderer;
-    renderer.init(resources.get<Shader>("mesh.glsl"), 1000);
+    renderer.init(resources.get<Shader>("meshBase.glsl"), 1000);
     Ref<Shader> boxShader = resources.get<Shader>("meshTextureScale.glsl");
     Ref<Shader> shader = resources.get<Shader>("mesh.glsl");
+    Ref<Shader> shadowShader = resources.get<Shader>("shadow.glsl");
+
     Ref<Mesh> cube = MeshFactory::createCube();
     Ref<Mesh> sphere = MeshFactory::createSphere(32, 32);
     Ref<Texture> tex1 = resources.get<Texture>("tex1.png");
@@ -251,28 +276,17 @@ int main(int argc, char *argv[]){
         cameraController(camera, false, look, true, speed);
         camera.position = player.transform.position - camera.forward * cameraDistance;
 
-
-        /*
-        //shoot spheres
-        if(input.pressed(Input::MOUSE_BUTTON_LEFT)){
-            entities.push_back({});
-            Entity &e = entities.back();
-            e.color = Color(glm::vec4(0.3, 0.3, 0.3, 1.0));
-            e.transform.position = camera.position + camera.forward * 1.5f;
-            e.rigidBody.mass = 200;
-            e.rigidBody.velocity = camera.forward * 300.0f;
-            e.collider.type = Collider::SPHERE;
-        }*/
-
-
-
-
         //rendering
         clock.reset();
         if(wireframe){
             glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         }else{
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        }
+
+        if(shader->getId() != 0){
+            shader->bind();
+            shader->set("uCameraPosition", camera.position);
         }
         renderer.begin(camera.getProjection(), &frameBuffer);
         for(int i = 0; i < entities.size(); i++){
@@ -310,7 +324,7 @@ void createTestScene(std::vector<Entity> &entities, ResourceLoader &resources){
     Ref<Texture> tex3 = resources.get<Texture>("tex3.png");
     Ref<Texture> tex4 = resources.get<Texture>("tex4.png");
 
-    int groundSize = 500;
+    int groundSize = 200;
     int wallHeight = 30;
 
     //ground
@@ -380,7 +394,7 @@ void createTestScene(std::vector<Entity> &entities, ResourceLoader &resources){
                 e.collider.type = Collider::BOX;
                 e.rigidBody.mass = 0;
                 e.texture = tex1.get();
-                e.textureScale = {0.5, 0.5};
+                e.textureScale = {1.0, 1.0};
                 platformCount++;
             }
         }
@@ -462,6 +476,19 @@ void createPhysicsTest(std::vector<Entity> &entities, ResourceLoader &resources)
         e.transform.position.z = i % area;
         e.collider.type = (i % 2 == 0) ? Collider::SPHERE : Collider::BOX;
         e.texture = tex.get();
+    }
+}
+
+void shootSphere(std::vector<Entity> &entities, PerspectiveCamera &camera){
+    //shoot spheres
+    if(input.pressed(Input::MOUSE_BUTTON_LEFT)){
+        entities.push_back({});
+        Entity &e = entities.back();
+        e.color = Color(glm::vec4(0.3, 0.3, 0.3, 1.0));
+        e.transform.position = camera.position + camera.forward * 1.5f;
+        e.rigidBody.mass = 200;
+        e.rigidBody.velocity = camera.forward * 300.0f;
+        e.collider.type = Collider::SPHERE;
     }
 }
 
