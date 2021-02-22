@@ -45,7 +45,7 @@ flat in float fTextureUnit;
 out vec4 oColor;
 
 uniform sampler2D uTextures[32];
-uniform vec3 uAmbientLightDirection = vec3(0, 0, -1);
+uniform vec3 uAmbientLightDirection = vec3(0.2, 0.4, -1);
 uniform float uAmbientLightStrenght = 0.75;
 
 void main(){

@@ -27,10 +27,12 @@ Input input;
 
 class Entity{
 public:
-    Transform t;
-    RigidBody rb;
+    Transform transform;
+    RigidBody rigidBody;
     Collider collider;
     Color color;
+    Texture *texture;
+    glm::vec2 textureScale = {0.5, 0.5};
 };
 
 float randu(){
@@ -47,9 +49,12 @@ glm::vec4 randu4(){
     return glm::vec4(randu(), randu(), randu(), randu());
 }
 
-void cameraController(PerspectiveCamera &cam, bool look, bool lockUp, float speed);
+void cameraController(PerspectiveCamera &cam, bool move, bool look, bool lockUp, float speed);
 
-void createPhysicsTest(std::vector<Entity> &entities);
+void createTestScene(std::vector<Entity> &entities, ResourceLoader &resources);
+
+void createPhysicsTest(std::vector<Entity> &entities, ResourceLoader &resources);
+
 
 int main(int argc, char *argv[]){
     //logging
@@ -59,7 +64,7 @@ int main(int argc, char *argv[]){
     //window, input, time
     Window window;
     window.init(800, 600, "Tridot " TRI_VERSION);
-    window.setBackgroundColor(Color(100, 100, 100));
+    window.setBackgroundColor(Color::white);
     input.init();
     timer.init();
 
@@ -82,7 +87,10 @@ int main(int argc, char *argv[]){
     Ref<Shader> shader = resources.get<Shader>("mesh.glsl");
     Ref<Mesh> cube = MeshFactory::createCube();
     Ref<Mesh> sphere = MeshFactory::createSphere(32, 32);
-    Ref<Texture> texture = resources.get<Texture>("checkerboard.png");
+    Ref<Texture> tex1 = resources.get<Texture>("tex1.png");
+    Ref<Texture> tex2 = resources.get<Texture>("tex2.png");
+    Ref<Texture> tex3 = resources.get<Texture>("tex3.png");
+    Ref<Texture> tex4 = resources.get<Texture>("tex4.png");
 
     //framebuffer
     FrameBuffer frameBuffer;
@@ -95,16 +103,37 @@ int main(int argc, char *argv[]){
     PerspectiveCamera camera;
     camera.position = {0, 20, 0};
     camera.forward = {0, -1, 0};
+    camera.near = 0.05;
+    camera.far = 1200;
 
     //create scene
     std::vector<Entity> entities;
-    createPhysicsTest(entities);
+    createTestScene(entities, resources);
+
+    //create player
+    int playerId = 0;
+    {
+        playerId = entities.size();
+        entities.push_back({});
+        Entity &e = entities.back();
+        e.color = Color(glm::vec4(0.3, 0.6, 0.8, 1.0));
+        e.transform.position = {0, 0, 0};
+        e.rigidBody.mass = 1;
+        e.rigidBody.velocity = {0, 0, 0};
+        e.collider.type = Collider::SPHERE;
+        e.rigidBody.friction = 1.0f;
+        e.texture = tex4.get();
+        e.textureScale = {0.5f, 0.5f};
+        e.rigidBody.mass = 5;
+    }
 
     //camera mode
     bool look = true;
-    bool lockUp = true;
-    float speed = 10;
     bool wireframe = false;
+    float speed = 20;
+    float cameraDistance = 5;
+    float jumpBufferTimer = 0;
+    Clock clock;
 
     while(window.isOpen()){
         if(input.pressed(tridot::Input::KEY_ESCAPE)){
@@ -115,11 +144,19 @@ int main(int argc, char *argv[]){
         timer.update();
         input.update();
         resources.update();
+
+        //physics
+        clock.reset();
         physics.step(timer.deltaTime);
+        for(int i = 0; i < entities.size(); i++){
+            auto &e = entities[i];
+            physics.update(e.rigidBody, e.transform, e.collider, i);
+        }
 
         //fps info
         if(timer.frameTicks(1.0)){
             Log::info(timer.framesPerSecond, " fps, ", timer.avgFrameTime * 1000, " ms [", timer.minFrameTime * 1000, ", ", timer.maxFrameTime * 1000, "]");
+            Log::info("physics: ", clock.elapsed() * 1000, " ms");
         }
 
         //clear framebuffer
@@ -129,35 +166,109 @@ int main(int argc, char *argv[]){
         }
         frameBuffer.clear(window.getBackgroundColor());
 
+
+
+        //player control
+        Entity &player = entities[playerId];
+        glm::vec2 in = {0, 0};
+        if(input.down('W')) {
+            in.y += 1;
+        }if(input.down('S')) {
+            in.y -= 1;
+        }if(input.down('A')) {
+            in.x -= 1;
+        }if(input.down('D')) {
+            in.x += 1;
+        }
+
+        if(in != glm::vec2(0, 0)){
+            in = glm::normalize(in);
+        }
+
+        glm::vec3 dirX = camera.right;
+        dirX.z = 0;
+        dirX = glm::normalize(dirX);
+
+        glm::vec3 dirY = camera.forward;
+        dirY.z = 0;
+        dirY = glm::normalize(dirY);
+
+        player.rigidBody.velocity += (dirX * in.x + dirY * in.y) * speed * timer.deltaTime;
+
+        if(in.x == 0 && in.y == 0){
+            player.rigidBody.velocity.x *= std::pow(0.000001, timer.deltaTime);
+            player.rigidBody.velocity.y *= std::pow(0.000001, timer.deltaTime);
+        }else{
+            player.rigidBody.velocity.x *= std::pow(0.1, timer.deltaTime);
+            player.rigidBody.velocity.y *= std::pow(0.1, timer.deltaTime);
+        }
+
+
+
+        if(input.pressed(input.KEY_SPACE)) {
+            jumpBufferTimer = 0.1;
+        }
+
+        if(jumpBufferTimer > 0){
+            bool onGround = false;
+
+            physics.contacts(player.rigidBody, [playerId, &player, &onGround](const glm::vec3 &pos, int index){
+                if(index != playerId){
+                    if(pos.z < player.transform.position.z - 0.2)
+                    onGround = true;
+                }
+            });
+
+            if(onGround){
+                player.rigidBody.velocity.z = 10;
+            }
+        }
+        jumpBufferTimer -= timer.deltaTime;
+        if(input.released(input.KEY_SPACE)){
+            if(player.rigidBody.velocity.z > 0.1){
+                player.rigidBody.velocity.z /= 2;
+            }
+        }
+
+        if(player.rigidBody.velocity.z > 10){
+            player.rigidBody.velocity.z = 10;
+        }
+
+        physics.update(entities[playerId].rigidBody, entities[playerId].transform, entities[playerId].collider, playerId);
+
         //camera
         camera.aspectRatio = window.getAspectRatio();
-        if(input.pressed('C')){
-            look = !look;
-        }
-        if(input.pressed('X')){
-            lockUp = !lockUp;
+        if(input.pressed('V')){
+            window.setVSync(!window.getVSync());
         }
         if(input.pressed('B')){
             wireframe = !wireframe;
         }
-        if(input.pressed('V')){
-            window.setVSync(!window.getVSync());
+        if(input.pressed('C')){
+            look = !look;
         }
-        speed *= std::pow(1.3f, input.mouseWheelDelta());
-        cameraController(camera, look, lockUp, speed);
+        cameraDistance /= std::pow(1.3f, input.mouseWheelDelta());
+        cameraController(camera, false, look, true, speed);
+        camera.position = player.transform.position - camera.forward * cameraDistance;
 
+
+        /*
         //shoot spheres
         if(input.pressed(Input::MOUSE_BUTTON_LEFT)){
             entities.push_back({});
             Entity &e = entities.back();
             e.color = Color(glm::vec4(0.3, 0.3, 0.3, 1.0));
-            e.t.position = camera.position + camera.forward * 1.5f;
-            e.rb.mass = 200;
-            e.rb.velocity = camera.forward * 300.0f;
+            e.transform.position = camera.position + camera.forward * 1.5f;
+            e.rigidBody.mass = 200;
+            e.rigidBody.velocity = camera.forward * 300.0f;
             e.collider.type = Collider::SPHERE;
-        }
+        }*/
+
+
+
 
         //rendering
+        clock.reset();
         if(wireframe){
             glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         }else{
@@ -168,10 +279,12 @@ int main(int argc, char *argv[]){
             auto &e = entities[i];
             Mesh *mesh = e.collider.type == Collider::SPHERE ? sphere.get() : cube.get();
             Shader *s = e.collider.type == Collider::SPHERE ? shader.get() : boxShader.get();
-            physics.update(e.rb, e.t, e.collider, i);
-            renderer.submit({e.t.position, e.t.scale, e.t.rotation, e.color, {0, 0}, {0.5, 0.5}}, texture.get(), mesh, s);
+            renderer.submit({e.transform.position, e.transform.scale, e.transform.rotation, e.color, {0, 0}, e.textureScale}, e.texture, mesh, s);
         }
         renderer.end();
+        if(timer.frameTicks(1.0)){
+            Log::info("render: ", clock.elapsed() * 1000, " ms");
+        }
 
         //draw frame buffer
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -180,23 +293,114 @@ int main(int argc, char *argv[]){
         renderer.end();
 
         //window
+        clock.reset();
         glFinish();
         window.update();
+        if(timer.frameTicks(1.0)){
+            Log::info("window: ", clock.elapsed() * 1000, " ms");
+        }
     }
     return 0;
 }
 
-void createPhysicsTest(std::vector<Entity> &entities){
-    int area = 10;
+void createTestScene(std::vector<Entity> &entities, ResourceLoader &resources){
+
+    Ref<Texture> tex1 = resources.get<Texture>("tex1.png");
+    Ref<Texture> tex2 = resources.get<Texture>("tex2.png");
+    Ref<Texture> tex3 = resources.get<Texture>("tex3.png");
+    Ref<Texture> tex4 = resources.get<Texture>("tex4.png");
+
+    int groundSize = 500;
+    int wallHeight = 30;
 
     //ground
     {
         entities.push_back({});
         Entity &e = entities.back();
         e.color = Color::white * 0.7f;
-        e.t.scale = {100, 100, 1};
-        e.t.position = {0, 0, -1};
-        e.rb.mass = 0;
+        e.transform.scale = {groundSize, groundSize, 1};
+        e.transform.position = {0, 0, -1};
+        e.rigidBody.mass = 0;
+        e.texture = tex3.get();
+    }
+
+    //selling
+    {
+        entities.push_back({});
+        Entity &e = entities.back();
+        e.color = Color::white * 0.7f;
+        e.transform.scale = {groundSize, groundSize, 1};
+        e.transform.position = {0, 0, wallHeight};
+        e.rigidBody.mass = 0;
+        e.texture = tex3.get();
+    }
+
+    //walls
+    {
+        for(int i = 0; i < 4; i++) {
+            entities.push_back({});
+            Entity &e = entities.back();
+            if (i < 2) {
+                e.color = Color::white * 0.7f;
+                e.transform.scale = {1, groundSize, wallHeight};
+                e.transform.position = {i % 2 == 0 ? groundSize / 2 - 0.5 : -groundSize / 2 + 0.5, 0, wallHeight / 2 - 0.5};
+                e.rigidBody.mass = 0;
+                e.texture = tex3.get();
+            } else if (i < 4) {
+                e.color = Color::white * 0.7f;
+                e.transform.scale = {groundSize, 1, wallHeight};
+                e.transform.position = {0, i % 2 == 0 ? groundSize / 2 - 0.5 : -groundSize / 2 + 0.5, wallHeight / 2 - 0.5};
+                e.transform.position += glm::vec3(0.001, 0.001, 0.001);
+                e.rigidBody.mass = 0;
+                e.texture = tex3.get();
+            }
+        }
+    }
+
+    int platformCount = 0;
+    for(int x = -groundSize / 2 + 2; x < groundSize / 2 - 1; x++){
+        for(int y = -groundSize / 2 + 2; y < groundSize / 2 - 1; y++){
+
+            if(randu() < 0.025) {
+                float height = (int(randu() * 10) + 1) * 2;
+
+                int width = int(randu() * 5) + 2;
+                int depth = int(randu() * 5) + 2;
+
+
+                height += x * 0.001 + y * 0.001;
+
+                entities.push_back({});
+                Entity &e = entities.back();
+                e.color = Color(glm::vec4(randu3() * 0.0f + 0.5f, 1.0));
+                e.transform.position.x = x;
+                e.transform.position.y = y;
+                e.transform.position.z = height;
+                e.transform.scale = {width, depth, 0.5};
+                e.collider.type = Collider::BOX;
+                e.rigidBody.mass = 0;
+                e.texture = tex1.get();
+                e.textureScale = {0.5, 0.5};
+                platformCount++;
+            }
+        }
+    }
+    Log::info("generated ", platformCount, " platforms");
+}
+
+void createPhysicsTest(std::vector<Entity> &entities, ResourceLoader &resources){
+    int area = 8;
+    Ref<Texture> tex = resources.get<Texture>("checkerboard.png");
+
+    //ground
+    {
+        entities.push_back({});
+        Entity &e = entities.back();
+        e.color = Color::white * 0.7f;
+        e.transform.scale = {100, 100, 1};
+        e.transform.position = {0, 0, -1};
+        e.rigidBody.mass = 0;
+        e.texture = tex.get();
     }
 
     int wallSize = 4;
@@ -208,18 +412,17 @@ void createPhysicsTest(std::vector<Entity> &entities){
             Entity &e = entities.back();
             if (i < 2) {
                 e.color = Color::white * 0.7f;
-                e.t.scale = {1, wallDistance + 1, wallSize};
-                e.t.position = {i % 2 == 0 ? wallDistance / 2 : -wallDistance / 2, 0, wallSize / 2 - 0.5};
-                e.rb.mass = 0;
+                e.transform.scale = {1, wallDistance + 1, wallSize};
+                e.transform.position = {i % 2 == 0 ? wallDistance / 2 : -wallDistance / 2, 0, wallSize / 2 - 0.5};
+                e.rigidBody.mass = 0;
+                e.texture = tex.get();
             } else if (i < 4) {
                 e.color = Color::white * 0.7f;
-                e.t.scale = {18, 1, 7};
-
-                e.t.scale = {wallDistance + 1, 1, wallSize};
-                e.t.position = {0, i % 2 == 0 ? wallDistance / 2 : -wallDistance / 2, wallSize / 2 - 0.5};
-
-                e.t.position += glm::vec3(0.001, 0.001, 0.001);
-                e.rb.mass = 0;
+                e.transform.scale = {wallDistance + 1, 1, wallSize};
+                e.transform.position = {0, i % 2 == 0 ? wallDistance / 2 : -wallDistance / 2, wallSize / 2 - 0.5};
+                e.transform.position += glm::vec3(0.001, 0.001, 0.001);
+                e.rigidBody.mass = 0;
+                e.texture = tex.get();
             }
         }
     }
@@ -233,17 +436,18 @@ void createPhysicsTest(std::vector<Entity> &entities){
             Entity &e = entities.back();
             if (i < 2) {
                 e.color = Color::white * 0.7f;
-                e.t.scale = {1, wallDistance + 1, wallSize};
-                e.t.position = {i % 2 == 0 ? wallDistance / 2 : -wallDistance / 2, 0, wallSize / 2 - 0.5};
-                e.rb.mass = 0;
+                e.transform.scale = {1, wallDistance + 1, wallSize};
+                e.transform.position = {i % 2 == 0 ? wallDistance / 2 : -wallDistance / 2, 0, wallSize / 2 - 0.5};
+                e.rigidBody.mass = 0;
+                e.texture = tex.get();
             } else if (i < 4) {
                 e.color = Color::white * 0.7f;
-                e.t.scale = {18, 1, 7};
-
-                e.t.scale = {wallDistance + 1, 1, wallSize};
-                e.t.position = {0, i % 2 == 0 ? wallDistance / 2 : -wallDistance / 2, wallSize / 2 - 0.5};
-                e.t.position += glm::vec3(0.001, 0.001, 0.001);
-                e.rb.mass = 0;
+                e.transform.scale = {18, 1, 7};
+                e.transform.scale = {wallDistance + 1, 1, wallSize};
+                e.transform.position = {0, i % 2 == 0 ? wallDistance / 2 : -wallDistance / 2, wallSize / 2 - 0.5};
+                e.transform.position += glm::vec3(0.001, 0.001, 0.001);
+                e.rigidBody.mass = 0;
+                e.texture = tex.get();
             }
         }
     }
@@ -253,43 +457,47 @@ void createPhysicsTest(std::vector<Entity> &entities){
         entities.push_back({});
         Entity &e = entities.back();
         e.color = Color(glm::vec4(randu3() * 0.6f + 0.2f, 1.0));
-        e.t.position.x = i / (area * area) - (area / 2);
-        e.t.position.y = i / (area) % area - (area / 2);
-        e.t.position.z = i % area;
+        e.transform.position.x = i / (area * area) - (area / 2);
+        e.transform.position.y = i / (area) % area - (area / 2);
+        e.transform.position.z = i % area;
         e.collider.type = (i % 2 == 0) ? Collider::SPHERE : Collider::BOX;
+        e.texture = tex.get();
     }
 }
 
-void cameraController(PerspectiveCamera &cam, bool look, bool lockUp, float speed){
+void cameraController(PerspectiveCamera &cam, bool move, bool look, bool lockUp, float speed){
     GLFWwindow  *window = glfwGetCurrentContext();
     speed *= timer.deltaTime;
-    if(input.down('W')){
-        cam.position += cam.forward * speed;
-    }
-    if(input.down('S')){
-        cam.position -= cam.forward * speed;
-    }
-    if(input.down('D')){
-        cam.position += cam.right * speed;
-    }
-    if(input.down('A')){
-        cam.position -= cam.right * speed;
-    }
-    if(input.down('R')){
-        cam.position += cam.up * speed;
-    }
-    if(input.down('F')){
-        cam.position -= cam.up * speed;
-    }
 
-    float angle = 0;
-    if(input.down('E')){
-        angle += 1;
+    if(move) {
+        if (input.down('W')) {
+            cam.position += cam.forward * speed;
+        }
+        if (input.down('S')) {
+            cam.position -= cam.forward * speed;
+        }
+        if (input.down('D')) {
+            cam.position += cam.right * speed;
+        }
+        if (input.down('A')) {
+            cam.position -= cam.right * speed;
+        }
+        if (input.down('R')) {
+            cam.position += cam.up * speed;
+        }
+        if (input.down('F')) {
+            cam.position -= cam.up * speed;
+        }
+
+        float angle = 0;
+        if (input.down('E')) {
+            angle += 1;
+        }
+        if (input.down('Q')) {
+            angle -= 1;
+        }
+        cam.up = glm::rotate(glm::mat4(1), angle * (float) timer.deltaTime, cam.forward) * glm::vec4(cam.up, 1.0f);
     }
-    if(input.down('Q')){
-        angle -= 1;
-    }
-    cam.up = glm::rotate(glm::mat4(1), angle * (float)timer.deltaTime, cam.forward) * glm::vec4(cam.up, 1.0f);
 
     //look
     static bool lastLook = false;

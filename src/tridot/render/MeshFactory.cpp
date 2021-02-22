@@ -154,17 +154,12 @@ namespace tridot {
 
         for(int x = 0;  x < vertexCountX + 1; x++){
             for(int y = 0; y < vertexCountY + 1; y++){
-                float angleX = glm::radians(((float)x / (float)vertexCountX) * 360);
+                float angleX = glm::radians(((float)x / (float)vertexCountX) * 180);
                 float angleY = glm::radians(((float)y / (float)vertexCountY) * 360);
 
                 float vx = sin(angleX) * cos(angleY) / 2.0f;
                 float vy = cos(angleX) / 2.0f;
                 float vz = sin(angleX) * sin(angleY) / 2.0f;
-                if(x > (vertexCountX + 1) / 2){
-                    vx = sin(angleX) * sin(angleY) / 2.0f;
-                    vy = cos(angleX) / 2.0f;
-                    vz = sin(angleX) * cos(angleY) / 2.0f;
-                }
 
                 vs.push_back(vx);
                 vs.push_back(vy);
@@ -179,21 +174,13 @@ namespace tridot {
             }
         }
 
-        for(int x = 0;  x < vertexCountX; x++){
+        for(int x = 0; x < vertexCountX; x++){
             for(int y = 0; y < vertexCountY; y++){
-                /*
-                int i1 = x * vertexCountY + y;
-                int i2 = x * vertexCountY + (y + 1) % vertexCountY;
-
-                int i3 = ((x + 1) % vertexCountX) * vertexCountY + y;
-                int i4 = ((x + 1) % vertexCountX) * vertexCountY + (y + 1) % vertexCountY;
-                */
-
                 int i1 = x * (vertexCountY + 1) + y;
-                int i2 = x * (vertexCountY + 1) + y + 1;
+                int i2 = x * (vertexCountY + 1) + (y + 1);
 
                 int i3 = (x + 1) * (vertexCountY + 1) + y;
-                int i4 = (x + 1) * (vertexCountY + 1) + y + 1;
+                int i4 = (x + 1) * (vertexCountY + 1) + (y + 1);
 
 
                 is.push_back(i1);

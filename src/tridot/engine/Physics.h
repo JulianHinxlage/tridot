@@ -26,6 +26,13 @@ namespace tridot {
         float friction = 1;
         float restitution = 0;
         void *ref = nullptr;
+        float linearDamping = 0;
+        float angularDamping = 0;
+
+        glm::vec3 lastPosition = {0, 0, 0};
+        glm::vec3 lastRotation = {0, 0, 0};
+        glm::vec3 lastVelocity = {0, 0, 0};
+        glm::vec3 lastAngular = {0, 0, 0};
     };
 
     class Collider{
@@ -49,6 +56,7 @@ namespace tridot {
         void add(RigidBody &rb, Transform &t, Collider &collider, int index = -1);
         void remove(RigidBody &rb);
         void rayCast(glm::vec3 from, glm::vec3 to, bool firstOnly, std::function<void(const glm::vec3 &pos, int index)> callback);
+        void contacts(RigidBody &rb, std::function<void(const glm::vec3 &pos, int index)> callback);
 
     private:
         class Impl;

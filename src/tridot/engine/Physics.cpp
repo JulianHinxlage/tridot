@@ -26,8 +26,8 @@ namespace tridot {
     }
 
     btQuaternion convQuaternion(const glm::vec3 &euler){
-        glm::quat quaternion(euler);
-        return btQuaternion(quaternion.x, quaternion.y, quaternion.z, quaternion.w);
+        glm::quat quaternion(-euler);
+        return btQuaternion(-quaternion.x, -quaternion.y, -quaternion.z, quaternion.w);
     }
 
     glm::vec3 convQuaternion(const btQuaternion &quat){
@@ -114,16 +114,30 @@ namespace tridot {
                 add(rb, t, collider, index);
             }else{
                 btRigidBody* body = (btRigidBody*)rb.ref;
-                btTransform transform = body->getWorldTransform();
+                btTransform &transform = body->getWorldTransform();
                 glm::vec3 position = conv(transform.getOrigin());
                 glm::vec3 rotation = convQuaternion(transform.getRotation());
                 glm::vec3 velocity = conv(body->getLinearVelocity());
                 glm::vec3 angular = conv(body->getAngularVelocity());
 
-                t.position = position;
-                t.rotation = rotation;
-                rb.velocity = velocity;
-                rb.angular = angular;
+                if(rb.lastVelocity != rb.velocity){
+                    body->setActivationState(ACTIVE_TAG);
+                }
+
+                t.position = position + (t.position - rb.lastPosition);
+                t.rotation = rotation + (t.rotation - rb.lastRotation);
+                rb.velocity = velocity + (rb.velocity - rb.lastVelocity);
+                rb.angular = angular + (rb.angular - rb.lastAngular);
+
+                transform.setOrigin(conv(t.position));
+                transform.setRotation(convQuaternion(t.rotation));
+                body->setLinearVelocity(conv(rb.velocity));
+                body->setAngularVelocity(conv(rb.angular));
+
+                rb.lastPosition = t.position;
+                rb.lastRotation = t.rotation;
+                rb.lastVelocity = rb.velocity;
+                rb.lastAngular = rb.angular;
             }
         }
     }
@@ -165,6 +179,7 @@ namespace tridot {
 
                 body->setAngularVelocity(conv(rb.angular));
                 body->setLinearVelocity(conv(rb.velocity));
+                body->setDamping(rb.linearDamping, rb.angularDamping);
 
                 body->setCcdMotionThreshold(1e-7);
                 body->setCcdSweptSphereRadius(0.2);
@@ -174,6 +189,11 @@ namespace tridot {
                 rb.ref = (void*)body;
                 impl->shapes.push_back(shape);
                 impl->bodies.push_back(body);
+
+                rb.lastPosition = t.position;
+                rb.lastRotation = t.rotation;
+                rb.lastVelocity = rb.velocity;
+                rb.lastAngular = rb.angular;
             }
         }
     }
@@ -210,6 +230,30 @@ namespace tridot {
                 glm::vec3 pos = conv(conv(from).lerp(conv(to), results.m_hitFractions[i]));
                 callback(pos, results.m_collisionObjects[i]->getUserIndex());
             }
+        }
+    }
+
+    class ContactCallback : public btCollisionWorld::ContactResultCallback{
+    public:
+        btRigidBody *source;
+        std::vector<std::pair<glm::vec3, btCollisionObject*>> contacts;
+
+        virtual btScalar addSingleResult(btManifoldPoint& cp, const btCollisionObjectWrapper* colObj0Wrap, int partId0, int index0, const btCollisionObjectWrapper* colObj1Wrap, int partId1, int index1){
+            if(colObj0Wrap->m_collisionObject == source){
+                contacts.push_back({(glm::vec3)conv(cp.getPositionWorldOnA()), (btCollisionObject*)colObj1Wrap->m_collisionObject});
+            }else{
+                contacts.push_back({(glm::vec3)conv(cp.getPositionWorldOnB()), (btCollisionObject*)colObj0Wrap->m_collisionObject});
+            }
+            return 0;
+        }
+    };
+
+    void Physics::contacts(RigidBody &rb, std::function<void(const glm::vec3 &, int)> callback) {
+        ContactCallback result;
+        result.source = (btRigidBody*)rb.ref;
+        impl->world->contactTest((btRigidBody*)rb.ref, result);
+        for(auto &c : result.contacts){
+            callback(c.first, c.second->getUserIndex());
         }
     }
 
