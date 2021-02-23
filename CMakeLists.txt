@@ -5,7 +5,7 @@ project(tridot)
 file(GLOB_RECURSE SOURCES src/tridot/*.cpp)
 add_library(${PROJECT_NAME} STATIC ${SOURCES})
 target_include_directories(${PROJECT_NAME} PUBLIC src extern)
-target_compile_definitions(${PROJECT_NAME} PUBLIC TRI_DEBUG)
+target_compile_definitions(${PROJECT_NAME} PUBLIC TRI_DEBUG ECS_DEBUG)
 
 
 #required packages: libglfw3-dev libglew-dev libglm-dev pkg-config libbullet-dev
@@ -26,5 +26,9 @@ project(test-tridot)
 add_executable(${PROJECT_NAME} src/test/test.cpp)
 target_link_libraries(${PROJECT_NAME} PUBLIC tridot)
 
+
+project(test-ecs)
+add_executable(${PROJECT_NAME} src/test/ecsTest.cpp)
+target_link_libraries(${PROJECT_NAME} PUBLIC tridot)
 
 project(tridot)

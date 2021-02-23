@@ -20,6 +20,8 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/vector_angle.hpp>
 
+#include "tridot/ecs/Registry.h"
+
 using namespace tridot;
 
 Time timer;
@@ -147,7 +149,7 @@ int main(int argc, char *argv[]){
         e.rigidBody.velocity = {0, 0, 0};
         e.collider.type = Collider::SPHERE;
         e.rigidBody.friction = 1.0f;
-        e.texture = tex4.get();
+        e.texture = tex2.get();
         e.textureScale = {0.5f, 0.5f};
         e.rigidBody.mass = 5;
     }
