@@ -42,7 +42,7 @@ namespace ecs {
                     id = nextEntityId++;
                 }
             }
-            entityPool.add(id, nullptr);
+            entityPool.add(id, 0);
             return id;
         }
 
@@ -121,6 +121,16 @@ namespace ecs {
             return componentPools[cid]->has(id);
         }
 
+        SignatureBitMap getSignature(EntityId id){
+            return *(SignatureBitMap*)entityPool.getById(id);
+        }
+
+        template<typename... Components>
+        SignatureBitMap createSignature(){
+            ECS_ASSERT(!((componentMap.id<Components>() >= (sizeof(SignatureBitMap) * 8)) || ...), "to many component types")
+            return ((SignatureBitMap(1) << componentMap.id<Components>()) | ...);
+        }
+
         template<typename... Components>
         bool hasAll(EntityId id){
             return (has<Components>(id) && ...);
@@ -129,6 +139,14 @@ namespace ecs {
         template<typename... Components>
         bool hasAny(EntityId id){
             return (has<Components>(id) || ...);
+        }
+
+        bool hasAll(EntityId id, SignatureBitMap sig){
+            return (getSignature(id) & sig) == sig;
+        }
+
+        bool hasAny(EntityId id, SignatureBitMap sig){
+            return (getSignature(id) & sig) != 0;
         }
 
         template<typename... Components, typename Func>
@@ -144,12 +162,13 @@ namespace ecs {
                 }
             }else{
                 Pool *pool = &entityPool;
+                SignatureBitMap sig = createSignature<Components...>();
 
                 ((assurePool<Components>().getEntities().size() < pool->getEntities().size() ?
                     pool = &assurePool<Components>() : pool) , ...);
 
                 for(EntityId id : pool->getEntities()){
-                    if(hasAll<Components...>(id)){
+                    if(hasAll(id, sig)){
                         func(id, get<Components>(id)...);
                     }
                 }
@@ -188,7 +207,7 @@ namespace ecs {
     private:
         TypeMap componentMap;
         std::vector<std::shared_ptr<Pool>> componentPools;
-        Pool entityPool;
+        ComponentPool<SignatureBitMap> entityPool;
         std::map<EntityId, bool> freeEntityIds;
         EntityId nextEntityId;
 
@@ -200,6 +219,12 @@ namespace ecs {
             }
             if(componentPools[cid] == nullptr){
                 componentPools[cid] = std::make_shared<ComponentPool<Component>>();
+                componentPools[cid]->onAdd().add([this, cid](EntityId id){
+                    *(SignatureBitMap*)entityPool.getById(id) |= (SignatureBitMap(1) << cid);
+                });
+                componentPools[cid]->onRemove().add([this, cid](EntityId id){
+                    *(SignatureBitMap*)entityPool.getById(id) &= ~(SignatureBitMap(1) << cid);
+                });
             }
             return *(ComponentPool<Component>*)componentPools[cid].get();
         }

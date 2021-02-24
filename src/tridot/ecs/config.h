@@ -12,7 +12,7 @@
 #endif
 
 #ifdef ECS_DEBUG
-    #define ECS_ASSERT(expr, msg) assert((expr) && (msg));
+    #define ECS_ASSERT(expr, msg) if(!(expr)){ assert((expr) && (msg)); fprintf(stderr, "%s\n", msg); exit(-1);}
 #else
     #define ECS_ASSERT(expr, msg)
 #endif
@@ -21,6 +21,7 @@ namespace ecs{
 
     const uint32_t poolPageSizeBits = 8;
     typedef uint32_t EntityId;
+    typedef uint64_t SignatureBitMap;
 
 }
 
