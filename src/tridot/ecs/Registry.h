@@ -14,6 +14,9 @@
 
 namespace ecs {
 
+    template<typename... Components>
+    class View;
+
     class Registry {
     public:
         Registry(){
@@ -86,7 +89,7 @@ namespace ecs {
 
         template<typename Component, typename... Args>
         Component &add(EntityId id, Args &&... args){
-            auto &pool = assurePool<Component>();
+            auto &pool = getPool<Component>();
             uint32_t index = pool.add(id, std::forward<Args>(args)...);
             return *(Component*)pool.get(index);
         }
@@ -106,7 +109,7 @@ namespace ecs {
 
         template<typename... Components>
         void remove(EntityId id){
-            (assurePool<Components>().remove(id) , ...);
+            (getPool<Components>().remove(id) , ...);
         }
 
         template<typename Component>
@@ -127,8 +130,12 @@ namespace ecs {
 
         template<typename... Components>
         SignatureBitMap createSignature(){
-            ECS_ASSERT(!((componentMap.id<Components>() >= (sizeof(SignatureBitMap) * 8)) || ...), "to many component types")
-            return ((SignatureBitMap(1) << componentMap.id<Components>()) | ...);
+            if constexpr (sizeof...(Components) != 0) {
+                ECS_ASSERT(!((componentMap.id<Components>() >= (sizeof(SignatureBitMap) * 8)) || ...),"to many component types")
+                return ((SignatureBitMap(1) << componentMap.id<Components>()) | ...);
+            }else{
+                return SignatureBitMap(0);
+            }
         }
 
         template<typename... Components>
@@ -149,30 +156,14 @@ namespace ecs {
             return (getSignature(id) & sig) != 0;
         }
 
+        template<typename... Components>
+        View<Components...> view(){
+            return View<Components...>(this);
+        }
+
         template<typename... Components, typename Func>
         void each(const Func &func){
-            if constexpr (sizeof...(Components) == 0){
-                for(EntityId id : entityPool.getEntities()){
-                    func(id);
-                }
-            }else if constexpr (sizeof...(Components) == 1){
-                Pool *pool = &assurePool<Components...>();
-                for(int i = 0; i < pool->getEntities().size(); i++){
-                    func(pool->getId(i), *(Components*)pool->get(i)...);
-                }
-            }else{
-                Pool *pool = &entityPool;
-                SignatureBitMap sig = createSignature<Components...>();
-
-                ((assurePool<Components>().getEntities().size() < pool->getEntities().size() ?
-                    pool = &assurePool<Components>() : pool) , ...);
-
-                for(EntityId id : pool->getEntities()){
-                    if(hasAll(id, sig)){
-                        func(id, get<Components>(id)...);
-                    }
-                }
-            }
+            view<Components...>().each(func);
         }
 
         auto onCreate(){
@@ -185,12 +176,12 @@ namespace ecs {
 
         template<typename Component>
         auto onAdd(){
-            return assurePool<Component>().onAdd();
+            return getPool<Component>().onAdd();
         }
 
         template<typename Component>
         auto onRemove(){
-            return assurePool<Component>().onRemove();
+            return getPool<Component>().onRemove();
         }
 
         void clear(){
@@ -204,15 +195,12 @@ namespace ecs {
             }
         }
 
-    private:
-        TypeMap componentMap;
-        std::vector<std::shared_ptr<Pool>> componentPools;
-        ComponentPool<SignatureBitMap> entityPool;
-        std::map<EntityId, bool> freeEntityIds;
-        EntityId nextEntityId;
+        Pool &getEntityPool(){
+            return entityPool;
+        }
 
         template<typename Component>
-        ComponentPool<Component> &assurePool(){
+        ComponentPool<Component> &getPool(){
             uint32_t cid = componentMap.id<Component>();
             while(cid >= componentPools.size()){
                 componentPools.push_back(nullptr);
@@ -228,8 +216,17 @@ namespace ecs {
             }
             return *(ComponentPool<Component>*)componentPools[cid].get();
         }
+
+    private:
+        TypeMap componentMap;
+        std::vector<std::shared_ptr<Pool>> componentPools;
+        ComponentPool<SignatureBitMap> entityPool;
+        std::map<EntityId, bool> freeEntityIds;
+        EntityId nextEntityId;
     };
 
 }
+
+#include "tridot/ecs/View.h"
 
 #endif //TRIDOT_REGISTRY_H

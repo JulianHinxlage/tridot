@@ -32,36 +32,47 @@ int main(){
         Log::info("destroyed id = ", id);
     });
     reg.onAdd<A>().add([](EntityId id){
-        Log::info("add A id = ", id);
+        Log::info("added A id = ", id);
     });
     reg.onRemove<A>().add([](EntityId id){
-        Log::info("remove A id = ", id);
+        Log::info("removed A id = ", id);
     });
 
-    reg.create(A(0), B(0));
-    reg.create(A(1));
-    reg.create(B(2));
-    reg.create(A(3), B(3));
+    reg.create(A(0));
+    reg.create(B(1));
+    reg.create(A(2), B(2));
 
-    reg.each<>([](EntityId id){
+    Log::info("");
+    reg.view<>().each([](EntityId id){
         Log::info(id);
     });
 
     Log::info("");
-    reg.each<A>([](EntityId id, A &a){
+    reg.view<A>().each([](EntityId id, A &a){
         Log::info(id, " ", a.a);
     });
 
     Log::info("");
-    reg.each<B>([](EntityId id, B &b){
+    reg.view<B>().each([](EntityId id, B &b){
         Log::info(id, " ", b.b);
     });
 
     Log::info("");
-    reg.each<A, B>([](EntityId id, A &a, B &b){
+    reg.view<A, B>().each([](EntityId id, A &a, B &b){
         Log::info(id, " ", a.a, " ", b.b);
     });
 
-    reg.destroy(3);
+    Log::info("");
+    reg.view<A>().excluded<B>().each([](EntityId id, A &a){
+        Log::info(id, " ", a.a);
+    });
+
+    Log::info("");
+    reg.view<B>().excluded<A>().each([](EntityId id, B &b){
+        Log::info(id, " ", b.b);
+    });
+
+    Log::info("");
+    reg.destroy(2);
     return 0;
 }

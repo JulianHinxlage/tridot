@@ -46,6 +46,7 @@ namespace ecs {
         }
 
         virtual void* get(uint32_t index){
+            ECS_ASSERT(index < dense.size(), "index out of bounds")
             return &dense[index];
         }
 
