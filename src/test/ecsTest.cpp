@@ -25,6 +25,19 @@ public:
 int main(){
     Registry reg;
 
+    reg.onCreate().add([](EntityId id){
+        Log::info("created id = ", id);
+    });
+    reg.onDestroy().add( [](EntityId id){
+        Log::info("destroyed id = ", id);
+    });
+    reg.onAdd<A>().add([](EntityId id){
+        Log::info("add A id = ", id);
+    });
+    reg.onRemove<A>().add([](EntityId id){
+        Log::info("remove A id = ", id);
+    });
+
     reg.create(A(0), B(0));
     reg.create(A(1));
     reg.create(B(2));
@@ -48,5 +61,7 @@ int main(){
     reg.each<A, B>([](EntityId id, A &a, B &b){
         Log::info(id, " ", a.a, " ", b.b);
     });
+
+    reg.destroy(3);
     return 0;
 }

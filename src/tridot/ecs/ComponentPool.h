@@ -46,18 +46,23 @@ namespace ecs {
             return index;
         }
 
-        virtual void remove(EntityId id) override {
-            uint32_t index = getIndex(id);
-            Pool::remove(id);
+        virtual uint32_t remove(EntityId id) override {
+            uint32_t index = Pool::remove(id);
             if(index != -1){
                 components[index] = components.back();
                 components.pop_back();
             }
+            return index;
         }
 
         virtual void swap(uint32_t index1, uint32_t index2) override {
             Pool::swap(index1, index2);
             std::swap(components[index1], components[index2]);
+        }
+
+        virtual void clear() override{
+            Pool::clear();
+            components.clear();
         }
 
     private:

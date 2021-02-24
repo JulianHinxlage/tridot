@@ -20,11 +20,15 @@ namespace ecs {
             nextEntityId = 0;
         }
 
-        EntityId create(EntityId hint = -1){
+        EntityId createHinted(EntityId hint){
             EntityId id = -1;
             if(hint != -1){
                 if(!entityPool.has(hint)){
                     id = hint;
+                    auto entry = freeEntityIds.find(hint);
+                    if(entry != freeEntityIds.end()){
+                        freeEntityIds.erase(entry);
+                    }
                 }
             }
             if(id == -1){
@@ -32,11 +36,18 @@ namespace ecs {
                     id = freeEntityIds.begin()->first;
                     freeEntityIds.erase(freeEntityIds.begin());
                 }else{
+                    while(entityPool.has(nextEntityId)){
+                        nextEntityId++;
+                    }
                     id = nextEntityId++;
                 }
             }
             entityPool.add(id, nullptr);
             return id;
+        }
+
+        EntityId create() {
+            return createHinted(-1);
         }
 
         template<typename... Components>
@@ -50,14 +61,12 @@ namespace ecs {
             if(!entityPool.has(id)){
                 return;
             }
-            entityPool.remove(id);
             for(auto &pool : componentPools){
                 if(pool != nullptr){
-                    if(pool->has(id)){
-                        pool->remove(id);
-                    }
+                    pool->remove(id);
                 }
             }
+            entityPool.remove(id);
             if(id == nextEntityId - 1){
                 while(!entityPool.has(nextEntityId - 1)){
                     nextEntityId--;
@@ -78,8 +87,8 @@ namespace ecs {
         template<typename Component, typename... Args>
         Component &add(EntityId id, Args &&... args){
             auto &pool = assurePool<Component>();
-            pool.add(id, std::forward<Args>(args)...);
-            return *(Component*)pool.get(id);
+            uint32_t index = pool.add(id, std::forward<Args>(args)...);
+            return *(Component*)pool.get(index);
         }
 
         template<typename... Components>
@@ -143,6 +152,35 @@ namespace ecs {
                     if(hasAll<Components...>(id)){
                         func(id, get<Components>(id)...);
                     }
+                }
+            }
+        }
+
+        auto onCreate(){
+            return entityPool.onAdd();
+        }
+
+        auto onDestroy(){
+            return entityPool.onRemove();
+        }
+
+        template<typename Component>
+        auto onAdd(){
+            return assurePool<Component>().onAdd();
+        }
+
+        template<typename Component>
+        auto onRemove(){
+            return assurePool<Component>().onRemove();
+        }
+
+        void clear(){
+            freeEntityIds.clear();
+            nextEntityId = 0;
+            entityPool.clear();
+            for(auto &pool : componentPools){
+                if(pool != nullptr){
+                    pool->clear();
                 }
             }
         }
