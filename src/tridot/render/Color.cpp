@@ -31,6 +31,13 @@ namespace tridot {
         this->a = color.a * 255;
     }
 
+    Color::Color(const glm::vec3 &color) {
+        this->r = color.r * 255;
+        this->g = color.g * 255;
+        this->b = color.b * 255;
+        this->a = 255;
+    }
+
     glm::vec4 Color::vec() const {
         return glm::vec4((float)r / 255.0f, (float)g / 255.0f, (float)b / 255.0f, (float)a / 255.0f);
     }

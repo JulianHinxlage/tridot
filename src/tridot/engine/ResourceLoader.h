@@ -53,6 +53,7 @@ namespace tridot {
             uint64_t timestamp;
             bool preLoaded;
             bool postLoaded;
+            bool fileSearched;
             std::function<bool()> preLoad;
             std::function<bool()> postLoad;
         };

@@ -26,6 +26,7 @@ namespace tridot {
         bool preLoad(const std::string &file);
         bool postLoad();
 
+        bool has(const std::string &uniform);
         void set(const std::string &uniform, int value);
         void set(const std::string &uniform, float value);
         void set(const std::string &uniform, const glm::vec2 &value);

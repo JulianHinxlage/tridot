@@ -36,14 +36,17 @@ int main(int argc, char *argv[]){
     engine.init(800, 600, "Tridot " TRI_VERSION, "../res/", true);
     engine.window.setBackgroundColor(Color::white);
 
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
+
     createScene();
 
     //create player
     Ref<Shader> shader = engine.resources.get<Shader>("mesh.glsl");
     EntityId playerId = engine.create(
-            Transform(),
-            RenderComponent(Color(glm::vec4(0.3, 0.6, 0.8, 1.0)), {0.5f, 0.5f})
-            .setTexture(engine.resources.get<Texture>("tex4.png"))
+            Transform({0, 0, 0}, {1, 1, 1}),
+            RenderComponent(glm::vec3(0.3, 0.6, 0.8), {2.0f, 2.0f})
+            .setTexture(engine.resources.get<Texture>("tex1.png"))
             .setMesh(MeshFactory::createSphere(32, 32)).setShader(shader),
             RigidBody(5),
             Collider(Collider::SPHERE)
@@ -65,23 +68,17 @@ int main(int argc, char *argv[]){
         if(engine.time.frameTicks(0.5)){
             Log::info(engine.time.framesPerSecond, " fps, ", engine.time.avgFrameTime * 1000, "ms [", engine.time.minFrameTime * 1000, " ms, ", engine.time.maxFrameTime * 1000, " ms]");
         }
-
-        static bool look = true;
-        if(engine.input.pressed('C')){
-            look = !look;
-        }
         if(engine.input.pressed('V')){
             engine.window.setVSync(!engine.window.getVSync());
         }
 
         engine.view<PerspectiveCamera>().each([&](PerspectiveCamera &camera){
-            cameraControl(camera, true, look, true, 10);
-            if(shader->getId() != 0){
+            playerControl(playerId, camera);
+            if(shader->has("uCameraPosition")){
                 shader->set("uCameraPosition", camera.position);
             }
-            playerControl(playerId, camera);
         });
-    });
+    }, "camera");
 
     engine.run();
     return 0;
@@ -123,8 +120,8 @@ void playerControl(EntityId playerId, PerspectiveCamera &camera){
     rigidBody.velocity += (dirX * in.x + dirY * in.y) * speed * engine.time.deltaTime;
 
     if(in.x == 0 && in.y == 0){
-        rigidBody.velocity.x *= std::pow(0.000001, engine.time.deltaTime);
-        rigidBody.velocity.y *= std::pow(0.000001, engine.time.deltaTime);
+        rigidBody.velocity.x *= std::pow(0.0001, engine.time.deltaTime);
+        rigidBody.velocity.y *= std::pow(0.0001, engine.time.deltaTime);
     }else{
         rigidBody.velocity.x *= std::pow(0.1, engine.time.deltaTime);
         rigidBody.velocity.y *= std::pow(0.1, engine.time.deltaTime);
@@ -159,6 +156,14 @@ void playerControl(EntityId playerId, PerspectiveCamera &camera){
         rigidBody.velocity.z = 10;
     }
 
+    engine.physics.update(rigidBody, transform, engine.get<Collider>(playerId), playerId);
+
+    static bool look = true;
+    if(engine.input.pressed('C')){
+        look = !look;
+    }
+    cameraControl(camera, true, look, true, 0);
+
     //camera
     cameraDistance /= std::pow(1.3f, engine.input.mouseWheelDelta());
     camera.position = transform.position - camera.forward * cameraDistance;
@@ -171,7 +176,7 @@ void createScene(){
     Ref<Texture> tex4 = engine.resources.get<Texture>("tex4.png");
 
     Ref<Mesh> cube = MeshFactory::createCube();
-    Ref<Shader> shader = engine.resources.get<Shader>("meshTextureScale.glsl");
+    Ref<Shader> shader = engine.resources.get<Shader>("mesh.glsl");
 
     int groundSize = 200;
     int wallHeight = 30;
@@ -219,7 +224,7 @@ void createScene(){
 
                 engine.create(
                         Transform({x, y, height}, {width, depth, 0.5}),
-                        RenderComponent(Color(glm::vec4(randu3() * 0.0f + 0.5f, 1.0))).setTexture(tex1).setMesh(cube).setShader(shader),
+                        RenderComponent(randu3() * 0.0f + 0.5f).setTexture(tex1).setMesh(cube).setShader(shader),
                         RigidBody(0),
                         Collider(Collider::BOX)
                         );

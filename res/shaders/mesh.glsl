@@ -13,27 +13,38 @@ layout (location=10) in vec2 iTexCoordsBottomRight;
 
 out vec4 fColor;
 out vec3 fPosition;
-out vec2 fTexCoords;
+out vec3 fModelPosition;
 out vec3 fNormal;
+out vec3 fModelNormal;
+out vec2 fTexCoords;
+out vec2 fTexCoordsTopLeft;
+out vec2 fTexCoordsBottomRight;
 flat out float fTextureUnit;
 
 uniform mat4 uProjection = mat4(1);
-uniform bool uTextureScale = false;
+uniform bool uTextureScale = true;
 
 void main(){
     vec4 pos = iTransform * vec4(vPosition, 1.0);
     fPosition = vec3(pos);
+    fModelPosition = vPosition;
+    fModelNormal = vNormal;
     gl_Position = uProjection * pos;
     fNormal = (iTransform * vec4(vNormal, 0.0)).xyz;
     fTexCoords = vTexCoords * (iTexCoordsBottomRight - iTexCoordsTopLeft) + iTexCoordsTopLeft;
     fColor = iColor;
     fTextureUnit = iTextureUnit;
+    fTexCoordsTopLeft = iTexCoordsTopLeft;
+    fTexCoordsBottomRight = iTexCoordsBottomRight;
 
     if(uTextureScale){
         vec3 scale;
-        scale.x = length(iTransform * vec4(1, 0, 0, 0));
-        scale.y = length(iTransform * vec4(0, 1, 0, 0));
-        scale.z = length(iTransform * vec4(0, 0, 1, 0));
+        scale.x = length(iTransform[0].xyz);
+        scale.y = length(iTransform[1].xyz);
+        scale.z = length(iTransform[2].xyz);
+
+        fModelPosition *= scale;
+
         vec3 face = vNormal * 2;
         vec2 texCoords = fTexCoords;
         fTexCoords = texCoords * scale.xy * face.z + texCoords * scale.xz * face.y + texCoords * scale.zy * face.x;
@@ -45,8 +56,12 @@ void main(){
 
 in vec4 fColor;
 in vec3 fPosition;
+in vec3 fModelPosition;
 in vec3 fNormal;
+in vec3 fModelNormal;
 in vec2 fTexCoords;
+in vec2 fTexCoordsTopLeft;
+in vec2 fTexCoordsBottomRight;
 flat in float fTextureUnit;
 out vec4 oColor;
 
@@ -59,15 +74,27 @@ uniform vec3 uDirectionalLightDirection = vec3(0.2, 0.4, -1);
 uniform vec3 uDirectionalLightColor = vec3(1, 1, 1);
 uniform float uDirectionalStrenght = 0.5;
 uniform vec3 uSpecularColor = vec3(1, 1, 1);
-uniform float uSpecularStrenght = 0.4;
+uniform float uSpecularStrenght = 0.3;
 uniform float shininess = 4;
+uniform bool uTriPlanarMapping = true;
 
 vec4 sampleTexture(){
     vec4 color = vec4(1, 1, 1, 1);
     int index = int(fTextureUnit);
     for(int i = 0; i < 32; i++){
         if(i == index){
-            color = texture(uTextures[i], fTexCoords) * fColor;
+            if(uTriPlanarMapping){
+                vec3 n = abs(fModelNormal);
+                n = pow(n, vec3(3.0f));
+                n /= n.x + n.y + n.z;
+                color = (
+                texture(uTextures[i], fModelPosition.xy * (fTexCoordsBottomRight - fTexCoordsTopLeft) + fTexCoordsTopLeft) * n.z +
+                texture(uTextures[i], fModelPosition.xz * (fTexCoordsBottomRight - fTexCoordsTopLeft) + fTexCoordsTopLeft) * n.y +
+                texture(uTextures[i], fModelPosition.yz * (fTexCoordsBottomRight - fTexCoordsTopLeft) + fTexCoordsTopLeft) * n.x
+                ) * fColor;
+            }else{
+                color = texture(uTextures[i], fTexCoords) * fColor;
+            }
             break;
         }
     }

@@ -81,12 +81,25 @@ namespace tridot {
                 vs.push_back(tx * 0.998f + 0.001f); //tx
                 vs.push_back(ty * 0.998f + 0.001f); //ty
             }
-            is.push_back(0 + i * 4);
-            is.push_back(1 + i * 4);
-            is.push_back(2 + i * 4);
-            is.push_back(0 + i * 4);
-            is.push_back(2 + i * 4);
-            is.push_back(3 + i * 4);
+
+            if((i % 3 == 2) == (i >= 3)){//correct order for back face culling
+                is.push_back(0 + i * 4);
+                is.push_back(1 + i * 4);
+                is.push_back(2 + i * 4);
+
+                is.push_back(0 + i * 4);
+                is.push_back(2 + i * 4);
+                is.push_back(3 + i * 4);
+            }else{
+                is.push_back(1 + i * 4);
+                is.push_back(0 + i * 4);
+                is.push_back(2 + i * 4);
+
+                is.push_back(2 + i * 4);
+                is.push_back(0 + i * 4);
+                is.push_back(3 + i * 4);
+            }
+
         }
 
         mesh->create(vs.data(), vs.size(), is.data(), is.size(), {{FLOAT, 3}, {FLOAT, 3}, {FLOAT, 2}});

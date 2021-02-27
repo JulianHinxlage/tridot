@@ -58,6 +58,7 @@ namespace tridot {
             res->file = "";
             res->preLoaded = false;
             res->postLoaded = false;
+            res->fileSearched = false;
             resources[name] = res;
 
             if(synchronous || synchronousMode){
@@ -88,9 +89,11 @@ namespace tridot {
 
     void ResourceLoader::preUpdate(Resource *res) {
         if (!res->preLoaded) {
+            bool found = false;
             for(auto &dir : searchDirectories){
                 std::string file = dir + res->name;
                 if(std::experimental::filesystem::exists(file)){
+                    found = true;
                     res->file = file;
                     if(res->preLoad()){
                         res->timestamp = getTimestamp(file);
@@ -102,6 +105,10 @@ namespace tridot {
                     }
                 }
             }
+            if(!found && !res->fileSearched){
+                Log::warning("resource \"", res->name, "\" not found");
+            }
+            res->fileSearched = true;
         }else{
             if(res->postLoaded && autoReload) {
                 uint64_t timestamp = getTimestamp(res->file);

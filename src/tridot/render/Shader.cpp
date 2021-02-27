@@ -148,6 +148,14 @@ namespace tridot {
         return true;
     }
 
+    bool Shader::has(const std::string &uniform) {
+        if(id == 0){
+            return false;
+        }else{
+            return getLocation(uniform) != -1;
+        }
+    }
+
     void Shader::set(const std::string &uniform, int value) {
         glUniform1i(getLocation(uniform), value);
     }

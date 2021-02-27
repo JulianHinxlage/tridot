@@ -25,6 +25,7 @@ namespace tridot {
         Color(uint32_t value = 0xffffffff);
         Color(uint8_t r, uint8_t g, uint8_t b, uint8_t a = 255);
         Color(const glm::vec4 &color);
+        Color(const glm::vec3 &color);
         glm::vec4 vec() const;
         bool operator==(const Color &color) const;
         bool operator!=(const Color &color) const;

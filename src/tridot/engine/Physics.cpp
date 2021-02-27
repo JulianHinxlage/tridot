@@ -112,104 +112,139 @@ namespace tridot {
 
     void Physics::step(float deltaTime) {
         if(impl && impl->world){
-            impl->world->stepSimulation(deltaTime);
+            impl->world->stepSimulation(deltaTime, 6, 1 / 60.0f);
         }
     }
 
-    void Physics::update(RigidBody &rb, Transform &t, Collider &collider, int index) {
+    void Physics::update(RigidBody &rigidBody, Transform &transform, Collider &collider, int index) {
         if(impl && impl->world) {
-            if(rb.ref == nullptr){
-                add(rb, t, collider, index);
-            }else{
-                btRigidBody* body = (btRigidBody*)rb.ref;
-                btTransform &transform = body->getWorldTransform();
-                glm::vec3 position = conv(transform.getOrigin());
-                glm::vec3 rotation = convQuaternion(transform.getRotation());
-                glm::vec3 velocity = conv(body->getLinearVelocity());
-                glm::vec3 angular = conv(body->getAngularVelocity());
-
-                if(rb.lastVelocity != rb.velocity){
-                    body->setActivationState(ACTIVE_TAG);
+            if(!rigidBody.enablePhysics){
+                float dt = engine.time.deltaTime;
+                transform.position += rigidBody.velocity * dt;
+                transform.rotation += rigidBody.angular * dt;
+                if(rigidBody.linearDamping != 0){
+                    rigidBody.velocity *= std::pow(1.0 / rigidBody.linearDamping, dt);
                 }
+                if(rigidBody.angularDamping != 0) {
+                    rigidBody.angular *= std::pow(1.0 / rigidBody.angularDamping, dt);
+                }
+                return;
+            }
 
-                t.position = position + (t.position - rb.lastPosition);
-                t.rotation = rotation + (t.rotation - rb.lastRotation);
-                rb.velocity = velocity + (rb.velocity - rb.lastVelocity);
-                rb.angular = angular + (rb.angular - rb.lastAngular);
+            if(rigidBody.physicsReference == nullptr){
+                add(rigidBody, transform, collider, index);
+            }else{
+                if(rigidBody.mass == 0){
+                    btRigidBody* body = (btRigidBody*)rigidBody.physicsReference;
+                    if(transform.position != rigidBody.lastPosition){
+                        body->getWorldTransform().setOrigin(conv(transform.position));
+                        rigidBody.lastPosition = transform.position;
+                    }
+                    if(transform.rotation != rigidBody.lastRotation){
+                        body->getWorldTransform().setRotation(convQuaternion(transform.rotation));
+                        rigidBody.lastRotation = transform.rotation;
+                    }
+                }else {
+                    btRigidBody *body = (btRigidBody *) rigidBody.physicsReference;
+                    btTransform bodyTransform;
+                    if (body->getMotionState()) {
+                        body->getMotionState()->getWorldTransform(bodyTransform);
+                    } else {
+                        bodyTransform = body->getWorldTransform();
+                    }
+                    glm::vec3 position = conv(bodyTransform.getOrigin());
+                    glm::vec3 rotation = convQuaternion(bodyTransform.getRotation());
+                    glm::vec3 velocity = conv(body->getLinearVelocity());
+                    glm::vec3 angular = conv(body->getAngularVelocity());
 
-                transform.setOrigin(conv(t.position));
-                transform.setRotation(convQuaternion(t.rotation));
-                body->setLinearVelocity(conv(rb.velocity));
-                body->setAngularVelocity(conv(rb.angular));
+                    if (rigidBody.lastVelocity != rigidBody.velocity) {
+                        body->setActivationState(ACTIVE_TAG);
+                    }
 
-                rb.lastPosition = t.position;
-                rb.lastRotation = t.rotation;
-                rb.lastVelocity = rb.velocity;
-                rb.lastAngular = rb.angular;
+                    transform.position = position + (transform.position - rigidBody.lastPosition);
+                    transform.rotation = rotation + (transform.rotation - rigidBody.lastRotation);
+                    rigidBody.velocity = velocity + (rigidBody.velocity - rigidBody.lastVelocity);
+                    rigidBody.angular = angular + (rigidBody.angular - rigidBody.lastAngular);
+
+                    bodyTransform.setOrigin(conv(transform.position));
+                    bodyTransform.setRotation(convQuaternion(transform.rotation));
+                    if (body->getMotionState()) {
+                        body->getMotionState()->setWorldTransform(bodyTransform);
+                    } else {
+                        body->setWorldTransform(bodyTransform);
+                    }
+                    body->setLinearVelocity(conv(rigidBody.velocity));
+                    body->setAngularVelocity(conv(rigidBody.angular));
+
+                    rigidBody.lastPosition = transform.position;
+                    rigidBody.lastRotation = transform.rotation;
+                    rigidBody.lastVelocity = rigidBody.velocity;
+                    rigidBody.lastAngular = rigidBody.angular;
+                }
             }
         }
     }
 
-    void Physics::add(RigidBody &rb, Transform &t, Collider &collider, int index) {
+    void Physics::add(RigidBody &rigidBody, Transform &transform, Collider &collider, int index) {
         if(impl && impl->world) {
-            if(rb.ref == nullptr){
+            if(rigidBody.physicsReference == nullptr){
 
                 btVector3 localInertia(0, 0, 0);
                 btCollisionShape *shape;
 
                 if(collider.type == Collider::SPHERE){
-                    btSphereShape* s = new btSphereShape(collider.scale.x * t.scale.x * 0.5f);
-                    if (rb.mass != 0){
-                        s->calculateLocalInertia(rb.mass, localInertia);
+                    btSphereShape* s = new btSphereShape(collider.scale.x * transform.scale.x * 0.5f);
+                    if (rigidBody.mass != 0){
+                        s->calculateLocalInertia(rigidBody.mass, localInertia);
                     }
                     shape = s;
                 }else if(collider.type == Collider::BOX){
-                    btBoxShape* s = new btBoxShape(conv(collider.scale * t.scale * 0.5f));
-                    if (rb.mass != 0){
-                        s->calculateLocalInertia(rb.mass, localInertia);
+                    btBoxShape* s = new btBoxShape(conv(collider.scale * transform.scale * 0.5f));
+                    if (rigidBody.mass != 0){
+                        s->calculateLocalInertia(rigidBody.mass, localInertia);
                     }
                     shape = s;
                 }
 
 
-                btTransform transform;
-                transform.setIdentity();
-                transform.setOrigin(conv(t.position));
-                transform.setRotation(convQuaternion(t.rotation));
+                btTransform bodyTransform;
+                bodyTransform.setIdentity();
+                bodyTransform.setOrigin(conv(transform.position));
+                bodyTransform.setRotation(convQuaternion(transform.rotation));
 
-                btDefaultMotionState* motionState = new btDefaultMotionState(transform);
-                btRigidBody::btRigidBodyConstructionInfo info(rb.mass, motionState, shape, localInertia);
+                btDefaultMotionState* motionState = new btDefaultMotionState(bodyTransform);
+                btRigidBody::btRigidBodyConstructionInfo info(rigidBody.mass, motionState, shape, localInertia);
                 btRigidBody* body = new btRigidBody(info);
-                body->setFriction(rb.friction);
-                body->setRestitution(rb.restitution);
-                body->setRollingFriction(rb.friction / 100);
-                body->setSpinningFriction(rb.friction / 100);
+                body->setFriction(rigidBody.friction);
+                body->setRestitution(rigidBody.restitution);
+                body->setRollingFriction(rigidBody.friction / 100);
+                body->setSpinningFriction(rigidBody.friction / 100);
 
-                body->setAngularVelocity(conv(rb.angular));
-                body->setLinearVelocity(conv(rb.velocity));
-                body->setDamping(rb.linearDamping, rb.angularDamping);
+                body->setAngularVelocity(conv(rigidBody.angular));
+                body->setLinearVelocity(conv(rigidBody.velocity));
+                body->setDamping(rigidBody.linearDamping, rigidBody.angularDamping);
 
                 body->setCcdMotionThreshold(1e-7);
                 body->setCcdSweptSphereRadius(0.2);
 
                 body->setUserIndex(index);
                 impl->world->addRigidBody(body);
-                rb.ref = (void*)body;
+                rigidBody.physicsReference = (void*)body;
                 impl->shapes.push_back(shape);
                 impl->bodies.push_back(body);
 
-                rb.lastPosition = t.position;
-                rb.lastRotation = t.rotation;
-                rb.lastVelocity = rb.velocity;
-                rb.lastAngular = rb.angular;
+                rigidBody.lastPosition = transform.position;
+                rigidBody.lastRotation = transform.rotation;
+                rigidBody.lastVelocity = rigidBody.velocity;
+                rigidBody.lastAngular = rigidBody.angular;
             }
         }
     }
 
-    void Physics::remove(RigidBody &rb) {
+    void Physics::remove(RigidBody &rigidBody) {
         if(impl && impl->world) {
-            if(rb.ref != nullptr) {
-                btRigidBody* body = (btRigidBody*)rb.ref;
+            if(rigidBody.physicsReference != nullptr) {
+                btRigidBody* body = (btRigidBody*)rigidBody.physicsReference;
                 impl->world->removeRigidBody(body);
                 delete body->getMotionState();
                 for(int i = 0; i < impl->bodies.size(); i++){
@@ -256,12 +291,14 @@ namespace tridot {
         }
     };
 
-    void Physics::contacts(RigidBody &rb, std::function<void(const glm::vec3 &, int)> callback) {
-        ContactCallback result;
-        result.source = (btRigidBody*)rb.ref;
-        impl->world->contactTest((btRigidBody*)rb.ref, result);
-        for(auto &c : result.contacts){
-            callback(c.first, c.second->getUserIndex());
+    void Physics::contacts(RigidBody &rigidBody, std::function<void(const glm::vec3 &, int)> callback) {
+        if(rigidBody.physicsReference != nullptr) {
+            ContactCallback result;
+            result.source = (btRigidBody *) rigidBody.physicsReference;
+            impl->world->contactTest((btRigidBody *) rigidBody.physicsReference, result);
+            for (auto &c : result.contacts) {
+                callback(c.first, c.second->getUserIndex());
+            }
         }
     }
 
