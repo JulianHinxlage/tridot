@@ -16,6 +16,7 @@ namespace tridot {
         near = 0.01;
         far = 1000;
         aspectRatio = 1.0;
+        target = nullptr;
     }
 
     glm::mat4 PerspectiveCamera::getProjection() {
@@ -34,6 +35,7 @@ namespace tridot {
         right = {1, 0};
         rotation = 0;
         aspectRatio = 0;
+        target = nullptr;
     }
 
     glm::mat4 OrthographicCamera::getProjection() {

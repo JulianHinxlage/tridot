@@ -26,9 +26,4 @@ project(test-tridot)
 add_executable(${PROJECT_NAME} src/test/test.cpp)
 target_link_libraries(${PROJECT_NAME} PUBLIC tridot)
 
-
-project(test-ecs)
-add_executable(${PROJECT_NAME} src/test/ecsTest.cpp)
-target_link_libraries(${PROJECT_NAME} PUBLIC tridot)
-
 project(tridot)

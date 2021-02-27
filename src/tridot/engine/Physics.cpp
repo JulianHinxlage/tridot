@@ -3,6 +3,7 @@
 //
 
 #include "Physics.h"
+#include "Engine.h"
 #include <vector>
 #include <glm/detail/type_quat.hpp>
 #include <glm/gtx/euler_angles.hpp>
@@ -33,6 +34,13 @@ namespace tridot {
     glm::vec3 convQuaternion(const btQuaternion &quat){
         glm::quat quaternion(quat.getW(), -quat.getX(), -quat.getY(), -quat.getZ());
         return -glm::vec3(glm::eulerAngles(quaternion));
+    }
+
+    TRI_UPDATE("physics"){
+        engine.physics.step(engine.time.deltaTime);
+        engine.view<Transform, RigidBody, Collider>().each([](ecs::EntityId id, Transform &t, RigidBody &rb, Collider &c){
+            engine.physics.update(rb, t, c, id);
+        });
     }
 
     class Physics::Impl{

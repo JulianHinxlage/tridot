@@ -16,13 +16,20 @@ namespace ecs {
             add(comps...);
         }
 
-        EntityId instantiate(Registry &reg, EntityId hint = -1){
+        EntityId instantiateHinted(Registry &reg, EntityId hint = -1){
             EntityId id = reg.createHinted(hint);
             for(auto &component : components){
                 if(component != nullptr){
                     component->add(reg, id);
                 }
             }
+            return id;
+        }
+
+        template<typename... Components>
+        EntityId instantiate(Registry &reg, const Components&... comps){
+            EntityId id = instantiateHinted(reg);
+            reg.add(id, comps...);
             return id;
         }
 

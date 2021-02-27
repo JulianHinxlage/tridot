@@ -5,6 +5,7 @@
 #ifndef TRIDOT_CAMERA_H
 #define TRIDOT_CAMERA_H
 
+#include "FrameBuffer.h"
 #include <glm/glm.hpp>
 
 namespace tridot {
@@ -19,6 +20,7 @@ namespace tridot {
         float aspectRatio;
         float near;
         float far;
+        Ref<FrameBuffer> target;
 
         PerspectiveCamera();
         glm::mat4 getProjection();
@@ -32,6 +34,7 @@ namespace tridot {
         glm::vec2 right;
         float rotation;
         float aspectRatio;
+        Ref<FrameBuffer> target;
 
         OrthographicCamera();
         glm::mat4 getProjection();

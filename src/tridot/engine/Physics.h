@@ -6,17 +6,11 @@
 #define TRIDOT_PHYSICS_H
 
 #include "tridot/core/Ref.h"
+#include "tridot/components/Transform.h"
 #include <glm/glm.hpp>
 #include <functional>
 
 namespace tridot {
-
-    class Transform{
-    public:
-        glm::vec3 position = {0, 0, 0};
-        glm::vec3 scale = {1, 1, 1};
-        glm::vec3 rotation = {0, 0, 0};
-    };
 
     class RigidBody{
     public:
@@ -33,6 +27,8 @@ namespace tridot {
         glm::vec3 lastRotation = {0, 0, 0};
         glm::vec3 lastVelocity = {0, 0, 0};
         glm::vec3 lastAngular = {0, 0, 0};
+
+        RigidBody(float mass = 1) : mass(mass){}
     };
 
     class Collider{
@@ -42,8 +38,10 @@ namespace tridot {
             SPHERE,
         };
 
-        glm::vec3 scale = {1, 1, 1};
+        glm::vec3 scale;
         Type type;
+
+        Collider(Type type = BOX, const glm::vec3 &scale = {1, 1, 1}) : type(type), scale(scale){}
     };
 
     class Physics {
