@@ -2,11 +2,11 @@
 // Copyright (c) 2021 Julian Hinxlage. All rights reserved.
 //
 
-#include "Batch.h"
+#include "MeshRendererBatch.h"
 
 namespace tridot {
 
-    Batch::Batch() {
+    MeshRendererBatch::MeshRendererBatch() {
         shader = nullptr;
         mesh = nullptr;
         elementSize = 0;
@@ -16,7 +16,7 @@ namespace tridot {
         maxInstanceCount = 0;
     }
 
-    void Batch::init(uint32_t elementSize, uint32_t maxInstanceCount, uint32_t maxTextureCount, Mesh *mesh, Shader *shader, std::vector<Attribute> layout) {
+    void MeshRendererBatch::init(uint32_t elementSize, uint32_t maxInstanceCount, uint32_t maxTextureCount, Mesh *mesh, Shader *shader, std::vector<Attribute> layout) {
         this->elementSize = elementSize;
         this->maxTextureCount = maxTextureCount;
         this->maxInstanceCount = maxInstanceCount;
@@ -25,18 +25,18 @@ namespace tridot {
         this->shader = shader;
 
         instanceBuffer = Ref<Buffer>::make();
-        instanceBuffer->init(nullptr, elementSize * maxInstanceCount, elementSize, false, true);
+        instanceBuffer->init(nullptr, elementSize * maxInstanceCount, elementSize, VERTEX_BUFFER, true);
         data.resize(elementSize * maxInstanceCount);
 
         vertexArray = Ref<VertexArray>::make(mesh->vertexArray);
         vertexArray->addVertexBuffer(instanceBuffer, layout, 1);
     }
 
-    void *Batch::next() {
+    void *MeshRendererBatch::next() {
         return data.data() + instanceIndex++ * elementSize;
     }
 
-    void Batch::updateBuffer() {
+    void MeshRendererBatch::updateBuffer() {
         if(instanceIndex > updateIndex){
             instanceBuffer->bind();
             instanceBuffer->setData(data.data() + updateIndex * elementSize, (instanceIndex - updateIndex) * elementSize, updateIndex * elementSize);
@@ -44,19 +44,19 @@ namespace tridot {
         }
     }
 
-    void Batch::submit() {
+    void MeshRendererBatch::submit() {
         for(auto &t : textures){
             t.first->bind(t.second);
         }
         vertexArray->submit(-1, instanceIndex);
     }
 
-    void Batch::reset() {
+    void MeshRendererBatch::reset() {
         updateIndex = 0;
         instanceIndex = 0;
     }
 
-    uint32_t Batch::getTextureUnit(Texture *texture) {
+    uint32_t MeshRendererBatch::getTextureUnit(Texture *texture) {
         auto entry = textures.find(texture);
         if(entry == textures.end()){
             uint32_t unit = textures.size();
@@ -70,7 +70,7 @@ namespace tridot {
         }
     }
 
-    void Batch::resetTextures() {
+    void MeshRendererBatch::resetTextures() {
         textures.clear();
     }
 

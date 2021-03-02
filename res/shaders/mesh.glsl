@@ -22,7 +22,6 @@ out vec2 fTexCoordsBottomRight;
 flat out float fTextureUnit;
 
 uniform mat4 uProjection = mat4(1);
-uniform bool uTextureScale = true;
 
 void main(){
     vec4 pos = iTransform * vec4(vPosition, 1.0);
@@ -37,18 +36,11 @@ void main(){
     fTexCoordsTopLeft = iTexCoordsTopLeft;
     fTexCoordsBottomRight = iTexCoordsBottomRight;
 
-    if(uTextureScale){
-        vec3 scale;
-        scale.x = length(iTransform[0].xyz);
-        scale.y = length(iTransform[1].xyz);
-        scale.z = length(iTransform[2].xyz);
-
-        fModelPosition *= scale;
-
-        vec3 face = vNormal * 2;
-        vec2 texCoords = fTexCoords;
-        fTexCoords = texCoords * scale.xy * face.z + texCoords * scale.xz * face.y + texCoords * scale.zy * face.x;
-    }
+    vec3 scale;
+    scale.x = length(iTransform[0].xyz);
+    scale.y = length(iTransform[1].xyz);
+    scale.z = length(iTransform[2].xyz);
+    fModelPosition *= scale;
 }
 
 #type fragment

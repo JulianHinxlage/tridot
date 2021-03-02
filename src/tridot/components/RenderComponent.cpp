@@ -8,30 +8,49 @@
 
 namespace tridot {
 
+    RenderComponent::RenderComponent(const Color &color)
+            : color(color) {}
+
     RenderComponent &RenderComponent::setMesh(const Ref<Mesh> &mesh){
         this->mesh = mesh;
         return *this;
     }
 
-    RenderComponent &RenderComponent::setTexture(const Ref<Texture> &texture){
-        this->texture = texture;
+    RenderComponent &RenderComponent::setMaterial(const Ref<Material> &material) {
+        this->material = material;
         return *this;
     }
 
-    RenderComponent &RenderComponent::setShader(const Ref<Shader> &shader){
-        this->shader = shader;
+    RenderComponent &RenderComponent::setTexture(const Ref<Texture> &texture) {
+        if(!material){
+            material = Ref<Material>::make();
+        }
+        material->texture = texture;
+        return *this;
+    }
+
+    RenderComponent &RenderComponent::setShader(const Ref<Shader> &shader) {
+        if(!material){
+            material = Ref<Material>::make();
+        }
+        material->shader = shader;
         return *this;
     }
 
     TRI_UPDATE("rendering"){
         auto render = [](const glm::mat4 &projection, glm::vec3 cameraPosition, const Ref<FrameBuffer> &frameBuffer){
-            engine.renderer.begin(projection, frameBuffer);
+            engine.renderer.begin(projection, cameraPosition, frameBuffer);
+            engine.pbRenderer.begin(projection, cameraPosition, frameBuffer);
+
+            engine.view<Light>().each([](Light &light){
+               engine.pbRenderer.submit(light);
+            });
+
             engine.view<Transform, RenderComponent>().each([&](ecs::EntityId id, Transform &transform, RenderComponent &rc){
-                engine.renderer.submit(
-                        {transform.position, transform.scale, transform.rotation, rc.color, {0, 0},
-                         rc.textureScale}, rc.texture.get(), rc.mesh.get(),rc.shader.get());
+                engine.pbRenderer.submit(transform.getMatrix(), rc.color, rc.mesh.get(), rc.material.get());
             });
             engine.renderer.end();
+            engine.pbRenderer.end();
         };
 
         engine.view<PerspectiveCamera>().each([&](PerspectiveCamera &camera){

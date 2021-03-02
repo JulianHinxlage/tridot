@@ -52,7 +52,8 @@ namespace tridot {
         }
         resources.autoReload = autoReload;
         physics.init();
-        renderer.init(resources.get<Shader>("meshBase.glsl"));
+        renderer.init(resources.get<Shader>("mesh.glsl"));
+        pbRenderer.init(resources.get<Shader>("PBR.glsl"));
         glEnable(GL_DEPTH_TEST);
 
         onInitSignal.invoke();

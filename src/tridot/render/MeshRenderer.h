@@ -9,7 +9,7 @@
 #include "Texture.h"
 #include "Shader.h"
 #include "FrameBuffer.h"
-#include "Batch.h"
+#include "MeshRendererBatch.h"
 
 namespace tridot {
 
@@ -29,8 +29,8 @@ namespace tridot {
             glm::vec2 texCoordsBottomRight = {1, 1};
         };
 
-        void init(Ref<Shader> shader, uint32_t maxBatchSize = 10000);
-        void begin(glm::mat4 projection = glm::mat4(1), Ref<FrameBuffer> frameBuffer = nullptr);
+        void init(const Ref<Shader> &shader, uint32_t maxBatchSize = 10000);
+        void begin(const glm::mat4 &projection = glm::mat4(1), const glm::vec3 &cameraPosition = {0, 0, 0}, const Ref<FrameBuffer> &frameBuffer = nullptr);
         void submit(const SubmitCall &call, Texture *texture = nullptr, Mesh *mesh = nullptr, Shader *shader = nullptr);
         void end();
     private:
@@ -39,9 +39,10 @@ namespace tridot {
         Ref<Shader> defaultShader;
         Ref<FrameBuffer> frameBuffer;
         glm::mat4 projection;
-        std::vector<Ref<Batch>> batches;
+        glm::vec3 cameraPosition;
+        std::vector<Ref<MeshRendererBatch>> batches;
 
-        void flushBatch(Batch *batch);
+        void flushBatch(MeshRendererBatch *batch);
     };
 
 }

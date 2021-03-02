@@ -11,6 +11,7 @@
 #include "Physics.h"
 #include "ResourceLoader.h"
 #include "tridot/render/MeshRenderer.h"
+#include "tridot/render/PBRenderer.h"
 #include "tridot/render/Window.h"
 #include "tridot/core/Log.h"
 #include "tridot/core/config.h"
@@ -24,6 +25,7 @@ namespace tridot {
         Physics physics;
         ResourceLoader resources;
         MeshRenderer renderer;
+        PBRenderer pbRenderer;
         Window window;
 
         Engine();

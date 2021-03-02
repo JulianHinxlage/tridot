@@ -9,7 +9,7 @@
 
 namespace tridot {
 
-    class Instance {
+    class MeshInstance {
     public:
         glm::mat4 transform;
         Color color;
@@ -26,7 +26,7 @@ namespace tridot {
         maxBatchSize = 10000;
     }
 
-    void MeshRenderer::init(Ref<Shader> shader, uint32_t maxBatchSize) {
+    void MeshRenderer::init(const Ref<Shader> &shader, uint32_t maxBatchSize) {
         this->maxBatchSize = maxBatchSize;
         quadMesh = MeshFactory::createQuad();
 
@@ -39,9 +39,10 @@ namespace tridot {
         this->defaultShader = shader;
     }
 
-    void MeshRenderer::begin(glm::mat4 projection, Ref<FrameBuffer> frameBuffer) {
+    void MeshRenderer::begin(const glm::mat4 &projection, const glm::vec3 &cameraPosition, const Ref<FrameBuffer> &frameBuffer) {
         this->projection = projection;
         this->frameBuffer = frameBuffer;
+        this->cameraPosition = cameraPosition;
     }
 
     void MeshRenderer::submit(const MeshRenderer::SubmitCall &call, Texture *texture, Mesh *mesh, Shader *shader) {
@@ -65,7 +66,7 @@ namespace tridot {
             return;
         }
 
-        Batch *batch = nullptr;
+        MeshRendererBatch *batch = nullptr;
         for(int i = 0; i < batches.size(); i++){
             auto &b = batches[i];
             if(b){
@@ -86,8 +87,8 @@ namespace tridot {
 
 
         if(batch == nullptr || mesh->vertexArray.getId() != batch->meshId){
-            Ref<Batch> b(true);
-            b->init(sizeof(Instance), maxBatchSize, 32, mesh, shader,{
+            Ref<MeshRendererBatch> b(true);
+            b->init(sizeof(MeshInstance), maxBatchSize, 32, mesh, shader,{
                 {FLOAT, 4}, {FLOAT, 4}, {FLOAT, 4}, {FLOAT, 4},
                 {UINT8, 4, true},
                 {FLOAT, 1},
@@ -110,7 +111,7 @@ namespace tridot {
         }
         transform = glm::scale(transform, call.scale);
 
-        Instance *i = (Instance*)batch->next();
+        MeshInstance *i = (MeshInstance*)batch->next();
         i->transform = transform;
         i->color = call.color;
         i->textureUnit = (float)unit;
@@ -126,7 +127,7 @@ namespace tridot {
         }
     }
 
-    void MeshRenderer::flushBatch(Batch *batch) {
+    void MeshRenderer::flushBatch(MeshRendererBatch *batch) {
         if(batch->instanceIndex > 0) {
             batch->shader->bind();
             if (frameBuffer) {
@@ -136,6 +137,7 @@ namespace tridot {
             }
 
             batch->shader->set("uProjection", projection);
+            batch->shader->set("uCameraPosition", cameraPosition);
             int textures[32];
             for (int i = 0; i < 32; i++) {
                 textures[i] = i;

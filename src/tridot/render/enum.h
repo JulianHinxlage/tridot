@@ -45,10 +45,17 @@ namespace tridot {
         DEPTH24STENCIL8,
     };
 
+    enum BufferType{
+        VERTEX_BUFFER,
+        INDEX_BUFFER,
+        UNIFORM_BUFFER,
+    };
+
     uint32_t internalEnum(Type type);
     uint32_t internalEnum(Primitive primitive);
     uint32_t internalEnum(TextureAttachment attachment);
     uint32_t internalEnum(TextureFormat format);
+    uint32_t internalEnum(BufferType type);
 
     uint32_t internalEnumSize(Type type);
     uint32_t internalEnumSize(Primitive primitive);

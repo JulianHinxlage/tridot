@@ -14,7 +14,7 @@ namespace tridot {
         capacity = 0;
         elementSize = 1;
         dynamic = false;
-        indexBuffer = false;
+        type = VERTEX_BUFFER;
     }
 
     Buffer::~Buffer() {
@@ -25,44 +25,24 @@ namespace tridot {
         }
     }
 
-    void bindVertexBuffer(uint32_t id){
-        static uint32_t currentId = 0;
-        if(currentId != id){
-            glBindBuffer(GL_ARRAY_BUFFER, id);
-            currentId = id;
-        }
-    }
-
-    void bindIndexBuffer(uint32_t id){
-        static uint32_t currentId = 0;
-        if(currentId != id){
-            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, id);
-            currentId = id;
+    void bindBuffer(uint32_t id, BufferType type){
+        static uint32_t currentId[32];
+        if(currentId[(int)type] != id){
+            glBindBuffer(internalEnum(type), id);
+            currentId[(int)type] = id;
         }
     }
 
     void Buffer::bind() const {
-        if(indexBuffer){
-            bindIndexBuffer(id);
-        }else {
-            bindVertexBuffer(id);
-        }
+        bindBuffer(id, type);
     }
 
     void Buffer::unbind() const {
-        if(indexBuffer){
-            bindIndexBuffer(0);
-        }else {
-            bindVertexBuffer(0);
-        }
+        bindBuffer(0, type);
     }
 
-    void Buffer::unbind(bool indexBuffer) {
-        if(indexBuffer){
-            bindIndexBuffer(0);
-        }else {
-            bindVertexBuffer(0);
-        }
+    void Buffer::unbind(BufferType type) {
+        bindBuffer(0, type);
     }
 
     uint32_t Buffer::getId() const {
@@ -77,10 +57,10 @@ namespace tridot {
         return size / elementSize;
     }
 
-    void Buffer::init(void *data, uint32_t size, uint32_t elementSize, bool indexBuffer, bool dynamic) {
+    void Buffer::init(void *data, uint32_t size, uint32_t elementSize, BufferType type, bool dynamic) {
         this->elementSize = elementSize;
         this->dynamic = dynamic;
-        this->indexBuffer = indexBuffer;
+        this->type = type;
         if(id == 0){
             glGenBuffers(1, &id);
             Log::trace("created buffer ", id);
@@ -95,7 +75,7 @@ namespace tridot {
         }
     }
 
-    void Buffer::setData(void *data, uint32_t size, int offset) {
+    void Buffer::setData(void *data, uint32_t size, uint32_t offset) {
         if(this->capacity < size + offset){
             glNamedBufferData(id, size + offset, nullptr, dynamic ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW);
             glNamedBufferSubData(id, offset, size, data);

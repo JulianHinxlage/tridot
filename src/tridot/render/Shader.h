@@ -5,6 +5,7 @@
 #ifndef TRIDOT_SHADER_H
 #define TRIDOT_SHADER_H
 
+#include "Buffer.h"
 #include <cstdint>
 #include <string>
 #include <vector>
@@ -43,14 +44,17 @@ namespace tridot {
         void set(const std::string &uniform, glm::mat2 *values, int count);
         void set(const std::string &uniform, glm::mat3 *values, int count);
         void set(const std::string &uniform, glm::mat4 *values, int count);
+        void set(const std::string &uniform, Buffer *buffer);
 
     private:
         uint32_t id;
         std::vector<std::pair<uint32_t, std::string>> sources;
         std::unordered_map<std::string, uint32_t> locations;
+        std::unordered_map<std::string, uint32_t> bufferLocations;
         std::string file;
 
-        uint32_t getLocation(const std::string &name);
+        uint32_t getLocation(const std::string &name, bool warn = true);
+        uint32_t getBufferLocation(const std::string &name);
 
     };
 

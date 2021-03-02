@@ -38,8 +38,8 @@ namespace tridot {
             stride += a.size * a.count;
         }
 
-        vertexBuffer->init(vertices, vertexCount * sizeof(vertices[0]), stride, false, false);
-        indexBuffer->init(indices, indexCount * sizeof(indices[0]), sizeof(indices[0]), true, false);
+        vertexBuffer->init(vertices, vertexCount * sizeof(vertices[0]), stride, VERTEX_BUFFER, false);
+        indexBuffer->init(indices, indexCount * sizeof(indices[0]), sizeof(indices[0]), INDEX_BUFFER, false);
 
         vertexArray.addIndexBuffer(indexBuffer, UINT32);
         vertexArray.addVertexBuffer(vertexBuffer, layout);

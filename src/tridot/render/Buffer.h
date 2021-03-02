@@ -5,7 +5,7 @@
 #ifndef TRIDOT_BUFFER_H
 #define TRIDOT_BUFFER_H
 
-#include <cstdint>
+#include "enum.h"
 
 namespace tridot {
 
@@ -16,14 +16,14 @@ namespace tridot {
 
         void bind() const;
         void unbind() const;
-        static void unbind(bool indexBuffer);
+        static void unbind(BufferType type);
 
         uint32_t getId() const;
         uint32_t getElementCount() const;
         uint32_t getElementSize() const;
 
-        void init(void *data, uint32_t size, uint32_t elementSize = 1, bool indexBuffer = false, bool dynamic = false);
-        void setData(void *data, uint32_t size, int offset = 0);
+        void init(void *data, uint32_t size, uint32_t elementSize = 1, BufferType type = VERTEX_BUFFER, bool dynamic = false);
+        void setData(void *data, uint32_t size, uint32_t offset = 0);
 
     private:
         uint32_t id;
@@ -31,7 +31,7 @@ namespace tridot {
         uint32_t capacity;
         uint32_t elementSize;
         bool dynamic;
-        bool indexBuffer;
+        BufferType type;
     };
 
 }

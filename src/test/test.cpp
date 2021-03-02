@@ -31,23 +31,113 @@ void playerControl(EntityId playerId, PerspectiveCamera &camera);
 void createScene();
 void cameraControl(PerspectiveCamera &cam, bool move, bool look, bool lockUp, float speed);
 
+void tmpTest(){
+    //create camera
+    PerspectiveCamera &camera = engine.add<PerspectiveCamera>(engine.create());
+    camera.position = {0, -2, 0};
+    camera.forward = {0, 1, 0};
+    camera.right = {1, 0, 0};
+    camera.up = {0, 0, 1};
+    camera.near = 0.05;
+    camera.far = 1200;
+
+    engine.window.setBackgroundColor(Color::white * 0.5);
+
+    //engine.create(Light(AMBIENT_LIGHT, glm::vec3(0, 0, 0), glm::vec3(Color::white.vec()), 0.3));
+    engine.create(Light(DIRECTIONAL_LIGHT, glm::vec3(0.0, 0.0, -1), glm::vec3(Color::white.vec()), 2.5));
+
+    Ref<Mesh> sphere = MeshFactory::createSphere(32, 32);
+    for(int x = 0; x <= 5; x++){
+        for(int y = 0; y <= 5; y++){
+
+            Ref<Material> material = material.make();
+            //material->texture = engine.resources.get<Texture>("tex1.png");
+            //material->textureScale = {0.5f, 0.5f};
+            material->mapping = Material::TRI_PLANAR;
+            material->roughness = x * 0.2;
+            material->metallic = y * 0.2;
+
+
+            material->normalMap = engine.resources.get<Texture>("normal2.png");
+            material->normalMap->setMagMin(false, false);
+            material->normalMapScale = {0.5f, 0.5f};
+            material->normalMapFactor = 0.3;
+
+
+            engine.create(
+                    Transform({x * 2, y * 2, 0}, {1, 1, 1}),
+                    RenderComponent(Color::red)
+                            .setMaterial(material)
+                            .setMesh(sphere)
+                    //RigidBody(5),
+                    //Collider(Collider::SPHERE)
+            );
+
+        }
+    }
+
+    engine.onUpdate().add([&](){
+        if(engine.input.pressed(Input::KEY_ESCAPE)){
+            engine.window.close();
+        }
+        if(engine.time.frameTicks(0.5)){
+            Log::info(engine.time.framesPerSecond, " fps, ", engine.time.avgFrameTime * 1000, "ms [", engine.time.minFrameTime * 1000, " ms, ", engine.time.maxFrameTime * 1000, " ms]");
+        }
+        if(engine.input.pressed('V')){
+            engine.window.setVSync(!engine.window.getVSync());
+        }
+
+        static bool look = true;
+        if(engine.input.pressed("C")){
+            look = !look;
+        }
+
+        engine.view<PerspectiveCamera>().each([&](PerspectiveCamera &camera){
+            cameraControl(camera, true, look, true, 10);
+        });
+    }, "camera");
+
+    engine.run();
+}
+
 int main(int argc, char *argv[]){
     Log::options.logLevel = Log::TRACE;
     engine.init(800, 600, "Tridot " TRI_VERSION, "../res/", true);
     engine.window.setBackgroundColor(Color::white);
 
-    glEnable(GL_CULL_FACE);
-    glCullFace(GL_BACK);
+    //glEnable(GL_CULL_FACE);
+    //glCullFace(GL_BACK);
+
+
+    //tmpTest();
+    //return 0;
 
     createScene();
 
+    //create lights
+    engine.create(Light(AMBIENT_LIGHT, glm::vec3(0, 0, 0), glm::vec3(Color::white.vec()), 0.6));
+    engine.create(Light(DIRECTIONAL_LIGHT, glm::vec3(0.3, 0.7, -1), glm::vec3(Color::white.vec()), 2.5));
+    engine.create(Light(POINT_LIGHT, glm::vec3(0, -5, 1), glm::vec3(Color::green.vec()), 4));
+    engine.create(Light(POINT_LIGHT, glm::vec3(0, 5, 1), glm::vec3(Color::red.vec()), 4));
+
     //create player
-    Ref<Shader> shader = engine.resources.get<Shader>("mesh.glsl");
+    Ref<Material> material = material.make();
+    material->texture = engine.resources.get<Texture>("tex1.png");
+    material->textureScale = {0.5f, 0.5f};
+    material->mapping = Material::TRI_PLANAR;
+    material->roughness = 0.50;
+    material->metallic = 0.6;
+    material->normalMap = engine.resources.get<Texture>("normal2.png");
+    material->normalMap->setMagMin(false, false);
+    material->normalMapScale = {0.5f, 0.5f};
+    material->normalMapFactor = 0.3;
+
+    Ref<Mesh> mesh = MeshFactory::createSphere(32, 32);
     EntityId playerId = engine.create(
-            Transform({0, 0, 0}, {1, 1, 1}),
-            RenderComponent(glm::vec3(0.3, 0.6, 0.8), {2.0f, 2.0f})
-            .setTexture(engine.resources.get<Texture>("tex1.png"))
-            .setMesh(MeshFactory::createSphere(32, 32)).setShader(shader),
+            Transform(),
+            RenderComponent(glm::vec3(0.4, 0.5, 0.9))
+            .setMaterial(material)
+            .setMesh(mesh),
             RigidBody(5),
             Collider(Collider::SPHERE)
     );
@@ -74,9 +164,6 @@ int main(int argc, char *argv[]){
 
         engine.view<PerspectiveCamera>().each([&](PerspectiveCamera &camera){
             playerControl(playerId, camera);
-            if(shader->has("uCameraPosition")){
-                shader->set("uCameraPosition", camera.position);
-            }
         });
     }, "camera");
 
@@ -176,14 +263,25 @@ void createScene(){
     Ref<Texture> tex4 = engine.resources.get<Texture>("tex4.png");
 
     Ref<Mesh> cube = MeshFactory::createCube();
-    Ref<Shader> shader = engine.resources.get<Shader>("mesh.glsl");
 
     int groundSize = 200;
     int wallHeight = 30;
 
+    Ref<Material> wallMaterial = Ref<Material>::make();
+    wallMaterial->texture = tex3;
+    wallMaterial->texture->setMagMin(false, false);
+    wallMaterial->mapping = Material::SCALE_TRI_PLANAR;
+    wallMaterial->textureScale = {0.5, 0.5};
+    wallMaterial->roughness = 0.85;
+    wallMaterial->metallic = 0.50;
+    wallMaterial->normalMap = engine.resources.get<Texture>("normal1.png");
+    wallMaterial->normalMap->setMagMin(false, false);
+    wallMaterial->normalMapScale = {0.1f, 0.1f};
+    wallMaterial->normalMapFactor = 0.75;
+
     Prefab wall(
             Transform(),
-            RenderComponent(Color::white * 0.7f).setTexture(tex3).setMesh(cube).setShader(shader),
+            RenderComponent(Color::white * 0.7f).setMesh(cube).setMaterial(wallMaterial),
             RigidBody(0),
             Collider(Collider::BOX)
     );
@@ -212,19 +310,30 @@ void createScene(){
         }
     }
 
+    Ref<Material> platformMaterial = Ref<Material>::make();
+    platformMaterial->texture = tex1;
+    platformMaterial->texture->setMagMin(false, false);
+    platformMaterial->mapping = Material::SCALE_TRI_PLANAR;
+    platformMaterial->textureScale = {0.5, 0.5};
+    platformMaterial->roughness = 0.60;
+    platformMaterial->metallic = 0.10;
+    platformMaterial->normalMap = engine.resources.get<Texture>("normal2.png");
+    platformMaterial->normalMap->setMagMin(false, false);
+    platformMaterial->normalMapScale = {0.2f, 0.2f};
+
     int platformCount = 0;
     for(int x = -groundSize / 2 + 2; x < groundSize / 2 - 1; x++){
         for(int y = -groundSize / 2 + 2; y < groundSize / 2 - 1; y++){
-
             if(randu() < 0.025) {
                 int width = int(randu() * 5) + 2;
                 int depth = int(randu() * 5) + 2;
                 float height = (int(randu() * 10) + 1) * 2;
                 height += x * 0.001 + y * 0.001;
 
+
                 engine.create(
                         Transform({x, y, height}, {width, depth, 0.5}),
-                        RenderComponent(randu3() * 0.0f + 0.5f).setTexture(tex1).setMesh(cube).setShader(shader),
+                        RenderComponent(randu3() * 0.05f + 0.5f).setMesh(cube).setMaterial(platformMaterial),
                         RigidBody(0),
                         Collider(Collider::BOX)
                         );

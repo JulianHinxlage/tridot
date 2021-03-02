@@ -145,6 +145,8 @@ namespace tridot {
         }
         id = programId;
         Log::trace("created shader ", id, " ", file);
+        locations.clear();
+        bufferLocations.clear();
         return true;
     }
 
@@ -152,7 +154,7 @@ namespace tridot {
         if(id == 0){
             return false;
         }else{
-            return getLocation(uniform) != -1;
+            return getLocation(uniform, false) != -1;
         }
     }
 
@@ -220,16 +222,36 @@ namespace tridot {
         glUniformMatrix4fv(getLocation(uniform), count, GL_FALSE, (float*)values);
     }
 
-    uint32_t Shader::getLocation(const std::string &name) {
+    void Shader::set(const std::string &uniform, Buffer *buffer) {
+        uint32_t location = getBufferLocation(uniform);
+        glUniformBlockBinding(id, location, location);
+        glBindBufferBase(GL_UNIFORM_BUFFER, location, buffer->getId());
+    }
+
+    uint32_t Shader::getLocation(const std::string &name, bool warn) {
         auto entry = locations.find(name);
         if(entry != locations.end()){
             return entry->second;
         }else{
             uint32_t location = glGetUniformLocation(id, name.c_str());
-            if(location == -1){
+            if(location == -1 && warn){
                 Log::warning("uniform ", name, " not found");
             }
             locations[name] = location;
+            return location;
+        }
+    }
+
+    uint32_t Shader::getBufferLocation(const std::string &name) {
+        auto entry = bufferLocations.find(name);
+        if(entry != bufferLocations.end()){
+            return entry->second;
+        }else{
+            uint32_t location = glGetUniformBlockIndex(id, name.c_str());
+            if(location == -1){
+                Log::warning("uniform buffer ", name, " not found");
+            }
+            bufferLocations[name] = location;
             return location;
         }
     }

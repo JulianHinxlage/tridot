@@ -87,6 +87,19 @@ namespace tridot {
         }
     }
 
+    uint32_t internalEnum(BufferType type) {
+        switch (type) {
+            case VERTEX_BUFFER:
+                return GL_ARRAY_BUFFER;
+            case INDEX_BUFFER:
+                return GL_ELEMENT_ARRAY_BUFFER;
+            case UNIFORM_BUFFER:
+                return GL_UNIFORM_BUFFER;
+            default:
+                return GL_NONE;
+        }
+    }
+
     uint32_t internalEnumSize(Type type) {
         switch (type) {
             case INT8:

@@ -8,21 +8,20 @@
 #include "tridot/render/Mesh.h"
 #include "tridot/render/Texture.h"
 #include "tridot/render/Shader.h"
+#include "tridot/render/Material.h"
 
 namespace tridot {
 
     class RenderComponent {
     public:
         Ref<Mesh> mesh;
-        Ref<Texture> texture;
-        Ref<Shader> shader;
+        Ref<Material> material;
         Color color;
-        glm::vec2 textureScale;
 
-        RenderComponent(const Color &color = Color::white, const glm::vec2 &textureScale = {1, 1})
-            : color(color), textureScale(textureScale) {}
+        RenderComponent(const Color &color = Color::white);
 
         RenderComponent &setMesh(const Ref<Mesh> &mesh);
+        RenderComponent &setMaterial(const Ref<Material> &material);
         RenderComponent &setTexture(const Ref<Texture> &texture);
         RenderComponent &setShader(const Ref<Shader> &shader);
     };

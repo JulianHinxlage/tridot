@@ -2,8 +2,8 @@
 // Copyright (c) 2021 Julian Hinxlage. All rights reserved.
 //
 
-#ifndef TRIDOT_BATCH_H
-#define TRIDOT_BATCH_H
+#ifndef TRIDOT_MESHRENDERERBATCH_H
+#define TRIDOT_MESHRENDERERBATCH_H
 
 #include "Mesh.h"
 #include "Shader.h"
@@ -12,9 +12,9 @@
 
 namespace tridot {
 
-    class Batch {
+    class MeshRendererBatch {
     public:
-        Batch();
+        MeshRendererBatch();
 
         void init(uint32_t elementSize, uint32_t maxInstanceCount, uint32_t maxTextureCount, Mesh *mesh, Shader *shader, std::vector<Attribute> layout);
         void *next();
@@ -40,4 +40,4 @@ namespace tridot {
 
 }
 
-#endif //TRIDOT_BATCH_H
+#endif //TRIDOT_MESHRENDERERBATCH_H
