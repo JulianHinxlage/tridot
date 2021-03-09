@@ -66,7 +66,9 @@ namespace ecs {
             }
             for(auto &pool : componentPools){
                 if(pool != nullptr){
-                    pool->remove(id);
+                    if(pool->has(id)){
+                        pool->remove(id);
+                    }
                 }
             }
             entityPool.remove(id);

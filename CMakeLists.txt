@@ -3,10 +3,10 @@ set(CMAKE_CXX_STANDARD 20)
 
 project(tridot)
 file(GLOB_RECURSE SOURCES src/tridot/*.cpp)
-add_library(${PROJECT_NAME} STATIC ${SOURCES})
-target_include_directories(${PROJECT_NAME} PUBLIC src extern)
+file(GLOB IMGUI_SOURCES extern/imgui/*.cpp extern/imgui/backends/imgui_impl_glfw.cpp extern/imgui/backends/imgui_impl_opengl3.cpp)
+add_library(${PROJECT_NAME} SHARED ${SOURCES} ${IMGUI_SOURCES})
+target_include_directories(${PROJECT_NAME} PUBLIC src extern extern/imgui)
 target_compile_definitions(${PROJECT_NAME} PUBLIC TRI_DEBUG ECS_DEBUG)
-
 
 #required packages: libglfw3-dev libglew-dev libglm-dev pkg-config libbullet-dev
 find_package(Bullet REQUIRED)

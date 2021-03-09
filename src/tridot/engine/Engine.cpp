@@ -56,8 +56,6 @@ namespace tridot {
         pbRenderer.init(resources.get<Shader>("PBR.glsl"));
         glEnable(GL_DEPTH_TEST);
 
-        onInitSignal.invoke();
-
         onUpdate().add("time", [this](){
             time.update();
         });
@@ -71,6 +69,8 @@ namespace tridot {
             glFinish();
             window.update();
         });
+
+        onInitSignal.invoke();
     }
 
     void Engine::update() {

@@ -11,6 +11,8 @@
 #include <GLFW/glfw3.h>
 #include <glm/gtx/vector_angle.hpp>
 
+#include <imgui/imgui.h>
+
 using namespace tridot;
 using namespace ecs;
 
@@ -31,73 +33,66 @@ void playerControl(EntityId playerId, PerspectiveCamera &camera);
 void createScene();
 void cameraControl(PerspectiveCamera &cam, bool move, bool look, bool lockUp, float speed);
 
-void tmpTest(){
-    //create camera
-    PerspectiveCamera &camera = engine.add<PerspectiveCamera>(engine.create());
-    camera.position = {0, -2, 0};
-    camera.forward = {0, 1, 0};
-    camera.right = {1, 0, 0};
-    camera.up = {0, 0, 1};
-    camera.near = 0.05;
-    camera.far = 1200;
+void lightGui(){
+    if(ImGui::BeginTabItem("Lights")) {
+        engine.view<Light>().each([](EntityId id, Light &light) {
+            ImGui::Separator();
+            ImGui::PushID(id);
 
-    engine.window.setBackgroundColor(Color::white * 0.5);
+            std::vector<const char *> list = {"Ambient", "Directional", "Point Light"};
+            ImGui::Combo("type", (int *) &light.type, list.data(), list.size());
 
-    //engine.create(Light(AMBIENT_LIGHT, glm::vec3(0, 0, 0), glm::vec3(Color::white.vec()), 0.3));
-    engine.create(Light(DIRECTIONAL_LIGHT, glm::vec3(0.0, 0.0, -1), glm::vec3(Color::white.vec()), 2.5));
+            ImGui::DragFloat3("position", (float *) &light.position, 0.01);
+            ImGui::ColorEdit3("color", (float *) &light.color);
+            ImGui::DragFloat("intensity", &light.intensity, 0.01, 0.0, 1000);
+            if (ImGui::Button("remove")) {
+                engine.destroy(id);
+            }
 
-    Ref<Mesh> sphere = MeshFactory::createSphere(32, 32);
-    for(int x = 0; x <= 5; x++){
-        for(int y = 0; y <= 5; y++){
-
-            Ref<Material> material = material.make();
-            //material->texture = engine.resources.get<Texture>("tex1.png");
-            //material->textureScale = {0.5f, 0.5f};
-            material->mapping = Material::TRI_PLANAR;
-            material->roughness = x * 0.2;
-            material->metallic = y * 0.2;
-
-
-            material->normalMap = engine.resources.get<Texture>("normal2.png");
-            material->normalMap->setMagMin(false, false);
-            material->normalMapScale = {0.5f, 0.5f};
-            material->normalMapFactor = 0.3;
-
-
-            engine.create(
-                    Transform({x * 2, y * 2, 0}, {1, 1, 1}),
-                    RenderComponent(Color::red)
-                            .setMaterial(material)
-                            .setMesh(sphere)
-                    //RigidBody(5),
-                    //Collider(Collider::SPHERE)
-            );
-
-        }
-    }
-
-    engine.onUpdate().add([&](){
-        if(engine.input.pressed(Input::KEY_ESCAPE)){
-            engine.window.close();
-        }
-        if(engine.time.frameTicks(0.5)){
-            Log::info(engine.time.framesPerSecond, " fps, ", engine.time.avgFrameTime * 1000, "ms [", engine.time.minFrameTime * 1000, " ms, ", engine.time.maxFrameTime * 1000, " ms]");
-        }
-        if(engine.input.pressed('V')){
-            engine.window.setVSync(!engine.window.getVSync());
-        }
-
-        static bool look = true;
-        if(engine.input.pressed("C")){
-            look = !look;
-        }
-
-        engine.view<PerspectiveCamera>().each([&](PerspectiveCamera &camera){
-            cameraControl(camera, true, look, true, 10);
+            ImGui::PopID();
         });
-    }, "camera");
+        ImGui::Separator();
 
-    engine.run();
+        if (ImGui::Button("add light")) {
+            engine.create(Light(POINT_LIGHT, glm::vec3(0, 0, 0), glm::vec3(Color::white.vec()), 1));
+        }
+
+        ImGui::EndTabItem();
+    }
+}
+
+void materialGui(){
+    if(ImGui::BeginTabItem("Materials")) {
+        std::map<Material *, bool> materials;
+        engine.view<RenderComponent>().each([&](RenderComponent &rc) {
+            if (rc.material.get() != nullptr) {
+                materials[rc.material.get()] = true;
+            }
+        });
+
+        for (auto &m : materials) {
+            ImGui::Separator();
+            ImGui::PushID((int) (size_t) m.first);
+
+            Material *material = m.first;
+
+            std::vector<const char*> list = {"UV", "tri-planar", "scaled tri-planar"};
+            ImGui::Combo("mapping", (int*)&material->mapping, list.data(), list.size());
+
+
+
+            glm::vec4 c = material->color.vec();
+            ImGui::ColorEdit3("color", (float *) &c);
+            material->color = Color(c);
+
+            ImGui::DragFloat("roughness", &material->roughness, 0.001, 0.0, 1.0);
+            ImGui::DragFloat("metalic", &material->metallic, 0.001, 0.0, 1.0);
+
+            ImGui::PopID();
+        }
+
+        ImGui::EndTabItem();
+    }
 }
 
 int main(int argc, char *argv[]){
@@ -105,20 +100,14 @@ int main(int argc, char *argv[]){
     engine.init(800, 600, "Tridot " TRI_VERSION, "../res/", true);
     engine.window.setBackgroundColor(Color::white);
 
-    //glEnable(GL_CULL_FACE);
-    //glCullFace(GL_BACK);
-
-
-    //tmpTest();
-    //return 0;
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
 
     createScene();
 
     //create lights
     engine.create(Light(AMBIENT_LIGHT, glm::vec3(0, 0, 0), glm::vec3(Color::white.vec()), 0.6));
     engine.create(Light(DIRECTIONAL_LIGHT, glm::vec3(0.3, 0.7, -1), glm::vec3(Color::white.vec()), 2.5));
-    engine.create(Light(POINT_LIGHT, glm::vec3(0, -5, 1), glm::vec3(Color::green.vec()), 4));
-    engine.create(Light(POINT_LIGHT, glm::vec3(0, 5, 1), glm::vec3(Color::red.vec()), 4));
 
     //create player
     Ref<Material> material = material.make();
@@ -132,10 +121,16 @@ int main(int argc, char *argv[]){
     material->normalMapScale = {0.5f, 0.5f};
     material->normalMapFactor = 0.3;
 
+    //gold
+    material->color = Color(243, 217,105) * 0.8f;
+    material->roughness = 0.651;
+    material->metallic = 1.0;
+    material->texture = nullptr;
+
     Ref<Mesh> mesh = MeshFactory::createSphere(32, 32);
     EntityId playerId = engine.create(
             Transform(),
-            RenderComponent(glm::vec3(0.4, 0.5, 0.9))
+            RenderComponent()
             .setMaterial(material)
             .setMesh(mesh),
             RigidBody(5),
@@ -161,6 +156,21 @@ int main(int argc, char *argv[]){
         if(engine.input.pressed('V')){
             engine.window.setVSync(!engine.window.getVSync());
         }
+
+        //debug gui
+        static bool debugOpen = false;
+        if(engine.input.pressed('P')){
+            debugOpen = !debugOpen;
+        }
+        if(debugOpen){
+            ImGui::Begin("Debug Menu", &debugOpen);
+            ImGui::BeginTabBar("tabs");
+            lightGui();
+            materialGui();
+            ImGui::EndTabBar();
+            ImGui::End();
+        }
+
 
         engine.view<PerspectiveCamera>().each([&](PerspectiveCamera &camera){
             playerControl(playerId, camera);

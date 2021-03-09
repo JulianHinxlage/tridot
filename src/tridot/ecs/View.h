@@ -50,6 +50,10 @@ namespace ecs {
             }
 
             for(int i = startIndex; i < endIndex; i++){
+                if(pool->getEntities().size() <= i){
+                    break;
+                }
+
                 EntityId id = pool->getId(i);
                 if constexpr (sizeof...(Components) <= 1){
                     if(excludedSignature == 0 || !reg->hasAny(id, excludedSignature)) {
@@ -69,6 +73,10 @@ namespace ecs {
                             }
                         }
                     }
+                }
+
+                if(!reg->exists(id)){
+                    i--;
                 }
             }
         }
