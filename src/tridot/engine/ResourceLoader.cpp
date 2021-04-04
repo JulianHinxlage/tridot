@@ -3,7 +3,7 @@
 //
 
 #include "ResourceLoader.h"
-#include <experimental/filesystem>
+#include <filesystem>
 
 namespace tridot {
 
@@ -80,10 +80,10 @@ namespace tridot {
     }
 
     uint64_t getTimestamp(const std::string &file){
-        if(!std::experimental::filesystem::exists(file)){
+        if(!std::filesystem::exists(file)){
             return 0;
         }else{
-            return std::experimental::filesystem::last_write_time(file).time_since_epoch().count();
+            return std::filesystem::last_write_time(file).time_since_epoch().count();
         }
     }
 
@@ -92,7 +92,7 @@ namespace tridot {
             bool found = false;
             for(auto &dir : searchDirectories){
                 std::string file = dir + res->name;
-                if(std::experimental::filesystem::exists(file)){
+                if(std::filesystem::exists(file)){
                     found = true;
                     res->file = file;
                     if(res->preLoad()){
