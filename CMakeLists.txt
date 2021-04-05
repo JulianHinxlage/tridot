@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.4)
 set(CMAKE_CXX_STANDARD 20)
 
+#required linux packages: libxinerama-dev libxcursor-dev libxi-dev
 project(tridot)
 
 if(MSVC)
@@ -11,6 +12,8 @@ endif()
 
 if(WIN32)
     set(LIBRARY_OUTPUT_PATH ${CMAKE_CURRENT_BINARY_DIR})
+else()
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
 endif()
 
 file(GLOB_RECURSE SOURCES src/tridot/*.cpp)
@@ -25,6 +28,8 @@ endif()
 target_include_directories(${PROJECT_NAME} PUBLIC src extern extern/imgui)
 target_compile_definitions(${PROJECT_NAME} PUBLIC TRI_DEBUG ECS_DEBUG)
 
+set(OpenGL_GL_PREFERENCE "GLVND")
+find_package(OpenGL REQUIRED)
 
 set(TRIDOT_BUILD_TYPE "${CMAKE_BUILD_TYPE}")
 set(CMAKE_BUILD_TYPE "Release")
@@ -33,8 +38,6 @@ add_subdirectory(extern/bullet3)
 target_include_directories(${PROJECT_NAME} PUBLIC extern/bullet3/src)
 target_link_libraries(${PROJECT_NAME} BulletDynamics BulletCollision LinearMath)
 
-set(OpenGL_GL_PREFERENCE "GLVND")
-find_package(OpenGL REQUIRED)
 add_subdirectory(extern/glfw)
 add_subdirectory(extern/glew/build/cmake)
 add_subdirectory(extern/glm)
@@ -44,7 +47,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC extern/glm extern/glfw/include
 if(WIN32)
     target_link_libraries(${PROJECT_NAME} opengl32 glew_s imm32)
 else()
-    target_link_libraries(${PROJECT_NAME} gl glew pthread stdc++fs)
+    target_link_libraries(${PROJECT_NAME} GL glew pthread stdc++fs)
 endif()
 
 set(CMAKE_BUILD_TYPE ${TRIDOT_BUILD_TYPE})
