@@ -9,7 +9,7 @@
 #include "Time.h"
 #include "Input.h"
 #include "Physics.h"
-#include "ResourceLoader.h"
+#include "ResourceManager.h"
 #include "tridot/render/MeshRenderer.h"
 #include "tridot/render/PBRenderer.h"
 #include "tridot/render/Window.h"
@@ -23,7 +23,7 @@ namespace tridot {
         Time time;
         Input input;
         Physics physics;
-        ResourceLoader resources;
+        ResourceManager resources;
         MeshRenderer renderer;
         PBRenderer pbRenderer;
         Window window;

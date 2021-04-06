@@ -2,18 +2,18 @@
 // Copyright (c) 2021 Julian Hinxlage. All rights reserved.
 //
 
-#include "ResourceLoader.h"
+#include "ResourceManager.h"
 #include <experimental/filesystem>
 
 namespace tridot {
 
-    ResourceLoader::ResourceLoader() {
+    ResourceManager::ResourceManager() {
         synchronousMode = false;
         autoReload = false;
         terminated = false;
     }
 
-    ResourceLoader::~ResourceLoader() {
+    ResourceManager::~ResourceManager() {
         terminated = true;
         if(thread){
             con.notify_all();
@@ -21,7 +21,7 @@ namespace tridot {
         }
     }
 
-    void ResourceLoader::addSearchDirectory(const std::string &directory) {
+    void ResourceManager::addSearchDirectory(const std::string &directory) {
         if(directory.back() == '/'){
             searchDirectories.push_back(directory);
         }else{
@@ -29,7 +29,7 @@ namespace tridot {
         }
     }
 
-    void ResourceLoader::update() {
+    void ResourceManager::update() {
         if(!synchronousMode){
             if(!thread){
                 thread = Ref<std::thread>::make([this](){
@@ -48,7 +48,7 @@ namespace tridot {
         }
     }
 
-    ResourceLoader::Resource *ResourceLoader::getResource(const std::string &name, uint32_t typeId, bool synchronous, std::function<Ref<Resource>()> create) {
+    ResourceManager::Resource *ResourceManager::getResource(const std::string &name, uint32_t typeId, bool synchronous, std::function<Ref<Resource>()> create) {
         auto entry = resources.find(name);
         if(entry == resources.end()){
             Ref<Resource> res = create();
@@ -87,7 +87,7 @@ namespace tridot {
         }
     }
 
-    void ResourceLoader::preUpdate(Resource *res) {
+    void ResourceManager::preUpdate(Resource *res) {
         if (!res->preLoaded) {
             bool found = false;
             for(auto &dir : searchDirectories){
@@ -95,7 +95,13 @@ namespace tridot {
                 if(std::experimental::filesystem::exists(file)){
                     found = true;
                     res->file = file;
-                    if(res->preLoad()){
+                    if(!res->preLoad){
+                        Log::warning("no preLoad callback provided for resource \"", res->name, "\"");
+                        res->timestamp = getTimestamp(file);
+                        res->preLoaded = true;
+                        res->postLoaded = false;
+                        break;
+                    }else if(res->preLoad()){
                         res->timestamp = getTimestamp(file);
                         res->preLoaded = true;
                         res->postLoaded = false;
@@ -117,7 +123,12 @@ namespace tridot {
                         res->preLoaded = false;
                         res->postLoaded = false;
                     } else {
-                        if (res->preLoad()) {
+                        if(!res->preLoad){
+                            Log::warning("no preLoad callback provided for resource \"", res->name, "\"");
+                            res->timestamp = timestamp;
+                            res->preLoaded = true;
+                            res->postLoaded = false;
+                        }else if (res->preLoad()) {
                             res->timestamp = timestamp;
                             res->preLoaded = true;
                             res->postLoaded = false;
@@ -128,9 +139,12 @@ namespace tridot {
         }
     }
 
-    void ResourceLoader::postUpdate(Resource *res) {
+    void ResourceManager::postUpdate(Resource *res) {
         if(res->preLoaded && !res->postLoaded){
-            if(res->postLoad()){
+            if(!res->postLoad){
+                Log::warning("no postLoad callback provided for resource \"", res->name, "\"");
+                res->postLoaded = true;
+            }else if(res->postLoad()){
                 res->postLoaded = true;
             }
         }

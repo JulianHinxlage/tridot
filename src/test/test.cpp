@@ -127,15 +127,27 @@ int main(int argc, char *argv[]){
     material->metallic = 1.0;
     material->texture = nullptr;
 
-    Ref<Mesh> mesh = MeshFactory::createSphere(32, 32);
+    engine.resources.set<Mesh>("sphere") = MeshFactory::createSphere(32, 32);
+    *engine.resources.set<ecs::Prefab>("player") = ecs::Prefab(
+        Transform(),
+        RenderComponent()
+            .setMaterial(material)
+            .setMesh(engine.resources.get<Mesh>("sphere")),
+        RigidBody(5),
+        Collider(Collider::SPHERE)
+    );
+    EntityId playerId = engine.resources.get<ecs::Prefab>("player")->instantiate(engine);
+
+/*
     EntityId playerId = engine.create(
             Transform(),
             RenderComponent()
             .setMaterial(material)
-            .setMesh(mesh),
+            .setMesh(engine.resources.get<Mesh>("sphere")),
             RigidBody(5),
             Collider(Collider::SPHERE)
     );
+*/
 
     //create camera
     PerspectiveCamera &camera = engine.add<PerspectiveCamera>(engine.create());
