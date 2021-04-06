@@ -7,6 +7,7 @@
 #include <fstream>
 #include <vector>
 #include <memory>
+#include <time.h>
 
 namespace tridot{
 

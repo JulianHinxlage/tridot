@@ -7,6 +7,7 @@
 
 #include "VertexArray.h"
 #include <glm/glm.hpp>
+#include <string>
 
 namespace tridot {
 
