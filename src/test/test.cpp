@@ -97,7 +97,7 @@ void materialGui(){
 
 int main(int argc, char *argv[]){
     Log::options.logLevel = Log::TRACE;
-    engine.init(800, 600, "Tridot " TRI_VERSION, "../res/", true);
+    engine.init(1920, 1080, "Tridot " TRI_VERSION, "../res/", true);
     engine.window.setBackgroundColor(Color::white);
 
     glEnable(GL_CULL_FACE);
@@ -138,17 +138,6 @@ int main(int argc, char *argv[]){
     );
     EntityId playerId = engine.resources.get<ecs::Prefab>("player")->instantiate(engine);
 
-/*
-    EntityId playerId = engine.create(
-            Transform(),
-            RenderComponent()
-            .setMaterial(material)
-            .setMesh(engine.resources.get<Mesh>("sphere")),
-            RigidBody(5),
-            Collider(Collider::SPHERE)
-    );
-*/
-
     //create camera
     PerspectiveCamera &camera = engine.add<PerspectiveCamera>(engine.create());
     camera.position = {0, -2, 0};
@@ -174,7 +163,7 @@ int main(int argc, char *argv[]){
         if(engine.input.pressed('P')){
             debugOpen = !debugOpen;
         }
-        if(debugOpen){
+        if(debugOpen && ImGui::GetCurrentContext() != nullptr){
             ImGui::Begin("Debug Menu", &debugOpen);
             ImGui::BeginTabBar("tabs");
             lightGui();
@@ -274,7 +263,9 @@ void playerControl(EntityId playerId, PerspectiveCamera &camera){
     cameraControl(camera, true, look, true, 0);
 
     //camera
-    cameraDistance /= std::pow(1.3f, engine.input.mouseWheelDelta());
+    if(look){
+        cameraDistance /= std::pow(1.3f, engine.input.mouseWheelDelta());
+    }
     camera.position = transform.position - camera.forward * cameraDistance;
 }
 

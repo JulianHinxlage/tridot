@@ -219,6 +219,15 @@ namespace ecs {
             return *(ComponentPool<Component>*)componentPools[cid].get();
         }
 
+        Pool *getPool(int reflectId){
+            int cid = componentMap.id(reflectId);
+            if(cid < 0 || cid >= componentPools.size()){
+                return nullptr;
+            }else{
+                return componentPools[componentMap.id(reflectId)].get();
+            }
+        }
+
     private:
         TypeMap componentMap;
         std::vector<std::shared_ptr<Pool>> componentPools;

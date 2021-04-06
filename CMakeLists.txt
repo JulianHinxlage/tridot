@@ -17,22 +17,25 @@ else()
 endif()
 
 file(GLOB_RECURSE SOURCES src/tridot/*.cpp)
-file(GLOB IMGUI_SOURCES extern/imgui/*.cpp  extern/imgui/backends/imgui_impl_glfw.cpp extern/imgui/backends/imgui_impl_opengl3.cpp)
 
 if(WIN32)
-    add_library(${PROJECT_NAME} STATIC ${SOURCES} ${IMGUI_SOURCES})
+    add_library(${PROJECT_NAME} STATIC ${SOURCES})
 else()
-    add_library(${PROJECT_NAME} SHARED ${SOURCES} ${IMGUI_SOURCES})
+    add_library(${PROJECT_NAME} SHARED ${SOURCES})
 endif()
 
 target_include_directories(${PROJECT_NAME} PUBLIC src extern extern/imgui)
 target_compile_definitions(${PROJECT_NAME} PUBLIC TRI_DEBUG ECS_DEBUG)
 
-set(OpenGL_GL_PREFERENCE "GLVND")
-find_package(OpenGL REQUIRED)
-
 set(TRIDOT_BUILD_TYPE "${CMAKE_BUILD_TYPE}")
 set(CMAKE_BUILD_TYPE "Release")
+
+file(GLOB IMGUI_SOURCES extern/imgui/*.cpp  extern/imgui/backends/imgui_impl_glfw.cpp extern/imgui/backends/imgui_impl_opengl3.cpp)
+add_library(imgui STATIC ${IMGUI_SOURCES})
+target_include_directories(imgui PUBLIC src extern/imgui)
+
+set(OpenGL_GL_PREFERENCE "GLVND")
+find_package(OpenGL REQUIRED)
 
 add_subdirectory(extern/bullet3)
 target_include_directories(${PROJECT_NAME} PUBLIC extern/bullet3/src)
@@ -54,5 +57,5 @@ set(CMAKE_BUILD_TYPE ${TRIDOT_BUILD_TYPE})
 
 project(test-tridot)
 add_executable(${PROJECT_NAME} src/test/test.cpp)
-target_link_libraries(${PROJECT_NAME} PUBLIC tridot)
+target_link_libraries(${PROJECT_NAME} PUBLIC tridot imgui)
 project(tridot)

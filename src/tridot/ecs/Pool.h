@@ -7,6 +7,7 @@
 
 #include "config.h"
 #include "Signal.h"
+#include <memory>
 
 namespace ecs {
 
