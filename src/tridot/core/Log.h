@@ -37,7 +37,8 @@ namespace tridot {
 
         static Options options;
         static void addTarget(const std::string &file, Options options);
-        static void removeTarget(const std::string &file);
+        static void addTarget(std::ostream &stream, const std::string &name, Options options);
+        static void removeTarget(const std::string &name);
 
         static void log(Level level, const std::string &message);
 

@@ -15,8 +15,8 @@ namespace tridot{
 
     class Target{
     public:
-        std::shared_ptr<std::ofstream> stream;
-        std::string file;
+        std::shared_ptr<std::ostream> stream;
+        std::string name;
         Log::Options options;
     };
 
@@ -28,9 +28,14 @@ namespace tridot{
         logTargets.push_back({s, file, options});
     }
 
-    void Log::removeTarget(const std::string &file) {
+    void Log::addTarget(std::ostream &stream, const std::string &name, Log::Options options){
+        std::shared_ptr<std::ostream> s = std::shared_ptr<std::ostream>(&stream, [](void *ptr){});
+        logTargets.push_back({s, name, options});
+    }
+
+    void Log::removeTarget(const std::string &name) {
         for(int i = 0; i < logTargets.size(); i++){
-            if(logTargets[i].file == file){
+            if(logTargets[i].name == name){
                 logTargets.erase(logTargets.begin() + i);
                 i--;
             }
@@ -170,9 +175,7 @@ namespace tridot{
         logStream(level, message, options, std::cout);
         for(auto &target : logTargets){
             if(target.stream){
-                if(target.stream->is_open()){
-                    logStream(level, message, target.options, *target.stream);
-                }
+                logStream(level, message, target.options, *target.stream);
             }
         }
     }

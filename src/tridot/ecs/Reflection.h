@@ -120,9 +120,9 @@ namespace ecs{
 
 }
 
-#define ECS_UNIQUE_NAME_3(name, line) name##line
-#define ECS_UNIQUE_NAME_2(name, line) ECS_UNIQUE_NAME_3(name, line)
-#define ECS_UNIQUE_NAME(name) ECS_UNIQUE_NAME_2(name, __COUNTER__)
+#define ECS_UNIQUE_NAME_3(name, line, number) name##line##number
+#define ECS_UNIQUE_NAME_2(name, line, number) ECS_UNIQUE_NAME_3(name, line, number)
+#define ECS_UNIQUE_NAME(name) ECS_UNIQUE_NAME_2(name, __LINE__, __COUNTER__)
 
 #define REFLECT_TYPE_NAME(type, name) bool ECS_UNIQUE_NAME(___ecs_global___) = (ecs::Reflection::registerType<type>(#name), true);
 #define REFLECT_TYPE(type) REFLECT_TYPE_NAME(type, type)

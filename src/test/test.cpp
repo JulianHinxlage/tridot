@@ -100,8 +100,8 @@ int main(int argc, char *argv[]){
     engine.init(1920, 1080, "Tridot " TRI_VERSION, "../res/", true);
     engine.window.setBackgroundColor(Color::white);
 
-    glEnable(GL_CULL_FACE);
-    glCullFace(GL_BACK);
+    engine.resources.set<Mesh>("sphere") = MeshFactory::createSphere(32, 32);
+    engine.resources.set<Mesh>("cube") = MeshFactory::createCube();
 
     createScene();
 
@@ -127,7 +127,6 @@ int main(int argc, char *argv[]){
     material->metallic = 1.0;
     material->texture = nullptr;
 
-    engine.resources.set<Mesh>("sphere") = MeshFactory::createSphere(32, 32);
     *engine.resources.set<ecs::Prefab>("player") = ecs::Prefab(
         Transform(),
         RenderComponent()
@@ -158,7 +157,7 @@ int main(int argc, char *argv[]){
             engine.window.setVSync(!engine.window.getVSync());
         }
 
-        //debug gui
+
         static bool debugOpen = false;
         if(engine.input.pressed('P')){
             debugOpen = !debugOpen;
@@ -186,6 +185,13 @@ void playerControl(EntityId playerId, PerspectiveCamera &camera){
     float speed = 20;
     static float jumpBufferTimer = 0;
     static float cameraDistance = 5;
+
+    if(!engine.exists(playerId)){
+        return;
+    }
+    if(!engine.hasAll<RigidBody, Transform, Collider>(playerId)){
+        return;
+    }
 
     RigidBody &rigidBody = engine.get<RigidBody>(playerId);
     Transform &transform = engine.get<Transform>(playerId);
@@ -275,7 +281,7 @@ void createScene(){
     Ref<Texture> tex3 = engine.resources.get<Texture>("tex3.png");
     Ref<Texture> tex4 = engine.resources.get<Texture>("tex4.png");
 
-    Ref<Mesh> cube = MeshFactory::createCube();
+    Ref<Mesh> cube = engine.resources.get<Mesh>("cube");
 
     int groundSize = 200;
     int wallHeight = 30;
@@ -318,7 +324,7 @@ void createScene(){
         } else if (i < 4) {
             wall.instantiate(engine, Transform(
                     {0, i % 2 == 0 ? groundSize / 2 - 0.5 : -groundSize / 2 + 0.5, wallHeight / 2 - 0.5},
-                     {groundSize, 1, wallHeight}
+                    {groundSize, 1, wallHeight}
             ));
         }
     }
@@ -349,7 +355,7 @@ void createScene(){
                         RenderComponent(randu3() * 0.05f + 0.5f).setMesh(cube).setMaterial(platformMaterial),
                         RigidBody(0),
                         Collider(Collider::BOX)
-                        );
+                );
 
                 platformCount++;
             }

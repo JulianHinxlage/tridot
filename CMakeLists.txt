@@ -55,7 +55,13 @@ endif()
 
 set(CMAKE_BUILD_TYPE ${TRIDOT_BUILD_TYPE})
 
+project(editor)
+file(GLOB_RECURSE SOURCES src/editor/*.cpp)
+add_executable(${PROJECT_NAME} ${SOURCES})
+target_link_libraries(${PROJECT_NAME} PUBLIC tridot imgui)
+
 project(test-tridot)
-add_executable(${PROJECT_NAME} src/test/test.cpp)
+file(GLOB_RECURSE SOURCES src/test/*.cpp)
+add_executable(${PROJECT_NAME} ${SOURCES})
 target_link_libraries(${PROJECT_NAME} PUBLIC tridot imgui)
 project(tridot)

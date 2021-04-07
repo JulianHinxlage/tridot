@@ -50,9 +50,9 @@ namespace tridot {
 
 extern tridot::Engine engine;
 
-#define TRI_UNIQUE_NAME_3(name, line) name##line
-#define TRI_UNIQUE_NAME_2(name, line) TRI_UNIQUE_NAME_3(name, line)
-#define TRI_UNIQUE_NAME(name) TRI_UNIQUE_NAME_2(name, __COUNTER__)
+#define TRI_UNIQUE_NAME_3(name, line, number) name##line##number
+#define TRI_UNIQUE_NAME_2(name, line, number) TRI_UNIQUE_NAME_3(name, line, number)
+#define TRI_UNIQUE_NAME(name) TRI_UNIQUE_NAME_2(name, __LINE__, __COUNTER__)
 bool addUpdateSignalCallback(const std::string &name, const std::function<void()> &callback);
 bool addInitSignalCallback(const std::string &name, const std::function<void()> &callback);
 #define TRI_UPDATE_2(name, func) static void func();\

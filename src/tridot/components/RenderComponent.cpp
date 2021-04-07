@@ -54,11 +54,15 @@ namespace tridot {
         };
 
         engine.view<PerspectiveCamera>().each([&](PerspectiveCamera &camera){
-            camera.aspectRatio = engine.window.getAspectRatio();
+            if(camera.target.get() == nullptr){
+                camera.aspectRatio = engine.window.getAspectRatio();
+            }
             render(camera.getProjection(), camera.position, camera.target);
         });
         engine.view<OrthographicCamera>().each([&](OrthographicCamera &camera){
-            camera.aspectRatio = engine.window.getAspectRatio();
+            if(camera.target.get() == nullptr) {
+                camera.aspectRatio = engine.window.getAspectRatio();
+            }
             render(camera.getProjection(), glm::vec3(camera.position, 0.0f), camera.target);
         });
     }

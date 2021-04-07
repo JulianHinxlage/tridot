@@ -86,6 +86,20 @@ namespace tridot {
             return res->ref;
         }
 
+        template<typename T>
+        std::vector<std::string> getList(){
+            std::vector<std::string> list;
+            uint32_t typeId = typeid(T).hash_code();
+            for(auto &res : resources){
+                if(res.second){
+                    if(res.second->typeId == typeId){
+                        list.push_back(res.second->name);
+                    }
+                }
+            }
+            return list;
+        }
+
     private:
         class Resource{
         public:
