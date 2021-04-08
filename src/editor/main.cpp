@@ -69,4 +69,6 @@ int main(int argc, char *argv[]){
 
     engine.run();
     Editor::saveFlags();
+
+    return 0;
 }

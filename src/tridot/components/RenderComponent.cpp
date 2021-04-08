@@ -47,7 +47,7 @@ namespace tridot {
             });
 
             engine.view<Transform, RenderComponent>().each([&](ecs::EntityId id, Transform &transform, RenderComponent &rc){
-                engine.pbRenderer.submit(transform.getMatrix(), rc.color, rc.mesh.get(), rc.material.get());
+                engine.pbRenderer.submit(transform.getMatrix(), rc.color, rc.mesh.get(), rc.material.get(), id);
             });
             engine.renderer.end();
             engine.pbRenderer.end();

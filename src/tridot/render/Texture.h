@@ -33,6 +33,8 @@ namespace tridot {
         uint32_t getHeight();
         uint32_t getChannels();
         TextureFormat getFormat();
+        Color getPixel(int x, int y);
+        void clear(Color color);
 
     private:
         uint32_t id;

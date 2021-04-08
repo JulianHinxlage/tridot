@@ -13,6 +13,7 @@ namespace tridot {
         glm::mat4 transform;
         float materialIndex;
         Color color;
+        int id;
     };
 
     class PBLight{
@@ -121,7 +122,7 @@ namespace tridot {
         l->intensity = light.intensity;
     }
 
-    void PBRenderer::submit(const glm::mat4 &transform, Color color, Mesh *mesh, Material *material) {
+    void PBRenderer::submit(const glm::mat4 &transform, Color color, Mesh *mesh, Material *material, int id) {
         //setup defaults
         if(mesh == nullptr){
             mesh = defaultMesh.get();
@@ -177,6 +178,7 @@ namespace tridot {
                 {FLOAT, 4}, {FLOAT, 4}, {FLOAT, 4}, {FLOAT, 4},//transform
                 {FLOAT, 1},//materialIndex
                 {UINT8, 4, true},//color
+                {UINT8, 4, true},//id
             }, 1);
 
             batches.push_back(b);
@@ -256,6 +258,7 @@ namespace tridot {
         i->transform = transform;
         i->materialIndex = (float)materialIndex;
         i->color = color;
+        i->id = id;
     }
 
     void PBRenderer::end() {

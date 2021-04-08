@@ -26,6 +26,9 @@ namespace tridot {
 
     void Input::update() {
         GLFWwindow *window = (GLFWwindow*)glfwGetCurrentContext();
+        if(!window){
+            return;
+        }
         for(auto &key : keys){
             key.second.pressed = false;
             key.second.released = false;

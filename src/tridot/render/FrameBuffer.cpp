@@ -35,6 +35,17 @@ namespace tridot {
         if(currentFrameBufferId != id) {
             bindFrameBuffer(id);
             glViewport(0, 0, width, height);
+
+            std::vector<GLenum> drawBuffers;
+            for(auto &texture : textures){
+                if(texture.second.get() != nullptr) {
+                    if (texture.first >= COLOR && texture.first < COLOR + 16) {
+                        drawBuffers.push_back(internalEnum((TextureAttachment)texture.first));
+                    }
+                }
+            }
+            std::sort(drawBuffers.begin(), drawBuffers.end());
+            glDrawBuffers(drawBuffers.size(), drawBuffers.data());
         }
     }
 

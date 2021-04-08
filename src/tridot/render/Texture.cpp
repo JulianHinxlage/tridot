@@ -150,4 +150,15 @@ namespace tridot {
         return format;
     }
 
+    Color Texture::getPixel(int x, int y) {
+        glm::vec4 color;
+        glGetTextureSubImage(id, 0, x, y, 0, 1, 1, 1, GL_RGBA, GL_FLOAT, sizeof(color), &color);
+        return Color(color);
+    }
+
+    void Texture::clear(Color color) {
+        glm::vec4 c = color.vec();
+        glClearTexImage(id, 0, GL_RGBA, GL_FLOAT, &c);
+    }
+
 }

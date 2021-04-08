@@ -8,6 +8,7 @@ layout (location=2) in vec2 vTexCoords;
 layout (location=3) in mat4 iTransform;
 layout (location=7) in float iMaterialIndex;
 layout (location=8) in vec4 iColor;
+layout (location=9) in vec4 iId;
 
 uniform mat4 uProjection = mat4(1);
 
@@ -19,6 +20,7 @@ out vec4 fColor;
 out vec3 fPosition;
 out vec3 fNormal;
 out vec3 fScale;
+out vec4 fId;
 
 void main(){
     fLocalPosition = vPosition;
@@ -32,6 +34,7 @@ void main(){
     gl_Position = uProjection * pos;
     fScale = vec3(length(iTransform[0].xyz), length(iTransform[1].xyz), length(iTransform[2].xyz));
     fNormal = vec3(iTransform * vec4(vNormal / fScale, 0.0));
+    fId = iId;
 }
 
 #type fragment
@@ -45,6 +48,7 @@ in vec4 fColor;
 in vec3 fPosition;
 in vec3 fNormal;
 in vec3 fScale;
+in vec4 fId;
 
 struct Light{
     vec3 position;
@@ -87,7 +91,8 @@ layout(std140) uniform uMaterials {
 uniform sampler2D uTextures[32];
 uniform vec3 uCameraPosition;
 const float PI = 3.14159265359;
-out vec4 oColor;
+layout(location = 0) out vec4 oColor;
+layout(location = 1) out vec4 oId;
 
 vec4 sampleTexture(int textureIndex, int mapping, vec2 textureScale, vec2 textureOffset);
 float distributionFunction(vec3 N, vec3 H, float roughness);
@@ -168,6 +173,7 @@ void main(){
         lightOutput = albedo.rgb;
     }
     oColor = vec4(lightOutput, albedo.a);
+    oId = fId;
 
     //gamm correction
     //float gamma = 2.2;

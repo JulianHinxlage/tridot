@@ -29,7 +29,7 @@ namespace tridot {
         void init(const Ref<Shader> &shader, uint32_t maxTextures = 32, uint32_t maxMaterials = 1024, uint32_t maxInstances = 100000);
         void begin(const glm::mat4 &projection = glm::mat4(1), const glm::vec3 &cameraPosition = glm::vec3(0, 0, 0), const Ref<FrameBuffer> &frameBuffer = nullptr);
         void submit(const Light &light);
-        void submit(const glm::mat4 &transform, Color color = Color::white, Mesh *mesh = nullptr, Material *material = nullptr);
+        void submit(const glm::mat4 &transform, Color color = Color::white, Mesh *mesh = nullptr, Material *material = nullptr, int id = -1);
         void end();
     private:
         Ref<Texture> blankTexture;

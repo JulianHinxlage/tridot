@@ -16,6 +16,7 @@ TRI_UPDATE("clear"){
             camera.target = Ref<FrameBuffer>::make();
             camera.target->setTexture(COLOR);
             camera.target->setTexture(DEPTH);
+            camera.target->setTexture(TextureAttachment(COLOR + 1));
         }
         if (camera.target->getSize() != Editor::viewportSize) {
             camera.target->resize(Editor::viewportSize.x, Editor::viewportSize.y);
@@ -24,6 +25,10 @@ TRI_UPDATE("clear"){
             camera.aspectRatio = camera.target->getSize().x / camera.target->getSize().y;
         }
         camera.target->clear(engine.window.getBackgroundColor());
+        auto idBuffer = camera.target->getTexture(TextureAttachment(COLOR + 1));
+        if(idBuffer){
+            idBuffer->clear(Color(255, 255, 255, 255));
+        }
     }
 }
 
@@ -39,7 +44,25 @@ TRI_UPDATE("panels"){
                     Editor::viewportSize.x = ImGui::GetContentRegionAvail().x;
                     Editor::viewportSize.y = ImGui::GetContentRegionAvail().y;
                     if(camera.target) {
-                        auto texture = camera.target->getTexture(COLOR);
+
+                        auto idBuffer = camera.target->getTexture(TextureAttachment(COLOR + 1));
+                        if(idBuffer) {
+                            float x = ImGui::GetMousePos().x - (ImGui::GetWindowPos().x + ImGui::GetCursorPos().x);
+                            float y = ImGui::GetMousePos().y - (ImGui::GetWindowPos().y + ImGui::GetCursorPos().y);
+                            int id = idBuffer->getPixel(x, idBuffer->getHeight() - y).value;
+
+                            if(ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows)){
+                                if(ImGui::IsMouseClicked(0)){
+                                    if(id != -1 && engine.exists(id)){
+                                        Editor::selectedEntity = id;
+                                    }else{
+                                        Editor::selectedEntity = -1;
+                                    }
+                                }
+                            }
+                        }
+
+                        auto texture = camera.target->getTexture(TextureAttachment(COLOR + 0));
                         ImGui::Image((void *) (size_t) texture->getId(),
                                      ImVec2(Editor::viewportSize.x, Editor::viewportSize.y),
                                      ImVec2(0, 1), ImVec2(1, 0));
