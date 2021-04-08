@@ -7,9 +7,12 @@
 #include <imgui.h>
 #include <fstream>
 
-tridot::Editor editor;
-
 namespace tridot {
+
+    ecs::EntityId Editor::selectedEntity = -1;
+    ecs::EntityId Editor::cameraId = -1;
+    glm::vec2 Editor::viewportSize = {0, 0};
+    std::map<std::string, bool> Editor::flags;
 
     bool &Editor::getFlag(const std::string &name){
         auto open = flags.find(name);
@@ -29,14 +32,14 @@ namespace tridot {
                 auto pos = line.find('=');
                 bool value = (bool)std::stoi(line.substr(pos+1));
                 std::string key = line.substr(0, pos);
-                editor.flags[key] = value;
+                flags[key] = value;
             }
         }
     }
 
     void Editor::saveFlags(){
         std::ofstream s("flags.ini");
-        for(auto &panel : editor.flags){
+        for(auto &panel : flags){
             s.write(panel.first.c_str(), panel.first.size());
             s.write("=", 1);
             s.write(std::to_string((int)panel.second).c_str(), 1);
@@ -45,8 +48,32 @@ namespace tridot {
     }
 
     TRI_INIT("editor"){
-        ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
-        engine.onUpdate().order({"window", "clear", "rendering", "editor", "panels"});
+        if(ImGui::GetCurrentContext()) {
+            ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+
+            ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(1, 1, 1, 0.3));
+            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(1, 1, 1, 0.4));
+            ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(1, 1, 1, 0.5));
+            ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(1, 1, 1, 0.2));
+            ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4(1, 1, 1, 0.3));
+            ImGui::PushStyleColor(ImGuiCol_HeaderActive, ImVec4(1, 1, 1, 0.4));
+            ImGui::PushStyleColor(ImGuiCol_Tab, ImVec4(1, 1, 1, 0.1));
+            ImGui::PushStyleColor(ImGuiCol_TabActive, ImVec4(1, 1, 1, 0.25));
+            ImGui::PushStyleColor(ImGuiCol_TabHovered, ImVec4(1, 1, 1, 0.40));
+            ImGui::PushStyleColor(ImGuiCol_TabUnfocused, ImVec4(1, 1, 1, 0.1));
+            ImGui::PushStyleColor(ImGuiCol_TabUnfocusedActive, ImVec4(1, 1, 1, 0.25));
+            ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(1, 1, 1, 0.35));
+            ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, ImVec4(1, 1, 1, 0.45));
+            ImGui::PushStyleColor(ImGuiCol_FrameBgActive, ImVec4(1, 1, 1, 0.55));
+            ImGui::PushStyleColor(ImGuiCol_SliderGrab, ImVec4(1, 1, 1, 0.35));
+            ImGui::PushStyleColor(ImGuiCol_SliderGrabActive, ImVec4(1, 1, 1, 0.35));
+            ImGui::PushStyleColor(ImGuiCol_CheckMark, ImVec4(1, 1, 1, 0.45));
+            ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.116, 0.125, 0.133, 1));
+            ImGui::PushStyleColor(ImGuiCol_TitleBg, ImVec4(0.177, 0.177, 0.177, 1));
+            ImGui::PushStyleColor(ImGuiCol_TitleBgActive, ImVec4(0.238, 0.238, 0.238, 1));
+            ImGui::PushStyleColor(ImGuiCol_DragDropTarget, ImVec4(0.0, 0.32, 1.0, 1));
+        }
+        engine.onUpdate().order({"imgui end", "window", "imgui begin", "clear", "rendering", "editor", "panels"});
     }
 
     TRI_UPDATE("editor"){
@@ -54,7 +81,7 @@ namespace tridot {
             ImGui::DockSpaceOverViewport();
             if (ImGui::BeginMainMenuBar()) {
                 if (ImGui::BeginMenu("Panels")) {
-                    for (auto &panel : editor.flags) {
+                    for (auto &panel : Editor::flags) {
                         if (ImGui::MenuItem(panel.first.c_str(), nullptr, panel.second)) {
                             panel.second = !panel.second;
                         }

@@ -30,8 +30,8 @@ void main(){
     vec4 pos = iTransform * vec4(vPosition, 1.0);
     fPosition = pos.xyz;
     gl_Position = uProjection * pos;
-    fNormal = vec3(iTransform * vec4(vNormal, 0.0));
     fScale = vec3(length(iTransform[0].xyz), length(iTransform[1].xyz), length(iTransform[2].xyz));
+    fNormal = vec3(iTransform * vec4(vNormal / fScale, 0.0));
 }
 
 #type fragment

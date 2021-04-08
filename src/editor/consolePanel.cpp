@@ -21,9 +21,10 @@ TRI_INIT("panels"){
 
 TRI_UPDATE("panels"){
     if(ImGui::GetCurrentContext() != nullptr){
-        bool &open = editor.getFlag("Console");
+        bool &open = Editor::getFlag("Console");
         if(open){
             if(ImGui::Begin("Console", &open, ImGuiWindowFlags_HorizontalScrollbar)){
+                ImGui::SetWindowSize(ImVec2(400, 400), ImGuiCond_FirstUseEver);
                 std::string str = consoleLog.str();
                 std::string line;
                 for(char c : str){
@@ -37,6 +38,9 @@ TRI_UPDATE("panels"){
                 if(line.size() > 0){
                     ImGui::Text("%s", line.c_str());
                     line.clear();
+                }
+                if (ImGui::GetScrollY() >= ImGui::GetScrollMaxY()){
+                    ImGui::SetScrollHereY(1.0f);
                 }
             }
             ImGui::End();

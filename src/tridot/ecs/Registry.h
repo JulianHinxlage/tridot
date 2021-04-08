@@ -73,7 +73,7 @@ namespace ecs {
             }
             entityPool.remove(id);
             if(id == nextEntityId - 1){
-                while(!entityPool.has(nextEntityId - 1)){
+                while(nextEntityId != 0 && !entityPool.has(nextEntityId - 1)){
                     nextEntityId--;
                     auto entry = freeEntityIds.find(nextEntityId);
                     if(entry != freeEntityIds.end()){

@@ -29,6 +29,8 @@ bool addInitSignalCallback(const std::string &name, const std::function<void()> 
     return true;
 }
 
+void imguiInit();
+
 namespace tridot {
 
     Engine::Engine() {
@@ -70,6 +72,7 @@ namespace tridot {
             window.update();
         });
 
+        imguiInit();
         onInitSignal.invoke();
     }
 

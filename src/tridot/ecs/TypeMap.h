@@ -13,19 +13,15 @@ namespace ecs{
     public:
         template<typename T>
         int id(){
-            int reflectId = Reflection::id<T>();
+            return id(Reflection::id<T>());
+        }
+
+        int id(int reflectId){
             while(reflectId >= map.size()){
                 map.push_back(-1);
             }
             if(map[reflectId] == -1){
                 map[reflectId] = count++;
-            }
-            return map[reflectId];
-        }
-
-        int id(int reflectId){
-            if(reflectId >= map.size()){
-                return -1;
             }
             return map[reflectId];
         }

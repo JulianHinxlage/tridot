@@ -11,7 +11,7 @@ using namespace tridot;
 
 bool inFrame = false;
 
-TRI_INIT("imgui"){
+void imguiInit(){
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO &io = ImGui::GetIO();

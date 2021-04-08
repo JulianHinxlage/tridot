@@ -6,6 +6,7 @@
 #define TRIDOT_ECS_CONFIG_H
 
 #include <cassert>
+#include <cstdint>
 
 #if !defined(ECS_DEBUG) && !defined(ECS_RELEASE)
     #define ECS_RELEASE

@@ -87,7 +87,33 @@ namespace tridot {
         }
 
         template<typename T>
-        std::vector<std::string> getList(){
+        void remove(const std::string &name){
+            uint32_t typeId = typeid(T).hash_code();
+            for(auto &res : resources){
+                if(res.second->typeId == typeId){
+                    if(res.first == name){
+                        resources.erase(res.first);
+                    }
+                }
+            }
+        }
+
+        template<typename T>
+        std::string getName(Ref<T> &res){
+            uint32_t typeId = typeid(T).hash_code();
+            for(auto &r : resources){
+                if(r.second->typeId == typeId){
+                    auto *t = (ResourceT<T>*)r.second.get();
+                    if(t->ref == res){
+                        return r.first;
+                    }
+                }
+            }
+            return "";
+        }
+
+        template<typename T>
+        std::vector<std::string> getNames(){
             std::vector<std::string> list;
             uint32_t typeId = typeid(T).hash_code();
             for(auto &res : resources){

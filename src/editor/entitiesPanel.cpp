@@ -11,27 +11,58 @@ using namespace ecs;
 
 TRI_UPDATE("panels"){
     if(ImGui::GetCurrentContext() != nullptr) {
-        bool &open = editor.getFlag("Entities");
+        bool &open = Editor::getFlag("Entities");
         if(open) {
             if (ImGui::Begin("Entities", &open)) {
-                engine.view<>().each([&](EntityId id) {
-                    ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_OpenOnArrow |
-                            ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen;
-                    if (id == editor.selectedEntity) {
-                        flags |= ImGuiTreeNodeFlags_Selected;
-                    }
-                    ImGui::TreeNodeEx((void *) (size_t) id, flags, "Entity %i", id);
-                    if (ImGui::IsItemClicked()) {
-                        if(editor.selectedEntity == id){
-                            editor.selectedEntity = -1;
-                        }else{
-                            editor.selectedEntity = id;
+                ImGui::SetWindowSize(ImVec2(400, 400), ImGuiCond_FirstUseEver);
+
+                if (ImGui::Button("add Entity")) {
+                    Editor::selectedEntity = engine.create();
+                }
+
+                if (ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows)) {
+                    if (engine.input.pressed(engine.input.KEY_DELETE)) {
+                        if (Editor::selectedEntity != -1) {
+                            engine.destroy(Editor::selectedEntity);
                         }
                     }
-                });
-                if (ImGui::Button("add Entity")) {
-                    editor.selectedEntity = engine.create();
                 }
+
+                ImGui::Separator();
+                ImGui::BeginChild("entities");
+
+
+                EntityId max = 0;
+                engine.view<>().each([&](EntityId id) {
+                    max = std::max(max, id);
+                });
+                for (EntityId id = 0; id <= max; id++) {
+                    if (engine.exists(id)) {
+                        std::string label = "Entity " + std::to_string(id);
+                        if (ImGui::Selectable(label.c_str(), id == Editor::selectedEntity,
+                                              ImGuiSelectableFlags_AllowItemOverlap)) {
+                            if (Editor::selectedEntity == id) {
+                                Editor::selectedEntity = -1;
+                            } else {
+                                Editor::selectedEntity = id;
+                            }
+                        }
+
+                        ImGui::PushID(id);
+                        if (ImGui::BeginPopupContextItem()) {
+                            if (ImGui::Selectable("remove")) {
+                                engine.destroy(id);
+                                if (id == Editor::selectedEntity) {
+                                    Editor::selectedEntity = -1;
+                                }
+                            }
+                            ImGui::EndPopup();
+                        }
+                        ImGui::PopID();
+                    }
+                }
+
+                ImGui::EndChild();
             }
             ImGui::End();
         }

@@ -55,6 +55,10 @@ endif()
 
 set(CMAKE_BUILD_TYPE ${TRIDOT_BUILD_TYPE})
 
+if(NOT WIN32)
+add_link_options(-no-pie)
+endif()
+
 project(editor)
 file(GLOB_RECURSE SOURCES src/editor/*.cpp)
 add_executable(${PROJECT_NAME} ${SOURCES})

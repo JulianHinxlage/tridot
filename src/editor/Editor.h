@@ -13,18 +13,16 @@ namespace tridot {
 
     class Editor {
     public:
-        ecs::EntityId selectedEntity = -1;
-        ecs::EntityId cameraId = -1;
-        glm::vec2 viewportSize = {0, 0};
+        static ecs::EntityId selectedEntity;
+        static ecs::EntityId cameraId;
+        static glm::vec2 viewportSize;
+        static std::map<std::string, bool> flags;
 
-        std::map<std::string, bool> flags;
-        bool &getFlag(const std::string &name);
-        void loadFlags();
-        void saveFlags();
+        static bool &getFlag(const std::string &name);
+        static void loadFlags();
+        static void saveFlags();
     };
 
 }
-
-extern tridot::Editor editor;
 
 #endif //TRIDOT_EDITOR_H

@@ -63,5 +63,6 @@ static void func()
 namespace{ bool TRI_UNIQUE_NAME(___tri_global___) = addInitSignalCallback(name, &func);}\
 static void func()
 #define TRI_INIT(name) TRI_INIT_2(name, TRI_UNIQUE_NAME(___tri_init_func___))
+#define TRI_COMPONENT(type) TRI_INIT(""){engine.getPool<type>();}
 
 #endif //TRIDOT_ENGINE_H

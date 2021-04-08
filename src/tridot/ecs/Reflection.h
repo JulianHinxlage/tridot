@@ -26,7 +26,6 @@ namespace ecs{
             virtual const std::string &name() = 0;
             virtual const std::type_info &info() = 0;
             virtual std::vector<Member> &member() = 0;
-
             virtual void construct(void *ptr) = 0;
             virtual void destruct(void *ptr) = 0;
             virtual void copy(void *from, void *to) = 0;
@@ -41,6 +40,10 @@ namespace ecs{
         template<class T>
         static Type &get(){
             return *getTypes()[id<T>()];
+        }
+
+        static Type &get(int id){
+            return *getTypes()[id];
         }
 
         static std::vector<Type*> &getTypes(){
