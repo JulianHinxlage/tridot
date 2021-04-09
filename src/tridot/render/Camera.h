@@ -24,6 +24,8 @@ namespace tridot {
 
         PerspectiveCamera();
         glm::mat4 getProjection();
+        glm::mat4 getView();
+        glm::mat4 getPerspective();
     };
 
     class OrthographicCamera {
@@ -38,6 +40,8 @@ namespace tridot {
 
         OrthographicCamera();
         glm::mat4 getProjection();
+        glm::mat4 getView();
+        glm::mat4 getPerspective();
     };
 
 }

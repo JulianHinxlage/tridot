@@ -128,13 +128,17 @@ namespace tridot {
         GLFWwindow *window = (GLFWwindow*)glfwGetCurrentContext();
         double x = 0;
         double y = 0;
-        glfwGetCursorPos(window, &x, &y);
+        if(window){
+            glfwGetCursorPos(window, &x, &y);
+        }
         glm::vec2 m = {x, y};
 
         if(screenSpace) {
             int width = 0;
             int height = 0;
-            glfwGetWindowSize(window, &width, &height);
+            if(window){
+                glfwGetWindowSize(window, &width, &height);
+            }
             m.x /= (float) width;
             m.y /= (float) height;
             m.y = 1.0f - m.y;
@@ -153,7 +157,9 @@ namespace tridot {
         if(screenSpace){
             int width = 0;
             int height = 0;
-            glfwGetWindowSize(window, &width, &height);
+            if(window){
+                glfwGetWindowSize(window, &width, &height);
+            }
             glm::vec2 m = position;
             m += glm::vec2(1, 1);
             m /= 2.0f;
@@ -162,7 +168,9 @@ namespace tridot {
             m.x *= (float)width;
             position = m;
         }
-        glfwSetCursorPos(window, position.x, position.y);
+        if(window){
+            glfwSetCursorPos(window, position.x, position.y);
+        }
     }
 
 }

@@ -30,8 +30,9 @@ target_compile_definitions(${PROJECT_NAME} PUBLIC TRI_DEBUG ECS_DEBUG)
 set(TRIDOT_BUILD_TYPE "${CMAKE_BUILD_TYPE}")
 set(CMAKE_BUILD_TYPE "Release")
 
-file(GLOB IMGUI_SOURCES extern/imgui/*.cpp  extern/imgui/backends/imgui_impl_glfw.cpp extern/imgui/backends/imgui_impl_opengl3.cpp)
-add_library(imgui STATIC ${IMGUI_SOURCES})
+file(GLOB IMGUI_SOURCES extern/imgui/*.cpp extern/imgui/backends/imgui_impl_glfw.cpp extern/imgui/backends/imgui_impl_opengl3.cpp)
+file(GLOB IMGUIZMO_SOURCES extern/imguizmo/ImGuizmo.cpp)
+add_library(imgui STATIC ${IMGUI_SOURCES} ${IMGUIZMO_SOURCES})
 target_include_directories(imgui PUBLIC src extern/imgui)
 
 set(OpenGL_GL_PREFERENCE "GLVND")

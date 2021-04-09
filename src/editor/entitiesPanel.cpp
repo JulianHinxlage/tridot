@@ -24,6 +24,7 @@ TRI_UPDATE("panels"){
                     if (engine.input.pressed(engine.input.KEY_DELETE)) {
                         if (Editor::selectedEntity != -1) {
                             engine.destroy(Editor::selectedEntity);
+                            Editor::selectedEntity = -1;
                         }
                     }
                 }

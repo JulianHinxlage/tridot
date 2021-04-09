@@ -44,7 +44,7 @@ int main(int argc, char *argv[]){
 
     Editor::cameraId = engine.create();
     PerspectiveCamera &camera = engine.add<PerspectiveCamera>(Editor::cameraId);
-    camera.position = glm::vec3(3, -5, 2) * 0.5f;
+    camera.position = glm::vec3(3, 5, 2) * 0.5f;
     camera.forward = -glm::normalize(camera.position);
     camera.up = {0, 0, 1};
     camera.right = {1, 0, 0};

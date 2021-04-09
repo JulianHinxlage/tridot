@@ -27,13 +27,13 @@ namespace tridot {
     }
 
     btQuaternion convQuaternion(const glm::vec3 &euler){
-        glm::quat quaternion(-euler);
-        return btQuaternion(-quaternion.x, -quaternion.y, -quaternion.z, quaternion.w);
+        glm::quat quaternion(euler);
+        return btQuaternion(quaternion.x, quaternion.y, quaternion.z, quaternion.w);
     }
 
     glm::vec3 convQuaternion(const btQuaternion &quat){
-        glm::quat quaternion(quat.getW(), -quat.getX(), -quat.getY(), -quat.getZ());
-        return -glm::vec3(glm::eulerAngles(quaternion));
+        glm::quat quaternion(quat.getW(), quat.getX(), quat.getY(), quat.getZ());
+        return glm::vec3(glm::eulerAngles(quaternion));
     }
 
     TRI_UPDATE("physics"){

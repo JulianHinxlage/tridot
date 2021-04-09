@@ -13,3 +13,6 @@
 [submodule "extern/glew"]
 	path = extern/glew
 	url = https://github.com/edoren/glew.git
+[submodule "extern/imguizmo"]
+	path = extern/imguizmo
+	url = https://github.com/CedricGuillemet/ImGuizmo.git

@@ -12,7 +12,9 @@ namespace tridot {
         glm::mat4 transform(1);
         transform = glm::translate(transform, position);
         if(rotation != glm::vec3(0, 0, 0)){
-            transform = transform * glm::eulerAngleXYZ(rotation.x, rotation.y, rotation.z);
+            transform = glm::rotate(transform, rotation.z, {0, 0, 1});
+            transform = glm::rotate(transform, rotation.y, {0, 1, 0});
+            transform = glm::rotate(transform, rotation.x, {1, 0, 0});
         }
         transform = glm::scale(transform, scale);
         return transform;
