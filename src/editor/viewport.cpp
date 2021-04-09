@@ -12,6 +12,14 @@
 using namespace tridot;
 
 TRI_UPDATE("clear"){
+    if(Editor::cameraId == -1){
+        engine.view<PerspectiveCamera>().each([](ecs::EntityId id, PerspectiveCamera &camera){
+            if(Editor::cameraId == -1){
+                Editor::cameraId = id;
+            }
+        });
+    }
+
     if(engine.has<PerspectiveCamera>(Editor::cameraId)) {
         PerspectiveCamera &camera = engine.get<PerspectiveCamera>(Editor::cameraId);
         if(camera.target.get() == nullptr) {
@@ -94,6 +102,7 @@ TRI_UPDATE("panels"){
                     static ImGuizmo::OPERATION operation = ImGuizmo::OPERATION::TRANSLATE;
                     static ImGuizmo::MODE mode = ImGuizmo::MODE::LOCAL;
 
+
                     //viewport control bar
                     {
                         ImGui::BeginTable("controls", 3);
@@ -126,10 +135,31 @@ TRI_UPDATE("panels"){
                         ImGui::EndTable();
                     }
 
+
+                    if(ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows)) {
+                        if(engine.input.pressed('E')){
+                            if(operation == ImGuizmo::OPERATION::TRANSLATE){
+                                operation = ImGuizmo::OPERATION::SCALE;
+                            }else if(operation == ImGuizmo::OPERATION::SCALE){
+                                operation = ImGuizmo::OPERATION::ROTATE;
+                            }else if(operation == ImGuizmo::OPERATION::ROTATE){
+                                operation = ImGuizmo::OPERATION::TRANSLATE;
+                            }
+                        }else if(engine.input.pressed('R')){
+                            if(mode == ImGuizmo::MODE::LOCAL){
+                                mode = ImGuizmo::MODE::WORLD;
+                            }else{
+                                mode = ImGuizmo::MODE::LOCAL;
+                            }
+                        }
+                    }
+
+
                     //camera control
                     editorCamera.update(camera, ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows));
                     float mousePickX = ImGui::GetMousePos().x - (ImGui::GetWindowPos().x + ImGui::GetCursorPos().x);
                     float mousePickY = ImGui::GetMousePos().y - (ImGui::GetWindowPos().y + ImGui::GetCursorPos().y);
+
 
                     //draw to viewport panel
                     if(camera.target) {
@@ -155,22 +185,6 @@ TRI_UPDATE("panels"){
                             glm::mat4 matrix = transform.getMatrix();
                             glm::mat4 view = camera.getView();
                             glm::mat4 projection = camera.getPerspective();
-
-                            if(ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows)) {
-                                if(engine.input.pressed('M')){
-                                    operation = ImGuizmo::OPERATION::TRANSLATE;
-                                }else if(engine.input.pressed('N')){
-                                    operation = ImGuizmo::OPERATION::SCALE;
-                                }else if(engine.input.pressed('B')){
-                                    operation = ImGuizmo::OPERATION::ROTATE;
-                                }else if(engine.input.pressed('V')){
-                                    if(mode == ImGuizmo::MODE::LOCAL){
-                                        mode = ImGuizmo::MODE::WORLD;
-                                    }else{
-                                        mode = ImGuizmo::MODE::LOCAL;
-                                    }
-                                }
-                            }
 
                             bool snap = engine.input.down(Input::KEY_LEFT_CONTROL) || engine.input.down(Input::KEY_RIGHT_CONTROL);
                             glm::vec3 snapValues = glm::vec3(1) * 0.25f;
@@ -204,6 +218,7 @@ TRI_UPDATE("panels"){
                             }
                         }
                     }
+
 
                     //remove entities
                     if (ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows)) {

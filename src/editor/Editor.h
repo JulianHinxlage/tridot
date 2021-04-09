@@ -17,6 +17,7 @@ namespace tridot {
         static ecs::EntityId cameraId;
         static glm::vec2 viewportSize;
         static std::map<std::string, bool> flags;
+        static std::string currentSceneFile;
 
         static bool &getFlag(const std::string &name);
         static void loadFlags();

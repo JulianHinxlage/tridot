@@ -41,9 +41,13 @@ void resourcePanel(const char *name, const char *panelName) {
                         ImGui::CloseCurrentPopup();
                     }
                     static char buffer[256];
-                    ImGui::InputText("name", buffer, sizeof(buffer));
-                    if (ImGui::Button("create")) {
+                    ImGui::InputText("Name", buffer, sizeof(buffer));
+                    if (ImGui::Button("Create")) {
                         res = engine.resources.set<T>(std::string(buffer));
+                        ImGui::CloseCurrentPopup();
+                    }
+                    ImGui::SameLine();
+                    if(ImGui::Button("Cancel")){
                         ImGui::CloseCurrentPopup();
                     }
                     ImGui::EndPopup();

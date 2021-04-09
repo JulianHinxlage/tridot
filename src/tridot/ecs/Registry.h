@@ -228,6 +228,12 @@ namespace ecs {
             }
         }
 
+        template<typename... Components>
+        void registerComponents(){
+            (getPool<Components>() , ...);
+        }
+
+
     private:
         TypeMap componentMap;
         std::vector<std::shared_ptr<Pool>> componentPools;

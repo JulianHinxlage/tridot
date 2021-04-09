@@ -93,6 +93,12 @@ TRI_INIT("panels"){
     EditorGui::addType<bool>(true, [](bool &v, const std::string &name) {
         ImGui::Checkbox(name.c_str(), &v);
     });
+    EditorGui::addType<std::string>(true, [](std::string &v, const std::string &name) {
+        char buffer[256];
+        strcpy(buffer, v.c_str());
+        ImGui::InputText(name.c_str(), buffer, sizeof(buffer));
+        v = buffer;
+    });
     EditorGui::addType<glm::vec2>(true, [](glm::vec2 &v, const std::string &name) {
         ImGui::DragFloat2(name.c_str(), (float*)&v, 0.01);
     });

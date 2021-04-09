@@ -3,6 +3,7 @@
 //
 
 #include "tridot/engine/Engine.h"
+#include "tridot/engine/Serializer.h"
 #include "tridot/render/Camera.h"
 #include "tridot/render/MeshFactory.h"
 #include "tridot/components/RenderComponent.h"
@@ -28,33 +29,39 @@ int main(int argc, char *argv[]){
     engine.resources.get<Texture>("tex3.png");
     engine.resources.get<Texture>("tex4.png");
 
-    Ref<Material> gold = engine.resources.set<Material>("gold");
-    gold->texture = nullptr;
-    gold->textureScale = {0.5f, 0.5f};
-    gold->mapping = Material::SCALE_TRI_PLANAR;
-    gold->roughness = 0.50;
-    gold->metallic = 0.6;
-    gold->normalMap = engine.resources.get<Texture>("normal2.png");
-    gold->normalMap->setMagMin(false, false);
-    gold->normalMapScale = {0.5f, 0.5f};
-    gold->normalMapFactor = 0.5;
-    gold->color = Color(194, 172, 84);
-    gold->roughness = 0.651;
-    gold->metallic = 1.0;
+    engine.registerComponents<Transform, RenderComponent, PerspectiveCamera, OrthographicCamera, Light, RigidBody, Collider>();
 
-    Editor::cameraId = engine.create();
-    PerspectiveCamera &camera = engine.add<PerspectiveCamera>(Editor::cameraId);
-    camera.position = glm::vec3(3, 5, 2) * 0.5f;
-    camera.forward = -glm::normalize(camera.position);
-    camera.up = {0, 0, 1};
-    camera.right = {1, 0, 0};
-    camera.near = 0.05;
-    camera.far = 1200;
-    camera.aspectRatio = 1;
+    Editor::currentSceneFile = "scene.yaml";
+    Serializer s;
+    if(!s.load(Editor::currentSceneFile, engine, engine.resources)){
+        Ref<Material> gold = engine.resources.set<Material>("gold");
+        gold->texture = nullptr;
+        gold->textureScale = {0.5f, 0.5f};
+        gold->mapping = Material::SCALE_TRI_PLANAR;
+        gold->roughness = 0.50;
+        gold->metallic = 0.6;
+        gold->normalMap = engine.resources.get<Texture>("normal2.png");
+        gold->normalMap->setMagMin(false, false);
+        gold->normalMapScale = {0.5f, 0.5f};
+        gold->normalMapFactor = 0.5;
+        gold->color = Color(194, 172, 84);
+        gold->roughness = 0.651;
+        gold->metallic = 1.0;
 
-    engine.create(Transform(), RenderComponent(Color::white).setMesh(engine.resources.get<Mesh>("cube")).setMaterial(gold));
-    engine.create(Light(DIRECTIONAL_LIGHT, {-0.3, 0.1, -0.4}, {1, 1, 1}, 2.7));
-    engine.create(Light(AMBIENT_LIGHT, {0, 0, 0}, {1, 1, 1}, 0.5));
+        Editor::cameraId = engine.create();
+        PerspectiveCamera &camera = engine.add<PerspectiveCamera>(Editor::cameraId);
+        camera.position = glm::vec3(3, 5, 2) * 0.5f;
+        camera.forward = -glm::normalize(camera.position);
+        camera.up = {0, 0, 1};
+        camera.right = {1, 0, 0};
+        camera.near = 0.05;
+        camera.far = 1200;
+        camera.aspectRatio = 1;
+
+        engine.create(Transform(), RenderComponent(Color::white).setMesh(engine.resources.get<Mesh>("cube")).setMaterial(gold));
+        engine.create(Light(DIRECTIONAL_LIGHT, {-0.3, 0.1, -0.4}, {1, 1, 1}, 2.7));
+        engine.create(Light(AMBIENT_LIGHT, {0, 0, 0}, {1, 1, 1}, 0.5));
+    }
 
     Editor::loadFlags();
 

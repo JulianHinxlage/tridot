@@ -16,3 +16,6 @@
 [submodule "extern/imguizmo"]
 	path = extern/imguizmo
 	url = https://github.com/CedricGuillemet/ImGuizmo.git
+[submodule "extern/yaml-cpp"]
+	path = extern/yaml-cpp
+	url = https://github.com/jbeder/yaml-cpp.git

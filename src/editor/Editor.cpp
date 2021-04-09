@@ -4,6 +4,7 @@
 
 #include "Editor.h"
 #include "tridot/engine/Engine.h"
+#include "tridot/engine/Serializer.h"
 #include <imgui.h>
 #include <fstream>
 
@@ -13,6 +14,7 @@ namespace tridot {
     ecs::EntityId Editor::cameraId = -1;
     glm::vec2 Editor::viewportSize = {0, 0};
     std::map<std::string, bool> Editor::flags;
+    std::string Editor::currentSceneFile = "";
 
     bool &Editor::getFlag(const std::string &name){
         auto open = flags.find(name);
@@ -79,7 +81,26 @@ namespace tridot {
     TRI_UPDATE("editor"){
         if(ImGui::GetCurrentContext() != nullptr) {
             ImGui::DockSpaceOverViewport();
+
+            bool openFilePopup = false;
+            bool saveFilePopup = false;
+
             if (ImGui::BeginMainMenuBar()) {
+                if(ImGui::BeginMenu("File")){
+                    if(ImGui::MenuItem("Open")){
+                        openFilePopup = true;
+                    }
+                    if(ImGui::MenuItem("Save")){
+                        Serializer s;
+                        s.save(Editor::currentSceneFile, engine, engine.resources);
+                    }
+                    if(ImGui::MenuItem("Save as")){
+                        saveFilePopup = true;
+                    }
+                    ImGui::EndMenu();
+                }
+
+
                 if (ImGui::BeginMenu("Panels")) {
                     for (auto &panel : Editor::flags) {
                         if (ImGui::MenuItem(panel.first.c_str(), nullptr, panel.second)) {
@@ -90,6 +111,63 @@ namespace tridot {
                 }
                 ImGui::EndMainMenuBar();
             }
+
+            //Open File
+            if(openFilePopup){
+                ImGui::OpenPopup("Open File");
+            }
+            {
+                bool popupOpen = true;
+                if (ImGui::BeginPopupModal("Open File", &popupOpen)){
+                    if (!popupOpen) {
+                        ImGui::CloseCurrentPopup();
+                    }
+                    static char buffer[256];
+                    ImGui::InputText("File", buffer, sizeof(buffer));
+                    if (ImGui::Button("Open")) {
+                        Serializer s;
+                        if(s.load(std::string(buffer), engine, engine.resources)){
+                            Editor::currentSceneFile = std::string(buffer);
+                            Editor::cameraId = -1;
+                            Editor::selectedEntity = -1;
+                        }
+                        ImGui::CloseCurrentPopup();
+                    }
+                    ImGui::SameLine();
+                    if(ImGui::Button("Cancel")){
+                        ImGui::CloseCurrentPopup();
+                    }
+                    ImGui::EndPopup();
+                }
+            }
+
+
+            //Save File
+            if(saveFilePopup){
+                ImGui::OpenPopup("Save File");
+            }
+            {
+                bool popupOpen = true;
+                if (ImGui::BeginPopupModal("Save File", &popupOpen)){
+                    if (!popupOpen) {
+                        ImGui::CloseCurrentPopup();
+                    }
+                    static char buffer[256];
+                    ImGui::InputText("File", buffer, sizeof(buffer));
+                    if (ImGui::Button("Save")) {
+                        Editor::currentSceneFile = std::string(buffer);
+                        Serializer s;
+                        s.save(Editor::currentSceneFile, engine, engine.resources);
+                        ImGui::CloseCurrentPopup();
+                    }
+                    ImGui::SameLine();
+                    if(ImGui::Button("Cancel")){
+                        ImGui::CloseCurrentPopup();
+                    }
+                    ImGui::EndPopup();
+                }
+            }
+
         }
     }
 

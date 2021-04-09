@@ -42,11 +42,15 @@ add_subdirectory(extern/bullet3)
 target_include_directories(${PROJECT_NAME} PUBLIC extern/bullet3/src)
 target_link_libraries(${PROJECT_NAME} BulletDynamics BulletCollision LinearMath)
 
+set(CMAKE_BUILD_TYPE ${TRIDOT_BUILD_TYPE})
+add_subdirectory(extern/yaml-cpp)
+set(CMAKE_BUILD_TYPE "Release")
+
 add_subdirectory(extern/glfw)
 add_subdirectory(extern/glew/build/cmake)
 add_subdirectory(extern/glm)
-target_link_libraries(${PROJECT_NAME} glfw glm)
-target_include_directories(${PROJECT_NAME} PUBLIC extern/glm extern/glfw/include extern/glew/include)
+target_link_libraries(${PROJECT_NAME} glfw glm yaml-cpp)
+target_include_directories(${PROJECT_NAME} PUBLIC extern/glm extern/glfw/include extern/glew/include extern/yaml-cpp/include)
 
 if(WIN32)
     target_link_libraries(${PROJECT_NAME} opengl32 glew_s imm32)
