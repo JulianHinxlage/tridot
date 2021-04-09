@@ -5,7 +5,8 @@
 #include "EditorGui.h"
 #include "tridot/render/Camera.h"
 #include "tridot/components/RenderComponent.h"
-#include <map>
+#include "Editor.h"
+#include "EditorCamera.h"
 #include <imgui.h>
 
 using namespace tridot;
@@ -163,7 +164,11 @@ TRI_INIT("panels"){
             v.setWrap(false, false);
         }
 
-        ImGui::Image((void *) (size_t) v.getId(), ImVec2(100, 100));
+        float aspect = 1;
+        if (v.getHeight() != 0) {
+            aspect = (float)v.getWidth() / (float)v.getHeight();
+        }
+        ImGui::Image((void *) (size_t) v.getId(), ImVec2(200 * aspect, 200));
     });
     EditorGui::addType<Mesh>(true, [](Mesh &v, const std::string &name){
         ImGui::Text("id: %i", v.vertexArray.getId());
@@ -195,6 +200,67 @@ TRI_INIT("panels"){
     EditorGui::addMember<OrthographicCamera, float>("aspectRatio", [](float &v, const std::string &name){});
     EditorGui::addMember<OrthographicCamera, float>("rotation", [](float &v, const std::string &name){
         ImGui::DragFloat(name.c_str(), &v, 0.01);
+    });
+
+    EditorGui::addType<Ref<FrameBuffer>>(true, [](Ref<FrameBuffer> &v, const std::string &name) {
+        if(v){
+            if(ImGui::TreeNode("FrameBuffer")) {
+                std::vector<TextureAttachment> attachments;
+                for(int i = 0; i < 16; i++){
+                    attachments.push_back(TextureAttachment(COLOR + i));
+                }
+                attachments.push_back(DEPTH);
+                attachments.push_back(STENCIL);
+
+                for (TextureAttachment attachment : attachments) {
+                    auto texture = v->getTexture(attachment);
+                    if (texture) {
+                        float aspect = 1;
+                        if (texture->getHeight() != 0) {
+                            aspect = (float) texture->getWidth() / (float) texture->getHeight();
+                        }
+                        ImGui::Image((void *) (size_t) texture->getId(), ImVec2(200 * aspect, 200), ImVec2(0, 1), ImVec2(1, 0));
+
+                        if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID)) {
+                            ImGui::SetDragDropPayload(ecs::Reflection::get<Texture>().name().c_str(), &texture, sizeof(texture));
+                            ImGui::Text("Texture");
+                            ImGui::EndDragDropSource();
+                        }
+
+                        ImGui::SameLine();
+                        if(attachment == DEPTH){
+                            ImGui::Text("depth");
+                        }else if(attachment == STENCIL){
+                            ImGui::Text("stencil");
+                        }else if(attachment == COLOR){
+                            ImGui::Text("color");
+                        }else{
+                            ImGui::Text("color %i", (int)attachment - COLOR);
+                        }
+                    }
+                }
+                ImGui::TreePop();
+            }
+        }
+    });
+
+    EditorGui::addType<PerspectiveCamera>(false, [](PerspectiveCamera &v, const std::string &name) {
+       if(v.target) {
+           if(ImGui::TreeNode("View")) {
+               auto texture = v.target->getTexture(COLOR);
+               if (texture) {
+                   float aspect = 1;
+                   if (texture->getHeight() != 0) {
+                       aspect = (float) texture->getWidth() / (float) texture->getHeight();
+                   }
+                   ImGui::Image((void *) (size_t) texture->getId(), ImVec2(200 * aspect, 200), ImVec2(0, 1),
+                                ImVec2(1, 0));
+                   static EditorCamera editorCamera;
+                   editorCamera.update(v, ImGui::IsItemHovered());
+               }
+               ImGui::TreePop();
+           }
+       }
     });
 }
 
@@ -230,7 +296,7 @@ REFLECT_TYPE(PerspectiveCamera)
 REFLECT_MEMBER9(PerspectiveCamera, position, forward, up, right, fieldOfView, aspectRatio, near, far, target)
 
 REFLECT_TYPE(OrthographicCamera)
-REFLECT_MEMBER6(OrthographicCamera, position, scale, up, right, rotation, aspectRatio)
+REFLECT_MEMBER7(OrthographicCamera, position, scale, up, right, rotation, aspectRatio, target)
 
 REFLECT_TYPE(Material)
 REFLECT_MEMBER10(Material,

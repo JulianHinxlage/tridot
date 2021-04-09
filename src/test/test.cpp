@@ -270,7 +270,7 @@ void playerControl(EntityId playerId, PerspectiveCamera &camera){
 
     //camera
     if(look){
-        cameraDistance /= std::pow(1.3f, engine.input.mouseWheelDelta());
+        cameraDistance /= std::pow(1.3f, engine.input.getMouseWheelDelta());
     }
     camera.position = transform.position - camera.forward * cameraDistance;
 }

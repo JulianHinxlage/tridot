@@ -8,7 +8,6 @@
 namespace tridot {
 
     Input::Input() {
-        mouse = {0, 0};
         wheel = 0;
         wheelUpdate = 0;
     }
@@ -18,9 +17,6 @@ namespace tridot {
         static Input *input = this;
         glfwSetScrollCallback(window, [](GLFWwindow *window, double x, double y){
             input->wheelUpdate += (float)y;
-        });
-        glfwSetCursorPosCallback(window, [](GLFWwindow *window, double x, double y){
-            input->mouse = glm::vec2(x, y);
         });
     }
 
@@ -128,12 +124,16 @@ namespace tridot {
         return get(button).released;
     }
 
-    glm::vec2 Input::mousePosition(bool screenSpace) {
-        glm::vec2 m = mouse;
+    glm::vec2 Input::getMousePosition(bool screenSpace) {
+        GLFWwindow *window = (GLFWwindow*)glfwGetCurrentContext();
+        double x = 0;
+        double y = 0;
+        glfwGetCursorPos(window, &x, &y);
+        glm::vec2 m = {x, y};
+
         if(screenSpace) {
             int width = 0;
             int height = 0;
-            GLFWwindow *window = (GLFWwindow *) glfwGetCurrentContext();
             glfwGetWindowSize(window, &width, &height);
             m.x /= (float) width;
             m.y /= (float) height;
@@ -144,8 +144,25 @@ namespace tridot {
         return m;
     }
 
-    float Input::mouseWheelDelta() {
+    float Input::getMouseWheelDelta() {
         return wheel;
+    }
+
+    void Input::setMousePosition(glm::vec2 position, bool screenSpace) {
+        GLFWwindow *window = (GLFWwindow*)glfwGetCurrentContext();
+        if(screenSpace){
+            int width = 0;
+            int height = 0;
+            glfwGetWindowSize(window, &width, &height);
+            glm::vec2 m = position;
+            m += glm::vec2(1, 1);
+            m /= 2.0f;
+            m.y = 1.0f - m.y;
+            m.y *= (float)height;
+            m.x *= (float)width;
+            position = m;
+        }
+        glfwSetCursorPos(window, position.x, position.y);
     }
 
 }

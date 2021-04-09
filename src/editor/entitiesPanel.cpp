@@ -39,6 +39,11 @@ TRI_UPDATE("panels"){
                 for (EntityId id = 0; id <= max; id++) {
                     if (engine.exists(id)) {
                         std::string label = "Entity " + std::to_string(id);
+
+                        if(id == Editor::cameraId){
+                            label = "<Editor Camera>";
+                        }
+
                         if (ImGui::Selectable(label.c_str(), id == Editor::selectedEntity,
                                               ImGuiSelectableFlags_AllowItemOverlap)) {
                             if (Editor::selectedEntity == id) {

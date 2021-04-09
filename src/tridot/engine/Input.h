@@ -182,13 +182,13 @@ namespace tridot {
         bool released(const char *key);
         bool released(Button button);
 
-        glm::vec2 mousePosition(bool screenSpace = true);
-        float mouseWheelDelta();
+        glm::vec2 getMousePosition(bool screenSpace = false);
+        void setMousePosition(glm::vec2 position, bool screenSpace = false);
+        float getMouseWheelDelta();
 
     private:
         std::unordered_map<Key, State> keys;
         std::unordered_map<Button, State> buttons;
-        glm::vec2 mouse;
         float wheel;
         float wheelUpdate;
     };
