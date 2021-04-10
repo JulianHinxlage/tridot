@@ -229,8 +229,13 @@ namespace ecs {
         }
 
         template<typename... Components>
-        void registerComponents(){
+        void registerComponent(){
             (getPool<Components>() , ...);
+        }
+
+        template<typename... Components>
+        void unregisterComponent(){
+            (((componentMap.id<Components>() < componentPools.size()) ? componentPools[componentMap.id<Components>()] = nullptr : nullptr) , ...);
         }
 
 

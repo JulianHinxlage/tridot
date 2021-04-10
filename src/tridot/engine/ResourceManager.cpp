@@ -146,6 +146,8 @@ namespace tridot {
                 res->postLoaded = true;
             }else if(res->postLoad()){
                 res->postLoaded = true;
+            }else{
+                res->postLoaded = true;
             }
         }
     }

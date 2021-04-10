@@ -93,6 +93,7 @@ namespace tridot {
                 if(res.second->typeId == typeId){
                     if(res.first == name){
                         resources.erase(res.first);
+                        break;
                     }
                 }
             }

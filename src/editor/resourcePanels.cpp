@@ -3,6 +3,7 @@
 //
 
 #include "tridot/engine/Engine.h"
+#include "tridot/engine/Plugin.h"
 #include "Editor.h"
 #include "EditorGui.h"
 #include <imgui.h>
@@ -25,6 +26,11 @@ void resourcePanel(const char *name, const char *panelName) {
 
                 if (ImGui::Button("new")) {
                     ImGui::OpenPopup(newName.c_str());
+                }
+
+                ImGui::SameLine();
+                if (ImGui::Button("open")) {
+                    ImGui::OpenPopup("Open File");
                 }
 
                 if (res) {
@@ -53,6 +59,23 @@ void resourcePanel(const char *name, const char *panelName) {
                     ImGui::EndPopup();
                 }
 
+                if (ImGui::BeginPopupModal("Open File", &popupOpen)){
+                    if (!popupOpen) {
+                        ImGui::CloseCurrentPopup();
+                    }
+                    static char buffer[256];
+                    ImGui::InputText("File", buffer, sizeof(buffer));
+                    if (ImGui::Button("Open")) {
+                        res = engine.resources.get<T>(std::string(buffer));
+                        ImGui::CloseCurrentPopup();
+                    }
+                    ImGui::SameLine();
+                    if(ImGui::Button("Cancel")){
+                        ImGui::CloseCurrentPopup();
+                    }
+                    ImGui::EndPopup();
+                }
+
                 ImGui::Separator();
                 ImGui::BeginChild("resource");
                 if (res.get() != nullptr) {
@@ -70,4 +93,5 @@ TRI_UPDATE("panels"){
     resourcePanel<Texture>("Texture", "Textures");
     resourcePanel<Mesh>("Mesh", "Meshes");
     resourcePanel<Shader>("Shader", "Shaders");
+    resourcePanel<Plugin>("Plugin", "Plugins");
 }

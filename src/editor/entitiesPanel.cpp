@@ -17,7 +17,7 @@ TRI_UPDATE("panels"){
                 ImGui::SetWindowSize(ImVec2(400, 400), ImGuiCond_FirstUseEver);
 
                 if (ImGui::Button("add Entity")) {
-                    Editor::selectedEntity = engine.create();
+                    Editor::selectedEntity = engine.create(Transform());
                 }
 
                 if (ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows)) {
@@ -60,6 +60,16 @@ TRI_UPDATE("panels"){
                                 engine.destroy(id);
                                 if (id == Editor::selectedEntity) {
                                     Editor::selectedEntity = -1;
+                                }
+                            }
+                            if (ImGui::Selectable("duplicate")) {
+                                EntityId newId = engine.create();
+                                Editor::selectedEntity = newId;
+                                for(auto &type : ecs::Reflection::getTypes()){
+                                    auto *pool = engine.getPool(type->id());
+                                    if(pool && pool->has(id)){
+                                        pool->add(newId, pool->getById(id));
+                                    }
                                 }
                             }
                             ImGui::EndPopup();

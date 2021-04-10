@@ -30,11 +30,13 @@ TRI_UPDATE("panels"){
                     }
                     if (ImGui::BeginPopup("add")) {
                         for (auto &type : types) {
-                            auto *pool = engine.getPool(type->id());
-                            if (pool && !pool->has(id)) {
-                                if (ImGui::Button(type->name().c_str())) {
-                                    pool->add(id, nullptr);
-                                    ImGui::CloseCurrentPopup();
+                            if(type) {
+                                auto *pool = engine.getPool(type->id());
+                                if (pool && !pool->has(id)) {
+                                    if (ImGui::Button(type->name().c_str())) {
+                                        pool->add(id, nullptr);
+                                        ImGui::CloseCurrentPopup();
+                                    }
                                 }
                             }
                         }
@@ -45,15 +47,17 @@ TRI_UPDATE("panels"){
                     ImGui::BeginChild("properties");
 
                     for (auto &type : types) {
-                        auto *pool = engine.getPool(type->id());
-                        if (pool && pool->has(id)) {
-                            void *comp = pool->getById(id);
-                            bool open = true;
-                            if (ImGui::CollapsingHeader(type->name().c_str(), &open, ImGuiTreeNodeFlags_DefaultOpen)) {
-                                EditorGui::drawType(type->id(), comp);
-                            }
-                            if (!open) {
-                                pool->remove(id);
+                        if(type){
+                            auto *pool = engine.getPool(type->id());
+                            if (pool && pool->has(id)) {
+                                void *comp = pool->getById(id);
+                                bool open = true;
+                                if (ImGui::CollapsingHeader(type->name().c_str(), &open, ImGuiTreeNodeFlags_DefaultOpen)) {
+                                    EditorGui::drawType(type->id(), comp);
+                                }
+                                if (!open) {
+                                    pool->remove(id);
+                                }
                             }
                         }
                     }

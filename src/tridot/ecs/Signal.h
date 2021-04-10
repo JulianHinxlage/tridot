@@ -17,12 +17,14 @@ namespace ecs {
     public:
         typedef std::function<void(Args...)> Callback;
 
-        void add(const Callback &callback, const std::string &name = ""){
-            listeners.emplace_back(callback, name);
+        int add(const Callback &callback, const std::string &name = ""){
+            listeners.emplace_back(callback, name, nextId);
+            return nextId++;
         }
 
-        void add(const std::string &name, const Callback &callback){
-            listeners.emplace_back(callback, name);
+        int add(const std::string &name, const Callback &callback){
+            listeners.emplace_back(callback, name, nextId);
+            return nextId++;
         }
 
         void remove(const std::string &name){
@@ -35,8 +37,19 @@ namespace ecs {
             }
         }
 
+        void remove(int id){
+            for(int i = 0; i < listeners.size(); i++){
+                auto &listener = listeners[i];
+                if(listener.id == id){
+                    listeners.erase(listeners.begin() + i);
+                    i--;
+                }
+            }
+        }
+
         void invoke(Args... args){
-            for(auto &listener : listeners){
+            for(int i = 0; i < listeners.size(); i++) {
+                auto &listener = listeners[i];
                 if(listener.callback != nullptr){
                     listener.callback(args...);
                 }
@@ -65,12 +78,14 @@ namespace ecs {
         public:
             Callback callback;
             std::string name;
+            int id;
             std::vector<std::string> dependencies;
 
-            Listener(const Callback &callback = nullptr, const std::string &name = "")
-                : callback(callback), name(name){}
+            Listener(const Callback &callback = nullptr, const std::string &name = "", int id = 0)
+                : callback(callback), name(name), id(id){}
         };
         std::vector<Listener> listeners;
+        int nextId;
 
         bool sort(){
             bool conflict = false;
@@ -116,16 +131,20 @@ namespace ecs {
 
         SignalRef(Signal<Args...> *signal) : signal(signal) {}
 
-        void add(const Callback &callback, const std::string &name = ""){
-            signal->add(callback, name);
+        int add(const Callback &callback, const std::string &name = ""){
+            return signal->add(callback, name);
         }
 
-        void add(const std::string &name, const Callback &callback){
-            signal->add(name, callback);
+        int add(const std::string &name, const Callback &callback){
+            return signal->add(name, callback);
         }
 
         void remove(const std::string &name){
             signal->remove(name);
+        }
+
+        void remove(int id){
+            signal->remove(id);
         }
 
         bool order(const std::vector<std::string> &names){

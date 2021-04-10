@@ -166,10 +166,12 @@ namespace tridot {
                     out << YAML::Key << "id" << YAML::Value << id;
 
                     for (auto &type : Reflection::getTypes()) {
-                        auto *pool = reg.getPool(type->id());
-                        if (pool && pool->has(id)) {
-                            void *ptr = pool->getById(id);
-                            serializeType(type, type->name(), out, ptr, resources);
+                        if(type) {
+                            auto *pool = reg.getPool(type->id());
+                            if (pool && pool->has(id)) {
+                                void *ptr = pool->getById(id);
+                                serializeType(type, type->name(), out, ptr, resources);
+                            }
                         }
                     }
 
@@ -234,15 +236,17 @@ namespace tridot {
                     id = reg.createHinted(id);
 
                     for(auto &type : Reflection::getTypes()){
-                        auto comp = entity[type->name()];
-                        if(comp){
-                            auto *pool = reg.getPool(type->id());
-                            if(pool){
-                                uint32_t index = pool->add(id, nullptr);
-                                void *ptr = pool->get(index);
-                                deserializeType(type, comp, ptr, resources);
-                            }else{
-                                Log::warning("no component pool present for ", type->name());
+                        if(type) {
+                            auto comp = entity[type->name()];
+                            if (comp) {
+                                auto *pool = reg.getPool(type->id());
+                                if (pool) {
+                                    uint32_t index = pool->add(id, nullptr);
+                                    void *ptr = pool->get(index);
+                                    deserializeType(type, comp, ptr, resources);
+                                } else {
+                                    Log::warning("no component pool present for ", type->name());
+                                }
                             }
                         }
                     }

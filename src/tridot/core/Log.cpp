@@ -172,6 +172,7 @@ namespace tridot{
     }
 
     void Log::log(tridot::Log::Level level, const std::string &message) {
+        std::ios_base::Init init;
         logStream(level, message, options, std::cout);
         for(auto &target : logTargets){
             if(target.stream){

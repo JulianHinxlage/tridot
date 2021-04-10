@@ -10,14 +10,15 @@ using namespace tridot;
 
 std::stringstream consoleLog;
 
-TRI_INIT("panels"){
+bool startup = [](){
     Log::Options options;
     options.logLevel = Log::TRACE;
     options.dateEnabled = false;
     options.timeEnabled = true;
     options.colorEnabled = false;
     Log::addTarget(consoleLog, "console", options);
-}
+    return true;
+}();
 
 TRI_UPDATE("panels"){
     if(ImGui::GetCurrentContext() != nullptr){

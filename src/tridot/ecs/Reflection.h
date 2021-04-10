@@ -69,6 +69,13 @@ namespace ecs{
             t->typeMember.push_back({name, id<M>(), offset});
         }
 
+        template<typename T>
+        static void unregisterType(){
+            TypeT<T> *t = (TypeT<T>*)getTypes()[id<T>()];
+            delete t;
+            getTypes()[id<T>()] = nullptr;
+        }
+
     private:
         static int getNewId(){
             static int id = 0;
@@ -123,11 +130,22 @@ namespace ecs{
 
 }
 
+template<typename T>
+class ReflectionRegisterer{
+public:
+    ReflectionRegisterer(const std::string &name){
+        ecs::Reflection::registerType<T>(name);
+    }
+    ~ReflectionRegisterer(){
+        ecs::Reflection::unregisterType<T>();
+    }
+};
+
 #define ECS_UNIQUE_NAME_3(name, line, number) name##line##number
 #define ECS_UNIQUE_NAME_2(name, line, number) ECS_UNIQUE_NAME_3(name, line, number)
 #define ECS_UNIQUE_NAME(name) ECS_UNIQUE_NAME_2(name, __LINE__, __COUNTER__)
 
-#define REFLECT_TYPE_NAME(type, name) bool ECS_UNIQUE_NAME(___ecs_global___) = (ecs::Reflection::registerType<type>(#name), true);
+#define REFLECT_TYPE_NAME(type, name) ReflectionRegisterer<type> ECS_UNIQUE_NAME(___ecs_global___)(#name);
 #define REFLECT_TYPE(type) REFLECT_TYPE_NAME(type, type)
 
 #define REFLECT_MEMBER(type, member) bool ECS_UNIQUE_NAME(___ecs_global___) = (ecs::Reflection::registerMember<type, typeof(type::member)>(#member, offsetof(type, member)), true);

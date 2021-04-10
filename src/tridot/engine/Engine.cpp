@@ -6,6 +6,8 @@
 #include <GL/glew.h>
 
 tridot::Engine engine;
+bool engineInited = false;
+bool engineInitedSignal = false;
 
 ecs::Signal<> &getUpdateSignal(){
     static ecs::Signal<> signal;
@@ -17,16 +19,25 @@ ecs::Signal<> &getInitSignal(){
     return signal;
 }
 
-bool addUpdateSignalCallback(const std::string &name, const std::function<void()> &callback){
-    getUpdateSignal().add(name, callback);
-    engine.onUpdate().add(name, callback);
-    return true;
+int addUpdateSignalCallback(const std::string &name, const std::function<void()> &callback){
+    if(engineInited){
+        return engine.onUpdate().add(name, callback);
+    }else{
+        return getUpdateSignal().add(name, callback);
+    }
 }
 
-bool addInitSignalCallback(const std::string &name, const std::function<void()> &callback){
-    getInitSignal().add(name, callback);
-    engine.onInit().add(name, callback);
-    return true;
+int addInitSignalCallback(const std::string &name, const std::function<void()> &callback){
+    int id = -1;
+    if(engineInited){
+        id = engine.onInit().add(name, callback);
+    }else{
+        id = getInitSignal().add(name, callback);
+    }
+    if(engineInitedSignal){
+        callback();
+    }
+    return id;
 }
 
 void imguiInit();
@@ -34,8 +45,13 @@ void imguiInit();
 namespace tridot {
 
     Engine::Engine() {
+        engineInited = true;
         onUpdateSignal = getUpdateSignal();
         onInitSignal = getInitSignal();
+    }
+
+    Engine::~Engine() {
+        engineInited = false;
     }
 
     void Engine::init(uint32_t width, uint32_t height, const std::string &title, const std::string &resourceDirectory, bool autoReload) {
@@ -74,6 +90,7 @@ namespace tridot {
 
         imguiInit();
         onInitSignal.invoke();
+        engineInitedSignal = true;
     }
 
     void Engine::update() {
@@ -86,4 +103,24 @@ namespace tridot {
         }
     }
 
+}
+
+UpdateSignalRegisterer::UpdateSignalRegisterer(const std::string &name, const std::function<void()> &callback){
+    this->name = name;
+    this->id = addUpdateSignalCallback(name, callback);
+}
+UpdateSignalRegisterer::~UpdateSignalRegisterer(){
+    if(engineInited){
+        engine.onUpdate().remove(id);
+    }
+}
+
+InitSignalRegisterer::InitSignalRegisterer(const std::string &name, const std::function<void()> &callback){
+    this->name = name;
+    this->id = addInitSignalCallback(name, callback);
+}
+InitSignalRegisterer::~InitSignalRegisterer(){
+    if(engineInited){
+        engine.onInit().remove(id);
+    }
 }

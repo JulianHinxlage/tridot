@@ -14,6 +14,8 @@ using namespace tridot;
 
 int main(int argc, char *argv[]){
     Log::options.logLevel = Log::TRACE;
+
+    engine.resources.addSearchDirectory(".");
     engine.init(1920, 1080, "Tridot Editor", "../res/", true);
     engine.window.setBackgroundColor(glm::vec4(glm::vec3((Color::white * 0.25).vec()), 1.0f));
 
@@ -29,7 +31,7 @@ int main(int argc, char *argv[]){
     engine.resources.get<Texture>("tex3.png");
     engine.resources.get<Texture>("tex4.png");
 
-    engine.registerComponents<Transform, RenderComponent, PerspectiveCamera, OrthographicCamera, Light, RigidBody, Collider>();
+    engine.registerComponent<Transform, RenderComponent, PerspectiveCamera, OrthographicCamera, Light, RigidBody, Collider>();
 
     Editor::currentSceneFile = "scene.yaml";
     Serializer s;
@@ -63,8 +65,6 @@ int main(int argc, char *argv[]){
         engine.create(Light(AMBIENT_LIGHT, {0, 0, 0}, {1, 1, 1}, 0.5));
     }
 
-    Editor::loadFlags();
-
     engine.onUpdate().add([&](){
         if(ImGui::GetCurrentContext() != nullptr){
             bool &open = Editor::getFlag("ImGui Demo");
@@ -74,8 +74,8 @@ int main(int argc, char *argv[]){
         }
     }, "panels");
 
+    Editor::loadFlags();
     engine.run();
     Editor::saveFlags();
-
     return 0;
 }
