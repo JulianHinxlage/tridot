@@ -10,14 +10,15 @@
 #include "tridot/render/Mesh.h"
 #include "tridot/render/Shader.h"
 #include "tridot/engine/Physics.h"
-#include "yaml-cpp/yaml.h"
+#include "tridot/engine/Plugin.h"
+#include "tridot/components/ComponentCache.h"
 #include <fstream>
 
 using namespace ecs;
 
 namespace tridot {
 
-    void serializeType(Reflection::Type *type, const std::string &name, YAML::Emitter &out, void *ptr, ResourceManager &resources){
+    void Serializer::serializeType(Reflection::Type *type, const std::string &name, YAML::Emitter &out, void *ptr, ResourceManager &resources){
         out << YAML::Key << name;
         if(type->id() == Reflection::id<float>()){
             out << YAML::Value << *(float*)ptr;
@@ -58,6 +59,9 @@ namespace tridot {
         }else if(type->id() == Reflection::id<Ref<Shader>>()){
             Ref<Shader> &v = *(Ref<Shader>*)ptr;
             out << YAML::Value << resources.getName(v);
+        }else if(type->id() == Reflection::id<YAML::Node>()){
+            YAML::Node &v = *(YAML::Node*)ptr;
+            out << v;
         }else {
             if(type->member().size() == 0){
                 out << YAML::Value << YAML::Null;
@@ -71,7 +75,7 @@ namespace tridot {
         }
     }
 
-    void deserializeType(Reflection::Type *type, YAML::Node &in, void *ptr, ResourceManager &resources) {
+    void Serializer::deserializeType(Reflection::Type *type, YAML::Node &in, void *ptr, ResourceManager &resources) {
         if(type->id() == Reflection::id<float>()){
             *(float*)ptr = in.as<float>(0);
         }else if(type->id() == Reflection::id<int>()){
@@ -136,13 +140,13 @@ namespace tridot {
                 Ref<Shader> &v = *(Ref<Shader> *) ptr;
                 v = resources.get<Shader>(name);
             }
+        }else if(type->id() == Reflection::id<YAML::Node>()){
+            YAML::Node &v = *(YAML::Node*)ptr;
+            v = in.as<YAML::Node>();
         }else {
             for(auto &member : type->member()){
                 auto node = in[member.name];
                 if(node){
-                    if(member.name == "speed"){
-                        int x = 0;
-                    }
                     deserializeType(&Reflection::get(member.typeId), node, (char*)ptr + member.offset, resources);
                 }
             }
@@ -197,6 +201,24 @@ namespace tridot {
                 out << YAML::EndSeq;
             }
 
+            //Plugins
+            {
+                auto pluginNames = resources.getNames<Plugin>();
+                if(pluginNames.size() > 0) {
+                    out << YAML::Key << "Plugins" << YAML::BeginSeq;
+
+                    for (auto &name : pluginNames) {
+                        out << YAML::BeginMap;
+                        Ref<Plugin> plugin = resources.get<Plugin>(name);
+                        out << YAML::Key << "name" << YAML::Value << name;
+                        out << YAML::EndMap;
+
+                    }
+
+                    out << YAML::EndSeq;
+                }
+            }
+
             out << YAML::EndMap;
             std::ofstream stream(file);
             stream << out.c_str();
@@ -228,12 +250,23 @@ namespace tridot {
                 }
             }
 
+            //Plugins
+            if(auto plugins = data["Plugins"]){
+                for(auto plugin : plugins){
+                    std::string name = plugin["name"].as<std::string>("");
+                    if(!name.empty()){
+                        resources.get<Plugin>(name);
+                    }
+                }
+            }
+
             //Entities
             if(auto entities = data["Entities"]){
                 reg.clear();
                 for(auto entity : entities){
                     EntityId id = entity["id"].as<EntityId>(-1);
                     id = reg.createHinted(id);
+                    entity.remove("id");
 
                     for(auto &type : Reflection::getTypes()){
                         if(type) {
@@ -247,10 +280,22 @@ namespace tridot {
                                 } else {
                                     Log::warning("no component pool present for ", type->name());
                                 }
+                                entity.remove(type->name());
+                                if(reg.has<ComponentCache>(id)){
+                                    reg.get<ComponentCache>(id).update(id);
+                                }
                             }
                         }
                     }
 
+                    if(entity.size() > 0){
+                        auto &cache = reg.add<ComponentCache>(id);
+                        for(auto comp : entity){
+                            if(comp.first){
+                                cache.data[comp.first] = comp.second;
+                            }
+                        }
+                    }
                 }
             }else{
                 return false;

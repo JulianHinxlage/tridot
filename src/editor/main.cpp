@@ -77,5 +77,6 @@ int main(int argc, char *argv[]){
     Editor::loadFlags();
     engine.run();
     Editor::saveFlags();
+    engine.shutdown();
     return 0;
 }

@@ -215,6 +215,7 @@ namespace ecs {
                 componentPools[cid]->onRemove().add([this, cid](EntityId id){
                     *(SignatureBitMap*)entityPool.getById(id) &= ~(SignatureBitMap(1) << cid);
                 });
+                onRegisterSignal.invoke(Reflection::id<Component>());
             }
             return *(ComponentPool<Component>*)componentPools[cid].get();
         }
@@ -228,6 +229,30 @@ namespace ecs {
             }
         }
 
+        void *get(int id, int reflectId){
+            auto *pool = getPool(reflectId);
+            if (pool && pool->has(id)) {
+                return pool->getById(id);
+            }else{
+                return nullptr;
+            }
+        }
+
+        void *addReflect(int id, int reflectId){
+            auto *pool = getPool(reflectId);
+            if (pool) {
+                uint32_t index = pool->add(id, nullptr);
+                return pool->get(index);
+            }else{
+                return nullptr;
+            }
+        }
+
+        bool has(int id, int reflectId){
+            auto *pool = getPool(reflectId);
+            return (bool)pool && pool->has(id);
+        }
+
         template<typename... Components>
         void registerComponent(){
             (getPool<Components>() , ...);
@@ -235,9 +260,24 @@ namespace ecs {
 
         template<typename... Components>
         void unregisterComponent(){
-            (((componentMap.id<Components>() < componentPools.size()) ? componentPools[componentMap.id<Components>()] = nullptr : nullptr) , ...);
+            (
+                (
+                    (componentMap.id<Components>() < componentPools.size() &&
+                            componentPools[componentMap.id<Components>()] != nullptr) ?
+                    (onUnregisterSignal.invoke(Reflection::id<Components>()),
+                            componentPools[componentMap.id<Components>()] = nullptr)
+                    : nullptr
+                )
+            , ...);
         }
 
+        auto onUnregister(){
+            return onUnregisterSignal.ref();
+        }
+
+        auto onRegister(){
+            return onRegisterSignal.ref();
+        }
 
     private:
         TypeMap componentMap;
@@ -245,6 +285,8 @@ namespace ecs {
         ComponentPool<SignatureBitMap> entityPool;
         std::map<EntityId, bool> freeEntityIds;
         EntityId nextEntityId;
+        Signal<int> onUnregisterSignal;
+        Signal<int> onRegisterSignal;
     };
 
 }

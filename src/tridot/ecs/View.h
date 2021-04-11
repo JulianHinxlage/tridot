@@ -75,7 +75,7 @@ namespace ecs {
                     }
                 }
 
-                if(!reg->exists(id)){
+                if(!reg->exists(id) || !pool->has(id)){
                     i--;
                 }
             }

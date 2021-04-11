@@ -103,6 +103,10 @@ namespace tridot {
         }
     }
 
+    void Engine::shutdown() {
+        onShutdownSignal.invoke();
+    }
+
 }
 
 UpdateSignalRegisterer::UpdateSignalRegisterer(const std::string &name, const std::function<void()> &callback){

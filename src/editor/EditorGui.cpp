@@ -5,8 +5,8 @@
 #include "EditorGui.h"
 #include "tridot/render/Camera.h"
 #include "tridot/components/RenderComponent.h"
-#include "Editor.h"
 #include "EditorCamera.h"
+#include "tridot/components/ComponentCache.h"
 #include <imgui.h>
 
 using namespace tridot;
@@ -267,6 +267,16 @@ TRI_INIT("panels"){
                ImGui::TreePop();
            }
        }
+    });
+
+    EditorGui::addType<ComponentCache>(true, [](ComponentCache &v, const std::string &name){
+        for(auto comp : v.data){
+            if(ImGui::Button("remove")){
+                v.data.remove(comp.first);
+            }
+            ImGui::SameLine();
+            ImGui::Text("%s", comp.first.as<std::string>("").c_str());
+        }
     });
 }
 

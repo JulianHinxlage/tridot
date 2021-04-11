@@ -33,6 +33,7 @@ namespace tridot {
         void init(uint32_t width, uint32_t height, const std::string &title, const std::string &resourceDirectory, bool autoReload = false);
         void update();
         void run();
+        void shutdown();
 
         auto onUpdate(){
             return onUpdateSignal.ref();
@@ -42,9 +43,14 @@ namespace tridot {
             return onInitSignal.ref();
         }
 
+        auto onShutdown(){
+            return onShutdownSignal.ref();
+        }
+
     private:
         ecs::Signal<> onUpdateSignal;
         ecs::Signal<> onInitSignal;
+        ecs::Signal<> onShutdownSignal;
     };
 
 }
