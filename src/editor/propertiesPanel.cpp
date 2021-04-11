@@ -53,7 +53,7 @@ TRI_UPDATE("panels"){
                                 void *comp = pool->getById(id);
                                 bool open = true;
                                 if (ImGui::CollapsingHeader(type->name().c_str(), &open, ImGuiTreeNodeFlags_DefaultOpen)) {
-                                    EditorGui::drawType(type->id(), comp);
+                                    EditorGui::drawType(type->id(), comp, type->name());
                                 }
                                 if (!open) {
                                     pool->remove(id);

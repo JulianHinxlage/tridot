@@ -3,6 +3,7 @@
 //
 
 #include "tridot/engine/Engine.h"
+#include "tridot/components/Tag.h"
 #include "Editor.h"
 #include <imgui.h>
 
@@ -17,7 +18,7 @@ TRI_UPDATE("panels"){
                 ImGui::SetWindowSize(ImVec2(400, 400), ImGuiCond_FirstUseEver);
 
                 if (ImGui::Button("add Entity")) {
-                    Editor::selectedEntity = engine.create(Transform());
+                    Editor::selectedEntity = engine.create(Transform(), Tag(), uuid());
                 }
 
                 if (ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows)) {
@@ -39,10 +40,14 @@ TRI_UPDATE("panels"){
                 });
                 for (EntityId id = 0; id <= max; id++) {
                     if (engine.exists(id)) {
-                        std::string label = "Entity " + std::to_string(id);
+                        ImGui::PushID(id);
 
-                        if(id == Editor::cameraId){
-                            label = "<Editor Camera>";
+                        std::string label = "";
+                        if(engine.has<Tag>(id)){
+                            label = engine.get<Tag>(id).tag;
+                        }
+                        if(label.empty()){
+                            label = "Entity " + std::to_string(id);
                         }
 
                         if (ImGui::Selectable(label.c_str(), id == Editor::selectedEntity,
@@ -54,7 +59,6 @@ TRI_UPDATE("panels"){
                             }
                         }
 
-                        ImGui::PushID(id);
                         if (ImGui::BeginPopupContextItem()) {
                             if (ImGui::Selectable("remove")) {
                                 engine.destroy(id);
@@ -64,13 +68,16 @@ TRI_UPDATE("panels"){
                             }
                             if (ImGui::Selectable("duplicate")) {
                                 EntityId newId = engine.create();
-                                Editor::selectedEntity = newId;
                                 for(auto &type : ecs::Reflection::getTypes()){
                                     auto *pool = engine.getPool(type->id());
                                     if(pool && pool->has(id)){
                                         pool->add(newId, pool->getById(id));
                                     }
                                 }
+                                if(engine.has<uuid>(newId)){
+                                    engine.get<uuid>(newId).make();
+                                }
+                                Editor::selectedEntity = newId;
                             }
                             ImGui::EndPopup();
                         }

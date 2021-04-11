@@ -7,6 +7,7 @@
 #include "tridot/render/Camera.h"
 #include "tridot/render/MeshFactory.h"
 #include "tridot/components/RenderComponent.h"
+#include "tridot/components/Tag.h"
 #include "Editor.h"
 #include <imgui.h>
 
@@ -30,8 +31,6 @@ int main(int argc, char *argv[]){
     engine.resources.get<Texture>("tex2.png");
     engine.resources.get<Texture>("tex3.png");
     engine.resources.get<Texture>("tex4.png");
-
-    engine.registerComponent<Transform, RenderComponent, PerspectiveCamera, OrthographicCamera, Light, RigidBody, Collider>();
 
     Editor::currentSceneFile = "scene.yaml";
     Serializer s;

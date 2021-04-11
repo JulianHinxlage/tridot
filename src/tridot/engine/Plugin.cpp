@@ -23,6 +23,10 @@ namespace tridot {
 
     bool Plugin::preLoad(const std::string &file) {
         this->file = file;
+        return true;
+    }
+
+    bool Plugin::postLoad() {
         unload();
         handle = dlopen(this->file.c_str(), RTLD_NOW | RTLD_LOCAL);
         if(handle){
@@ -38,10 +42,6 @@ namespace tridot {
             Log::warning("failed to load plugin ", dlerror());
         }
         return handle != nullptr;
-    }
-
-    bool Plugin::postLoad() {
-        return true;
     }
 
     void Plugin::unload() {
@@ -67,6 +67,20 @@ namespace tridot {
                 }
             }
         }
+    }
+
+    TRI_INIT("plugins"){
+        engine.onShutdown().add("plugins", [](){
+            for(auto &name : engine.resources.getNames<Plugin>()){
+                auto plugin = engine.resources.get<Plugin>(name);
+                if(plugin){
+                    plugin->init = nullptr;
+                    plugin->update = nullptr;
+                    plugin->shutdown = nullptr;
+                    plugin->handle = nullptr;
+                }
+            }
+        });
     }
 
 }

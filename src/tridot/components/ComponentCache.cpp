@@ -36,10 +36,14 @@ namespace tridot {
             if(type){
                 if(isCached(type->id())){
                     if(!engine.has(id, type->id())){
-                        load(type->id(), engine.addReflect(id, type->id()));
-                        remove(type->id());
-                        if(data.size() == 0){
-                            engine.remove<ComponentCache>(id);
+                        void *ptr = engine.addReflect(id, type->id());
+                        if(ptr) {
+                            load(type->id(), ptr);
+                            remove(type->id());
+                            if (data.size() == 0) {
+                                engine.remove<ComponentCache>(id);
+                                break;
+                            }
                         }
                     }
                 }
@@ -82,7 +86,7 @@ namespace tridot {
             });
         });
 
-        engine.onShutdown().add([](){
+        engine.onShutdown().add("ComponentCache", [](){
             engine.onUnregister().remove("ComponentCache");
             engine.onRegister().remove("ComponentCache");
         });

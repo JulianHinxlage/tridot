@@ -4,9 +4,10 @@
 
 #include "EditorGui.h"
 #include "tridot/render/Camera.h"
+#include "tridot/components/Tag.h"
 #include "tridot/components/RenderComponent.h"
-#include "EditorCamera.h"
 #include "tridot/components/ComponentCache.h"
+#include "EditorCamera.h"
 #include <imgui.h>
 
 using namespace tridot;
@@ -125,7 +126,9 @@ TRI_INIT("panels"){
     EditorGui::addType<Ref<Shader>>(true, [](Ref<Shader> &v, const std::string &name) {
         EditorGui::drawResourceSelection(v, name);
     });
-
+    EditorGui::addType<uuid>(true, [](uuid &v, const std::string &name) {
+        ImGui::LabelText(name.c_str(), "%s", v.str().c_str());
+    });
 
     EditorGui::addType<Light>(true, [](Light &v, const std::string &name){
         std::vector<const char *> list = {"Ambient", "Directional", "Point Light"};

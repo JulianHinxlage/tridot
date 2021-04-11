@@ -12,6 +12,7 @@
 #include "tridot/engine/Physics.h"
 #include "tridot/engine/Plugin.h"
 #include "tridot/components/ComponentCache.h"
+#include "tridot/components/Tag.h"
 #include <fstream>
 
 using namespace ecs;
@@ -24,6 +25,10 @@ namespace tridot {
             out << YAML::Value << *(float*)ptr;
         }else if(type->id() == Reflection::id<int>()){
             out << YAML::Value << *(int*)ptr;
+        }else if(type->id() == Reflection::id<uint32_t>()){
+            out << YAML::Value << *(uint32_t*)ptr;
+        }else if(type->id() == Reflection::id<uint64_t>()){
+            out << YAML::Value << *(uint64_t*)ptr;
         }else if(type->id() == Reflection::id<bool>()){
             out << YAML::Value << *(bool*)ptr;
         }else if(type->id() == Reflection::id<std::string>()){
@@ -41,6 +46,12 @@ namespace tridot {
         }else if(type->id() == Reflection::id<glm::vec4>()){
             glm::vec4 &v = *(glm::vec4*)ptr;
             out << YAML::Flow << YAML::BeginSeq << v.x << v.y << v.z << v.w << YAML::EndSeq;
+        }else if(type->id() == Reflection::id<Tag>()){
+            Tag &v = *(Tag*)ptr;
+            out << v.tag;
+        }else if(type->id() == Reflection::id<uuid>()){
+            uuid &v = *(uuid*)ptr;
+            out << v.str();
         }else if(type->id() == Reflection::id<LightType>()){
             out << YAML::Value << *(int*)ptr;
         }else if(type->id() == Reflection::id<Material::Mapping>()){
@@ -80,6 +91,10 @@ namespace tridot {
             *(float*)ptr = in.as<float>(0);
         }else if(type->id() == Reflection::id<int>()){
             *(int*)ptr = in.as<int>(0);
+        }else if(type->id() == Reflection::id<uint32_t>()){
+            *(uint32_t*)ptr = in.as<uint32_t>(0);
+        }else if(type->id() == Reflection::id<uint64_t>()){
+            *(uint64_t*)ptr = in.as<uint64_t>(0);
         }else if(type->id() == Reflection::id<bool>()){
             *(bool*)ptr = in.as<bool>(false);
         }else if(type->id() == Reflection::id<std::string>()){
@@ -110,6 +125,10 @@ namespace tridot {
                     *((float*)ptr + i) = in[i].as<float>(0);
                 }
             }
+        }else if(type->id() == Reflection::id<uuid>()){
+            (*(uuid*)ptr).set(in.as<std::string>(""));
+        }else if(type->id() == Reflection::id<Tag>()){
+            (*(Tag*)ptr).tag = in.as<std::string>("");
         }else if(type->id() == Reflection::id<LightType>()){
             *(int*)ptr = in.as<int>(0);
         }else if(type->id() == Reflection::id<Material::Mapping>()){
@@ -277,10 +296,10 @@ namespace tridot {
                                     uint32_t index = pool->add(id, nullptr);
                                     void *ptr = pool->get(index);
                                     deserializeType(type, comp, ptr, resources);
+                                    entity.remove(type->name());
                                 } else {
                                     Log::warning("no component pool present for ", type->name());
                                 }
-                                entity.remove(type->name());
                                 if(reg.has<ComponentCache>(id)){
                                     reg.get<ComponentCache>(id).update(id);
                                 }

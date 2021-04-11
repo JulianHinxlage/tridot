@@ -3,6 +3,9 @@
 //
 
 #include "Engine.h"
+#include "tridot/components/Tag.h"
+#include "tridot/components/RenderComponent.h"
+#include "tridot/render/Camera.h"
 #include <GL/glew.h>
 
 tridot::Engine engine;
@@ -56,6 +59,9 @@ namespace tridot {
 
     void Engine::init(uint32_t width, uint32_t height, const std::string &title, const std::string &resourceDirectory, bool autoReload) {
         Log::info("Tridot version " TRI_VERSION);
+
+        registerComponent<Tag, uuid, Transform, RenderComponent, PerspectiveCamera, OrthographicCamera, Light, RigidBody, Collider>();
+
         window.init(width, height, title);
         input.init();
         time.init();
