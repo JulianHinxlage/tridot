@@ -19,6 +19,25 @@ REFLECT_TYPE(Blink)
 REFLECT_MEMBER4(Blink, speed, color, flag, value)
 TRI_COMPONENT(Blink)
 
+
+/*
+#define MEMBER(t, m) ecs::Reflection::registerMember<t, decltype(t::m)>(#m, offsetof(t, m));
+
+extern "C" void init() {
+    ecs::Reflection::registerType<Blink>("Blink");
+    MEMBER(Blink, speed);
+    MEMBER(Blink, color);
+    MEMBER(Blink, flag);
+    MEMBER(Blink, value);
+    engine.registerComponent<Blink>();
+}
+
+extern "C" void shutdown() {
+    engine.unregisterComponent<Blink>();
+    ecs::Reflection::unregisterType<Blink>();
+}
+*/
+
 extern "C" void update(){
     engine.view<Blink, RenderComponent>().each([](Blink &blink, RenderComponent &r){
         if(blink.flag){

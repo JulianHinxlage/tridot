@@ -126,10 +126,11 @@ TRI_INIT("panels"){
     EditorGui::addType<Ref<Shader>>(true, [](Ref<Shader> &v, const std::string &name) {
         EditorGui::drawResourceSelection(v, name);
     });
+#ifndef WIN32
     EditorGui::addType<uuid>(true, [](uuid &v, const std::string &name) {
         ImGui::LabelText(name.c_str(), "%s", v.str().c_str());
     });
-
+#endif
     EditorGui::addType<Light>(true, [](Light &v, const std::string &name){
         std::vector<const char *> list = {"Ambient", "Directional", "Point Light"};
         ImGui::Combo("type", (int *) &v.type, list.data(), list.size());
@@ -273,8 +274,8 @@ TRI_INIT("panels"){
     });
 
     EditorGui::addType<ComponentCache>(true, [](ComponentCache &v, const std::string &name){
-        for(auto comp : v.data){
-            if(ImGui::Button("remove")){
+        for (auto comp : v.data) {
+            if (ImGui::Button("remove")) {
                 v.data.remove(comp.first);
             }
             ImGui::SameLine();

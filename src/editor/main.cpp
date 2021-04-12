@@ -7,7 +7,6 @@
 #include "tridot/render/Camera.h"
 #include "tridot/render/MeshFactory.h"
 #include "tridot/components/RenderComponent.h"
-#include "tridot/components/Tag.h"
 #include "Editor.h"
 #include <imgui.h>
 
@@ -15,6 +14,9 @@ using namespace tridot;
 
 int main(int argc, char *argv[]){
     Log::options.logLevel = Log::TRACE;
+#if WIN32
+    Log::options.colorEnabled = false;
+#endif
 
     engine.resources.addSearchDirectory(".");
     engine.init(1920, 1080, "Tridot Editor", "../res/", true);
@@ -22,7 +24,7 @@ int main(int argc, char *argv[]){
 
     engine.resources.set<Mesh>("cube") = MeshFactory::createCube();
     engine.resources.set<Mesh>("sphere") = MeshFactory::createSphere(32, 32);
-    engine.resources.get<Mesh>("teapot.obj");
+    engine.resources.get<Mesh>("teapot.obj", true);
 
     engine.resources.get<Texture>("checkerboard.png");
     engine.resources.get<Texture>("normal1.png");

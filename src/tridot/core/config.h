@@ -6,6 +6,17 @@
 #define TRIDOT_CONFIG_H
 
 #include <cassert>
+
+#if WIN32
+#ifdef TRI_DLL_EXPORT
+#define TRI_API __declspec(dllexport)
+#else
+#define TRI_API __declspec(dllimport)
+#endif
+#else
+#define TRI_API
+#endif
+
 #include "Log.h"
 
 #define TRI_STR(x) #x

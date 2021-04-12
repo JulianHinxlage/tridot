@@ -55,7 +55,7 @@ namespace tridot {
 
 }
 
-extern tridot::Engine engine;
+extern TRI_API tridot::Engine engine;
 
 #define TRI_UNIQUE_NAME_3(name, line, number) name##line##number
 #define TRI_UNIQUE_NAME_2(name, line, number) TRI_UNIQUE_NAME_3(name, line, number)

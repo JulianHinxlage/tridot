@@ -5,12 +5,15 @@
 #ifndef TRIDOT_REFLECTION_H
 #define TRIDOT_REFLECTION_H
 
+#include "tridot/core/config.h"
 #include <string>
 #include <vector>
+#include <typeinfo>
+#include <map>
 
 namespace ecs{
 
-    class Reflection{
+    class TRI_API Reflection{
     public:
         class Member{
         public:
@@ -33,8 +36,33 @@ namespace ecs{
 
         template<typename T>
         static int id(){
-            static int id = (getTypes().push_back(new TypeT<T>(getNewId())), getTypes().back()->id());
-            return id;
+            static bool init = false;
+            static int id = 0;
+            if(!init){
+                init = true;
+                auto& types = getTypes();
+                int hash = typeid(T).hash_code();
+                for (auto* t : types) {
+                    if (t) {
+                        if ((int)t->info().hash_code() == hash) {
+                            id = t->id();
+                            return id;
+                        }
+                    }
+                }
+                for (int i = 0; i < types.size(); i++) {
+                    if (types[i] == nullptr) {
+                        types[i] = new TypeT<T>(i);
+                        id = i;
+                        return id;
+                    }
+                }
+                id = types.size();
+                types.push_back(new TypeT<T>(id));
+                return id;
+            } else {
+                return id;
+            }
         }
 
         template<class T>
@@ -71,17 +99,13 @@ namespace ecs{
 
         template<typename T>
         static void unregisterType(){
-            TypeT<T> *t = (TypeT<T>*)getTypes()[id<T>()];
+            int i = id<T>();
+            TypeT<T> *t = (TypeT<T>*)getTypes()[i];
             delete t;
-            getTypes()[id<T>()] = nullptr;
+            getTypes()[i] = nullptr;
         }
 
     private:
-        static int getNewId(){
-            static int id = 0;
-            return id++;
-        }
-
         template<typename T>
         class TypeT : public Type{
         public:
@@ -148,7 +172,25 @@ public:
 #define REFLECT_TYPE_NAME(type, name) ReflectionRegisterer<type> ECS_UNIQUE_NAME(___ecs_global___)(#name);
 #define REFLECT_TYPE(type) REFLECT_TYPE_NAME(type, type)
 
-#define REFLECT_MEMBER(type, member) bool ECS_UNIQUE_NAME(___ecs_global___) = (ecs::Reflection::registerMember<type, typeof(type::member)>(#member, offsetof(type, member)), true);
+#define REFLECT_MEMBER(type, member) bool ECS_UNIQUE_NAME(___ecs_global___) = (ecs::Reflection::registerMember<type, decltype(type::member)>(#member, offsetof(type, member)), true);
+
+#define REFLECT_MEMBER2(type, member, member2) REFLECT_MEMBER(type, member) REFLECT_MEMBER(type, member2)
+#define REFLECT_MEMBER3(type, member, member2, member3) REFLECT_MEMBER(type, member) REFLECT_MEMBER(type, member2) REFLECT_MEMBER(type, member3)
+#define REFLECT_MEMBER4(type, member, member2, member3, member4) REFLECT_MEMBER(type, member) REFLECT_MEMBER(type, member2) REFLECT_MEMBER(type, member3) REFLECT_MEMBER(type, member4)
+#define REFLECT_MEMBER5(type, member, member2, member3, member4, member5) REFLECT_MEMBER(type, member) REFLECT_MEMBER(type, member2) REFLECT_MEMBER(type, member3) REFLECT_MEMBER(type, member4) REFLECT_MEMBER(type, member5)
+#define REFLECT_MEMBER6(type, member, member2, member3, member4, member5, member6) REFLECT_MEMBER(type, member) REFLECT_MEMBER(type, member2) REFLECT_MEMBER(type, member3) REFLECT_MEMBER(type, member4) REFLECT_MEMBER(type, member5) REFLECT_MEMBER(type, member6)
+#define REFLECT_MEMBER7(type, member, member2, member3, member4, member5, member6, member7) REFLECT_MEMBER(type, member) REFLECT_MEMBER(type, member2) \
+    REFLECT_MEMBER(type, member3) REFLECT_MEMBER(type, member4) REFLECT_MEMBER(type, member5) REFLECT_MEMBER(type, member6) REFLECT_MEMBER(type, member7)
+#define REFLECT_MEMBER8(type, member, member2, member3, member4, member5, member6, member7, member8) REFLECT_MEMBER(type, member) REFLECT_MEMBER(type, member2) \
+    REFLECT_MEMBER(type, member3) REFLECT_MEMBER(type, member4) REFLECT_MEMBER(type, member5) REFLECT_MEMBER(type, member6) REFLECT_MEMBER(type, member7)  REFLECT_MEMBER(type, member8)
+#define REFLECT_MEMBER9(type, member, member2, member3, member4, member5, member6, member7, member8, member9) REFLECT_MEMBER(type, member) REFLECT_MEMBER(type, member2) \
+    REFLECT_MEMBER(type, member3) REFLECT_MEMBER(type, member4) REFLECT_MEMBER(type, member5) REFLECT_MEMBER(type, member6) REFLECT_MEMBER(type, member7)  REFLECT_MEMBER(type, member8) REFLECT_MEMBER(type, member9)
+#define REFLECT_MEMBER10(type, member, member2, member3, member4, member5, member6, member7, member8, member9, member10) REFLECT_MEMBER(type, member) REFLECT_MEMBER(type, member2) \
+    REFLECT_MEMBER(type, member3) REFLECT_MEMBER(type, member4) REFLECT_MEMBER(type, member5) REFLECT_MEMBER(type, member6) REFLECT_MEMBER(type, member7)  REFLECT_MEMBER(type, member8) REFLECT_MEMBER(type, member9) REFLECT_MEMBER(type, member10)
+
+
+//this dose not work under MSVC
+/*
 #define REFLECT_MEMBER2(type, member, ...) REFLECT_MEMBER(type, member) REFLECT_MEMBER(type, __VA_ARGS__)
 #define REFLECT_MEMBER3(type, member, ...) REFLECT_MEMBER(type, member) REFLECT_MEMBER2(type, __VA_ARGS__)
 #define REFLECT_MEMBER4(type, member, ...) REFLECT_MEMBER(type, member) REFLECT_MEMBER3(type, __VA_ARGS__)
@@ -164,5 +206,6 @@ public:
 #define REFLECT_MEMBER14(type, member, ...) REFLECT_MEMBER(type, member) REFLECT_MEMBER13(type, __VA_ARGS__)
 #define REFLECT_MEMBER15(type, member, ...) REFLECT_MEMBER(type, member) REFLECT_MEMBER14(type, __VA_ARGS__)
 #define REFLECT_MEMBER16(type, member, ...) REFLECT_MEMBER(type, member) REFLECT_MEMBER15(type, __VA_ARGS__)
+*/
 
 #endif //TRIDOT_REFLECTION_H

@@ -95,58 +95,72 @@ namespace tridot {
             std::string line;
             while(std::getline(stream, line)){
                 std::vector<std::string> parts = split(line, ' ');
+                if (parts.size() > 0) {
+                    if (parts[0] == "v") {
+                        for (int i = 0; i < 3; i++) {
+                            if (parts.size() > i + 1) {
+                                try {
+                                    vs.push_back(std::stof(parts[i + 1]));
+                                }
+                                catch (...) {}
+                            }
+                            else {
+                                vs.push_back(0);
+                            }
+                        }
+                    }
+                    else if (parts[0] == "vn") {
+                        for (int i = 0; i < 3; i++) {
+                            if (parts.size() > i + 1) {
+                                try {
+                                    ns.push_back(std::stof(parts[i + 1]));
+                                }
+                                catch (...) {}
+                            }
+                            else {
+                                vs.push_back(0);
+                            }
+                        }
+                    }
+                    else if (parts[0] == "vt") {
+                        for (int i = 0; i < 3; i++) {
+                            if (parts.size() > i + 1) {
+                                try {
+                                    ts.push_back(std::stof(parts[i + 1]));
+                                }
+                                catch (...) {}
+                            }
+                            else {
+                                vs.push_back(0);
+                            }
+                        }
+                    }
+                    else if (parts[0] == "f") {
+                        for (int i = 1; i < parts.size(); i++) {
+                            std::vector<std::string> parts2 = split(parts[i], '/');
 
-                if(parts[0] == "v"){
-                    for(int i = 0; i < 3; i++){
-                        if(parts.size() > i+1){
-                            try{
-                                vs.push_back(std::stof(parts[i+1]));
-                            }catch(...){}
-                        }else{
-                            vs.push_back(0);
-                        }
-                    }
-                }else if(parts[0] == "vn"){
-                    for(int i = 0; i < 3; i++){
-                        if(parts.size() > i+1){
-                            try{
-                                ns.push_back(std::stof(parts[i+1]));
-                            }catch(...){}
-                        }else{
-                            vs.push_back(0);
-                        }
-                    }
-                }else if(parts[0] == "vt"){
-                    for(int i = 0; i < 3; i++){
-                        if(parts.size() > i+1){
-                            try{
-                                ts.push_back(std::stof(parts[i+1]));
-                            }catch(...){}
-                        }else{
-                            vs.push_back(0);
-                        }
-                    }
-                }else if(parts[0] == "f"){
-                    for(int i = 1; i < parts.size(); i++){
-                        std::vector<std::string> parts2 = split(parts[i], '/');
-
-                        is.push_back({});
-                        if(parts2.size() > 0){
-                            try{
-                                is.back().v = std::stof(parts2[0]) - 1;
-                            }catch(...){}
-                        }
-                        if(parts2.size() > 1){
-                            try{
-                                is.back().t = std::stof(parts2[1]) - 1;
-                            }catch(...){}
-                        }
-                        if(parts2.size() > 2){
-                            try{
-                                is.back().n = std::stof(parts2[2]) - 1;
-                            }catch(...){}
-                        }else{
-                            is.back().n = is.back().v;
+                            is.push_back({});
+                            if (parts2.size() > 0) {
+                                try {
+                                    is.back().v = std::stof(parts2[0]) - 1;
+                                }
+                                catch (...) {}
+                            }
+                            if (parts2.size() > 1) {
+                                try {
+                                    is.back().t = std::stof(parts2[1]) - 1;
+                                }
+                                catch (...) {}
+                            }
+                            if (parts2.size() > 2) {
+                                try {
+                                    is.back().n = std::stof(parts2[2]) - 1;
+                                }
+                                catch (...) {}
+                            }
+                            else {
+                                is.back().n = is.back().v;
+                            }
                         }
                     }
                 }

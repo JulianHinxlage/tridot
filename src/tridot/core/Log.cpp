@@ -12,15 +12,7 @@
 namespace tridot{
 
     Log::Options Log::options;
-
-    class Target{
-    public:
-        std::shared_ptr<std::ostream> stream;
-        std::string name;
-        Log::Options options;
-    };
-
-    std::vector<Target> logTargets;
+    std::vector<Log::Target> Log::logTargets;
 
     void Log::addTarget(const std::string &file, Log::Options options) {
         std::shared_ptr<std::ofstream> s = std::make_shared<std::ofstream>();

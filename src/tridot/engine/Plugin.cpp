@@ -5,7 +5,11 @@
 #include "Plugin.h"
 #include "Engine.h"
 #include "tridot/core/Log.h"
-#include <dlfcn.h>
+#if WIN32
+    #include <windows.h>
+#else
+    #include <dlfcn.h>
+#endif
 
 namespace tridot {
 
@@ -27,29 +31,55 @@ namespace tridot {
     }
 
     bool Plugin::postLoad() {
+#if WIN32
+        unload();
+        handle = (void*)LoadLibrary(file.c_str());
+        if (handle) {
+            Log::trace("loaded plugin ", this->file);
+            typedef void (*Function)();
+            init = (Function)GetProcAddress((HINSTANCE)handle, "init");
+            update = (Function)GetProcAddress((HINSTANCE)handle, "update");
+            shutdown = (Function)GetProcAddress((HINSTANCE)handle, "shutdown");
+            if (!update) {
+                Log::warning("no update function found in plugin ", file);
+            }
+            if (init) {
+                init();
+            }
+        } else {
+            Log::warning("failed to load plugin ", GetLastError());
+        }
+        return handle != nullptr;
+#else
         unload();
         handle = dlopen(this->file.c_str(), RTLD_NOW | RTLD_LOCAL);
-        if(handle){
+        if (handle) {
             Log::trace("loaded plugin ", this->file);
             typedef void (*Function)();
             init = (Function)dlsym(handle, "init");
             update = (Function)dlsym(handle, "update");
             shutdown = (Function)dlsym(handle, "shutdown");
-            if(init){
+            if (init) {
                 init();
             }
-        }else{
+        }
+        else {
             Log::warning("failed to load plugin ", dlerror());
         }
         return handle != nullptr;
+#endif
     }
 
     void Plugin::unload() {
-        if(handle != nullptr){
-            if(shutdown){
+        if (handle != nullptr) {
+            if (shutdown) {
                 shutdown();
             }
+#if WIN32
+            FreeLibrary((HINSTANCE)handle);
+#else      
             dlclose(handle);
+#endif            
             init = nullptr;
             update = nullptr;
             shutdown = nullptr;

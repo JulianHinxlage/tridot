@@ -5,7 +5,11 @@
 #ifndef TRIDOT_LOG_H
 #define TRIDOT_LOG_H
 
+#include "tridot/core/config.h"
 #include <sstream>
+#include <fstream>
+#include <memory>
+#include <vector>
 
 namespace tridot {
 
@@ -16,7 +20,7 @@ namespace tridot {
         return s.str();
     }
 
-    class Log{
+    class TRI_API Log {
     public:
         enum Level {
             TRACE = 0,
@@ -70,6 +74,16 @@ namespace tridot {
         static void critical(T... t){
             log(CRITICAL, t...);
         }
+    
+    private:
+        class Target {
+        public:
+            std::shared_ptr<std::ostream> stream;
+            std::string name;
+            Log::Options options;
+        };
+
+        static std::vector<Target> logTargets;
     };
 
 }

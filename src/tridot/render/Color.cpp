@@ -12,7 +12,7 @@ namespace tridot {
     const Color Color::green = 0xff00ff00;
     const Color Color::blue = 0xffff0000;
     const Color Color::transparent = 0x00ffffff;
-
+    
     Color::Color(uint32_t value) {
         this->value = value;
     }

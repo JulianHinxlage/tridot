@@ -5,12 +5,13 @@
 #ifndef TRIDOT_COLOR_H
 #define TRIDOT_COLOR_H
 
+#include "tridot/core/config.h"
 #include <cstdint>
 #include <glm/glm.hpp>
 
 namespace tridot {
 
-    class Color {
+    class TRI_API Color {
     public:
         union{
             uint32_t value;

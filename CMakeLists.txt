@@ -12,31 +12,31 @@ endif()
 
 if(WIN32)
     set(LIBRARY_OUTPUT_PATH ${CMAKE_CURRENT_BINARY_DIR})
+    set(CMAKE_DEBUG_POSTFIX "")
+    set(CMAKE_IMPORT_LIBRARY_SUFFIX ".lib")
 else()
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
 endif()
 
 file(GLOB_RECURSE SOURCES src/tridot/*.cpp)
+file(GLOB IMGUI_SOURCES extern/imgui/*.cpp extern/imgui/backends/imgui_impl_glfw.cpp extern/imgui/backends/imgui_impl_opengl3.cpp)
+file(GLOB IMGUIZMO_SOURCES extern/imguizmo/ImGuizmo.cpp)
 
-if(WIN32)
-    add_library(${PROJECT_NAME} STATIC ${SOURCES})
-else()
-    add_library(${PROJECT_NAME} SHARED ${SOURCES})
-endif()
+add_library(${PROJECT_NAME} SHARED ${SOURCES} ${IMGUI_SOURCES} ${IMGUIZMO_SOURCES})
 
 target_include_directories(${PROJECT_NAME} PUBLIC src extern extern/imgui)
 target_compile_definitions(${PROJECT_NAME} PUBLIC TRI_DEBUG ECS_DEBUG)
 
+if(WIN32)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE TRI_DLL_EXPORT)
+endif()
+
 set(TRIDOT_BUILD_TYPE "${CMAKE_BUILD_TYPE}")
 set(CMAKE_BUILD_TYPE "Release")
 
-file(GLOB IMGUI_SOURCES extern/imgui/*.cpp extern/imgui/backends/imgui_impl_glfw.cpp extern/imgui/backends/imgui_impl_opengl3.cpp)
-file(GLOB IMGUIZMO_SOURCES extern/imguizmo/ImGuizmo.cpp)
-add_library(imgui STATIC ${IMGUI_SOURCES} ${IMGUIZMO_SOURCES})
-target_include_directories(imgui PUBLIC src extern/imgui)
-
 set(OpenGL_GL_PREFERENCE "GLVND")
 find_package(OpenGL REQUIRED)
+
 
 add_subdirectory(extern/bullet3)
 target_include_directories(${PROJECT_NAME} PUBLIC extern/bullet3/src)
@@ -67,13 +67,15 @@ endif()
 project(blink)
 add_library(${PROJECT_NAME} SHARED src/test/plugin/Blink.cpp)
 target_include_directories(${PROJECT_NAME} PUBLIC extern/glm src)
-target_compile_options(${PROJECT_NAME} PUBLIC -fno-gnu-unique)
-target_link_libraries(${PROJECT_NAME} PUBLIC)
+if(NOT WIN32)
+    target_compile_options(${PROJECT_NAME} PUBLIC -fno-gnu-unique)
+endif()
+target_link_libraries(${PROJECT_NAME} PUBLIC tridot)
 
 project(editor)
 file(GLOB_RECURSE SOURCES src/editor/*.cpp)
 add_executable(${PROJECT_NAME} ${SOURCES})
-target_link_libraries(${PROJECT_NAME} PUBLIC tridot imgui)
+target_link_libraries(${PROJECT_NAME} PUBLIC tridot)
 add_dependencies(${PROJECT_NAME} blink)
 
 project(test)
