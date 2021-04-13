@@ -42,8 +42,13 @@ namespace tridot {
             engine.renderer.begin(projection, cameraPosition, frameBuffer);
             engine.pbRenderer.begin(projection, cameraPosition, frameBuffer);
 
-            engine.view<Light>().each([](Light &light){
-               engine.pbRenderer.submit(light);
+            engine.view<Light, Transform>().each([](Light &light, Transform &transform){
+                if(light.type == LightType::POINT_LIGHT){
+                    engine.pbRenderer.submit(light, transform.position);
+                }else{
+                    glm::vec3 direction = glm::vec4(1, 0, 0, 0) * transform.getMatrix();
+                    engine.pbRenderer.submit(light, direction);
+                }
             });
 
             engine.view<Transform, RenderComponent>().each([&](ecs::EntityId id, Transform &transform, RenderComponent &rc){

@@ -165,15 +165,10 @@ public:
     }
 };
 
-#define ECS_UNIQUE_NAME_3(name, line, number) name##line##number
-#define ECS_UNIQUE_NAME_2(name, line, number) ECS_UNIQUE_NAME_3(name, line, number)
-#define ECS_UNIQUE_NAME(name) ECS_UNIQUE_NAME_2(name, __LINE__, __COUNTER__)
-
 #define REFLECT_TYPE_NAME(type, name) ReflectionRegisterer<type> ECS_UNIQUE_NAME(___ecs_global___)(#name);
 #define REFLECT_TYPE(type) REFLECT_TYPE_NAME(type, type)
 
 #define REFLECT_MEMBER(type, member) bool ECS_UNIQUE_NAME(___ecs_global___) = (ecs::Reflection::registerMember<type, decltype(type::member)>(#member, offsetof(type, member)), true);
-
 #define REFLECT_MEMBER2(type, member, member2) REFLECT_MEMBER(type, member) REFLECT_MEMBER(type, member2)
 #define REFLECT_MEMBER3(type, member, member2, member3) REFLECT_MEMBER(type, member) REFLECT_MEMBER(type, member2) REFLECT_MEMBER(type, member3)
 #define REFLECT_MEMBER4(type, member, member2, member3, member4) REFLECT_MEMBER(type, member) REFLECT_MEMBER(type, member2) REFLECT_MEMBER(type, member3) REFLECT_MEMBER(type, member4)
@@ -188,24 +183,5 @@ public:
 #define REFLECT_MEMBER10(type, member, member2, member3, member4, member5, member6, member7, member8, member9, member10) REFLECT_MEMBER(type, member) REFLECT_MEMBER(type, member2) \
     REFLECT_MEMBER(type, member3) REFLECT_MEMBER(type, member4) REFLECT_MEMBER(type, member5) REFLECT_MEMBER(type, member6) REFLECT_MEMBER(type, member7)  REFLECT_MEMBER(type, member8) REFLECT_MEMBER(type, member9) REFLECT_MEMBER(type, member10)
 
-
-//this dose not work under MSVC
-/*
-#define REFLECT_MEMBER2(type, member, ...) REFLECT_MEMBER(type, member) REFLECT_MEMBER(type, __VA_ARGS__)
-#define REFLECT_MEMBER3(type, member, ...) REFLECT_MEMBER(type, member) REFLECT_MEMBER2(type, __VA_ARGS__)
-#define REFLECT_MEMBER4(type, member, ...) REFLECT_MEMBER(type, member) REFLECT_MEMBER3(type, __VA_ARGS__)
-#define REFLECT_MEMBER5(type, member, ...) REFLECT_MEMBER(type, member) REFLECT_MEMBER4(type, __VA_ARGS__)
-#define REFLECT_MEMBER6(type, member, ...) REFLECT_MEMBER(type, member) REFLECT_MEMBER5(type, __VA_ARGS__)
-#define REFLECT_MEMBER7(type, member, ...) REFLECT_MEMBER(type, member) REFLECT_MEMBER6(type, __VA_ARGS__)
-#define REFLECT_MEMBER8(type, member, ...) REFLECT_MEMBER(type, member) REFLECT_MEMBER7(type, __VA_ARGS__)
-#define REFLECT_MEMBER9(type, member, ...) REFLECT_MEMBER(type, member) REFLECT_MEMBER8(type, __VA_ARGS__)
-#define REFLECT_MEMBER10(type, member, ...) REFLECT_MEMBER(type, member) REFLECT_MEMBER9(type, __VA_ARGS__)
-#define REFLECT_MEMBER11(type, member, ...) REFLECT_MEMBER(type, member) REFLECT_MEMBER10(type, __VA_ARGS__)
-#define REFLECT_MEMBER12(type, member, ...) REFLECT_MEMBER(type, member) REFLECT_MEMBER11(type, __VA_ARGS__)
-#define REFLECT_MEMBER13(type, member, ...) REFLECT_MEMBER(type, member) REFLECT_MEMBER12(type, __VA_ARGS__)
-#define REFLECT_MEMBER14(type, member, ...) REFLECT_MEMBER(type, member) REFLECT_MEMBER13(type, __VA_ARGS__)
-#define REFLECT_MEMBER15(type, member, ...) REFLECT_MEMBER(type, member) REFLECT_MEMBER14(type, __VA_ARGS__)
-#define REFLECT_MEMBER16(type, member, ...) REFLECT_MEMBER(type, member) REFLECT_MEMBER15(type, __VA_ARGS__)
-*/
 
 #endif //TRIDOT_REFLECTION_H

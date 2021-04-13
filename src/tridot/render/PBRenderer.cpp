@@ -114,10 +114,10 @@ namespace tridot {
         this->frameBuffer = frameBuffer;
     }
 
-    void PBRenderer::submit(const Light &light) {
+    void PBRenderer::submit(const Light &light, const glm::vec3 &positionOrDirection) {
         PBLight *l = (PBLight*)lights.next();
         l->type = (int)light.type;
-        l->position = light.position;
+        l->position = positionOrDirection;
         l->color = light.color;
         l->intensity = light.intensity;
     }

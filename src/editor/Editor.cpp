@@ -4,7 +4,6 @@
 
 #include "Editor.h"
 #include "tridot/engine/Engine.h"
-#include "tridot/engine/Serializer.h"
 #include <imgui.h>
 #include <fstream>
 
@@ -15,6 +14,7 @@ namespace tridot {
     glm::vec2 Editor::viewportSize = {0, 0};
     std::map<std::string, bool> Editor::flags;
     std::string Editor::currentSceneFile = "";
+    uint64_t Editor::propertiesWindowFlags = 0;
 
     bool &Editor::getFlag(const std::string &name){
         auto open = flags.find(name);
@@ -91,8 +91,7 @@ namespace tridot {
                         openFilePopup = true;
                     }
                     if(ImGui::MenuItem("Save")){
-                        Serializer s;
-                        s.save(Editor::currentSceneFile, engine, engine.resources);
+                        engine.saveScene(Editor::currentSceneFile);
                     }
                     if(ImGui::MenuItem("Save as")){
                         saveFilePopup = true;
@@ -125,8 +124,7 @@ namespace tridot {
                     static char buffer[256];
                     ImGui::InputText("File", buffer, sizeof(buffer));
                     if (ImGui::Button("Open")) {
-                        Serializer s;
-                        if(s.load(std::string(buffer), engine, engine.resources)){
+                        if(engine.loadScene(std::string(buffer))){
                             Editor::currentSceneFile = std::string(buffer);
                             Editor::cameraId = -1;
                             Editor::selectedEntity = -1;
@@ -156,8 +154,7 @@ namespace tridot {
                     ImGui::InputText("File", buffer, sizeof(buffer));
                     if (ImGui::Button("Save")) {
                         Editor::currentSceneFile = std::string(buffer);
-                        Serializer s;
-                        s.save(Editor::currentSceneFile, engine, engine.resources);
+                        engine.saveScene(Editor::currentSceneFile);
                         ImGui::CloseCurrentPopup();
                     }
                     ImGui::SameLine();

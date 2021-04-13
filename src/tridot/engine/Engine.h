@@ -47,6 +47,9 @@ namespace tridot {
             return onShutdownSignal.ref();
         }
 
+        bool loadScene(const std::string &file);
+        bool saveScene(const std::string &file);
+
     private:
         ecs::Signal<> onUpdateSignal;
         ecs::Signal<> onInitSignal;
@@ -56,10 +59,6 @@ namespace tridot {
 }
 
 extern TRI_API tridot::Engine engine;
-
-#define TRI_UNIQUE_NAME_3(name, line, number) name##line##number
-#define TRI_UNIQUE_NAME_2(name, line, number) TRI_UNIQUE_NAME_3(name, line, number)
-#define TRI_UNIQUE_NAME(name) TRI_UNIQUE_NAME_2(name, __LINE__, __COUNTER__)
 
 int addUpdateSignalCallback(const std::string &name, const std::function<void()> &callback);
 int addInitSignalCallback(const std::string &name, const std::function<void()> &callback);
@@ -95,15 +94,14 @@ public:
     }
 };
 
-
 #define TRI_UPDATE_2(name, func) static void func();\
-namespace{ UpdateSignalRegisterer TRI_UNIQUE_NAME(___tri_global___)(name, &func);}\
+namespace{ UpdateSignalRegisterer ECS_UNIQUE_NAME(___tri_global___)(name, &func);}\
 static void func()
-#define TRI_UPDATE(name) TRI_UPDATE_2(name, TRI_UNIQUE_NAME(___tri_update_func___))
+#define TRI_UPDATE(name) TRI_UPDATE_2(name, ECS_UNIQUE_NAME(___tri_update_func___))
 #define TRI_INIT_2(name, func) static void func();\
-namespace{ InitSignalRegisterer TRI_UNIQUE_NAME(___tri_global___)(name, &func);}\
+namespace{ InitSignalRegisterer ECS_UNIQUE_NAME(___tri_global___)(name, &func);}\
 static void func()
-#define TRI_INIT(name) TRI_INIT_2(name, TRI_UNIQUE_NAME(___tri_init_func___))
-#define TRI_COMPONENT(type) namespace{ ComponentRegisterer<type> TRI_UNIQUE_NAME(___tri_global___); }
+#define TRI_INIT(name) TRI_INIT_2(name, ECS_UNIQUE_NAME(___tri_init_func___))
+#define TRI_COMPONENT(type) namespace{ ComponentRegisterer<type> ECS_UNIQUE_NAME(___tri_global___); }
 
 #endif //TRIDOT_ENGINE_H

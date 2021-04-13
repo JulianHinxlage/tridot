@@ -101,13 +101,22 @@ TRI_UPDATE("panels"){
                     static EditorCamera editorCamera;
                     static ImGuizmo::OPERATION operation = ImGuizmo::OPERATION::TRANSLATE;
                     static ImGuizmo::MODE mode = ImGuizmo::MODE::LOCAL;
-
+                    static bool snap = false;
+                    static float snapValueTranslate = 0.5;
+                    static float snapValueScale = 0.25;
+                    static float snapValueRotate = 45.0;
+                    bool controlDown = engine.input.down(Input::KEY_LEFT_CONTROL) || engine.input.down(Input::KEY_RIGHT_CONTROL);
 
                     //viewport control bar
                     {
-                        ImGui::BeginTable("controls", 3);
-                        ImGui::TableNextColumn();
+                        ImGui::BeginTable("controls", 5, ImGuiTableFlags_SizingStretchSame);
+                        ImGui::TableSetupColumn("1", ImGuiTableColumnFlags_None, 0.25);
+                        ImGui::TableSetupColumn("2", ImGuiTableColumnFlags_None, 0.20);
+                        ImGui::TableSetupColumn("3", ImGuiTableColumnFlags_None, 0.05);
+                        ImGui::TableSetupColumn("4", ImGuiTableColumnFlags_None, 0.25);
+                        ImGui::TableSetupColumn("5", ImGuiTableColumnFlags_None, 0.25);
 
+                        ImGui::TableNextColumn();
                         if(ImGui::RadioButton("translate", operation == ImGuizmo::OPERATION::TRANSLATE)){
                             operation = ImGuizmo::OPERATION::TRANSLATE;
                         }
@@ -121,13 +130,27 @@ TRI_UPDATE("panels"){
                         }
 
                         ImGui::TableNextColumn();
-
                         if(ImGui::RadioButton("local", mode == ImGuizmo::MODE::LOCAL)){
                             mode = ImGuizmo::MODE::LOCAL;
                         }
                         ImGui::SameLine();
                         if(ImGui::RadioButton("world", mode == ImGuizmo::MODE::WORLD)){
                             mode = ImGuizmo::MODE::WORLD;
+                        }
+
+                        ImGui::TableNextColumn();
+                        bool snapTmp = snap ^ controlDown;
+                        if(ImGui::Checkbox("snap", &snapTmp)){
+                            snap = snapTmp ^ controlDown;
+                        }
+
+                        ImGui::TableNextColumn();
+                        if(operation == ImGuizmo::OPERATION::TRANSLATE){
+                            ImGui::DragFloat("snap value", &snapValueTranslate, 0.01);
+                        }if(operation == ImGuizmo::OPERATION::SCALE){
+                            ImGui::DragFloat("snap value", &snapValueScale, 0.01);
+                        }if(operation == ImGuizmo::OPERATION::ROTATE){
+                            ImGui::DragFloat("snap value", &snapValueRotate, 1.0);
                         }
 
                         ImGui::TableNextColumn();
@@ -155,12 +178,6 @@ TRI_UPDATE("panels"){
                     }
 
 
-                    //camera control
-                    editorCamera.update(camera, ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows));
-                    float mousePickX = ImGui::GetMousePos().x - (ImGui::GetWindowPos().x + ImGui::GetCursorPos().x);
-                    float mousePickY = ImGui::GetMousePos().y - (ImGui::GetWindowPos().y + ImGui::GetCursorPos().y);
-
-
                     //draw to viewport panel
                     if(camera.target) {
                         Editor::viewportSize.x = ImGui::GetContentRegionAvail().x;
@@ -171,6 +188,10 @@ TRI_UPDATE("panels"){
                                      ImVec2(Editor::viewportSize.x, Editor::viewportSize.y),
                                      ImVec2(0, 1), ImVec2(1, 0));
                     }
+
+
+                    float mousePickX = ImGui::GetMousePos().x - ImGui::GetItemRectMin().x;
+                    float mousePickY = ImGui::GetMousePos().y - ImGui::GetItemRectMin().y;
 
 
                     //gizmos
@@ -186,14 +207,18 @@ TRI_UPDATE("panels"){
                             glm::mat4 view = camera.getView();
                             glm::mat4 projection = camera.getPerspective();
 
-                            bool snap = engine.input.down(Input::KEY_LEFT_CONTROL) || engine.input.down(Input::KEY_RIGHT_CONTROL);
-                            glm::vec3 snapValues = glm::vec3(1) * 0.25f;
-                            if(operation == ImGuizmo::OPERATION::ROTATE){
-                                snapValues = glm::vec3(1) * 22.5f;
+                            glm::vec3 snapValues = glm::vec3(1);
+                            if(operation == ImGuizmo::OPERATION::TRANSLATE){
+                                snapValues *= snapValueTranslate;
+                            }if(operation == ImGuizmo::OPERATION::SCALE){
+                                snapValues *= snapValueScale;
+                            }if(operation == ImGuizmo::OPERATION::ROTATE){
+                                snapValues *= snapValueRotate;
                             }
 
-                            if(ImGuizmo::Manipulate((float *) &view, (float *) &projection, operation, mode,
-                                    (float *) &matrix, nullptr, snap ? (float*)&snapValues : nullptr)){
+                            if(ImGuizmo::Manipulate((float *) &view, (float *) &projection, operation,
+                                    operation == ImGuizmo::OPERATION::SCALE ? ImGuizmo::MODE::LOCAL : mode,
+                                    (float *) &matrix, nullptr, (snap ^ controlDown) ? (float*)&snapValues : nullptr)){
                                 ImGuizmo::DecomposeMatrixToComponents((float*)&matrix, (float*)&transform.position, (float*)&transform.rotation, (float*)&transform.scale);
                                 transform.rotation = glm::radians(transform.rotation);
                             }
@@ -219,6 +244,8 @@ TRI_UPDATE("panels"){
                         }
                     }
 
+                    //camera control
+                    editorCamera.update(camera, ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows));
 
                     //remove entities
                     if (ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows)) {

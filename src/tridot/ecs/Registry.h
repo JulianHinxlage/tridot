@@ -248,6 +248,13 @@ namespace ecs {
             }
         }
 
+        void remove(int id, int reflectId){
+            auto *pool = getPool(reflectId);
+            if (pool && pool->has(id)) {
+                pool->remove(id);
+            }
+        }
+
         bool has(int id, int reflectId){
             auto *pool = getPool(reflectId);
             return (bool)pool && pool->has(id);

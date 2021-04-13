@@ -18,6 +18,10 @@
     #define ECS_ASSERT(expr, msg)
 #endif
 
+#define ECS_UNIQUE_NAME_3(name, line, number) name##line##number
+#define ECS_UNIQUE_NAME_2(name, line, number) ECS_UNIQUE_NAME_3(name, line, number)
+#define ECS_UNIQUE_NAME(name) ECS_UNIQUE_NAME_2(name, __LINE__, __COUNTER__)
+
 namespace ecs{
 
     const uint32_t poolPageSizeBits = 8;

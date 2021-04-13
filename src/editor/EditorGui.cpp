@@ -8,6 +8,7 @@
 #include "tridot/components/RenderComponent.h"
 #include "tridot/components/ComponentCache.h"
 #include "EditorCamera.h"
+#include "Editor.h"
 #include <imgui.h>
 
 using namespace tridot;
@@ -134,7 +135,6 @@ TRI_INIT("panels"){
     EditorGui::addType<Light>(true, [](Light &v, const std::string &name){
         std::vector<const char *> list = {"Ambient", "Directional", "Point Light"};
         ImGui::Combo("type", (int *) &v.type, list.data(), list.size());
-        ImGui::DragFloat3("position", (float *) &v.position, 0.01);
         ImGui::ColorEdit3("color", (float *) &v.color);
         ImGui::DragFloat("intensity", &v.intensity, 0.01, 0.0, 1000);
     });
@@ -265,7 +265,11 @@ TRI_INIT("panels"){
                    }
                    ImGui::Image((void *) (size_t) texture->getId(), ImVec2(200 * aspect, 200), ImVec2(0, 1),
                                 ImVec2(1, 0));
+
                    static EditorCamera editorCamera;
+                   if(ImGui::IsItemHovered()) {
+                       Editor::propertiesWindowFlags |= ImGuiWindowFlags_NoScrollWithMouse;
+                   }
                    editorCamera.update(v, ImGui::IsItemHovered());
                }
                ImGui::TreePop();
@@ -283,61 +287,3 @@ TRI_INIT("panels"){
         }
     });
 }
-
-REFLECT_TYPE(float)
-REFLECT_TYPE(bool)
-REFLECT_TYPE(int)
-
-REFLECT_TYPE_NAME(glm::vec2, vec2)
-REFLECT_MEMBER2(glm::vec2, x, y)
-
-REFLECT_TYPE_NAME(glm::vec3, vec3)
-REFLECT_MEMBER3(glm::vec3, x, y, z)
-
-REFLECT_TYPE_NAME(glm::vec4, vec4)
-REFLECT_MEMBER4(glm::vec4, x, y, z, w)
-
-REFLECT_TYPE(Transform)
-REFLECT_MEMBER3(Transform, position, scale, rotation)
-
-REFLECT_TYPE(Collider)
-REFLECT_MEMBER2(Collider, scale, type)
-
-REFLECT_TYPE(RigidBody)
-REFLECT_MEMBER8(RigidBody, velocity, angular, mass, friction, restitution, linearDamping, angularDamping, enablePhysics)
-
-REFLECT_TYPE(RenderComponent)
-REFLECT_MEMBER3(RenderComponent, mesh, material, color)
-
-REFLECT_TYPE(Light)
-REFLECT_MEMBER4(Light, position, color, intensity, type)
-
-REFLECT_TYPE(PerspectiveCamera)
-REFLECT_MEMBER9(PerspectiveCamera, position, forward, up, right, fieldOfView, aspectRatio, near, far, target)
-
-REFLECT_TYPE(OrthographicCamera)
-REFLECT_MEMBER7(OrthographicCamera, position, scale, up, right, rotation, aspectRatio, target)
-
-REFLECT_TYPE(Material)
-REFLECT_MEMBER10(Material,
-color,
-mapping,
-roughness,
-metallic,
-normalMapFactor,
-texture,
-normalMap,
-roughnessMap,
-metallicMap,
-textureOffset
-)
-REFLECT_MEMBER8(Material,
-textureScale,
-normalMapOffset,
-normalMapScale,
-roughnessMapOffset,
-roughnessMapScale,
-metallicMapOffset,
-metallicMapScale,
-shader
-)

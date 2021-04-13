@@ -3,7 +3,6 @@
 //
 
 #include "Tag.h"
-#include "tridot/engine/Engine.h"
 #include <sstream>
 #include <iomanip>
 
@@ -51,10 +50,5 @@ namespace tridot{
         *((uint16_t*)&v2 + 2) = std::rand();
         *((uint16_t*)&v2 + 3) = std::rand();
     }
-
-    REFLECT_TYPE(Tag)
-    REFLECT_MEMBER(Tag, tag)
-
-    REFLECT_TYPE(uuid)
 
 }

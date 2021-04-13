@@ -44,19 +44,19 @@ TRI_UPDATE("panels"){
                     }
 
                     ImGui::Separator();
-                    ImGui::BeginChild("properties");
+                    ImGui::BeginChild("properties", ImVec2(0, 0), false, Editor::propertiesWindowFlags);
+                    Editor::propertiesWindowFlags = 0;
 
                     for (auto &type : types) {
                         if(type){
-                            auto *pool = engine.getPool(type->id());
-                            if (pool && pool->has(id)) {
-                                void *comp = pool->getById(id);
+                            if(engine.has(id, type->id())){
+                                void *comp = engine.get(id, type->id());
                                 bool open = true;
                                 if (ImGui::CollapsingHeader(type->name().c_str(), &open, ImGuiTreeNodeFlags_DefaultOpen)) {
                                     EditorGui::drawType(type->id(), comp, type->name());
                                 }
                                 if (!open) {
-                                    pool->remove(id);
+                                    engine.remove(id, type->id());
                                 }
                             }
                         }

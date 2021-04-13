@@ -6,7 +6,7 @@
 
 namespace tridot {
 
-    Light::Light(LightType type, const glm::vec3 &position, const glm::vec3 &color, float intensity)
-        : type(type), position(position), color(color), intensity(intensity){}
+    Light::Light(LightType type, const glm::vec3 &color, float intensity)
+        : type(type), color(color), intensity(intensity){}
 
 }

@@ -17,12 +17,11 @@ namespace tridot {
 
     class Light {
     public:
-        glm::vec3 position;
         glm::vec3 color;
         float intensity;
         LightType type;
 
-        Light(LightType type = DIRECTIONAL_LIGHT ,const glm::vec3 &position = {0, 0, -1}, const glm::vec3 &color = {1, 1, 1}, float intensity = 1);
+        Light(LightType type = DIRECTIONAL_LIGHT, const glm::vec3 &color = {1, 1, 1}, float intensity = 1);
     };
 
 }

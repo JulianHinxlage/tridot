@@ -92,8 +92,4 @@ namespace tridot {
         });
     }
 
-    REFLECT_TYPE(ComponentCache)
-    REFLECT_MEMBER(ComponentCache, data)
-    TRI_COMPONENT(ComponentCache)
-
 }

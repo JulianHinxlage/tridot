@@ -5,7 +5,9 @@
 #include "Engine.h"
 #include "tridot/components/Tag.h"
 #include "tridot/components/RenderComponent.h"
+#include "tridot/components/ComponentCache.h"
 #include "tridot/render/Camera.h"
+#include "tridot/engine/Serializer.h"
 #include <GL/glew.h>
 
 tridot::Engine engine;
@@ -60,7 +62,7 @@ namespace tridot {
     void Engine::init(uint32_t width, uint32_t height, const std::string &title, const std::string &resourceDirectory, bool autoReload) {
         Log::info("Tridot version " TRI_VERSION);
 
-        registerComponent<Tag, uuid, Transform, RenderComponent, PerspectiveCamera, OrthographicCamera, Light, RigidBody, Collider>();
+        registerComponent<Tag, uuid, Transform, RenderComponent, PerspectiveCamera, OrthographicCamera, Light, RigidBody, Collider, ComponentCache>();
 
         window.init(width, height, title);
         input.init();
@@ -111,6 +113,16 @@ namespace tridot {
 
     void Engine::shutdown() {
         onShutdownSignal.invoke();
+    }
+
+    bool Engine::loadScene(const std::string &file) {
+        Serializer serializer;
+        return serializer.load(file, *this, resources);
+    }
+
+    bool Engine::saveScene(const std::string &file) {
+        Serializer serializer;
+        return serializer.save(file, *this, resources);
     }
 
 }

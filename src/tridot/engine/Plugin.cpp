@@ -47,7 +47,7 @@ namespace tridot {
                 init();
             }
         } else {
-            Log::warning("failed to load plugin ", GetLastError());
+            Log::warning("failed to load plugin ", file, " code ", GetLastError());
         }
         return handle != nullptr;
 #else

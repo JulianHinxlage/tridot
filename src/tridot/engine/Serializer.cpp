@@ -190,9 +190,8 @@ namespace tridot {
 
                     for (auto &type : Reflection::getTypes()) {
                         if(type) {
-                            auto *pool = reg.getPool(type->id());
-                            if (pool && pool->has(id)) {
-                                void *ptr = pool->getById(id);
+                            if(reg.has(id, type->id())){
+                                void *ptr = reg.get(id, type->id());
                                 serializeType(type, type->name(), out, ptr, resources);
                             }
                         }
@@ -300,15 +299,19 @@ namespace tridot {
                                 } else {
                                     Log::warning("no component pool present for ", type->name());
                                 }
-                                if(reg.has<ComponentCache>(id)){
-                                    reg.get<ComponentCache>(id).update(id);
-                                }
                             }
                         }
                     }
 
+                    if(reg.has<ComponentCache>(id)){
+                        reg.get<ComponentCache>(id).update(id);
+                    }
+
                     if(entity.size() > 0){
-                        auto &cache = reg.add<ComponentCache>(id);
+                        if(!reg.has<ComponentCache>(id)){
+                            reg.add<ComponentCache>(id);
+                        }
+                        auto &cache = reg.get<ComponentCache>(id);
                         for(auto comp : entity){
                             if(comp.first){
                                 cache.data[comp.first] = comp.second;

@@ -18,6 +18,7 @@ namespace tridot {
         static glm::vec2 viewportSize;
         static std::map<std::string, bool> flags;
         static std::string currentSceneFile;
+        static uint64_t propertiesWindowFlags;
 
         static bool &getFlag(const std::string &name);
         static void loadFlags();
