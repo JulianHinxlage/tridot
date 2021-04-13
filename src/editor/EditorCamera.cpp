@@ -27,7 +27,7 @@ namespace tridot {
             camera.position -= (mousePosition - startMousePosition).y * up * speed * 0.005f;
         }
         if(dragRight && engine.input.down(Input::MOUSE_BUTTON_RIGHT)){
-            glm::vec2 move = (mousePosition - startMousePosition) * speed * 0.001f;
+            glm::vec2 move = (mousePosition - startMousePosition) * 0.001f;
             camera.forward = glm::vec3(glm::vec4(camera.forward, 1.0) * glm::rotate(glm::mat4(1), move.x, camera.up));
             float theta = glm::dot(camera.forward, camera.up);
             if(theta > 0.99 & move.y < 0){

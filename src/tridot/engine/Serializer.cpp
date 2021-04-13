@@ -137,27 +137,35 @@ namespace tridot {
             *(int*)ptr = in.as<int>(0);
         }else if(type->id() == Reflection::id<Ref<Texture>>()){
             std::string name = in.as<std::string>("");
+            Ref<Texture> &v = *(Ref<Texture>*)ptr;
             if(!name.empty()){
-                Ref<Texture> &v = *(Ref<Texture>*)ptr;
                 v = resources.get<Texture>(name);
+            }else{
+                v = nullptr;
             }
         }else if(type->id() == Reflection::id<Ref<Material>>()){
             std::string name = in.as<std::string>("");
+            Ref<Material> &v = *(Ref<Material> *) ptr;
             if(!name.empty()) {
-                Ref<Material> &v = *(Ref<Material> *) ptr;
                 v = resources.get<Material>(name);
+            }else{
+                v = nullptr;
             }
         }else if(type->id() == Reflection::id<Ref<Mesh>>()){
             std::string name = in.as<std::string>("");
+            Ref<Mesh> &v = *(Ref<Mesh> *) ptr;
             if(!name.empty()) {
-                Ref<Mesh> &v = *(Ref<Mesh> *) ptr;
                 v = resources.get<Mesh>(name);
+            }else{
+                v = nullptr;
             }
         }else if(type->id() == Reflection::id<Ref<Mesh>>()){
             std::string name = in.as<std::string>("");
+            Ref<Shader> &v = *(Ref<Shader> *) ptr;
             if(!name.empty()) {
-                Ref<Shader> &v = *(Ref<Shader> *) ptr;
                 v = resources.get<Shader>(name);
+            }else{
+                v = nullptr;
             }
         }else if(type->id() == Reflection::id<YAML::Node>()){
             YAML::Node &v = *(YAML::Node*)ptr;

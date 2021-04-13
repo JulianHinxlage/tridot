@@ -94,98 +94,99 @@ TRI_UPDATE("panels"){
             ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
             if (ImGui::Begin("Viewport", &open)) {
                 ImGui::SetWindowSize(ImVec2(400, 400), ImGuiCond_FirstUseEver);
-                if(engine.has<PerspectiveCamera>(Editor::cameraId)) {
 
-                    PerspectiveCamera &camera = engine.get<PerspectiveCamera>(Editor::cameraId);
-                    static EditorCamera editorCamera;
-                    static ImGuizmo::OPERATION operation = ImGuizmo::OPERATION::TRANSLATE;
-                    static ImGuizmo::MODE mode = ImGuizmo::MODE::LOCAL;
-                    static bool snap = false;
-                    static float snapValueTranslate = 0.5;
-                    static float snapValueScale = 0.25;
-                    static float snapValueRotate = 45.0;
-                    bool controlDown = engine.input.down(Input::KEY_LEFT_CONTROL) || engine.input.down(Input::KEY_RIGHT_CONTROL);
+                static EditorCamera editorCamera;
+                static ImGuizmo::OPERATION operation = ImGuizmo::OPERATION::TRANSLATE;
+                static ImGuizmo::MODE mode = ImGuizmo::MODE::LOCAL;
+                static bool snap = false;
+                static float snapValueTranslate = 0.5;
+                static float snapValueScale = 0.25;
+                static float snapValueRotate = 45.0;
+                bool controlDown = engine.input.down(Input::KEY_LEFT_CONTROL) || engine.input.down(Input::KEY_RIGHT_CONTROL);
 
-                    //viewport control bar
-                    {
-                        ImGui::BeginTable("controls", 5, ImGuiTableFlags_SizingStretchSame);
-                        ImGui::TableSetupColumn("1", ImGuiTableColumnFlags_None, 0.25);
-                        ImGui::TableSetupColumn("2", ImGuiTableColumnFlags_None, 0.20);
-                        ImGui::TableSetupColumn("3", ImGuiTableColumnFlags_None, 0.05);
-                        ImGui::TableSetupColumn("4", ImGuiTableColumnFlags_None, 0.25);
-                        ImGui::TableSetupColumn("5", ImGuiTableColumnFlags_None, 0.25);
+                //viewport control bar
+                {
+                    ImGui::BeginTable("controls", 5, ImGuiTableFlags_SizingStretchSame);
+                    ImGui::TableSetupColumn("1", ImGuiTableColumnFlags_None, 0.25);
+                    ImGui::TableSetupColumn("2", ImGuiTableColumnFlags_None, 0.20);
+                    ImGui::TableSetupColumn("3", ImGuiTableColumnFlags_None, 0.05);
+                    ImGui::TableSetupColumn("4", ImGuiTableColumnFlags_None, 0.25);
+                    ImGui::TableSetupColumn("5", ImGuiTableColumnFlags_None, 0.25);
 
-                        ImGui::TableNextColumn();
+                    ImGui::TableNextColumn();
 
-                        if(ImGui::Checkbox("play", &Editor::runtime)){
-                            if(Editor::runtime){
-                                Editor::enableRuntime();
-                            }else{
-                                Editor::disableRuntime();
-                            }
+                    if(ImGui::Checkbox("play", &Editor::runtime)){
+                        if(Editor::runtime){
+                            Editor::enableRuntime();
+                        }else{
+                            Editor::disableRuntime();
                         }
-                        ImGui::SameLine();
+                    }
+                    ImGui::SameLine();
 
-                        if(ImGui::RadioButton("translate", operation == ImGuizmo::OPERATION::TRANSLATE)){
+                    if(ImGui::RadioButton("translate", operation == ImGuizmo::OPERATION::TRANSLATE)){
+                        operation = ImGuizmo::OPERATION::TRANSLATE;
+                    }
+                    ImGui::SameLine();
+                    if(ImGui::RadioButton("scale", operation == ImGuizmo::OPERATION::SCALE)){
+                        operation = ImGuizmo::OPERATION::SCALE;
+                    }
+                    ImGui::SameLine();
+                    if(ImGui::RadioButton("rotate", operation == ImGuizmo::OPERATION::ROTATE)){
+                        operation = ImGuizmo::OPERATION::ROTATE;
+                    }
+
+                    ImGui::TableNextColumn();
+                    if(ImGui::RadioButton("local", mode == ImGuizmo::MODE::LOCAL)){
+                        mode = ImGuizmo::MODE::LOCAL;
+                    }
+                    ImGui::SameLine();
+                    if(ImGui::RadioButton("world", mode == ImGuizmo::MODE::WORLD)){
+                        mode = ImGuizmo::MODE::WORLD;
+                    }
+
+                    ImGui::TableNextColumn();
+                    bool snapTmp = snap ^ controlDown;
+                    if(ImGui::Checkbox("snap", &snapTmp)){
+                        snap = snapTmp ^ controlDown;
+                    }
+
+                    ImGui::TableNextColumn();
+                    if(operation == ImGuizmo::OPERATION::TRANSLATE){
+                        ImGui::DragFloat("snap value", &snapValueTranslate, 0.01);
+                    }if(operation == ImGuizmo::OPERATION::SCALE){
+                        ImGui::DragFloat("snap value", &snapValueScale, 0.01);
+                    }if(operation == ImGuizmo::OPERATION::ROTATE){
+                        ImGui::DragFloat("snap value", &snapValueRotate, 1.0);
+                    }
+
+                    ImGui::TableNextColumn();
+                    ImGui::SliderFloat("speed", &editorCamera.speed, 0.0f, 10);
+                    ImGui::EndTable();
+                }
+
+
+                if(ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows)) {
+                    if(engine.input.pressed('E')){
+                        if(operation == ImGuizmo::OPERATION::TRANSLATE){
+                            operation = ImGuizmo::OPERATION::SCALE;
+                        }else if(operation == ImGuizmo::OPERATION::SCALE){
+                            operation = ImGuizmo::OPERATION::ROTATE;
+                        }else if(operation == ImGuizmo::OPERATION::ROTATE){
                             operation = ImGuizmo::OPERATION::TRANSLATE;
                         }
-                        ImGui::SameLine();
-                        if(ImGui::RadioButton("scale", operation == ImGuizmo::OPERATION::SCALE)){
-                            operation = ImGuizmo::OPERATION::SCALE;
-                        }
-                        ImGui::SameLine();
-                        if(ImGui::RadioButton("rotate", operation == ImGuizmo::OPERATION::ROTATE)){
-                            operation = ImGuizmo::OPERATION::ROTATE;
-                        }
-
-                        ImGui::TableNextColumn();
-                        if(ImGui::RadioButton("local", mode == ImGuizmo::MODE::LOCAL)){
+                    }else if(engine.input.pressed('R')){
+                        if(mode == ImGuizmo::MODE::LOCAL){
+                            mode = ImGuizmo::MODE::WORLD;
+                        }else{
                             mode = ImGuizmo::MODE::LOCAL;
                         }
-                        ImGui::SameLine();
-                        if(ImGui::RadioButton("world", mode == ImGuizmo::MODE::WORLD)){
-                            mode = ImGuizmo::MODE::WORLD;
-                        }
-
-                        ImGui::TableNextColumn();
-                        bool snapTmp = snap ^ controlDown;
-                        if(ImGui::Checkbox("snap", &snapTmp)){
-                            snap = snapTmp ^ controlDown;
-                        }
-
-                        ImGui::TableNextColumn();
-                        if(operation == ImGuizmo::OPERATION::TRANSLATE){
-                            ImGui::DragFloat("snap value", &snapValueTranslate, 0.01);
-                        }if(operation == ImGuizmo::OPERATION::SCALE){
-                            ImGui::DragFloat("snap value", &snapValueScale, 0.01);
-                        }if(operation == ImGuizmo::OPERATION::ROTATE){
-                            ImGui::DragFloat("snap value", &snapValueRotate, 1.0);
-                        }
-
-                        ImGui::TableNextColumn();
-                        ImGui::SliderFloat("speed", &editorCamera.speed, 0.0f, 10);
-                        ImGui::EndTable();
                     }
+                }
 
 
-                    if(ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows)) {
-                        if(engine.input.pressed('E')){
-                            if(operation == ImGuizmo::OPERATION::TRANSLATE){
-                                operation = ImGuizmo::OPERATION::SCALE;
-                            }else if(operation == ImGuizmo::OPERATION::SCALE){
-                                operation = ImGuizmo::OPERATION::ROTATE;
-                            }else if(operation == ImGuizmo::OPERATION::ROTATE){
-                                operation = ImGuizmo::OPERATION::TRANSLATE;
-                            }
-                        }else if(engine.input.pressed('R')){
-                            if(mode == ImGuizmo::MODE::LOCAL){
-                                mode = ImGuizmo::MODE::WORLD;
-                            }else{
-                                mode = ImGuizmo::MODE::LOCAL;
-                            }
-                        }
-                    }
-
+                if(engine.has<PerspectiveCamera>(Editor::cameraId)) {
+                    PerspectiveCamera &camera = engine.get<PerspectiveCamera>(Editor::cameraId);
 
                     //draw to viewport panel
                     if(camera.target) {
@@ -265,12 +266,10 @@ TRI_UPDATE("panels"){
                             }
                         }
                     }
-
                 }
             }
             ImGui::End();
             ImGui::PopStyleVar();
-
         }
     }
 }
