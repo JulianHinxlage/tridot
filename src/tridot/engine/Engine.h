@@ -31,28 +31,26 @@ namespace tridot {
         Engine();
         ~Engine();
         void init(uint32_t width, uint32_t height, const std::string &title, const std::string &resourceDirectory, bool autoReload = false);
+        void beginScene();
         void update();
         void run();
+        void endScene();
         void shutdown();
 
-        auto onUpdate(){
-            return onUpdateSignal.ref();
-        }
-
-        auto onInit(){
-            return onInitSignal.ref();
-        }
-
-        auto onShutdown(){
-            return onShutdownSignal.ref();
-        }
+        ecs::SignalRef<> onInit();
+        ecs::SignalRef<> onBeginScene();
+        ecs::SignalRef<> onUpdate();
+        ecs::SignalRef<> onEndScene();
+        ecs::SignalRef<> onShutdown();
 
         bool loadScene(const std::string &file);
         bool saveScene(const std::string &file);
 
     private:
-        ecs::Signal<> onUpdateSignal;
         ecs::Signal<> onInitSignal;
+        ecs::Signal<> onBeginSceneSignal;
+        ecs::Signal<> onUpdateSignal;
+        ecs::Signal<> onEndSceneSignal;
         ecs::Signal<> onShutdownSignal;
     };
 
@@ -60,48 +58,46 @@ namespace tridot {
 
 extern TRI_API tridot::Engine engine;
 
-int addUpdateSignalCallback(const std::string &name, const std::function<void()> &callback);
-int addInitSignalCallback(const std::string &name, const std::function<void()> &callback);
+namespace tridot::impl {
 
-class UpdateSignalRegisterer{
-public:
-    std::string name;
-    int id;
-    UpdateSignalRegisterer(const std::string &name, const std::function<void()> &callback);
-    ~UpdateSignalRegisterer();
-};
+    class UpdateSignalRegisterer {
+    public:
+        int id;
+        UpdateSignalRegisterer(const std::string &name, const std::function<void()> &callback);
+        ~UpdateSignalRegisterer();
+    };
 
-class InitSignalRegisterer{
-public:
-    std::string name;
-    int id;
-    InitSignalRegisterer(const std::string &name, const std::function<void()> &callback);
-    ~InitSignalRegisterer();
-};
+    class InitSignalRegisterer {
+    public:
+        int id;
+        InitSignalRegisterer(const std::string &name, const std::function<void()> &callback);
+        ~InitSignalRegisterer();
+    };
 
-template<typename T>
-class ComponentRegisterer{
-public:
-    int id;
-    ComponentRegisterer(){
-        id = addInitSignalCallback("", [](){
-            engine.registerComponent<T>();
-        });
-    }
-    ~ComponentRegisterer(){
-        engine.unregisterComponent<T>();
-        engine.onInit().remove(id);
-    }
-};
+    template<typename T>
+    class ComponentRegisterer {
+    public:
+        int id;
+        ComponentRegisterer() {
+            id = engine.onInit().add("", []() {
+                engine.registerComponent<T>();
+            });
+        }
+        ~ComponentRegisterer() {
+            engine.unregisterComponent<T>();
+            engine.onInit().remove(id);
+        }
+    };
+}
 
 #define TRI_UPDATE_2(name, func) static void func();\
-namespace{ UpdateSignalRegisterer ECS_UNIQUE_NAME(___tri_global___)(name, &func);}\
+namespace{ tridot::impl::UpdateSignalRegisterer ECS_UNIQUE_NAME(___tri_global___)(name, &func);}\
 static void func()
 #define TRI_UPDATE(name) TRI_UPDATE_2(name, ECS_UNIQUE_NAME(___tri_update_func___))
 #define TRI_INIT_2(name, func) static void func();\
-namespace{ InitSignalRegisterer ECS_UNIQUE_NAME(___tri_global___)(name, &func);}\
+namespace{ tridot::impl::InitSignalRegisterer ECS_UNIQUE_NAME(___tri_global___)(name, &func);}\
 static void func()
 #define TRI_INIT(name) TRI_INIT_2(name, ECS_UNIQUE_NAME(___tri_init_func___))
-#define TRI_COMPONENT(type) namespace{ ComponentRegisterer<type> ECS_UNIQUE_NAME(___tri_global___); }
+#define TRI_COMPONENT(type) namespace{ tridot::impl::ComponentRegisterer<type> ECS_UNIQUE_NAME(___tri_global___); }
 
 #endif //TRIDOT_ENGINE_H

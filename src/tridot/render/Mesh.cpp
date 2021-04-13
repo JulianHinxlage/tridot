@@ -234,7 +234,7 @@ namespace tridot {
                 indexData.push_back(index);
             }
 
-            Log::trace("loaded mesh ", file);
+            Log::debug("loaded mesh ", file);
             return true;
         }else{
             Log::warning("mesh: file ", file, " not found");

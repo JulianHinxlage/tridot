@@ -152,20 +152,22 @@ namespace ecs{
 
     };
 
+    namespace impl{
+        template<typename T>
+        class ReflectionRegisterer{
+        public:
+            ReflectionRegisterer(const std::string &name){
+                ecs::Reflection::registerType<T>(name);
+            }
+            ~ReflectionRegisterer(){
+                ecs::Reflection::unregisterType<T>();
+            }
+        };
+    }
+
 }
 
-template<typename T>
-class ReflectionRegisterer{
-public:
-    ReflectionRegisterer(const std::string &name){
-        ecs::Reflection::registerType<T>(name);
-    }
-    ~ReflectionRegisterer(){
-        ecs::Reflection::unregisterType<T>();
-    }
-};
-
-#define REFLECT_TYPE_NAME(type, name) ReflectionRegisterer<type> ECS_UNIQUE_NAME(___ecs_global___)(#name);
+#define REFLECT_TYPE_NAME(type, name) ecs::impl::ReflectionRegisterer<type> ECS_UNIQUE_NAME(___ecs_global___)(#name);
 #define REFLECT_TYPE(type) REFLECT_TYPE_NAME(type, type)
 
 #define REFLECT_MEMBER(type, member) bool ECS_UNIQUE_NAME(___ecs_global___) = (ecs::Reflection::registerMember<type, decltype(type::member)>(#member, offsetof(type, member)), true);

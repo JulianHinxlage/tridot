@@ -144,7 +144,7 @@ namespace tridot {
             glDeleteShader(shaderId);
         }
         id = programId;
-        Log::trace("created shader ", id, " ", file);
+        Log::debug("created shader ", id, " ", file);
         locations.clear();
         bufferLocations.clear();
         return true;

@@ -87,7 +87,6 @@ TRI_INIT("imguizmo begin"){
     engine.onUpdate().order({"imgui begin", "imguizmo begin"});
 }
 
-
 TRI_UPDATE("panels"){
     if(ImGui::GetCurrentContext() != nullptr) {
         bool &open = Editor::getFlag("Viewport");
@@ -117,6 +116,16 @@ TRI_UPDATE("panels"){
                         ImGui::TableSetupColumn("5", ImGuiTableColumnFlags_None, 0.25);
 
                         ImGui::TableNextColumn();
+
+                        if(ImGui::Checkbox("play", &Editor::runtime)){
+                            if(Editor::runtime){
+                                Editor::enableRuntime();
+                            }else{
+                                Editor::disableRuntime();
+                            }
+                        }
+                        ImGui::SameLine();
+
                         if(ImGui::RadioButton("translate", operation == ImGuizmo::OPERATION::TRANSLATE)){
                             operation = ImGuizmo::OPERATION::TRANSLATE;
                         }

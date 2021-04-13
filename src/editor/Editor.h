@@ -6,6 +6,7 @@
 #define TRIDOT_EDITOR_H
 
 #include "tridot/ecs/Registry.h"
+#include "tridot/render/Camera.h"
 #include <glm/glm.hpp>
 #include <map>
 
@@ -19,6 +20,11 @@ namespace tridot {
         static std::map<std::string, bool> flags;
         static std::string currentSceneFile;
         static uint64_t propertiesWindowFlags;
+        static bool runtime;
+        static ecs::Registry runtimeSceneBuffer;
+
+        static void enableRuntime();
+        static void disableRuntime(bool restoreScene = true);
 
         static bool &getFlag(const std::string &name);
         static void loadFlags();

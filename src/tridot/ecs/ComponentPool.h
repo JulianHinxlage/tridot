@@ -65,6 +65,15 @@ namespace ecs {
             components.clear();
         }
 
+        virtual void copy(const Pool &source) override{
+            Pool::copy(source);
+            components = ((ComponentPool<Component>&)source).components;
+        }
+
+        virtual std::shared_ptr<Pool> make() override{
+            return std::make_shared<ComponentPool<Component>>();
+        }
+
     private:
         std::vector<Component> components;
     };

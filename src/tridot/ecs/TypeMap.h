@@ -30,6 +30,11 @@ namespace ecs{
             return count;
         }
 
+        void clear(){
+            map.clear();
+            count = 0;
+        }
+
     private:
         std::vector<int> map;
         int count = 0;

@@ -186,13 +186,36 @@ namespace ecs {
             return getPool<Component>().onRemove();
         }
 
-        void clear(){
+        void clear(bool unregisterComponents = false){
             freeEntityIds.clear();
             nextEntityId = 0;
             entityPool.clear();
             for(auto &pool : componentPools){
                 if(pool != nullptr){
                     pool->clear();
+                }
+            }
+            if(unregisterComponents){
+                componentPools.clear();
+                componentMap.clear();
+            }
+        }
+
+        void copy(const Registry &source){
+            componentMap = source.componentMap;
+            freeEntityIds = source.freeEntityIds;
+            nextEntityId = source.nextEntityId;
+            onRegisterSignal = source.onRegisterSignal;
+            onUnregisterSignal = source.onUnregisterSignal;
+
+            entityPool.copy(source.entityPool);
+            componentPools.resize(source.componentPools.size());
+            for(int i = 0; i < source.componentPools.size(); i++){
+                if(source.componentPools[i]){
+                    componentPools[i] = source.componentPools[i]->make();
+                    componentPools[i]->copy(*source.componentPools[i]);
+                }else{
+                    componentPools[i] = nullptr;
                 }
             }
         }
@@ -276,6 +299,13 @@ namespace ecs {
                     : nullptr
                 )
             , ...);
+        }
+
+        void unregisterComponent(int reflectId){
+            uint32_t cid = componentMap.id(reflectId);
+            if(cid < componentPools.size()){
+                componentPools[cid] = nullptr;
+            }
         }
 
         auto onUnregister(){

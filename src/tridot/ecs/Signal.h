@@ -27,6 +27,31 @@ namespace ecs {
             return nextId++;
         }
 
+        void setActive(const std::string &name, bool active){
+            for(int i = 0; i < listeners.size(); i++){
+                auto &listener = listeners[i];
+                if(listener.name == name){
+                    listener.active = active;
+                }
+            }
+        }
+
+        void setActive(int id, bool active){
+            for(int i = 0; i < listeners.size(); i++){
+                auto &listener = listeners[i];
+                if(listener.id == id){
+                    listener.active = active;
+                }
+            }
+        }
+
+        void setActiveAll(bool active){
+            for(int i = 0; i < listeners.size(); i++){
+                auto &listener = listeners[i];
+                listener.active = active;
+            }
+        }
+
         void remove(const std::string &name){
             for(int i = 0; i < listeners.size(); i++){
                 auto &listener = listeners[i];
@@ -51,7 +76,9 @@ namespace ecs {
             for(int i = 0; i < listeners.size(); i++) {
                 auto &listener = listeners[i];
                 if(listener.callback != nullptr){
-                    listener.callback(args...);
+                    if(listener.active){
+                        listener.callback(args...);
+                    }
                 }
             }
         }
@@ -79,10 +106,11 @@ namespace ecs {
             Callback callback;
             std::string name;
             int id;
+            bool active;
             std::vector<std::string> dependencies;
 
-            Listener(const Callback &callback = nullptr, const std::string &name = "", int id = 0)
-                : callback(callback), name(name), id(id){}
+            Listener(const Callback &callback = nullptr, const std::string &name = "", int id = 0, bool active = true)
+                : callback(callback), name(name), id(id), active(active){}
         };
         std::vector<Listener> listeners;
         int nextId;
@@ -137,6 +165,18 @@ namespace ecs {
 
         int add(const std::string &name, const Callback &callback){
             return signal->add(name, callback);
+        }
+
+        void setActive(const std::string &name, bool active){
+            signal->setActive(name, active);
+        }
+
+        void setActive(int id, bool active){
+            signal->setActive(id, active);
+        }
+
+        void setActiveAll(bool active){
+            signal->setActiveAll(active);
         }
 
         void remove(const std::string &name){

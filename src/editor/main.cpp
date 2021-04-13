@@ -15,7 +15,7 @@ using namespace tridot;
 void createDefaultScene();
 
 int main(int argc, char *argv[]){
-    Log::options.logLevel = Log::TRACE;
+    Log::options.logLevel = Log::DEBUG;
 #if WIN32
     Log::options.colorEnabled = false;
 #endif

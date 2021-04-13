@@ -11,52 +11,44 @@
 #include <GL/glew.h>
 
 tridot::Engine engine;
-bool engineInited = false;
-bool engineInitedSignal = false;
-
-ecs::Signal<> &getUpdateSignal(){
-    static ecs::Signal<> signal;
-    return signal;
-}
-
-ecs::Signal<> &getInitSignal(){
-    static ecs::Signal<> signal;
-    return signal;
-}
-
-int addUpdateSignalCallback(const std::string &name, const std::function<void()> &callback){
-    if(engineInited){
-        return engine.onUpdate().add(name, callback);
-    }else{
-        return getUpdateSignal().add(name, callback);
-    }
-}
-
-int addInitSignalCallback(const std::string &name, const std::function<void()> &callback){
-    int id = -1;
-    if(engineInited){
-        id = engine.onInit().add(name, callback);
-    }else{
-        id = getInitSignal().add(name, callback);
-    }
-    if(engineInitedSignal){
-        callback();
-    }
-    return id;
-}
 
 void imguiInit();
+
+bool &isEngineConstructed(){
+    static bool value = false;
+    return value;
+}
+
+bool &isEngineInitialized(){
+    static bool value = false;
+    return value;
+}
+
+bool &isEngineDestructed(){
+    static bool value = false;
+    return value;
+}
+
+ecs::Signal<> &tmpUpdateSignal(){
+    static ecs::Signal<> signal;
+    return signal;
+}
+
+ecs::Signal<> &tmpInitSignal(){
+    static ecs::Signal<> signal;
+    return signal;
+}
 
 namespace tridot {
 
     Engine::Engine() {
-        engineInited = true;
-        onUpdateSignal = getUpdateSignal();
-        onInitSignal = getInitSignal();
+        isEngineConstructed() = true;
+        onInitSignal = tmpInitSignal();
+        onUpdateSignal = tmpUpdateSignal();
     }
 
     Engine::~Engine() {
-        engineInited = false;
+        isEngineDestructed() = true;
     }
 
     void Engine::init(uint32_t width, uint32_t height, const std::string &title, const std::string &resourceDirectory, bool autoReload) {
@@ -98,10 +90,17 @@ namespace tridot {
 
         imguiInit();
         onInitSignal.invoke();
-        engineInitedSignal = true;
+        onInitSignal.setActiveAll(false);
+        isEngineInitialized() = true;
+    }
+
+    void Engine::beginScene() {
+        onBeginSceneSignal.invoke();
     }
 
     void Engine::update() {
+        onInitSignal.invoke();
+        onInitSignal.setActiveAll(false);
         onUpdateSignal.invoke();
     }
 
@@ -111,8 +110,40 @@ namespace tridot {
         }
     }
 
+    void Engine::endScene() {
+        onEndSceneSignal.invoke();
+    }
+
     void Engine::shutdown() {
         onShutdownSignal.invoke();
+    }
+
+    ecs::SignalRef<> Engine::onInit(){
+        if(isEngineConstructed()){
+            return onInitSignal.ref();
+        }else{
+            return tmpInitSignal().ref();
+        }
+    }
+
+    ecs::SignalRef<> Engine::onBeginScene(){
+        return onBeginSceneSignal.ref();
+    }
+
+    ecs::SignalRef<> Engine::onUpdate(){
+        if(isEngineConstructed()){
+            return onUpdateSignal.ref();
+        }else{
+            return tmpUpdateSignal().ref();
+        }
+    }
+
+    ecs::SignalRef<> Engine::onEndScene(){
+        return onEndSceneSignal.ref();
+    }
+
+    ecs::SignalRef<> Engine::onShutdown(){
+        return onShutdownSignal.ref();
     }
 
     bool Engine::loadScene(const std::string &file) {
@@ -127,22 +158,20 @@ namespace tridot {
 
 }
 
-UpdateSignalRegisterer::UpdateSignalRegisterer(const std::string &name, const std::function<void()> &callback){
-    this->name = name;
-    this->id = addUpdateSignalCallback(name, callback);
+tridot::impl::UpdateSignalRegisterer::UpdateSignalRegisterer(const std::string &name, const std::function<void()> &callback){
+    this->id = engine.onUpdate().add(name, callback);
 }
-UpdateSignalRegisterer::~UpdateSignalRegisterer(){
-    if(engineInited){
+tridot::impl::UpdateSignalRegisterer::~UpdateSignalRegisterer(){
+    if(!isEngineDestructed()){
         engine.onUpdate().remove(id);
     }
 }
 
-InitSignalRegisterer::InitSignalRegisterer(const std::string &name, const std::function<void()> &callback){
-    this->name = name;
-    this->id = addInitSignalCallback(name, callback);
+tridot::impl::InitSignalRegisterer::InitSignalRegisterer(const std::string &name, const std::function<void()> &callback){
+    this->id = engine.onInit().add(name, callback);
 }
-InitSignalRegisterer::~InitSignalRegisterer(){
-    if(engineInited){
+tridot::impl::InitSignalRegisterer::~InitSignalRegisterer(){
+    if(!isEngineDestructed()){
         engine.onInit().remove(id);
     }
 }

@@ -35,7 +35,7 @@ namespace tridot {
         unload();
         handle = (void*)LoadLibrary(file.c_str());
         if (handle) {
-            Log::trace("loaded plugin ", this->file);
+            Log::debug("loaded plugin ", this->file);
             typedef void (*Function)();
             init = (Function)GetProcAddress((HINSTANCE)handle, "init");
             update = (Function)GetProcAddress((HINSTANCE)handle, "update");
@@ -54,7 +54,7 @@ namespace tridot {
         unload();
         handle = dlopen(this->file.c_str(), RTLD_NOW | RTLD_LOCAL);
         if (handle) {
-            Log::trace("loaded plugin ", this->file);
+            Log::debug("loaded plugin ", this->file);
             typedef void (*Function)();
             init = (Function)dlsym(handle, "init");
             update = (Function)dlsym(handle, "update");
@@ -84,7 +84,7 @@ namespace tridot {
             update = nullptr;
             shutdown = nullptr;
             handle = nullptr;
-            Log::trace("unloaded plugin ", this->file);
+            Log::debug("unloaded plugin ", this->file);
         }
     }
 

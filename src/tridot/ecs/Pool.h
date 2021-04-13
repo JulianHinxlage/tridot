@@ -108,11 +108,32 @@ namespace ecs {
             return onRemoveSignal.ref();
         }
 
+        virtual void copy(const Pool &source){
+            dense = source.dense;
+            onAddSignal = source.onAddSignal;
+            onRemoveSignal = source.onRemoveSignal;
+            sparse.resize(source.sparse.size());
+            for(int i = 0; i < source.sparse.size(); i++){
+                if(source.sparse[i]){
+                    sparse[i].reset(new EntityId[pageSize]);
+                    for(int j = 0; j < pageSize; j++){
+                        sparse[i][j] = source.sparse[i][j];
+                    }
+                }else{
+                    sparse[i] = nullptr;
+                }
+            }
+        }
+
+        virtual std::shared_ptr<Pool> make(){
+            return std::make_shared<Pool>();
+        }
+
     protected:
         static const uint32_t pageMask = (1 << poolPageSizeBits) - 1;
         static const uint32_t pageSize = 1 << poolPageSizeBits;
         std::vector<EntityId> dense;
-        std::vector<std::unique_ptr<uint32_t[]>> sparse;
+        std::vector<std::shared_ptr<uint32_t[]>> sparse;
         Signal<EntityId> onAddSignal;
         Signal<EntityId> onRemoveSignal;
 

@@ -15,6 +15,8 @@ namespace tridot {
     std::map<std::string, bool> Editor::flags;
     std::string Editor::currentSceneFile = "";
     uint64_t Editor::propertiesWindowFlags = 0;
+    bool Editor::runtime = false;
+    ecs::Registry Editor::runtimeSceneBuffer;
 
     bool &Editor::getFlag(const std::string &name){
         auto open = flags.find(name);
@@ -49,6 +51,44 @@ namespace tridot {
         }
     }
 
+    void Editor::enableRuntime() {
+        runtimeSceneBuffer.copy(engine);
+        engine.onUpdate().setActiveAll(true);
+        runtime = true;
+        engine.beginScene();
+        Log::debug("runtime enabled");
+    }
+
+    void Editor::disableRuntime(bool restoreScene) {
+        engine.endScene();
+        if(restoreScene){
+            PerspectiveCamera cameraBuffer;
+            if(engine.has<PerspectiveCamera>(Editor::cameraId)){
+                PerspectiveCamera &camera = engine.get<PerspectiveCamera>(Editor::cameraId);
+                cameraBuffer = camera;
+            }
+            engine.copy(runtimeSceneBuffer);
+            if(engine.has<PerspectiveCamera>(Editor::cameraId)){
+                PerspectiveCamera &camera = engine.get<PerspectiveCamera>(Editor::cameraId);
+                camera = cameraBuffer;
+            }
+        }
+        runtimeSceneBuffer.clear(true);
+        engine.onUpdate().setActiveAll(false);
+        engine.onUpdate().setActive("rendering", true);
+        engine.onUpdate().setActive("panels", true);
+        engine.onUpdate().setActive("window", true);
+        engine.onUpdate().setActive("imgui begin", true);
+        engine.onUpdate().setActive("imgui end", true);
+        engine.onUpdate().setActive("input", true);
+        engine.onUpdate().setActive("time", true);
+        engine.onUpdate().setActive("editor", true);
+        engine.onUpdate().setActive("clear", true);
+        engine.onUpdate().setActive("resources", true);
+        runtime = false;
+        Log::debug("runtime disabled");
+    }
+
     TRI_INIT("editor"){
         if(ImGui::GetCurrentContext()) {
             ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
@@ -76,6 +116,10 @@ namespace tridot {
             ImGui::PushStyleColor(ImGuiCol_DragDropTarget, ImVec4(0.0, 0.32, 1.0, 1));
         }
         engine.onUpdate().order({"imgui end", "window", "imgui begin", "clear", "rendering", "editor", "panels"});
+        Editor::disableRuntime(false);
+        engine.onUnregister().add([](int reflectId){
+            Editor::runtimeSceneBuffer.unregisterComponent(reflectId);
+        });
     }
 
     TRI_UPDATE("editor"){

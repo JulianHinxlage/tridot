@@ -12,7 +12,7 @@ std::stringstream consoleLog;
 
 TRI_INIT("panels"){
     Log::Options options;
-    options.logLevel = Log::TRACE;
+    options.logLevel = Log::DEBUG;
     options.dateEnabled = false;
     options.timeEnabled = true;
     options.colorEnabled = false;

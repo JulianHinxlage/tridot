@@ -43,6 +43,14 @@ namespace tridot {
         });
     }
 
+    TRI_INIT("physics"){
+        engine.onEndScene().add("physics", [](){
+            engine.view<RigidBody>().each([](ecs::EntityId id, RigidBody &rb){
+                engine.physics.remove(rb);
+            });
+        });
+    }
+
     class Physics::Impl{
     public:
         btDynamicsWorld *world;
