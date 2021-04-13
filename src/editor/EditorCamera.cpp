@@ -8,7 +8,7 @@
 
 namespace tridot {
 
-    void EditorCamera::update(PerspectiveCamera &camera, bool hovered) {
+    void EditorCamera::update(PerspectiveCamera &camera, bool hovered, bool useKeyboard) {
         glm::vec2 mousePosition = engine.input.getMousePosition(false);
 
         if(hovered && engine.input.pressed(Input::MOUSE_BUTTON_MIDDLE)){
@@ -52,7 +52,7 @@ namespace tridot {
             engine.input.setMousePosition(startMousePosition, false);
         }
 
-        if(hovered){
+        if(hovered && useKeyboard){
             if(engine.input.down('W')){
                 camera.position += camera.forward * engine.time.frameTime * speed * 5.0f;
             }if(engine.input.down('A')){

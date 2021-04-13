@@ -4,14 +4,16 @@
 
 #include "Editor.h"
 #include "tridot/engine/Engine.h"
+#include "tridot/components/Tag.h"
 #include <imgui.h>
 #include <fstream>
 
 namespace tridot {
 
-    ecs::EntityId Editor::selectedEntity = -1;
+    SelectionContext Editor::selection;
+    Viewport Editor::viewport;
+
     ecs::EntityId Editor::cameraId = -1;
-    glm::vec2 Editor::viewportSize = {0, 0};
     std::map<std::string, bool> Editor::flags;
     std::string Editor::currentSceneFile = "";
     uint64_t Editor::propertiesWindowFlags = 0;
@@ -89,9 +91,10 @@ namespace tridot {
         Log::debug("runtime disabled");
     }
 
-    TRI_INIT("editor"){
+    void Editor::init() {
         if(ImGui::GetCurrentContext()) {
             ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+            ImGui::GetIO().IniFilename = "editor.ini";
 
             ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(1, 1, 1, 0.3));
             ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(1, 1, 1, 0.4));
@@ -115,6 +118,12 @@ namespace tridot {
             ImGui::PushStyleColor(ImGuiCol_TitleBgActive, ImVec4(0.238, 0.238, 0.238, 1));
             ImGui::PushStyleColor(ImGuiCol_DragDropTarget, ImVec4(0.0, 0.32, 1.0, 1));
         }
+
+        viewport.init();
+
+        engine.onUpdate().add("editor", [](){
+            Editor::update();
+        });
         engine.onUpdate().order({"imgui end", "window", "imgui begin", "clear", "rendering", "editor", "panels"});
         Editor::disableRuntime(false);
         engine.onUnregister().add([](int reflectId){
@@ -122,7 +131,7 @@ namespace tridot {
         });
     }
 
-    TRI_UPDATE("editor"){
+    void Editor::update() {
         if(ImGui::GetCurrentContext() != nullptr) {
             ImGui::DockSpaceOverViewport();
 
@@ -144,7 +153,7 @@ namespace tridot {
                 }
 
 
-                if (ImGui::BeginMenu("Panels")) {
+                if (ImGui::BeginMenu("View")) {
                     for (auto &panel : Editor::flags) {
                         if (ImGui::MenuItem(panel.first.c_str(), nullptr, panel.second)) {
                             panel.second = !panel.second;
@@ -171,7 +180,7 @@ namespace tridot {
                         if(engine.loadScene(std::string(buffer))){
                             Editor::currentSceneFile = std::string(buffer);
                             Editor::cameraId = -1;
-                            Editor::selectedEntity = -1;
+                            Editor::selection.unselect();
                         }
                         ImGui::CloseCurrentPopup();
                     }
@@ -208,8 +217,9 @@ namespace tridot {
                     ImGui::EndPopup();
                 }
             }
-
         }
+
+        viewport.update();
     }
 
 }

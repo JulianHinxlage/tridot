@@ -7,6 +7,8 @@
 
 #include "tridot/ecs/Registry.h"
 #include "tridot/render/Camera.h"
+#include "SelectionContext.h"
+#include "Viewport.h"
 #include <glm/glm.hpp>
 #include <map>
 
@@ -14,14 +16,18 @@ namespace tridot {
 
     class Editor {
     public:
-        static ecs::EntityId selectedEntity;
+        static SelectionContext selection;
+        static Viewport viewport;
+
         static ecs::EntityId cameraId;
-        static glm::vec2 viewportSize;
         static std::map<std::string, bool> flags;
         static std::string currentSceneFile;
         static uint64_t propertiesWindowFlags;
         static bool runtime;
         static ecs::Registry runtimeSceneBuffer;
+
+        static void init();
+        static void update();
 
         static void enableRuntime();
         static void disableRuntime(bool restoreScene = true);

@@ -16,9 +16,8 @@ TRI_UPDATE("panels"){
         if(open) {
             if (ImGui::Begin("Properties", &open)) {
                 ImGui::SetWindowSize(ImVec2(400, 400), ImGuiCond_FirstUseEver);
-                EntityId id = Editor::selectedEntity;
+                EntityId id = Editor::selection.getSingleSelection();
                 if (id != -1 && engine.exists(id)) {
-
                     auto &types = ecs::Reflection::getTypes();
                     if (ImGui::Button("add Component")) {
                         ImGui::OpenPopup("add");
@@ -26,7 +25,7 @@ TRI_UPDATE("panels"){
                     ImGui::SameLine();
                     if (ImGui::Button("remove Entity")) {
                         engine.destroy(id);
-                        Editor::selectedEntity = -1;
+                        Editor::selection.unselect();
                     }
                     if (ImGui::BeginPopup("add")) {
                         for (auto &type : types) {

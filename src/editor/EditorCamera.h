@@ -16,7 +16,7 @@ namespace tridot {
         bool dragMiddle = false;
         bool dragRight = false;
 
-        void update(PerspectiveCamera &camera, bool hovered);
+        void update(PerspectiveCamera &camera, bool hovered, bool useKeyboard = true);
     };
 
 }

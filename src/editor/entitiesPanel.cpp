@@ -17,18 +17,24 @@ TRI_UPDATE("panels"){
             if (ImGui::Begin("Entities", &open)) {
                 ImGui::SetWindowSize(ImVec2(400, 400), ImGuiCond_FirstUseEver);
 
+                bool controlDown = engine.input.down(Input::KEY_RIGHT_CONTROL) || engine.input.down(Input::KEY_LEFT_CONTROL);
+                bool shiftDown = engine.input.down(Input::KEY_RIGHT_SHIFT) || engine.input.down(Input::KEY_LEFT_SHIFT);
+
                 if (ImGui::Button("add Entity")) {
-                    Editor::selectedEntity = engine.create(Transform(), Tag(), uuid());
+                    Editor::selection.select(engine.create(Transform(), Tag(), uuid()));
                 }
 
                 if (ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows)) {
-                    if (engine.input.pressed(engine.input.KEY_DELETE)) {
-                        if (Editor::selectedEntity != -1) {
-                            engine.destroy(Editor::selectedEntity);
-                            Editor::selectedEntity = -1;
+                    if(controlDown){
+                        if(engine.input.pressed('D')){
+                            Editor::selection.duplicateAll();
                         }
                     }
+                    if (engine.input.pressed(engine.input.KEY_DELETE)) {
+                        Editor::selection.destroyAll();
+                    }
                 }
+
 
                 ImGui::Separator();
                 ImGui::BeginChild("entities");
@@ -50,37 +56,49 @@ TRI_UPDATE("panels"){
                             label = "Entity " + std::to_string(id);
                         }
 
-                        if (ImGui::Selectable(label.c_str(), id == Editor::selectedEntity,
-                                              ImGuiSelectableFlags_AllowItemOverlap)) {
-                            if (Editor::selectedEntity == id) {
-                                Editor::selectedEntity = -1;
-                            } else {
-                                Editor::selectedEntity = id;
+                        if (ImGui::Selectable(label.c_str(), Editor::selection.isSelected(id))) {
+                            if(shiftDown) {
+                                ecs::EntityId min = std::min(id, Editor::selection.lastSelected);
+                                ecs::EntityId max = std::max(id, Editor::selection.lastSelected);
+                                for (EntityId id = min; id <= max; id++) {
+                                    if (engine.exists(id)) {
+                                        Editor::selection.select(id, false);
+                                    }
+                                }
+                            }else {
+                                if (Editor::selection.isSelected(id)) {
+                                    if(controlDown){
+                                        Editor::selection.unselect(id);
+                                    }else{
+                                        Editor::selection.unselect();
+                                    }
+                                } else {
+                                    Editor::selection.select(id, !controlDown);
+                                }
                             }
                         }
 
                         if (ImGui::BeginPopupContextItem()) {
                             if (ImGui::Selectable("remove")) {
-                                engine.destroy(id);
-                                if (id == Editor::selectedEntity) {
-                                    Editor::selectedEntity = -1;
+                                if(Editor::selection.isSelected(id)){
+                                    Editor::selection.destroyAll();
+                                }else{
+                                    engine.destroy(id);
+                                    if(Editor::selection.isSelected(id)){
+                                        Editor::selection.unselect(id);
+                                    }
                                 }
                             }
                             if (ImGui::Selectable("duplicate")) {
-                                EntityId newId = engine.create();
-                                for(auto &type : ecs::Reflection::getTypes()){
-                                    auto *pool = engine.getPool(type->id());
-                                    if(pool && pool->has(id)){
-                                        pool->add(newId, pool->getById(id));
-                                    }
+                                if(Editor::selection.isSelected(id)){
+                                    Editor::selection.duplicateAll();
+                                }else{
+                                    Editor::selection.select(Editor::selection.duplicate(id));
                                 }
-                                if(engine.has<uuid>(newId)){
-                                    engine.get<uuid>(newId).make();
-                                }
-                                Editor::selectedEntity = newId;
                             }
                             ImGui::EndPopup();
                         }
+
                         ImGui::PopID();
                     }
                 }
