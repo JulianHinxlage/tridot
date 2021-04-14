@@ -24,6 +24,8 @@ namespace tridot {
         float snapValueRotate = 45.0;
         glm::vec2 mousePickPosition = {0, 0};
         bool controlDown = false;
+        Ref<FrameBuffer> selectionOverlayTarget;
+        bool selectionOverlay = true;
 
         void init();
         void clear();
@@ -32,6 +34,7 @@ namespace tridot {
         void draw();
         void updateGizmos();
         void updateMousePicking();
+        void drawSelectionOverlay();
     };
 
 }

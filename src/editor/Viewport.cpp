@@ -5,7 +5,8 @@
 #include "Viewport.h"
 #include "Editor.h"
 #include "tridot/engine/Engine.h"
-#include <glm/gtc/matrix_transform.hpp>
+#include "tridot/components/RenderComponent.h"
+#include <GL/glew.h>
 
 namespace tridot {
 
@@ -30,6 +31,7 @@ namespace tridot {
                     ImGui::SetWindowSize(ImVec2(400, 400), ImGuiCond_FirstUseEver);
 
                     updateControlBar();
+                    drawSelectionOverlay();
                     draw();
                     updateGizmos();
                     updateMousePicking();
@@ -49,12 +51,13 @@ namespace tridot {
     void Viewport::updateControlBar() {
         controlDown = engine.input.down(Input::KEY_LEFT_CONTROL) || engine.input.down(Input::KEY_RIGHT_CONTROL);
 
-        ImGui::BeginTable("controls", 5, ImGuiTableFlags_SizingStretchSame);
-        ImGui::TableSetupColumn("1", ImGuiTableColumnFlags_None, 0.30);
-        ImGui::TableSetupColumn("2", ImGuiTableColumnFlags_None, 0.15);
-        ImGui::TableSetupColumn("3", ImGuiTableColumnFlags_None, 0.05);
-        ImGui::TableSetupColumn("4", ImGuiTableColumnFlags_None, 0.25);
+        ImGui::BeginTable("controls", 6, ImGuiTableFlags_SizingStretchSame);
+        ImGui::TableSetupColumn("1", ImGuiTableColumnFlags_None, 0.25);
+        ImGui::TableSetupColumn("2", ImGuiTableColumnFlags_None, 0.125);
+        ImGui::TableSetupColumn("3", ImGuiTableColumnFlags_None, 0.075);
+        ImGui::TableSetupColumn("4", ImGuiTableColumnFlags_None, 0.05);
         ImGui::TableSetupColumn("5", ImGuiTableColumnFlags_None, 0.25);
+        ImGui::TableSetupColumn("6", ImGuiTableColumnFlags_None, 0.25);
 
         //toggle runtime mode
         ImGui::TableNextColumn();
@@ -89,6 +92,10 @@ namespace tridot {
         if(ImGui::RadioButton("world", mode == ImGuizmo::MODE::WORLD)){
             mode = ImGuizmo::MODE::WORLD;
         }
+
+        //outlines
+        ImGui::TableNextColumn();
+        ImGui::Checkbox("outlines", &selectionOverlay);
 
         //snap
         ImGui::TableNextColumn();
@@ -146,13 +153,25 @@ namespace tridot {
                 viewportSize.x = ImGui::GetContentRegionAvail().x;
                 viewportSize.y = ImGui::GetContentRegionAvail().y;
 
+                auto imagePosition = ImGui::GetCursorPos();
                 auto texture = camera.target->getTexture(TextureAttachment(COLOR + 0));
-                ImGui::Image((void *) (size_t) texture->getId(),
-                             ImVec2(viewportSize.x, viewportSize.y),
-                             ImVec2(0, 1), ImVec2(1, 0));
-
+                if(texture) {
+                    ImGui::Image((void *) (size_t) texture->getId(),
+                                 ImVec2(viewportSize.x, viewportSize.y),
+                                 ImVec2(0, 1), ImVec2(1, 0));
+                }
                 mousePickPosition.x = ImGui::GetMousePos().x - ImGui::GetItemRectMin().x;
                 mousePickPosition.y = ImGui::GetMousePos().y - ImGui::GetItemRectMin().y;
+
+                if(selectionOverlayTarget && selectionOverlay){
+                    ImGui::SetCursorPos(imagePosition);
+                    auto overlay = selectionOverlayTarget->getTexture(TextureAttachment(COLOR + 0));
+                    if(overlay){
+                        ImGui::Image((void *) (size_t) overlay->getId(),
+                                     ImVec2(viewportSize.x, viewportSize.y),
+                                     ImVec2(0, 1), ImVec2(1, 0));
+                    }
+                }
             }
         }
     }
@@ -267,7 +286,11 @@ namespace tridot {
                     if (ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows)) {
                         if (ImGui::IsMouseClicked(0) && !(ImGuizmo::IsOver() && ImGuizmo::IsUsing())) {
                             if (id != -1 && engine.exists(id)) {
-                                Editor::selection.select(id, !(engine.input.down(Input::KEY_RIGHT_CONTROL) || engine.input.down(Input::KEY_LEFT_CONTROL)));
+                                if(Editor::selection.isSelected(id) && controlDown){
+                                    Editor::selection.unselect(id);
+                                }else{
+                                    Editor::selection.select(id, !controlDown);
+                                }
                             } else {
                                 Editor::selection.unselect();
                             }
@@ -320,6 +343,50 @@ namespace tridot {
         engine.view<OrthographicCamera>().each([&](ecs::EntityId id, OrthographicCamera &camera){
             updateFramebuffer(camera.target, false, viewportSize);
         });
+    }
+
+    void Viewport::drawSelectionOverlay() {
+        if(engine.has<PerspectiveCamera>(Editor::cameraId) && selectionOverlay) {
+            PerspectiveCamera &camera = engine.get<PerspectiveCamera>(Editor::cameraId);
+
+            updateFramebuffer(selectionOverlayTarget, false, viewportSize);
+            selectionOverlayTarget->clear(Color::transparent);
+            engine.pbRenderer.begin(camera.getProjection(), camera.position, selectionOverlayTarget);
+
+            for (auto &sel : Editor::selection.selectedEntities) {
+                ecs::EntityId id = sel.first;
+                if (engine.exists(id)) {
+                    if (engine.has<Transform>(id)) {
+                        Transform &transform = engine.get<Transform>(id);
+                        if (engine.has<RenderComponent>(id)) {
+                            RenderComponent &rc = engine.get<RenderComponent>(id);
+                            transform.scale *= 1.05f;
+                            engine.pbRenderer.submit(transform.getMatrix(), Color(255,128,0,255), rc.mesh.get(), nullptr, id);
+                            transform.scale /= 1.05f;
+                        }
+                    }
+                }
+            }
+
+            engine.pbRenderer.end();
+            glClear(GL_DEPTH_BUFFER_BIT);
+
+            for (auto &sel : Editor::selection.selectedEntities) {
+                ecs::EntityId id = sel.first;
+                if (engine.exists(id)) {
+                    if (engine.has<Transform>(id)) {
+                        Transform &transform = engine.get<Transform>(id);
+                        if (engine.has<RenderComponent>(id)) {
+                            RenderComponent &rc = engine.get<RenderComponent>(id);
+                            engine.pbRenderer.submit(transform.getMatrix(), Color::transparent, rc.mesh.get(), nullptr, id);
+                        }
+                    }
+                }
+            }
+
+            engine.pbRenderer.end();
+            glFinish();
+        }
     }
 
 }
