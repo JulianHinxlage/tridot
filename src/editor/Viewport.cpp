@@ -334,14 +334,14 @@ namespace tridot {
                 Editor::cameraId = id;
             }
             if(id == Editor::cameraId) {
-                updateFramebuffer(camera.target, true, viewportSize);
+                camera.aspectRatio = updateFramebuffer(camera.target, true, viewportSize);
             }else {
-                updateFramebuffer(camera.target, false, viewportSize);
+                camera.aspectRatio = updateFramebuffer(camera.target, false, viewportSize);
             }
         });
 
         engine.view<OrthographicCamera>().each([&](ecs::EntityId id, OrthographicCamera &camera){
-            updateFramebuffer(camera.target, false, viewportSize);
+            camera.aspectRatio = updateFramebuffer(camera.target, false, viewportSize);
         });
     }
 
