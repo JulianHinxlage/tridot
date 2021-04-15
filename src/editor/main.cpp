@@ -22,7 +22,7 @@ int main(int argc, char *argv[]){
 
     engine.resources.addSearchDirectory(".");
     engine.init(1920, 1080, "Tridot Editor", "../res/", true);
-    engine.window.setBackgroundColor(glm::vec4(glm::vec3((Color::white * 0.25).vec()), 1.0f));
+    engine.window.setBackgroundColor(glm::vec4( 0.25, 0.25, 0.25, 1 ));
     Editor::init();
 
     engine.resources.set<Mesh>("cube") = MeshFactory::createCube();

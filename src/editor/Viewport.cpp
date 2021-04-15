@@ -20,6 +20,7 @@ namespace tridot {
             Editor::viewport.clear();
         });
         engine.onUpdate().order({"imgui begin", "imguizmo begin"});
+        engine.onUpdate().order({"window", "clear", "rendering"});
     }
 
     void Viewport::update() {
@@ -153,7 +154,8 @@ namespace tridot {
                 viewportSize.x = ImGui::GetContentRegionAvail().x;
                 viewportSize.y = ImGui::GetContentRegionAvail().y;
 
-                auto imagePosition = ImGui::GetCursorPos();
+                viewportPosition.x = ImGui::GetCursorPos().x;
+                viewportPosition.y = ImGui::GetCursorPos().y;
                 auto texture = camera.target->getTexture(TextureAttachment(COLOR + 0));
                 if(texture) {
                     ImGui::Image((void *) (size_t) texture->getId(),
@@ -164,7 +166,7 @@ namespace tridot {
                 mousePickPosition.y = ImGui::GetMousePos().y - ImGui::GetItemRectMin().y;
 
                 if(selectionOverlayTarget && selectionOverlay){
-                    ImGui::SetCursorPos(imagePosition);
+                    ImGui::SetCursorPos(ImVec2(viewportPosition.x, viewportPosition.y));
                     auto overlay = selectionOverlayTarget->getTexture(TextureAttachment(COLOR + 0));
                     if(overlay){
                         ImGui::Image((void *) (size_t) overlay->getId(),
@@ -189,7 +191,7 @@ namespace tridot {
 
                     ImGuizmo::SetOrthographic(false);
                     ImGuizmo::SetDrawlist();
-                    ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, ImGui::GetWindowWidth(), ImGui::GetWindowHeight());
+                    ImGuizmo::SetRect(ImGui::GetWindowPos().x + viewportPosition.x, ImGui::GetWindowPos().y + viewportPosition.y, viewportSize.x, viewportSize.y);
 
                     glm::mat4 matrix = transform.getMatrix();
                     glm::mat4 view = camera.getView();
@@ -219,19 +221,25 @@ namespace tridot {
 
                     Transform transform;
                     int count = 0;
+                    for (auto& sel : Editor::selection.selectedEntities) {
+                        ecs::EntityId id = sel.first;
+                        if (engine.has<Transform>(id)) {
+                            count++;
+                        }
+                    }
+
                     for (auto &sel : Editor::selection.selectedEntities) {
                         ecs::EntityId id = sel.first;
                         if (engine.has<Transform>(id)) {
                             Transform &t = engine.get<Transform>(id);
-                            transform.position += t.position;
-                            transform.scale *= t.scale;
-                            transform.rotation += t.rotation;
-                            count++;
+                            transform.position += t.position / (float)count;
+                            transform.scale *= glm::pow(t.scale, glm::vec3(1, 1, 1) / (float)count);
+                            transform.rotation += t.rotation / (float)count;
                         }
                     }
-                    transform.position /= count;
-                    transform.rotation /= count;
-                    transform.scale = glm::pow(transform.scale, glm::vec3(1, 1, 1) / (float)count);
+                    //transform.position /= count;
+                    //transform.rotation /= count;
+                    //transform.scale = glm::pow(transform.scale, glm::vec3(1, 1, 1) / (float)count);
 
 
                     ImGuizmo::SetOrthographic(false);

@@ -124,7 +124,7 @@ namespace tridot {
         engine.onUpdate().add("editor", [](){
             Editor::update();
         });
-        engine.onUpdate().order({"imgui end", "window", "imgui begin", "clear", "rendering", "editor", "panels"});
+        engine.onUpdate().order({"imgui end", "window", "imgui begin", "rendering", "editor", "panels"});
         Editor::disableRuntime(false);
         engine.onUnregister().add([](int reflectId){
             Editor::runtimeSceneBuffer.unregisterComponent(reflectId);

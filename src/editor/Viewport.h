@@ -15,6 +15,7 @@ namespace tridot {
     class Viewport {
     public:
         glm::vec2 viewportSize = {0, 0};
+        glm::vec2 viewportPosition = {0, 0};
         EditorCamera editorCamera;
         ImGuizmo::OPERATION operation = ImGuizmo::OPERATION::TRANSLATE;
         ImGuizmo::MODE mode = ImGuizmo::MODE::LOCAL;

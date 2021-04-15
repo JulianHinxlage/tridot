@@ -18,6 +18,22 @@
 
 namespace tridot {
 
+    RigidBody::RigidBody(const RigidBody& body) {
+        velocity = body.velocity;
+        angular = body.angular;
+        mass = body.mass;
+        friction = body.friction;
+        restitution = body.restitution;
+        linearDamping = body.linearDamping;
+        angularDamping = body.angularDamping;
+        physicsReference = nullptr;
+        enablePhysics = body.enablePhysics;
+        lastPosition = body.lastPosition;
+        lastRotation = body.lastRotation;
+        lastVelocity = body.lastVelocity;
+        lastAngular = body.lastAngular;
+    }
+
     btVector3 conv(const glm::vec3 &vec){
         return btVector3(vec.x, vec.y, vec.z);
     }

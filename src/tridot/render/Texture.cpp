@@ -32,10 +32,10 @@ namespace tridot {
 
     void bindTexture(uint32_t id, int32_t slot){
         static int32_t currentIds[128];
-        if(slot >= 0 && currentIds[slot] != id){
+        //if(slot >= 0 && currentIds[slot] != id){
             glBindTextureUnit(slot, id);
             currentIds[slot] = id;
-        }
+        //}
     }
 
     void Texture::bind(int32_t slot) {
@@ -44,7 +44,7 @@ namespace tridot {
     }
 
     void Texture::unbind() {
-        bindTexture(id, slot);
+        bindTexture(-1, slot);
         slot = -1;
     }
 

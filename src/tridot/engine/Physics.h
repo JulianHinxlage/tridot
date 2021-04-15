@@ -30,6 +30,7 @@ namespace tridot {
         glm::vec3 lastAngular = {0, 0, 0};
 
         RigidBody(float mass = 1) : mass(mass){}
+        RigidBody(const RigidBody& body);
     };
 
     class Collider{

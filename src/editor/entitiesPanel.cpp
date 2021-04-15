@@ -24,7 +24,7 @@ TRI_UPDATE("panels"){
                     Editor::selection.select(engine.create(Transform(), Tag(), uuid()));
                 }
 
-                if (ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows)) {
+                if (ImGui::IsWindowHovered(ImGuiFocusedFlags_ChildWindows)) {
                     if(controlDown){
                         if(engine.input.pressed('D')){
                             Editor::selection.duplicateAll();
