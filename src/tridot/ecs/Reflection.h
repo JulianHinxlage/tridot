@@ -13,6 +13,21 @@
 
 namespace ecs{
 
+    namespace impl {
+        template<class T, class EqualTo>
+        struct has_operator_equal_impl
+        {
+            template<class U, class V>
+            static auto test(U*) -> decltype(std::declval<U>() == std::declval<V>());
+            template<typename, typename>
+            static auto test(...)->std::false_type;
+
+            using type = typename std::is_same<bool, decltype(test<T, EqualTo>(0))>::type;
+        };
+        template<class T, class EqualTo = T>
+        struct has_operator_equal : has_operator_equal_impl<T, EqualTo>::type {};
+    }
+
     class TRI_API Reflection{
     public:
         class Member{
@@ -32,6 +47,7 @@ namespace ecs{
             virtual void construct(void *ptr) = 0;
             virtual void destruct(void *ptr) = 0;
             virtual void copy(void *from, void *to) = 0;
+            virtual bool equals(void* v1, void* v2) = 0;
         };
 
         template<typename T>
@@ -146,6 +162,13 @@ namespace ecs{
             void copy(void *from, void *to) override{
                 if constexpr(std::is_copy_constructible<T>::value){
                     new ((T*)to) T(*(T*)from);
+                }
+            }
+            virtual bool equals(void* v1, void* v2) override {
+                if constexpr (impl::has_operator_equal<T>()) {
+                    return *(T*)v1 == *(T*)v2;
+                } else {
+                    return false;
                 }
             }
         };

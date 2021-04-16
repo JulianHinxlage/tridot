@@ -156,8 +156,9 @@ TRI_INIT("panels"){
         }
 
         glm::vec3 r = glm::degrees(v.rotation);
-        ImGui::DragFloat3("rotation", (float*)&r, 1.0f);
-        v.rotation = glm::radians(r);
+        if (ImGui::DragFloat3("rotation", (float*)&r, 1.0f)) {
+            v.rotation = glm::radians(r);
+        }
     });
 
     EditorGui::addType<Texture>(true, [](Texture &v, const std::string &name){

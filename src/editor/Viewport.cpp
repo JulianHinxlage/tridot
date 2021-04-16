@@ -228,6 +228,8 @@ namespace tridot {
                         }
                     }
 
+                    bool differeingRotation = false;
+                    int index = 0;
                     for (auto &sel : Editor::selection.selectedEntities) {
                         ecs::EntityId id = sel.first;
                         if (engine.has<Transform>(id)) {
@@ -235,12 +237,12 @@ namespace tridot {
                             transform.position += t.position / (float)count;
                             transform.scale *= glm::pow(t.scale, glm::vec3(1, 1, 1) / (float)count);
                             transform.rotation += t.rotation / (float)count;
+                            index++;
+                            if (t.rotation / (float)count != transform.rotation / (float)index) {
+                                differeingRotation = true;
+                            }
                         }
                     }
-                    //transform.position /= count;
-                    //transform.rotation /= count;
-                    //transform.scale = glm::pow(transform.scale, glm::vec3(1, 1, 1) / (float)count);
-
 
                     ImGuizmo::SetOrthographic(false);
                     ImGuizmo::SetDrawlist();
@@ -270,8 +272,13 @@ namespace tridot {
                                 Transform &t = engine.get<Transform>(id);
 
                                 glm::mat4 m = matrix * inverse * t.getMatrix();
-                                ImGuizmo::DecomposeMatrixToComponents((float*)&m, (float*)&t.position, (float*)&t.rotation, (float*)&t.scale);
-                                t.rotation = glm::radians(t.rotation);
+                                if (differeingRotation && operation == ImGuizmo::OPERATION::SCALE) {
+                                    Transform tmp;
+                                    ImGuizmo::DecomposeMatrixToComponents((float*)&m, (float*)&t.position, (float*)&tmp.rotation, (float*)&t.scale);
+                                } else {
+                                    ImGuizmo::DecomposeMatrixToComponents((float*)&m, (float*)&t.position, (float*)&t.rotation, (float*)&t.scale);
+                                    t.rotation = glm::radians(t.rotation);
+                                }
                             }
                         }
                     }

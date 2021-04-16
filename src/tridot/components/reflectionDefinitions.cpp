@@ -31,6 +31,7 @@ namespace tridot {
     REFLECT_MEMBER(Tag, tag)
 
     REFLECT_TYPE(uuid)
+    REFLECT_MEMBER2(uuid, v1, v2)
 
     REFLECT_TYPE(Transform)
     REFLECT_MEMBER3(Transform, position, scale, rotation)
