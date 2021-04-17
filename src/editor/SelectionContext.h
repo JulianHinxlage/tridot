@@ -22,7 +22,7 @@ namespace tridot {
         ecs::EntityId getSingleSelection();
 
         void destroyAll();
-        ecs::EntityId duplicate(ecs::EntityId id);
+        ecs::EntityId duplicate(ecs::EntityId id, bool addAction = true);
         void duplicateAll();
     };
 

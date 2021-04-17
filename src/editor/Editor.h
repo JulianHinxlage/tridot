@@ -9,6 +9,11 @@
 #include "tridot/render/Camera.h"
 #include "SelectionContext.h"
 #include "Viewport.h"
+#include "PropertiesPanel.h"
+#include "EntitiesPanel.h"
+#include "ResourcePanel.h"
+#include "ConsolePanel.h"
+#include "Undo.h"
 #include <glm/glm.hpp>
 #include <map>
 
@@ -18,6 +23,11 @@ namespace tridot {
     public:
         static SelectionContext selection;
         static Viewport viewport;
+        static EntitiesPanel entities;
+        static PropertiesPanel properties;
+        static ResourcePanel resource;
+        static ConsolePanel console;
+        static Undo undo;
 
         static ecs::EntityId cameraId;
         static std::map<std::string, bool> flags;

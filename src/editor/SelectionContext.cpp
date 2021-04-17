@@ -3,8 +3,10 @@
 //
 
 #include "SelectionContext.h"
+#include "Editor.h"
 #include "tridot/engine/Engine.h"
 #include "tridot/components/Tag.h"
+#include "tridot/engine/Serializer.h"
 
 namespace tridot {
 
@@ -43,7 +45,7 @@ namespace tridot {
         selectedEntities.clear();
     }
 
-    ecs::EntityId SelectionContext::duplicate(ecs::EntityId id) {
+    ecs::EntityId SelectionContext::duplicate(ecs::EntityId id, bool addAction) {
         ecs::EntityId newId = engine.create();
         for(auto &type : ecs::Reflection::getTypes()){
             auto *pool = engine.getPool(type->id());
@@ -54,15 +56,37 @@ namespace tridot {
         if(engine.has<uuid>(newId)){
             engine.get<uuid>(newId).make();
         }
+
+        if (addAction) {
+            Editor::undo.addAction([newId]() {
+                engine.destroy(newId);
+            }, [id]() {
+                Editor::selection.duplicate(id, false);
+            });
+        }
+
         return newId;
     }
 
     void SelectionContext::duplicateAll() {
         auto tmp = selectedEntities;
+        std::map<ecs::EntityId, bool> newTmp;
         unselect();
         for(auto &sel : tmp){
-            select(duplicate(sel.first), false);
+            ecs::EntityId id = duplicate(sel.first, false);
+            newTmp[id] = true;
+            select(id, false);
         }
+
+        Editor::undo.addAction([newTmp]() {
+            for (auto& sel : newTmp) {
+                engine.destroy(sel.first);
+            }
+        }, [tmp]() {
+            for (auto& sel : tmp) {
+                Editor::selection.select(Editor::selection.duplicate(sel.first, false), false);
+            }
+        });
     }
 
 }

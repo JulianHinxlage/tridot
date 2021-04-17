@@ -12,6 +12,11 @@ namespace tridot {
 
     SelectionContext Editor::selection;
     Viewport Editor::viewport;
+    EntitiesPanel Editor::entities;
+    PropertiesPanel Editor::properties;
+    ResourcePanel Editor::resource;
+    ConsolePanel Editor::console;
+    Undo Editor::undo;
 
     ecs::EntityId Editor::cameraId = -1;
     std::map<std::string, bool> Editor::flags;
@@ -120,6 +125,7 @@ namespace tridot {
         }
 
         viewport.init();
+        console.init();
 
         engine.onUpdate().add("editor", [](){
             Editor::update();
@@ -220,6 +226,23 @@ namespace tridot {
         }
 
         viewport.update();
+        entities.update();
+        properties.update();
+        resource.update();
+        console.update();
+
+        if (engine.input.down(Input::KEY_LEFT_CONTROL) || engine.input.down(Input::KEY_RIGHT_CONTROL)) {
+            if (engine.input.down(Input::KEY_LEFT_SHIFT) || engine.input.down(Input::KEY_RIGHT_SHIFT)) {
+                if (engine.input.pressed('Z')) {
+                    undo.redoAction();
+                }
+            } else {
+                if (engine.input.pressed('Z')) {
+                    undo.undoAction();
+                }
+            }
+        }
+
     }
 
 }

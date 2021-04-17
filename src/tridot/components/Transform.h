@@ -18,7 +18,7 @@ namespace tridot {
         Transform(const glm::vec3 &position = {0, 0, 0}, const glm::vec3 &scale = {1, 1, 1}, const glm::vec3 &rotation = {0, 0, 0})
             : position(position), scale(scale), rotation(rotation) {}
 
-        glm::mat4 getMatrix();
+        glm::mat4 getMatrix() const;
     };
 
 }

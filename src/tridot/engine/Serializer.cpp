@@ -19,6 +19,63 @@ using namespace ecs;
 
 namespace tridot {
 
+    void Serializer::serializeEntity(ecs::EntityId id, YAML::Emitter& out, ecs::Registry& reg, ResourceManager& resources){
+        out << YAML::BeginMap;
+        out << YAML::Key << "id" << YAML::Value << id;
+
+        for (auto& type : Reflection::getTypes()) {
+            if (type) {
+                if (reg.has(id, type->id())) {
+                    void* ptr = reg.get(id, type->id());
+                    serializeType(type, type->name(), out, ptr, resources);
+                }
+            }
+        }
+
+        out << YAML::EndMap;
+    }
+    
+    ecs::EntityId Serializer::deserializeEntity(YAML::Node &in, ecs::Registry& reg, ResourceManager& resources) {
+        EntityId id = in["id"].as<EntityId>(-1);
+        id = reg.createHinted(id);
+        in.remove("id");
+
+        for (auto& type : Reflection::getTypes()) {
+            if (type) {
+                auto comp = in[type->name()];
+                if (comp) {
+                    auto* pool = reg.getPool(type->id());
+                    if (pool) {
+                        uint32_t index = pool->add(id, nullptr);
+                        void* ptr = pool->get(index);
+                        deserializeType(type, comp, ptr, resources);
+                        in.remove(type->name());
+                    }
+                    else {
+                        Log::warning("no component pool present for ", type->name());
+                    }
+                }
+            }
+        }
+
+        if (reg.has<ComponentCache>(id)) {
+            reg.get<ComponentCache>(id).update(id);
+        }
+
+        if (in.size() > 0) {
+            if (!reg.has<ComponentCache>(id)) {
+                reg.add<ComponentCache>(id);
+            }
+            auto& cache = reg.get<ComponentCache>(id);
+            for (auto comp : in) {
+                if (comp.first) {
+                    cache.data[comp.first] = comp.second;
+                }
+            }
+        }
+        return id;
+    }
+
     void Serializer::serializeType(Reflection::Type *type, const std::string &name, YAML::Emitter &out, void *ptr, ResourceManager &resources){
         out << YAML::Key << name;
         if(type->id() == Reflection::id<float>()){
@@ -193,19 +250,7 @@ namespace tridot {
                 out << YAML::Key << "Entities" << YAML::BeginSeq;
 
                 for (EntityId id : reg.getEntityPool().getEntities()) {
-                    out << YAML::BeginMap;
-                    out << YAML::Key << "id" << YAML::Value << id;
-
-                    for (auto &type : Reflection::getTypes()) {
-                        if(type) {
-                            if(reg.has(id, type->id())){
-                                void *ptr = reg.get(id, type->id());
-                                serializeType(type, type->name(), out, ptr, resources);
-                            }
-                        }
-                    }
-
-                    out << YAML::EndMap;
+                    serializeEntity(id, out, reg, resources);
                 }
 
                 out << YAML::EndSeq;
@@ -290,42 +335,7 @@ namespace tridot {
             if(auto entities = data["Entities"]){
                 reg.clear();
                 for(auto entity : entities){
-                    EntityId id = entity["id"].as<EntityId>(-1);
-                    id = reg.createHinted(id);
-                    entity.remove("id");
-
-                    for(auto &type : Reflection::getTypes()){
-                        if(type) {
-                            auto comp = entity[type->name()];
-                            if (comp) {
-                                auto *pool = reg.getPool(type->id());
-                                if (pool) {
-                                    uint32_t index = pool->add(id, nullptr);
-                                    void *ptr = pool->get(index);
-                                    deserializeType(type, comp, ptr, resources);
-                                    entity.remove(type->name());
-                                } else {
-                                    Log::warning("no component pool present for ", type->name());
-                                }
-                            }
-                        }
-                    }
-
-                    if(reg.has<ComponentCache>(id)){
-                        reg.get<ComponentCache>(id).update(id);
-                    }
-
-                    if(entity.size() > 0){
-                        if(!reg.has<ComponentCache>(id)){
-                            reg.add<ComponentCache>(id);
-                        }
-                        auto &cache = reg.get<ComponentCache>(id);
-                        for(auto comp : entity){
-                            if(comp.first){
-                                cache.data[comp.first] = comp.second;
-                            }
-                        }
-                    }
+                    deserializeEntity(entity, reg, resources);
                 }
             }else{
                 return false;
