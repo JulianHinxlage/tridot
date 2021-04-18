@@ -150,6 +150,9 @@ namespace tridot {
                         openFilePopup = true;
                     }
                     if(ImGui::MenuItem("Save")){
+                        if(runtime){
+                            disableRuntime();
+                        }
                         engine.saveScene(Editor::currentSceneFile);
                     }
                     if(ImGui::MenuItem("Save as")){
@@ -183,6 +186,10 @@ namespace tridot {
                     static char buffer[256];
                     ImGui::InputText("File", buffer, sizeof(buffer));
                     if (ImGui::Button("Open")) {
+                        if(runtime){
+                            disableRuntime();
+                        }
+                        Editor::undo.clearActions();
                         if(engine.loadScene(std::string(buffer))){
                             Editor::currentSceneFile = std::string(buffer);
                             Editor::cameraId = -1;
@@ -213,6 +220,9 @@ namespace tridot {
                     ImGui::InputText("File", buffer, sizeof(buffer));
                     if (ImGui::Button("Save")) {
                         Editor::currentSceneFile = std::string(buffer);
+                        if(runtime){
+                            disableRuntime();
+                        }
                         engine.saveScene(Editor::currentSceneFile);
                         ImGui::CloseCurrentPopup();
                     }
@@ -231,18 +241,19 @@ namespace tridot {
         resource.update();
         console.update();
 
-        if (engine.input.down(Input::KEY_LEFT_CONTROL) || engine.input.down(Input::KEY_RIGHT_CONTROL)) {
-            if (engine.input.down(Input::KEY_LEFT_SHIFT) || engine.input.down(Input::KEY_RIGHT_SHIFT)) {
-                if (engine.input.pressed('Z')) {
-                    undo.redoAction();
-                }
-            } else {
-                if (engine.input.pressed('Z')) {
-                    undo.undoAction();
+        if(!runtime) {
+            if (engine.input.down(Input::KEY_LEFT_CONTROL) || engine.input.down(Input::KEY_RIGHT_CONTROL)) {
+                if (engine.input.down(Input::KEY_LEFT_SHIFT) || engine.input.down(Input::KEY_RIGHT_SHIFT)) {
+                    if (engine.input.pressed('Z')) {
+                        undo.redoAction();
+                    }
+                } else {
+                    if (engine.input.pressed('Z')) {
+                        undo.undoAction();
+                    }
                 }
             }
         }
-
     }
 
 }

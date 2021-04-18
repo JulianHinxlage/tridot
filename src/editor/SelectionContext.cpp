@@ -39,10 +39,13 @@ namespace tridot {
     }
 
     void SelectionContext::destroyAll() {
+        Editor::undo.beginAction();
         for(auto &id : selectedEntities){
+            Editor::undo.destroyEntity(id.first);
             engine.destroy(id.first);
         }
         selectedEntities.clear();
+        Editor::undo.endAction();
     }
 
     ecs::EntityId SelectionContext::duplicate(ecs::EntityId id, bool addAction) {
@@ -58,13 +61,8 @@ namespace tridot {
         }
 
         if (addAction) {
-            Editor::undo.addAction([newId]() {
-                engine.destroy(newId);
-            }, [id]() {
-                Editor::selection.duplicate(id, false);
-            });
+            Editor::undo.duplicateEntity(id, newId);
         }
-
         return newId;
     }
 
@@ -72,12 +70,15 @@ namespace tridot {
         auto tmp = selectedEntities;
         std::map<ecs::EntityId, bool> newTmp;
         unselect();
+
+        Editor::undo.beginAction();
         for(auto &sel : tmp){
-            ecs::EntityId id = duplicate(sel.first, false);
+            ecs::EntityId id = duplicate(sel.first);
             newTmp[id] = true;
             select(id, false);
         }
-
+        Editor::undo.endAction();
+        /*
         Editor::undo.addAction([newTmp]() {
             for (auto& sel : newTmp) {
                 engine.destroy(sel.first);
@@ -87,6 +88,7 @@ namespace tridot {
                 Editor::selection.select(Editor::selection.duplicate(sel.first, false), false);
             }
         });
+         */
     }
 
 }

@@ -33,6 +33,20 @@ namespace tridot {
         }
 	}
 
+    bool getDifferences(ecs::Reflection::Type* type, void* v1, void* v2, std::vector<std::pair<int, ecs::Reflection::Type*>>& differences, int currentOffset = 0) {
+        for (auto& member : type->member()) {
+            currentOffset += member.offset;
+            getDifferences(&ecs::Reflection::get(member.typeId), (uint8_t*)v1 + member.offset, (uint8_t*)v2 + member.offset, differences, currentOffset);
+            currentOffset -= member.offset;
+        }
+        if (type->member().size() == 0) {
+            if (!type->equals(v1, v2)) {
+                differences.push_back({ currentOffset, type });
+            }
+        }
+        return differences.size() > 0;
+    }
+
 	void PropertiesPanel::updateProperties(ecs::EntityId id){
         auto& types = ecs::Reflection::getTypes();
         if (ImGui::Button("add Component")) {
@@ -61,13 +75,31 @@ namespace tridot {
         ImGui::BeginChild("properties", ImVec2(0, 0), false, Editor::propertiesWindowFlags);
         Editor::propertiesWindowFlags = 0;
 
+        static ecs::Reflection::Type *lastChange;
+
         for (auto& type : types) {
             if (type) {
                 if (engine.has(id, type->id())) {
                     void* comp = engine.get(id, type->id());
                     bool open = true;
                     if (ImGui::CollapsingHeader(type->name().c_str(), &open, ImGuiTreeNodeFlags_DefaultOpen)) {
+                        uint8_t* compBuffer = new uint8_t[type->size()];
+                        type->copy(comp, compBuffer);
+
                         EditorGui::drawType(type->id(), comp, type->name());
+
+                        std::vector<std::pair<int, ecs::Reflection::Type*>> differences;
+                        if(getDifferences(type, comp, compBuffer,differences)){
+                            Editor::undo.changeComponent(id, type, compBuffer);
+                            Editor::undo.changeComponent(id, type, comp);
+                            lastChange = type;
+                        }else{
+                            if(type == lastChange){
+                                lastChange = nullptr;
+                                Editor::undo.endAction();
+                            }
+                        }
+                        delete[] compBuffer;
                     }
                     if (!open) {
                         engine.remove(id, type->id());
@@ -78,20 +110,6 @@ namespace tridot {
 
         ImGui::EndChild();
 	}
-
-    bool getDifferences(ecs::Reflection::Type* type, void* v1, void* v2, std::vector<std::pair<int, ecs::Reflection::Type*>>& differences, int currentOffset = 0) {
-        for (auto& member : type->member()) {
-            currentOffset += member.offset;
-            getDifferences(&ecs::Reflection::get(member.typeId), (uint8_t*)v1 + member.offset, (uint8_t*)v2 + member.offset, differences, currentOffset);
-            currentOffset -= member.offset;
-        }
-        if (type->member().size() == 0) {
-            if (!type->equals(v1, v2)) {
-                differences.push_back({ currentOffset, type });
-            }
-        }
-        return differences.size() > 0;
-    }
 
 	void PropertiesPanel::updateMultiProperties(){
         auto& types = ecs::Reflection::getTypes();
@@ -143,8 +161,9 @@ namespace tridot {
                 bool first = true;
                 bool remove = false;
                 bool change = false;
+                static ecs::Reflection::Type *lastChange;
                 std::vector<std::pair<int, ecs::Reflection::Type*>> differences;
-                void* compBuffer = new uint8_t[type->size()];
+                uint8_t* compBuffer = new uint8_t[type->size()];
 
                 for (auto& sel : Editor::selection.selectedEntities) {
                     ecs::EntityId id = sel.first;
@@ -162,14 +181,18 @@ namespace tridot {
                                 remove = true;
                             }
                             if (getDifferences(type, comp, compBuffer, differences)) {
+                                Editor::undo.changeComponent(id, type, compBuffer);
                                 change = true;
                                 type->copy(comp, compBuffer);
+                                Editor::undo.changeComponent(id, type, comp);
                             }
                         }
 
                         if (change && !first) {
                             for (auto difference : differences) {
+                                Editor::undo.changeComponent(id, type, comp);
                                 difference.second->copy((uint8_t*)compBuffer + difference.first, (uint8_t*)comp + difference.first);
+                                Editor::undo.changeComponent(id, type, comp);
                             }
                         }
                         if (remove) {
@@ -180,8 +203,15 @@ namespace tridot {
                     }
                 }
 
-                delete[] compBuffer;
+                if(!change && lastChange == type){
+                    Editor::undo.endAction();
+                    lastChange = nullptr;
+                }
+                if(change){
+                    lastChange = type;
+                }
 
+                delete[] compBuffer;
             }
         }
         ImGui::EndChild();

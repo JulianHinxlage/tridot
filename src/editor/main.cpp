@@ -44,9 +44,34 @@ int main(int argc, char *argv[]){
 
     engine.onUpdate().add([&](){
         if(ImGui::GetCurrentContext() != nullptr){
-            bool &open = Editor::getFlag("ImGui Demo");
-            if(open){
-                ImGui::ShowDemoWindow(&open);
+            {
+                bool &open = Editor::getFlag("ImGui Demo");
+                if (open) {
+                    ImGui::ShowDemoWindow(&open);
+                }
+            }
+            {
+                bool &open = Editor::getFlag("Statistics");
+                static std::vector<float> frameTimes;
+                frameTimes.push_back(engine.time.frameTime);
+                while(frameTimes.size() > 305){
+                    frameTimes.erase(frameTimes.begin());
+                }
+                if (open) {
+                    if(ImGui::Begin("Statistics", &open)){
+                        ImGui::Text("fps: %f", engine.time.framesPerSecond);
+                        ImGui::PlotLines("frame time", frameTimes.data() + 5, (int)frameTimes.size() - 5, 0,
+                            (std::to_string(engine.time.frameTime * 1000.0f) + "ms").c_str(), std::numeric_limits<float>::max(),
+                            std::numeric_limits<float>::max(), ImVec2(300, 100));
+
+                        bool vsync = engine.window.getVSync();
+                        if(ImGui::Checkbox("VSync", &vsync)){
+                            engine.window.setVSync(vsync);
+                        }
+                        ImGui::Text("%i entities selected", (int)Editor::selection.selectedEntities.size());
+                        ImGui::End();
+                    }
+                }
             }
         }
     }, "panels");

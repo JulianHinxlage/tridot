@@ -206,35 +206,24 @@ namespace tridot {
                         snapValues *= snapValueRotate;
                     }
 
-                    static Transform startTransform;
                     static bool modifiedLast = false;
-
                     if(ImGuizmo::Manipulate((float *) &view, (float *) &projection, operation,
                                             operation == ImGuizmo::OPERATION::SCALE ? ImGuizmo::MODE::LOCAL : mode,
                                             (float *) &matrix, nullptr, (snap ^ controlDown) ? (float*)&snapValues : nullptr)){
                         if (!modifiedLast) {
-                            startTransform = transform;
+                            Editor::undo.beginAction();
+                            Editor::undo.changeComponent(selectedEntity, &ecs::Reflection::get<Transform>(), &transform);
                         }
 
                         ImGuizmo::DecomposeMatrixToComponents((float*)&matrix, (float*)&transform.position, (float*)&transform.rotation, (float*)&transform.scale);
                         transform.rotation = glm::radians(transform.rotation);
                         modifiedLast = true;
+
+                        Editor::undo.changeComponent(selectedEntity, &ecs::Reflection::get<Transform>(), &transform);
                     } else {
                         if (!ImGuizmo::IsUsing()) {
                             if (modifiedLast) {
-                                Editor::undo.addAction([id = selectedEntity, transform = startTransform]() {
-                                    if (engine.exists(id)) {
-                                        if (engine.has<Transform>(id)) {
-                                            engine.get<Transform>(id) = transform;
-                                        }
-                                    }
-                                }, [id = selectedEntity, transform = transform]() {
-                                    if (engine.exists(id)) {
-                                        if (engine.has<Transform>(id)) {
-                                            engine.get<Transform>(id) = transform;
-                                        }
-                                    }
-                                });
+                                Editor::undo.endAction();
                             }
                             modifiedLast = false;
                         }
@@ -289,21 +278,23 @@ namespace tridot {
                         snapValues *= snapValueRotate;
                     }
 
-                    static Transform startTransform;
                     static bool modifiedLast = false;
-
                     if(ImGuizmo::Manipulate((float *) &view, (float *) &projection, operation,
                             operation == ImGuizmo::OPERATION::SCALE ? ImGuizmo::MODE::LOCAL : mode,
                             (float *) &matrix, nullptr, (snap ^ controlDown) ? (float*)&snapValues : nullptr)){
 
                         if (!modifiedLast) {
-                            startTransform = transform;
+                            Editor::undo.beginAction();
                         }
 
                         for (auto &sel : Editor::selection.selectedEntities) {
                             ecs::EntityId id = sel.first;
                             if (engine.has<Transform>(id)) {
                                 Transform &t = engine.get<Transform>(id);
+
+                                if (!modifiedLast) {
+                                    Editor::undo.changeComponent(id, &ecs::Reflection::get<Transform>(), &t);
+                                }
 
                                 glm::mat4 m = matrix * inverse * t.getMatrix();
                                 if (differeingRotation && operation == ImGuizmo::OPERATION::SCALE) {
@@ -313,6 +304,8 @@ namespace tridot {
                                     ImGuizmo::DecomposeMatrixToComponents((float*)&m, (float*)&t.position, (float*)&t.rotation, (float*)&t.scale);
                                     t.rotation = glm::radians(t.rotation);
                                 }
+
+                                Editor::undo.changeComponent(id, &ecs::Reflection::get<Transform>(), &t);
                             }
                         }
 
@@ -321,31 +314,7 @@ namespace tridot {
                     else {
                         if (!ImGuizmo::IsUsing()) {
                             if (modifiedLast) {
-                                Editor::undo.addAction([ids = Editor::selection.selectedEntities, transform1 = startTransform, transform2 = transform]() {
-                                    for (auto& sel : ids) {
-                                        ecs::EntityId id = sel.first;
-                                        if (engine.exists(id)) {
-                                            if (engine.has<Transform>(id)) {
-                                                Transform &t = engine.get<Transform>(id);
-                                                glm::mat4 m = transform1.getMatrix() * glm::inverse(transform2.getMatrix()) * t.getMatrix();
-                                                ImGuizmo::DecomposeMatrixToComponents((float*)&m, (float*)&t.position, (float*)&t.rotation, (float*)&t.scale);
-                                                t.rotation = glm::radians(t.rotation);
-                                            }
-                                        }
-                                    }
-                                }, [ids = Editor::selection.selectedEntities, transform1 = transform, transform2 = startTransform]() {
-                                    for (auto& sel : ids) {
-                                        ecs::EntityId id = sel.first;
-                                        if (engine.exists(id)) {
-                                            if (engine.has<Transform>(id)) {
-                                                Transform& t = engine.get<Transform>(id);
-                                                glm::mat4 m = transform1.getMatrix() * glm::inverse(transform2.getMatrix()) * t.getMatrix();
-                                                ImGuizmo::DecomposeMatrixToComponents((float*)&m, (float*)&t.position, (float*)&t.rotation, (float*)&t.scale);
-                                                t.rotation = glm::radians(t.rotation);
-                                            }
-                                        }
-                                    }
-                                });
+                                Editor::undo.endAction();
                             }
                             modifiedLast = false;
                         }
@@ -432,6 +401,7 @@ namespace tridot {
         if(engine.has<PerspectiveCamera>(Editor::cameraId) && selectionOverlay) {
             PerspectiveCamera &camera = engine.get<PerspectiveCamera>(Editor::cameraId);
 
+            updateFramebuffer(selectionOverlayTarget, false, viewportSize);
             updateFramebuffer(selectionOverlayTarget, false, viewportSize);
             selectionOverlayTarget->clear(Color::transparent);
             engine.pbRenderer.begin(camera.getProjection(), camera.position, selectionOverlayTarget);

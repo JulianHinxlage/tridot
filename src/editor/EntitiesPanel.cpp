@@ -89,6 +89,7 @@ namespace tridot {
                                         Editor::selection.destroyAll();
                                     }
                                     else {
+                                        Editor::undo.destroyEntity(id);
                                         engine.destroy(id);
                                         if (Editor::selection.isSelected(id)) {
                                             Editor::selection.unselect(id);
