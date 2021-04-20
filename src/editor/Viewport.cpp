@@ -189,6 +189,7 @@ namespace tridot {
                 if(engine.has<Transform>(selectedEntity)){
                     Transform &transform = engine.get<Transform>(selectedEntity);
 
+                    ImGuizmo::Enable(true);
                     ImGuizmo::SetOrthographic(false);
                     ImGuizmo::SetDrawlist();
                     ImGuizmo::SetRect(ImGui::GetWindowPos().x + viewportPosition.x, ImGui::GetWindowPos().y + viewportPosition.y, viewportSize.x, viewportSize.y);
@@ -260,6 +261,7 @@ namespace tridot {
                         }
                     }
 
+                    ImGuizmo::Enable(true);
                     ImGuizmo::SetOrthographic(false);
                     ImGuizmo::SetDrawlist();
                     ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, ImGui::GetWindowWidth(), ImGui::GetWindowHeight());
@@ -320,6 +322,8 @@ namespace tridot {
                         }
                     }
 
+                }else{
+                    ImGuizmo::Enable(false);
                 }
 
             }
@@ -402,7 +406,6 @@ namespace tridot {
             PerspectiveCamera &camera = engine.get<PerspectiveCamera>(Editor::cameraId);
 
             updateFramebuffer(selectionOverlayTarget, false, viewportSize);
-            updateFramebuffer(selectionOverlayTarget, false, viewportSize);
             selectionOverlayTarget->clear(Color::transparent);
             engine.pbRenderer.begin(camera.getProjection(), camera.position, selectionOverlayTarget);
 
@@ -422,6 +425,7 @@ namespace tridot {
             }
 
             engine.pbRenderer.end();
+            selectionOverlayTarget->bind();
             glClear(GL_DEPTH_BUFFER_BIT);
 
             for (auto &sel : Editor::selection.selectedEntities) {

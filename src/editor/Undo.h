@@ -42,6 +42,7 @@ namespace tridot {
         int nextAction;
         Action actionBuffer;
         bool inAction;
+        bool enabled;
 	};
 
 }

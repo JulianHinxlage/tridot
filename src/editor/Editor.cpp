@@ -63,6 +63,7 @@ namespace tridot {
         engine.onUpdate().setActiveAll(true);
         runtime = true;
         engine.beginScene();
+        undo.enabled = false;
         Log::debug("runtime enabled");
     }
 
@@ -93,6 +94,7 @@ namespace tridot {
         engine.onUpdate().setActive("clear", true);
         engine.onUpdate().setActive("resources", true);
         runtime = false;
+        undo.enabled = true;
         Log::debug("runtime disabled");
     }
 

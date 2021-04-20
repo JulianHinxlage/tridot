@@ -9,12 +9,14 @@
 namespace tridot {
 
     void Undo::addCustomAction(const std::function<void()>& undo, const std::function<void()>& redo){
-        actionBuffer.undos.push_back(undo);
-        actionBuffer.redos.push_back(redo);
+        if(enabled){
+            actionBuffer.undos.push_back(undo);
+            actionBuffer.redos.push_back(redo);
+        }
     }
 
     void Undo::undoAction(){
-        if(nextAction - 1 < actions.size()){
+        if(enabled && nextAction - 1 < actions.size()){
             for(auto &undo : actions[nextAction-1].undos){
                 if(undo){
                     undo();
@@ -36,7 +38,7 @@ namespace tridot {
     }
 
     void Undo::redoAction(){
-        if(nextAction < actions.size()){
+        if(enabled && nextAction < actions.size()){
             for(auto &redo : actions[nextAction].redos){
                 if(redo){
                     redo();
@@ -53,63 +55,73 @@ namespace tridot {
     }
 
     void Undo::beginAction() {
-        inAction = true;
+        if(enabled){
+            inAction = true;
+        }
     }
 
     void Undo::endAction() {
-        if(actionBuffer.undos.size() > 0 || actionBuffer.redos.size() > 0 || actionBuffer.components.size() > 0){
-            while(nextAction < actions.size()){
-                actions.pop_back();
+        if(enabled) {
+            if (actionBuffer.undos.size() > 0 || actionBuffer.redos.size() > 0 || actionBuffer.components.size() > 0) {
+                while (nextAction < actions.size()) {
+                    actions.pop_back();
+                }
+                actions.push_back(actionBuffer);
+                nextAction++;
+                actionBuffer.undos.clear();
+                actionBuffer.redos.clear();
+                actionBuffer.components.clear();
             }
-            actions.push_back(actionBuffer);
-            nextAction++;
-            actionBuffer.undos.clear();
-            actionBuffer.redos.clear();
-            actionBuffer.components.clear();
+            inAction = false;
         }
-        inAction = false;
     }
 
     void Undo::destroyEntity(ecs::EntityId id) {
-        for(auto &type : ecs::Reflection::getTypes()){
-            if(engine.has(id, type->id())){
-                changeComponent(id, type, engine.get(id, type->id()));
+        if(enabled) {
+            for (auto &type : ecs::Reflection::getTypes()) {
+                if (engine.has(id, type->id())) {
+                    changeComponent(id, type, engine.get(id, type->id()));
+                }
             }
-        }
-        addCustomAction(nullptr, [id](){
-            engine.destroy(id);
-        });
-        if(!inAction){
-            endAction();
+            addCustomAction(nullptr, [id]() {
+                engine.destroy(id);
+            });
+            if (!inAction) {
+                endAction();
+            }
         }
     }
 
     void Undo::duplicateEntity(ecs::EntityId id, ecs::EntityId newId) {
-        addCustomAction([newId]() {
-            engine.destroy(newId);
-        }, [id]() {
-            Editor::selection.duplicate(id, false);
-        });
-        if(!inAction){
-            endAction();
+        if(enabled) {
+            addCustomAction([newId]() {
+                engine.destroy(newId);
+            }, [id]() {
+                Editor::selection.duplicate(id, false);
+            });
+            if (!inAction) {
+                endAction();
+            }
         }
     }
 
     void Undo::changeComponent(ecs::EntityId id, ecs::Reflection::Type *type, void *value) {
-        for(auto &comp : actionBuffer.components){
-            if(comp.id == id && comp.typeId == type->id()){
-                type->copy(value, comp.endData.get());
-                return;
+        if(enabled) {
+            for (auto &comp : actionBuffer.components) {
+                if (comp.id == id && comp.typeId == type->id()) {
+                    type->copy(value, comp.endData.get());
+                    return;
+                }
             }
+            actionBuffer.components.push_back({});
+            auto &comp = actionBuffer.components.back();
+            comp.id = id;
+            comp.typeId = type->id();
+            comp.startData = std::shared_ptr<uint8_t[]>(new uint8_t[type->size()]);
+            type->copy(value, comp.startData.get());
+            comp.endData = std::shared_ptr<uint8_t[]>(new uint8_t[type->size()]);
+            type->copy(value, comp.endData.get());
         }
-        actionBuffer.components.push_back({});
-        auto &comp = actionBuffer.components.back();
-        comp.id = id;
-        comp.typeId = type->id();
-        comp.startData = std::shared_ptr<uint8_t[]>(new uint8_t[type->size()]);
-        type->copy(value, comp.startData.get());
-        comp.endData = std::shared_ptr<uint8_t[]>(new uint8_t[type->size()]);
-        type->copy(value, comp.endData.get());
     }
 
     void Undo::clearActions() {
