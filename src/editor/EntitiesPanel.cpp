@@ -42,6 +42,7 @@ namespace tridot {
                     ImGui::BeginChild("entities");
 
 
+                    EntityId hoveredId = -1;
                     EntityId max = 0;
                     engine.view<>().each([&](EntityId id) {
                         max = std::max(max, id);
@@ -59,6 +60,9 @@ namespace tridot {
                             }
 
                             if (ImGui::Selectable(label.c_str(), Editor::selection.isSelected(id))) {
+                                if(ImGui::IsItemHovered()){
+                                    hoveredId = id;
+                                }
                                 if (shiftDown) {
                                     ecs::EntityId min = std::min(id, Editor::selection.lastSelected);
                                     ecs::EntityId max = std::max(id, Editor::selection.lastSelected);
@@ -110,6 +114,18 @@ namespace tridot {
                             ImGui::PopID();
                         }
                     }
+
+                    /*
+                    if(engine.input.released(engine.input.MOUSE_BUTTON_LEFT)){
+                        if(hoveredId != -1){
+                            for(auto &sel : Editor::selection.selectedEntities){
+                                if(engine.has<Transform>(sel.first)){
+                                    Transform &t = engine.get<Transform>(sel.first);
+                                    t.parent.id = hoveredId;
+                                }
+                            }
+                        }
+                    }*/
 
                     ImGui::EndChild();
                 }

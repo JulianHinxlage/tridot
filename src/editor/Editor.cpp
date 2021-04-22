@@ -93,6 +93,7 @@ namespace tridot {
         engine.onUpdate().setActive("editor", true);
         engine.onUpdate().setActive("clear", true);
         engine.onUpdate().setActive("resources", true);
+        engine.onUpdate().setActive("transform", true);
         runtime = false;
         undo.enabled = true;
         Log::debug("runtime disabled");

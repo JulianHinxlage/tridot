@@ -159,6 +159,9 @@ TRI_INIT("panels"){
         if (ImGui::DragFloat3("rotation", (float*)&r, 1.0f)) {
             v.rotation = glm::radians(r);
         }
+
+        ImGui::InputInt("parent", (int*)&v.parent.id);
+        //ImGui::Text("parent: %i", v.parent.id);
     });
 
     EditorGui::addType<Texture>(true, [](Texture &v, const std::string &name){
