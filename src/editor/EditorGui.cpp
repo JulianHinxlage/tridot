@@ -148,20 +148,12 @@ TRI_INIT("panels"){
     });
     EditorGui::addType<Transform>(true, [](Transform &v, const std::string &name){
         ImGui::DragFloat3("position", (float*)&v.position, 0.01);
-
-        float factor = glm::length(v.scale);
         ImGui::DragFloat3("scale", (float*)&v.scale, 0.01);
-        if(ImGui::DragFloat("scale", &factor, factor * 0.01f)){
-            v.scale = glm::normalize(v.scale) * factor;
-        }
 
         glm::vec3 r = glm::degrees(v.rotation);
         if (ImGui::DragFloat3("rotation", (float*)&r, 1.0f)) {
             v.rotation = glm::radians(r);
         }
-
-        ImGui::InputInt("parent", (int*)&v.parent.id);
-        //ImGui::Text("parent: %i", v.parent.id);
     });
 
     EditorGui::addType<Texture>(true, [](Texture &v, const std::string &name){

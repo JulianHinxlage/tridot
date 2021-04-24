@@ -26,11 +26,9 @@ namespace tridot {
         return transform;
     }
 
-    Transform Transform::decompose(const glm::mat4 &matrix) {
-        Transform transform;
-        ImGuizmo::DecomposeMatrixToComponents((float*)&matrix, (float*)&transform.position, (float*)&transform.rotation, (float*)&transform.scale);
-        transform.rotation = glm::radians(transform.rotation);
-        return transform;
+    void Transform::decompose(const glm::mat4 &matrix) {
+        ImGuizmo::DecomposeMatrixToComponents((float*)&matrix, (float*)&position, (float*)&rotation, (float*)&scale);
+        rotation = glm::radians(rotation);
     }
 
     TRI_INIT("transform"){

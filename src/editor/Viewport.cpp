@@ -232,8 +232,7 @@ namespace tridot {
                         }
 
                         matrix = glm::inverse(transform.parent.matrix) * matrix;
-                        ImGuizmo::DecomposeMatrixToComponents((float*)&matrix, (float*)&transform.position, (float*)&transform.rotation, (float*)&transform.scale);
-                        transform.rotation = glm::radians(transform.rotation);
+                        transform.decompose(matrix);
                         modifiedLast = true;
 
                         Editor::undo.changeComponent(selectedEntity, &ecs::Reflection::get<Transform>(), &transform);
@@ -266,7 +265,8 @@ namespace tridot {
                     for (auto &sel : Editor::selection.selectedEntities) {
                         ecs::EntityId id = sel.first;
                         if (engine.has<Transform>(id)) {
-                            Transform t = Transform::decompose(engine.get<Transform>(id).getMatrix());
+                            Transform t;
+                            t.decompose(engine.get<Transform>(id).getMatrix());
                             transform.position += t.position / (float)count;
                             transform.scale *= glm::pow(t.scale, glm::vec3(1, 1, 1) / (float)count);
                             transform.rotation += t.rotation / (float)count;
@@ -320,11 +320,11 @@ namespace tridot {
                                     m = glm::inverse(t.parent.matrix) * m;
 
                                     if (differeingRotation && operation == ImGuizmo::OPERATION::SCALE) {
-                                        Transform tmp;
-                                        ImGuizmo::DecomposeMatrixToComponents((float*)&m, (float*)&t.position, (float*)&tmp.rotation, (float*)&t.scale);
+                                        glm::vec3 rotation = t.rotation;
+                                        t.decompose(m);
+                                        t.rotation = rotation;
                                     } else {
-                                        ImGuizmo::DecomposeMatrixToComponents((float*)&m, (float*)&t.position, (float*)&t.rotation, (float*)&t.scale);
-                                        t.rotation = glm::radians(t.rotation);
+                                        t.decompose(m);
                                     }
 
                                     Editor::undo.changeComponent(id, &ecs::Reflection::get<Transform>(), &t);

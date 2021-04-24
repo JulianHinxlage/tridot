@@ -30,7 +30,7 @@ namespace tridot {
 
         glm::mat4 getMatrix() const;
         glm::mat4 getLocalMatrix() const;
-        static Transform decompose(const glm::mat4 &matrix);
+        void decompose(const glm::mat4 &matrix);
     };
 
 }

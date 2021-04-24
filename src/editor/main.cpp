@@ -69,8 +69,8 @@ int main(int argc, char *argv[]){
                             engine.window.setVSync(vsync);
                         }
                         ImGui::Text("%i entities selected", (int)Editor::selection.selectedEntities.size());
-                        ImGui::End();
                     }
+                    ImGui::End();
                 }
             }
         }
