@@ -63,6 +63,13 @@ namespace tridot {
                     if (pool && !pool->has(id)) {
                         if (ImGui::Button(type->name().c_str())) {
                             pool->add(id, nullptr);
+                            Editor::undo.beginAction();
+                            Editor::undo.addCustomAction([id, rid = type->id()](){
+                                engine.remove(id, rid);
+                            }, [id, rid = type->id()](){
+                                engine.addReflect(id, rid);
+                            });
+                            Editor::undo.endAction();
                             ImGui::CloseCurrentPopup();
                         }
                     }
@@ -102,6 +109,12 @@ namespace tridot {
                         delete[] compBuffer;
                     }
                     if (!open) {
+                        Editor::undo.beginAction();
+                        Editor::undo.changeComponent(id, type, comp);
+                        Editor::undo.addCustomAction(nullptr, [id, rid = type->id()](){
+                            engine.remove(id, rid);
+                        });
+                        Editor::undo.endAction();
                         engine.remove(id, type->id());
                     }
                 }

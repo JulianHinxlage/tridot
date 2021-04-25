@@ -50,32 +50,44 @@ namespace tridot {
             }
             if (ImGui::Selectable("parent")) {
                 if(engine.has<Transform>(id)){
+                    Editor::undo.beginAction();
                     Transform &parentTransform = engine.get<Transform>(id);
                     for(auto &sel : Editor::selection.selectedEntities){
                         if(engine.has<Transform>(sel.first)){
                             Transform &transform = engine.get<Transform>(sel.first);
+                            Editor::undo.changeComponent(sel.first, &ecs::Reflection::get<Transform>(), &transform);
                             transform.decompose(glm::inverse(parentTransform.getMatrix()) * transform.getMatrix());
                             transform.parent.id = id;
+                            Editor::undo.changeComponent(sel.first, &ecs::Reflection::get<Transform>(), &transform);
                         }
                     }
+                    Editor::undo.endAction();
                 }
             }
             if (ImGui::Selectable("unparent")) {
                 if (Editor::selection.isSelected(id)) {
+                    Editor::undo.beginAction();
                     for(auto &sel : Editor::selection.selectedEntities){
                         EntityId id = sel.first;
                         if(engine.has<Transform>(id)){
                             Transform &transform = engine.get<Transform>(id);
+                            Editor::undo.changeComponent(sel.first, &ecs::Reflection::get<Transform>(), &transform);
                             transform.decompose(transform.getMatrix());
                             transform.parent.id = -1;
+                            Editor::undo.changeComponent(sel.first, &ecs::Reflection::get<Transform>(), &transform);
                         }
                     }
+                    Editor::undo.endAction();
                 }
                 else {
                     if(engine.has<Transform>(id)){
+                        Editor::undo.beginAction();
                         Transform &transform = engine.get<Transform>(id);
+                        Editor::undo.changeComponent(id, &ecs::Reflection::get<Transform>(), &transform);
                         transform.decompose(transform.getMatrix());
                         transform.parent.id = -1;
+                        Editor::undo.changeComponent(id, &ecs::Reflection::get<Transform>(), &transform);
+                        Editor::undo.endAction();
                     }
                 }
             }
