@@ -27,7 +27,7 @@ namespace tridot {
     static uint32_t currentFrameBufferId = 0;
     void bindFrameBuffer(uint32_t id){
         if(currentFrameBufferId != id){
-            glBindFramebuffer(GL_DRAW_FRAMEBUFFER, id);
+            glBindFramebuffer(GL_FRAMEBUFFER, id);
             currentFrameBufferId = id;
         }
     }
@@ -82,10 +82,12 @@ namespace tridot {
 
     Ref<Texture> FrameBuffer::setTexture(TextureAttachment attachment, const Ref<Texture> &texture) {
         if(id == 0){
-            glCreateFramebuffers(1, &id);
+            glGenFramebuffers(1, &id);
             Log::trace("created frame buffer ", id);
         }
-        glNamedFramebufferTexture(id, internalEnum(attachment), texture->getId(), 0);
+        bindFrameBuffer(id);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, internalEnum(attachment), GL_TEXTURE_2D, texture->getId(), 0);
+
         auto entry = textures.find((uint32_t)attachment);
         if(entry != textures.end()){
             entry->second = texture;
@@ -122,11 +124,12 @@ namespace tridot {
     }
 
     void FrameBuffer::resize(uint32_t width, uint32_t height) {
+        bindFrameBuffer(id);
         for(auto &texture : textures){
             if(texture.second.get() != nullptr){
                 if(texture.second->getWidth() != width || texture.second->getHeight() != height){
                     texture.second->create(width, height, texture.second->getFormat());
-                    glNamedFramebufferTexture(id, internalEnum((TextureAttachment)texture.first), texture.second->getId(), 0);
+                    glFramebufferTexture2D(GL_FRAMEBUFFER, internalEnum((TextureAttachment)texture.first), GL_TEXTURE_2D, texture.second->getId(), 0);
                 }
             }
         }

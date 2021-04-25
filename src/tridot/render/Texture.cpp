@@ -30,12 +30,21 @@ namespace tridot {
         }
     }
 
+    void bindTexture(uint32_t id) {
+        static int32_t currentId;
+        if (currentId != id) {
+            glBindTexture(GL_TEXTURE_2D, id);
+            currentId = id;
+        }
+    }
+
     void bindTexture(uint32_t id, int32_t slot){
         static int32_t currentIds[128];
-        //if(slot >= 0 && currentIds[slot] != id){
-            glBindTextureUnit(slot, id);
+        if(slot >= 0 && currentIds[slot] != id){
+            glActiveTexture(GL_TEXTURE0 + slot);
+            glBindTexture(GL_TEXTURE_2D, id);
             currentIds[slot] = id;
-        //}
+        }
     }
 
     void Texture::bind(int32_t slot) {
@@ -44,7 +53,7 @@ namespace tridot {
     }
 
     void Texture::unbind() {
-        bindTexture(-1, slot);
+        bindTexture(0, slot);
         slot = -1;
     }
 
@@ -53,15 +62,17 @@ namespace tridot {
     }
 
     void Texture::setMagMin(bool magNearest, bool minNearest) {
-        glTextureParameteri(id, GL_TEXTURE_MAG_FILTER, magNearest ? GL_NEAREST : GL_LINEAR);
-        glTextureParameteri(id, GL_TEXTURE_MIN_FILTER, minNearest ? GL_NEAREST : GL_LINEAR);
+        bindTexture(id);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, magNearest ? GL_NEAREST : GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, minNearest ? GL_NEAREST : GL_LINEAR_MIPMAP_LINEAR);
         this->magNearest = magNearest;
         this->minNearest = minNearest;
     }
 
     void Texture::setWrap(bool sRepeat, bool tRepeat) {
-        glTextureParameteri(id, GL_TEXTURE_WRAP_S, sRepeat ? GL_REPEAT : GL_CLAMP_TO_EDGE);
-        glTextureParameteri(id, GL_TEXTURE_WRAP_T, tRepeat ? GL_REPEAT : GL_CLAMP_TO_EDGE);
+        bindTexture(id);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, sRepeat ? GL_REPEAT : GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, tRepeat ? GL_REPEAT : GL_CLAMP_TO_EDGE);
         this->sRepeat = sRepeat;
         this->tRepeat = tRepeat;
     }
@@ -69,22 +80,22 @@ namespace tridot {
     void Texture::create(uint32_t width, uint32_t height, TextureFormat format) {
         if(id != 0){
             glDeleteTextures(1, &id);
-            glCreateTextures(GL_TEXTURE_2D, 1, &id);
+            glGenTextures(1, &id);
         }
         if(id == 0){
-            glCreateTextures(GL_TEXTURE_2D, 1, &id);
+            glGenTextures(1, &id);
             Log::trace("created texture ", id);
         }
-
-        glTextureStorage2D(id, 1, internalEnum(format), width, height);
 
         this->width = width;
         this->height = height;
         this->channels = internalEnumSize(format) / 8;
         this->format = format;
 
+        bind(0);
         setMagMin(magNearest, minNearest);
         setWrap(sRepeat, tRepeat);
+        glTexStorage2D(GL_TEXTURE_2D, 1, internalEnum(format), width, height);
     }
 
     bool Texture::load(const Image &image) {
@@ -109,7 +120,7 @@ namespace tridot {
         }
 
         create(image.getWidth(), image.getHeight(), format);
-        glTextureSubImage2D(id, 0, 0, 0, image.getWidth(), image.getHeight(), dataFormat, GL_UNSIGNED_BYTE, image.getData());
+        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, image.getWidth(), image.getHeight(), dataFormat, GL_UNSIGNED_BYTE, image.getData());
         return true;
     }
 
@@ -151,14 +162,28 @@ namespace tridot {
     }
 
     Color Texture::getPixel(int x, int y) {
-        glm::vec4 color;
-        glGetTextureSubImage(id, 0, x, y, 0, 1, 1, 1, GL_RGBA, GL_FLOAT, sizeof(color), &color);
-        return Color(color);
+        if ((int)width < 0 || (int)height < 0) {
+            return Color(0, 0, 0, 0);
+        }
+        std::vector<Color> colors;
+        int index = x + y * width;
+        if (index >= width * height) {
+            return Color(0, 0, 0, 0);
+        }
+        colors.resize(width * height);
+        bind(0);
+        glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, colors.data());
+        return colors[index];
     }
 
     void Texture::clear(Color color) {
-        glm::vec4 c = color.vec();
-        glClearTexImage(id, 0, GL_RGBA, GL_FLOAT, &c);
+        if ((int)width < 0 || (int)height < 0) {
+            return;
+        }
+        std::vector<Color> colors;
+        colors.resize(width * height, color);
+        bind(0);
+        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, colors.data());
     }
 
 }

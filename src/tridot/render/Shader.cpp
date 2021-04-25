@@ -224,8 +224,10 @@ namespace tridot {
 
     void Shader::set(const std::string &uniform, Buffer *buffer) {
         uint32_t location = getBufferLocation(uniform);
-        glUniformBlockBinding(id, location, location);
-        glBindBufferBase(GL_UNIFORM_BUFFER, location, buffer->getId());
+        if (location != -1) {
+            glUniformBlockBinding(id, location, location);
+            glBindBufferBase(GL_UNIFORM_BUFFER, location, buffer->getId());
+        }
     }
 
     uint32_t Shader::getLocation(const std::string &name, bool warn) {

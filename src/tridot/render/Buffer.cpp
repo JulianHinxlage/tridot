@@ -64,9 +64,9 @@ namespace tridot {
         if(id == 0){
             glGenBuffers(1, &id);
             Log::trace("created buffer ", id);
-            bind();
         }
-        glNamedBufferData(id, size, data, dynamic ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW);
+        bind();
+        glBufferData(internalEnum(type), size, data, dynamic ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW);
         this->capacity = size;
         if(data == nullptr){
             this->size = 0;
@@ -76,12 +76,13 @@ namespace tridot {
     }
 
     void Buffer::setData(void *data, uint32_t size, uint32_t offset) {
+        bind();
         if(this->capacity < size + offset){
-            glNamedBufferData(id, size + offset, nullptr, dynamic ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW);
-            glNamedBufferSubData(id, offset, size, data);
+            glBufferData(internalEnum(type), size + offset, nullptr, dynamic ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW);
+            glBufferSubData(internalEnum(type), offset, size, data);
             this->capacity = size + offset;
         }else{
-            glNamedBufferSubData(id, offset, size, data);
+            glBufferSubData(internalEnum(type), offset, size, data);
         }
         if(size + offset > this->size){
             this->size = size + offset;
