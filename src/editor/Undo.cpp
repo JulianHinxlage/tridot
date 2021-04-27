@@ -31,7 +31,7 @@ namespace tridot {
                     engine.addReflect(id, comp.typeId);
                 }
                 void *data = engine.get(id, comp.typeId);
-                ecs::Reflection::get(comp.typeId).copy(comp.startData.get(), data);
+                ecs::Reflection::get(comp.typeId)->copy(comp.startData.get(), data);
             }
             nextAction--;
         }
@@ -47,7 +47,7 @@ namespace tridot {
             for(auto &comp : actions[nextAction].components){
                 if(engine.has(comp.id, comp.typeId)){
                     void *data = engine.get(comp.id, comp.typeId);
-                    ecs::Reflection::get(comp.typeId).copy(comp.endData.get(), data);
+                    ecs::Reflection::get(comp.typeId)->copy(comp.endData.get(), data);
                 }
             }
             nextAction++;

@@ -228,14 +228,14 @@ namespace tridot {
                                             (float *) &matrix, nullptr, (snap ^ controlDown) ? (float*)&snapValues : nullptr)){
                         if (!modifiedLast) {
                             Editor::undo.beginAction();
-                            Editor::undo.changeComponent(selectedEntity, &ecs::Reflection::get<Transform>(), &transform);
+                            Editor::undo.changeComponent(selectedEntity, ecs::Reflection::get<Transform>(), &transform);
                         }
 
                         matrix = glm::inverse(transform.parent.matrix) * matrix;
                         transform.decompose(matrix);
                         modifiedLast = true;
 
-                        Editor::undo.changeComponent(selectedEntity, &ecs::Reflection::get<Transform>(), &transform);
+                        Editor::undo.changeComponent(selectedEntity, ecs::Reflection::get<Transform>(), &transform);
                     } else {
                         if (!ImGuizmo::IsUsing()) {
                             if (modifiedLast) {
@@ -313,7 +313,7 @@ namespace tridot {
 
                                 if(!isParentSelected(id)){
                                     if (!modifiedLast) {
-                                        Editor::undo.changeComponent(id, &ecs::Reflection::get<Transform>(), &t);
+                                        Editor::undo.changeComponent(id, ecs::Reflection::get<Transform>(), &t);
                                     }
 
                                     glm::mat4 m = matrix * inverse * t.getMatrix();
@@ -327,7 +327,7 @@ namespace tridot {
                                         t.decompose(m);
                                     }
 
-                                    Editor::undo.changeComponent(id, &ecs::Reflection::get<Transform>(), &t);
+                                    Editor::undo.changeComponent(id, ecs::Reflection::get<Transform>(), &t);
                                 }
                             }
                         }
@@ -358,10 +358,10 @@ namespace tridot {
                 auto idBuffer = camera.target->getTexture(TextureAttachment(COLOR + 1));
                 if (idBuffer && mousePickPosition.x >= 0 && mousePickPosition.y >= 0 &&
                         mousePickPosition.x < idBuffer->getWidth() && mousePickPosition.y < idBuffer->getHeight()) {
-                    int id = idBuffer->getPixel(mousePickPosition.x, idBuffer->getHeight() - mousePickPosition.y).value;
 
                     if (ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows)) {
                         if (ImGui::IsMouseClicked(0) && !(ImGuizmo::IsOver() && ImGuizmo::IsUsing())) {
+                            int id = idBuffer->getPixel(mousePickPosition.x, idBuffer->getHeight() - mousePickPosition.y).value;
                             if (id != -1 && engine.exists(id)) {
                                 if(Editor::selection.isSelected(id) && controlDown){
                                     Editor::selection.unselect(id);

@@ -82,12 +82,12 @@ namespace ecs{
         }
 
         template<class T>
-        static Type &get(){
-            return *getTypes()[id<T>()];
+        static Type *get(){
+            return getTypes()[id<T>()];
         }
 
-        static Type &get(int id){
-            return *getTypes()[id];
+        static Type *get(int id){
+            return getTypes()[id];
         }
 
         static std::vector<Type*> &getTypes(){
@@ -96,10 +96,10 @@ namespace ecs{
         }
 
         template<typename T>
-        static Type &registerType(const std::string &name){
+        static Type *registerType(const std::string &name){
             TypeT<T> *t = (TypeT<T>*)getTypes()[id<T>()];
             t->typeName = name;
-            return *t;
+            return t;
         }
 
         template<typename T, typename M>

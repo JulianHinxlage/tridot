@@ -36,7 +36,7 @@ namespace tridot {
     bool getDifferences(ecs::Reflection::Type* type, void* v1, void* v2, std::vector<std::pair<int, ecs::Reflection::Type*>>& differences, int currentOffset = 0) {
         for (auto& member : type->member()) {
             currentOffset += member.offset;
-            getDifferences(&ecs::Reflection::get(member.typeId), (uint8_t*)v1 + member.offset, (uint8_t*)v2 + member.offset, differences, currentOffset);
+            getDifferences(ecs::Reflection::get(member.typeId), (uint8_t*)v1 + member.offset, (uint8_t*)v2 + member.offset, differences, currentOffset);
             currentOffset -= member.offset;
         }
         if (type->member().size() == 0) {

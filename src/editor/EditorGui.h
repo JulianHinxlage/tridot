@@ -58,12 +58,12 @@ namespace tridot {
 
 
             if(ImGui::BeginDragDropSource(ImGuiDragDropFlags_None)){
-                ImGui::SetDragDropPayload(ecs::Reflection::get<T>().name().c_str(), &res, sizeof(res));
+                ImGui::SetDragDropPayload(ecs::Reflection::get<T>()->name().c_str(), &res, sizeof(res));
                 ImGui::Text("%s", resName.c_str());
                 ImGui::EndDragDropSource();
             }
             if(ImGui::BeginDragDropTarget()){
-                if(const ImGuiPayload *payload = ImGui::AcceptDragDropPayload(ecs::Reflection::get<T>().name().c_str())){
+                if(const ImGuiPayload *payload = ImGui::AcceptDragDropPayload(ecs::Reflection::get<T>()->name().c_str())){
                     res = *(Ref<T>*)payload->Data;
                 }
                 ImGui::EndDragDropTarget();

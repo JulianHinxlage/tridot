@@ -136,7 +136,7 @@ namespace tridot {
             }else{
                 out << YAML::BeginMap;
                 for(auto &member : type->member()){
-                    serializeType(&Reflection::get(member.typeId), member.name, out, (char*)ptr + member.offset, resources);
+                    serializeType(Reflection::get(member.typeId), member.name, out, (char*)ptr + member.offset, resources);
                 }
                 out << YAML::EndMap;
             }
@@ -231,7 +231,7 @@ namespace tridot {
             for(auto &member : type->member()){
                 auto node = in[member.name];
                 if(node){
-                    deserializeType(&Reflection::get(member.typeId), node, (char*)ptr + member.offset, resources);
+                    deserializeType(Reflection::get(member.typeId), node, (char*)ptr + member.offset, resources);
                 }
             }
         }
@@ -265,7 +265,7 @@ namespace tridot {
                     out << YAML::BeginMap;
                     Ref<Material> material = resources.get<Material>(name);
                     out << YAML::Key << "name" << YAML::Value << name;
-                    serializeType(&Reflection::get<Material>(), "material", out, material.get(), resources);
+                    serializeType(Reflection::get<Material>(), "material", out, material.get(), resources);
                     out << YAML::EndMap;
                 }
 
@@ -315,7 +315,7 @@ namespace tridot {
                         auto node = material["material"];
                         if(node){
                             Ref<Material> &mat = resources.set<Material>(name);
-                            deserializeType(&Reflection::get<Material>(), node, mat.get(), resources);
+                            deserializeType(Reflection::get<Material>(), node, mat.get(), resources);
                         }
                     }
                 }

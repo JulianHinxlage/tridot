@@ -73,6 +73,7 @@ namespace tridot {
         }else{
             this->size = size;
         }
+        unbind();
     }
 
     void Buffer::setData(void *data, uint32_t size, uint32_t offset) {
@@ -87,6 +88,7 @@ namespace tridot {
         if(size + offset > this->size){
             this->size = size + offset;
         }
+        unbind();
     }
 
 }

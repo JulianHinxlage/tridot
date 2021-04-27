@@ -9,17 +9,17 @@
 namespace tridot {
 
     bool ComponentCache::isCached(int reflectId) {
-        auto &type = ecs::Reflection::get(reflectId);
-        auto comp = data[type.name()];
+        auto *type = ecs::Reflection::get(reflectId);
+        auto comp = data[type->name()];
         return (bool)comp;
     }
 
     bool ComponentCache::load(int reflectId, void *ptr) {
-        auto &type = ecs::Reflection::get(reflectId);
-        auto comp = data[type.name()];
+        auto *type = ecs::Reflection::get(reflectId);
+        auto comp = data[type->name()];
         if(comp){
             Serializer s;
-            s.deserializeType(&type, comp, ptr, engine.resources);
+            s.deserializeType(type, comp, ptr, engine.resources);
             return true;
         }else{
             return false;
@@ -27,8 +27,8 @@ namespace tridot {
     }
 
     void ComponentCache::remove(int reflectId) {
-        auto &type = ecs::Reflection::get(reflectId);
-        data.remove(type.name());
+        auto *type = ecs::Reflection::get(reflectId);
+        data.remove(type->name());
     }
 
     void ComponentCache::update(ecs::EntityId id) {
@@ -65,8 +65,8 @@ namespace tridot {
                             Serializer s;
                             YAML::Emitter out;
                             out << YAML::BeginMap;
-                            auto &type = ecs::Reflection::get(reflectId);
-                            s.serializeType(&type, type.name(), out, ptr, engine.resources);
+                            auto *type = ecs::Reflection::get(reflectId);
+                            s.serializeType(type, type->name(), out, ptr, engine.resources);
                             out << YAML::EndMap;
                             YAML::Node node = YAML::Load(out.c_str());
                             for (auto comp : node) {
