@@ -35,14 +35,18 @@ void cameraControl(PerspectiveCamera &cam, bool move, bool look, bool lockUp, fl
 
 void lightGui(){
     if(ImGui::BeginTabItem("Lights")) {
-        engine.view<Light>().each([](EntityId id, Light &light) {
+        engine.view<Light, Transform>().each([](EntityId id, Light &light, Transform &transform) {
             ImGui::Separator();
             ImGui::PushID(id);
 
             std::vector<const char *> list = {"Ambient", "Directional", "Point Light"};
             ImGui::Combo("type", (int *) &light.type, list.data(), list.size());
 
-            ImGui::DragFloat3("position", (float *) &light.position, 0.01);
+            if(light.type == DIRECTIONAL_LIGHT){
+                ImGui::DragFloat3("rotation", (float *) &transform.rotation, 0.01);
+            }else{
+                ImGui::DragFloat3("position", (float *) &transform.position, 0.01);
+            }
             ImGui::ColorEdit3("color", (float *) &light.color);
             ImGui::DragFloat("intensity", &light.intensity, 0.01, 0.0, 1000);
             if (ImGui::Button("remove")) {
@@ -54,7 +58,7 @@ void lightGui(){
         ImGui::Separator();
 
         if (ImGui::Button("add light")) {
-            engine.create(Light(POINT_LIGHT, glm::vec3(0, 0, 0), glm::vec3(Color::white.vec()), 1));
+            engine.create(Transform(), Light(POINT_LIGHT, glm::vec3(Color::white.vec()), 1));
         }
 
         ImGui::EndTabItem();
@@ -106,8 +110,12 @@ int main(int argc, char *argv[]){
     createScene();
 
     //create lights
-    engine.create(Light(AMBIENT_LIGHT, glm::vec3(0, 0, 0), glm::vec3(Color::white.vec()), 0.6));
-    engine.create(Light(DIRECTIONAL_LIGHT, glm::vec3(0.3, 0.7, -1), glm::vec3(Color::white.vec()), 2.5));
+    engine.create(
+            Transform(),
+            Light(AMBIENT_LIGHT, glm::vec3(Color::white.vec()), 0.6));
+    engine.create(
+            Transform({0, 0, 0}, {1, 1, 1}, glm::radians(glm::vec3(80, 35, -145))),
+            Light(DIRECTIONAL_LIGHT, glm::vec3(Color::white.vec()), 2.5));
 
     //create player
     Ref<Material> material = material.make();

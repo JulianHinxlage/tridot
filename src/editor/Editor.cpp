@@ -247,11 +247,11 @@ namespace tridot {
         if(!runtime) {
             if (engine.input.down(Input::KEY_LEFT_CONTROL) || engine.input.down(Input::KEY_RIGHT_CONTROL)) {
                 if (engine.input.down(Input::KEY_LEFT_SHIFT) || engine.input.down(Input::KEY_RIGHT_SHIFT)) {
-                    if (engine.input.pressed('Z')) {
+                    if (engine.input.pressed('Y')) {
                         undo.redoAction();
                     }
                 } else {
-                    if (engine.input.pressed('Z')) {
+                    if (engine.input.pressed('Y')) {
                         undo.undoAction();
                     }
                 }

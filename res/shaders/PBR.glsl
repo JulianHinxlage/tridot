@@ -85,7 +85,7 @@ struct Material{
     vec2 metallicMapScale;
 };
 layout(std140) uniform uMaterials {
-    Material materials[1024];
+    Material materials[128];
 };
 
 uniform sampler2D uTextures[32];
