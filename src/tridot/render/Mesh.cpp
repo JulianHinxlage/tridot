@@ -6,6 +6,7 @@
 #include "tridot/core/Log.h"
 #include <fstream>
 #include <map>
+#include <algorithm>
 
 namespace tridot {
 

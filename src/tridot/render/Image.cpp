@@ -6,6 +6,7 @@
 #include "tridot/core/Log.h"
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb/stb_image.h>
+#include <algorithm>
 
 namespace tridot {
 

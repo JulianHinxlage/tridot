@@ -10,8 +10,8 @@
 #include "tridot/ecs/Prefab.h"
 #include <GLFW/glfw3.h>
 #include <glm/gtx/vector_angle.hpp>
-
 #include <imgui/imgui.h>
+#include <algorithm>
 
 using namespace tridot;
 using namespace ecs;

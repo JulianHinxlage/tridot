@@ -4,6 +4,7 @@
 
 #include "Time.h"
 #include <cmath>
+#include <algorithm>
 
 namespace tridot {
 
