@@ -29,15 +29,34 @@ int main(int argc, char *argv[]){
     engine.resources.set<Mesh>("sphere") = MeshFactory::createSphere(32, 32);
     engine.resources.get<Mesh>("teapot.obj", true);
 
-    engine.resources.get<Texture>("checkerboard.png");
-    engine.resources.get<Texture>("normal1.png");
-    engine.resources.get<Texture>("normal2.png");
-    engine.resources.get<Texture>("tex1.png");
-    engine.resources.get<Texture>("tex2.png");
-    engine.resources.get<Texture>("tex3.png");
-    engine.resources.get<Texture>("tex4.png");
+    engine.resources.get<Texture>("Checkerboard.png");
 
-    Editor::currentSceneFile = "scene.yaml";
+    engine.resources.get<Texture>("Tiles090_1K_Color.jpg");
+    engine.resources.get<Texture>("Tiles090_1K_Normal.jpg");
+    engine.resources.get<Texture>("Tiles090_1K_Roughness.jpg");
+
+    engine.resources.get<Texture>("Wood049_1K_Color.jpg");
+    engine.resources.get<Texture>("Wood049_1K_Normal.jpg");
+    engine.resources.get<Texture>("Wood049_1K_Roughness.jpg");
+
+    engine.resources.get<Texture>("Metal038_1K_Color.jpg");
+    engine.resources.get<Texture>("Metal038_1K_Normal.jpg");
+    engine.resources.get<Texture>("Metal038_1K_Roughness.jpg");
+    engine.resources.get<Texture>("Metal038_1K_Metalness.jpg");
+
+    engine.resources.get<Texture>("Marble012_1K_Color.jpg");
+    engine.resources.get<Texture>("Marble012_1K_Normal.jpg");
+    engine.resources.get<Texture>("Marble012_1K_Roughness.jpg");
+
+    engine.resources.get<Texture>("Ground037_1K_Color.jpg");
+    engine.resources.get<Texture>("Ground037_1K_Normal.jpg");
+    engine.resources.get<Texture>("Ground037_1K_Roughness.jpg");
+
+    engine.resources.get<Texture>("Rocks022_1K_Color.jpg");
+    engine.resources.get<Texture>("Rocks022_1K_Normal.jpg");
+    engine.resources.get<Texture>("Rocks022_1K_Roughness.jpg");
+
+    Editor::currentSceneFile = "../res/scenes/scene.yml";
     if(!engine.loadScene(Editor::currentSceneFile)){
         createDefaultScene();
     }

@@ -29,7 +29,7 @@ file(GLOB IMGUIZMO_SOURCES extern/imguizmo/ImGuizmo.cpp)
 add_library(${PROJECT_NAME} SHARED ${SOURCES} ${IMGUI_SOURCES} ${IMGUIZMO_SOURCES})
 
 target_include_directories(${PROJECT_NAME} PUBLIC src extern extern/imgui)
-target_compile_definitions(${PROJECT_NAME} PUBLIC TRI_DEBUG ECS_DEBUG)
+target_compile_definitions(${PROJECT_NAME} PUBLIC TRI_DEBUG ECS_DEBUG TRI_USE_GL_4_5)
 
 if(WIN32)
     target_compile_definitions(${PROJECT_NAME} PRIVATE TRI_DLL_EXPORT)

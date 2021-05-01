@@ -15,6 +15,7 @@ namespace tridot {
         width = 0;
         height = 0;
         channels = 0;
+        mipCount = 0;
 
         magNearest = true;
         minNearest = false;
@@ -95,7 +96,8 @@ namespace tridot {
         bind(0);
         setMagMin(magNearest, minNearest);
         setWrap(sRepeat, tRepeat);
-        glTexStorage2D(GL_TEXTURE_2D, 1, internalEnum(format), width, height);
+        mipCount = std::max(1, (int)std::log2(std::min(width, height)) - 1);
+        glTexStorage2D(GL_TEXTURE_2D, mipCount, internalEnum(format), width, height);
     }
 
     bool Texture::load(const Image &image) {
@@ -121,6 +123,7 @@ namespace tridot {
 
         create(image.getWidth(), image.getHeight(), format);
         glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, image.getWidth(), image.getHeight(), dataFormat, GL_UNSIGNED_BYTE, image.getData());
+        glGenerateMipmap(GL_TEXTURE_2D);
         return true;
     }
 
@@ -162,6 +165,7 @@ namespace tridot {
     }
 
     Color Texture::getPixel(int x, int y) {
+#ifndef TRI_USE_GL_4_5
         if ((int)width < 0 || (int)height < 0) {
             return Color(0, 0, 0, 0);
         }
@@ -174,9 +178,15 @@ namespace tridot {
         bind(0);
         glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, colors.data());
         return colors[index];
+#else
+        Color color;
+        glGetTextureSubImage(id, 0, x, y, 0, 1, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, sizeof(color), &color);
+        return color;
+#endif
     }
 
     void Texture::clear(Color color) {
+#ifndef TRI_USE_GL_4_5
         if ((int)width < 0 || (int)height < 0) {
             return;
         }
@@ -184,6 +194,9 @@ namespace tridot {
         colors.resize(width * height, color);
         bind(0);
         glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, colors.data());
+#else
+        glClearTexImage(id, 0, GL_RGBA, GL_UNSIGNED_BYTE, &color);
+#endif
     }
 
 }

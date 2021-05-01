@@ -119,21 +119,18 @@ int main(int argc, char *argv[]){
 
     //create player
     Ref<Material> material = material.make();
-    material->texture = engine.resources.get<Texture>("tex1.png");
     material->textureScale = {0.5f, 0.5f};
     material->mapping = Material::TRI_PLANAR;
-    material->roughness = 0.50;
-    material->metallic = 0.6;
-    material->normalMap = engine.resources.get<Texture>("normal2.png");
+    material->roughness = 2;
+    material->metallic = 2;
+    material->normalMap = engine.resources.get<Texture>("Metal038_1K_Normal.jpg");
+    material->texture = engine.resources.get<Texture>("Metal038_1K_Color.jpg");
+    material->roughnessMap = engine.resources.get<Texture>("Metal038_1K_Roughness.jpg");
+    material->metallicMap = engine.resources.get<Texture>("Metal038_1K_Metalness.jpg");
     material->normalMap->setMagMin(false, false);
-    material->normalMapScale = {0.5f, 0.5f};
-    material->normalMapFactor = 0.3;
-
-    //gold
-    material->color = Color(243, 217,105) * 0.8f;
-    material->roughness = 0.651;
-    material->metallic = 1.0;
-    material->texture = nullptr;
+    material->roughnessMapScale = {0.5f, 0.5f};
+    material->metallicMapScale = {0.5f, 0.5f};
+    material->normalMapFactor = 1.0;
 
     *engine.resources.set<ecs::Prefab>("player") = ecs::Prefab(
         Transform(),
@@ -284,27 +281,21 @@ void playerControl(EntityId playerId, PerspectiveCamera &camera){
 }
 
 void createScene(){
-    Ref<Texture> tex1 = engine.resources.get<Texture>("tex1.png");
-    Ref<Texture> tex2 = engine.resources.get<Texture>("tex2.png");
-    Ref<Texture> tex3 = engine.resources.get<Texture>("tex3.png");
-    Ref<Texture> tex4 = engine.resources.get<Texture>("tex4.png");
-
     Ref<Mesh> cube = engine.resources.get<Mesh>("cube");
 
     int groundSize = 200;
     int wallHeight = 30;
 
     Ref<Material> wallMaterial = Ref<Material>::make();
-    wallMaterial->texture = tex3;
+    wallMaterial->mapping = Material::TRI_PLANAR;
+    wallMaterial->roughness = 2;
+    wallMaterial->metallic = 0;
+    wallMaterial->normalMapFactor = 1.0;
+    wallMaterial->normalMap = engine.resources.get<Texture>("Tiles090_1K_Normal.jpg");
+    wallMaterial->texture = engine.resources.get<Texture>("Tiles090_1K_Color.jpg");
+    wallMaterial->roughnessMap = engine.resources.get<Texture>("Tiles090_1K_Roughness.jpg");
     wallMaterial->texture->setMagMin(false, false);
     wallMaterial->mapping = Material::SCALE_TRI_PLANAR;
-    wallMaterial->textureScale = {0.5, 0.5};
-    wallMaterial->roughness = 0.85;
-    wallMaterial->metallic = 0.50;
-    wallMaterial->normalMap = engine.resources.get<Texture>("normal1.png");
-    wallMaterial->normalMap->setMagMin(false, false);
-    wallMaterial->normalMapScale = {0.1f, 0.1f};
-    wallMaterial->normalMapFactor = 0.75;
 
     Prefab wall(
             Transform(),
@@ -338,15 +329,15 @@ void createScene(){
     }
 
     Ref<Material> platformMaterial = Ref<Material>::make();
-    platformMaterial->texture = tex1;
+    platformMaterial->mapping = Material::TRI_PLANAR;
+    platformMaterial->roughness = 2;
+    platformMaterial->metallic = 0;
+    platformMaterial->normalMapFactor = 1.0;
+    platformMaterial->normalMap = engine.resources.get<Texture>("Marble012_1K_Normal.jpg");
+    platformMaterial->texture = engine.resources.get<Texture>("Marble012_1K_Color.jpg");
+    platformMaterial->roughnessMap = engine.resources.get<Texture>("Marble012_1K_Roughness.jpg");
     platformMaterial->texture->setMagMin(false, false);
     platformMaterial->mapping = Material::SCALE_TRI_PLANAR;
-    platformMaterial->textureScale = {0.5, 0.5};
-    platformMaterial->roughness = 0.60;
-    platformMaterial->metallic = 0.10;
-    platformMaterial->normalMap = engine.resources.get<Texture>("normal2.png");
-    platformMaterial->normalMap->setMagMin(false, false);
-    platformMaterial->normalMapScale = {0.2f, 0.2f};
 
     int platformCount = 0;
     for(int x = -groundSize / 2 + 2; x < groundSize / 2 - 1; x++){

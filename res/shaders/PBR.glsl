@@ -28,13 +28,13 @@ void main(){
     fTexCoords = vTexCoords;
     fMaterialIndex = iMaterialIndex;
     fColor = iColor;
+    fId = iId;
 
     vec4 pos = iTransform * vec4(vPosition, 1.0);
     fPosition = pos.xyz;
     gl_Position = uProjection * pos;
     fScale = vec3(length(iTransform[0].xyz), length(iTransform[1].xyz), length(iTransform[2].xyz));
     fNormal = vec3(iTransform * vec4(vNormal / fScale, 0.0));
-    fId = iId;
 }
 
 #type fragment
@@ -113,7 +113,10 @@ void main(){
     vec3 normal = normalize(fNormal);
     if(material.normalMap != -1){
         vec3 n = sampleTexture(material.normalMap, material.mapping, material.normalMapScale, material.normalMapOffset).rgb;
-        normal = normalize(normal + (n * 2.0 - 1.0) * material.normalMapFactor);
+        n = normalize(normalize(n) * 2.0 - 1.0);
+        vec3 tangent = cross(normal, normalize(normal + vec3(0.2, 0.2, 0.2)));
+        mat3 tbn = mat3(tangent, cross(tangent, normal), normal);
+        normal = normalize(tbn * n) * material.normalMapFactor + normal * (1.0 - material.normalMapFactor);
     }
 
     //roughness
@@ -175,7 +178,7 @@ void main(){
     oColor = vec4(lightOutput, albedo.a);
     oId = fId;
 
-    //gamm correction
+    //gamma correction
     //float gamma = 2.2;
     //oColor.rgb = pow(oColor.rgb, vec3(1.0 / gamma));
 }
