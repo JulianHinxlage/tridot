@@ -88,6 +88,10 @@ int main(int argc, char *argv[]){
                             engine.window.setVSync(vsync);
                         }
                         ImGui::Text("%i entities selected", (int)Editor::selection.selectedEntities.size());
+                        ImGui::Text("%i entities in scene", (int)engine.getEntityPool().getEntities().size());
+                        if(Editor::selection.selectedEntities.size() == 1){
+                            ImGui::Text("selected entity id: %i", (int)Editor::selection.selectedEntities.begin()->first);
+                        }
                     }
                     ImGui::End();
                 }

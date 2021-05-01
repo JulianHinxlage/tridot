@@ -20,7 +20,7 @@ namespace tridot {
         void unbind();
         uint32_t getId();
 
-        void create(uint32_t width, uint32_t height, TextureFormat formal = RGBA8);
+        void create(uint32_t width, uint32_t height, TextureFormat formal = RGBA8, bool enableMipMapping = true);
         bool load(const Image &image);
         bool load(const std::string &file);
         bool preLoad(const std::string &file);

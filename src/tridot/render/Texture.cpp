@@ -65,7 +65,11 @@ namespace tridot {
     void Texture::setMagMin(bool magNearest, bool minNearest) {
         bindTexture(id);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, magNearest ? GL_NEAREST : GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, minNearest ? GL_NEAREST : GL_LINEAR_MIPMAP_LINEAR);
+        if(mipCount > 1){
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, minNearest ? GL_NEAREST_MIPMAP_NEAREST : GL_LINEAR_MIPMAP_LINEAR);
+        }else{
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, minNearest ? GL_NEAREST : GL_LINEAR);
+        }
         this->magNearest = magNearest;
         this->minNearest = minNearest;
     }
@@ -78,7 +82,7 @@ namespace tridot {
         this->tRepeat = tRepeat;
     }
 
-    void Texture::create(uint32_t width, uint32_t height, TextureFormat format) {
+    void Texture::create(uint32_t width, uint32_t height, TextureFormat format, bool enableMipMapping) {
         if(id != 0){
             glDeleteTextures(1, &id);
             glGenTextures(1, &id);
@@ -93,10 +97,14 @@ namespace tridot {
         this->channels = internalEnumSize(format) / 8;
         this->format = format;
 
+        mipCount = std::max(1, (int)std::log2(std::min(width, height)) - 1);
+        if(!enableMipMapping){
+            mipCount = 1;
+        }
+
         bind(0);
         setMagMin(magNearest, minNearest);
         setWrap(sRepeat, tRepeat);
-        mipCount = std::max(1, (int)std::log2(std::min(width, height)) - 1);
         glTexStorage2D(GL_TEXTURE_2D, mipCount, internalEnum(format), width, height);
     }
 
@@ -123,7 +131,9 @@ namespace tridot {
 
         create(image.getWidth(), image.getHeight(), format);
         glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, image.getWidth(), image.getHeight(), dataFormat, GL_UNSIGNED_BYTE, image.getData());
-        glGenerateMipmap(GL_TEXTURE_2D);
+        if(mipCount > 1){
+            glGenerateMipmap(GL_TEXTURE_2D);
+        }
         return true;
     }
 

@@ -103,20 +103,20 @@ namespace tridot {
         switch (attachment) {
             case DEPTH:
                 texture = Ref<Texture>::make();
-                texture->create(width, height, TextureFormat::DEPTH24);
+                texture->create(width, height, TextureFormat::DEPTH24, false);
                 break;
             case STENCIL:
                 texture = Ref<Texture>::make();
-                texture->create(width, height, TextureFormat::DEPTH24STENCIL8);
+                texture->create(width, height, TextureFormat::DEPTH24STENCIL8, false);
                 break;
             case COLOR:
                 texture = Ref<Texture>::make();
-                texture->create(width, height, TextureFormat::RGBA8);
+                texture->create(width, height, TextureFormat::RGBA8, false);
                 break;
             default:
                 if(attachment > COLOR && attachment < COLOR + 16){
                     texture = Ref<Texture>::make();
-                    texture->create(width, height, TextureFormat::RGBA8);
+                    texture->create(width, height, TextureFormat::RGBA8, false);
                 }
                 break;
         }
@@ -128,7 +128,7 @@ namespace tridot {
         for(auto &texture : textures){
             if(texture.second.get() != nullptr){
                 if(texture.second->getWidth() != width || texture.second->getHeight() != height){
-                    texture.second->create(width, height, texture.second->getFormat());
+                    texture.second->create(width, height, texture.second->getFormat(), false);
                     glFramebufferTexture2D(GL_FRAMEBUFFER, internalEnum((TextureAttachment)texture.first), GL_TEXTURE_2D, texture.second->getId(), 0);
                 }
             }
