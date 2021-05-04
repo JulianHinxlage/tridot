@@ -260,7 +260,7 @@ namespace tridot {
             {
                 out << YAML::Key << "Materials" << YAML::BeginSeq;
 
-                auto materialNames = resources.getNames<Material>();
+                auto materialNames = resources.getNameList<Material>();
                 for(auto &name : materialNames){
                     out << YAML::BeginMap;
                     Ref<Material> material = resources.get<Material>(name);
@@ -274,7 +274,7 @@ namespace tridot {
 
             //Plugins
             {
-                auto pluginNames = resources.getNames<Plugin>();
+                auto pluginNames = resources.getNameList<Plugin>();
                 if(pluginNames.size() > 0) {
                     out << YAML::Key << "Plugins" << YAML::BeginSeq;
 
@@ -314,7 +314,7 @@ namespace tridot {
                     if(!name.empty()){
                         auto node = material["material"];
                         if(node){
-                            Ref<Material> &mat = resources.set<Material>(name);
+                            Ref<Material> mat = resources.get<Material>(name, ResourceManager::JUST_CREATE);
                             deserializeType(Reflection::get<Material>(), node, mat.get(), resources);
                         }
                     }

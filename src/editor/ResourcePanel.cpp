@@ -38,7 +38,7 @@ namespace tridot {
                     if (res) {
                         ImGui::SameLine();
                         if (ImGui::Button("remove")) {
-                            engine.resources.remove<T>(engine.resources.getName(res));
+                            engine.resources.remove(engine.resources.getName(res));
                             res = nullptr;
                         }
                     }
@@ -51,7 +51,7 @@ namespace tridot {
                         static char buffer[256];
                         ImGui::InputText("Name", buffer, sizeof(buffer));
                         if (ImGui::Button("Create")) {
-                            res = engine.resources.set<T>(std::string(buffer));
+                            res = engine.resources.get<T>(std::string(buffer), ResourceManager::JUST_CREATE);
                             ImGui::CloseCurrentPopup();
                         }
                         ImGui::SameLine();

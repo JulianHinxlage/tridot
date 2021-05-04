@@ -135,6 +135,8 @@ namespace tridot {
         }
         this->width = width;
         this->height = height;
+        unbind();
+        bind();
     }
 
     void FrameBuffer::clear(Color color) {

@@ -5,6 +5,7 @@
 #include "Texture.h"
 #include "tridot/core/Log.h"
 #include <GL/glew.h>
+#include <algorithm>
 
 namespace tridot {
 

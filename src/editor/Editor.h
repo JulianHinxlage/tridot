@@ -5,7 +5,7 @@
 #ifndef TRIDOT_EDITOR_H
 #define TRIDOT_EDITOR_H
 
-#include "tridot/ecs/Registry.h"
+#include "tridot/engine/Scene.h"
 #include "tridot/render/Camera.h"
 #include "SelectionContext.h"
 #include "Viewport.h"
@@ -34,7 +34,7 @@ namespace tridot {
         static std::string currentSceneFile;
         static uint64_t propertiesWindowFlags;
         static bool runtime;
-        static ecs::Registry runtimeSceneBuffer;
+        static Scene runtimeSceneBuffer;
 
         static void init();
         static void update();

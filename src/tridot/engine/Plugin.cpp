@@ -89,7 +89,7 @@ namespace tridot {
     }
 
     TRI_UPDATE("plugins"){
-        for(auto &name : engine.resources.getNames<Plugin>()){
+        for(auto &name : engine.resources.getNameList<Plugin>()){
             auto plugin = engine.resources.get<Plugin>(name);
             if(plugin){
                 if(plugin->update){
@@ -101,7 +101,7 @@ namespace tridot {
 
     TRI_INIT("plugins"){
         engine.onShutdown().add("plugins", [](){
-            for(auto &name : engine.resources.getNames<Plugin>()){
+            for(auto &name : engine.resources.getNameList<Plugin>()){
                 auto plugin = engine.resources.get<Plugin>(name);
                 if(plugin){
                     plugin->init = nullptr;

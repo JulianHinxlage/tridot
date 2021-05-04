@@ -23,7 +23,7 @@ namespace tridot {
     std::string Editor::currentSceneFile = "";
     uint64_t Editor::propertiesWindowFlags = 0;
     bool Editor::runtime = false;
-    ecs::Registry Editor::runtimeSceneBuffer;
+    Scene Editor::runtimeSceneBuffer;
 
     bool &Editor::getFlag(const std::string &name){
         auto open = flags.find(name);
@@ -156,7 +156,7 @@ namespace tridot {
                         if(runtime){
                             disableRuntime();
                         }
-                        engine.saveScene(Editor::currentSceneFile);
+                        engine.save(Editor::currentSceneFile);
                     }
                     if(ImGui::MenuItem("Save as")){
                         saveFilePopup = true;
@@ -193,10 +193,17 @@ namespace tridot {
                             disableRuntime();
                         }
                         Editor::undo.clearActions();
-                        if(engine.loadScene(std::string(buffer))){
-                            Editor::currentSceneFile = std::string(buffer);
+
+                        std::string file(buffer);
+                        if(engine.resources.searchFile(file) != ""){
+                            file = engine.resources.searchFile(file);
+                            engine.resources.remove(Editor::currentSceneFile);
+                            engine.resources.setup<Scene>(file).setInstance(&engine).get();
+                            Editor::currentSceneFile = file;
                             Editor::cameraId = -1;
                             Editor::selection.unselect();
+                        }else{
+                            Log::warning("file ", file, " not found");
                         }
                         ImGui::CloseCurrentPopup();
                     }
@@ -226,7 +233,7 @@ namespace tridot {
                         if(runtime){
                             disableRuntime();
                         }
-                        engine.saveScene(Editor::currentSceneFile);
+                        engine.save(Editor::currentSceneFile);
                         ImGui::CloseCurrentPopup();
                     }
                     ImGui::SameLine();

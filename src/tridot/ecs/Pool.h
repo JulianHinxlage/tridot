@@ -11,6 +11,8 @@
 
 namespace ecs {
 
+    class Registry;
+
     class Pool {
     public:
         uint32_t getIndex(EntityId id){
@@ -59,7 +61,7 @@ namespace ecs {
             if(page[pageOffset] == -1){
                 dense.push_back(id);
                 page[pageOffset] = index;
-                onAddSignal.invoke(id);
+                onAddSignal.invoke(registry, id);
                 return index;
             }else{
                 return page[pageOffset];
@@ -70,7 +72,7 @@ namespace ecs {
             uint32_t index1 = getIndex(id);
             uint32_t index2 = dense.size() - 1;
             if(index1 != -1){
-                onRemoveSignal.invoke(id);
+                onRemoveSignal.invoke(registry, id);
                 EntityId id1 = getId(index1);
                 EntityId id2 = getId(index2);
                 dense[index1] = id2;
@@ -130,12 +132,14 @@ namespace ecs {
         }
 
     protected:
+        friend class Registry;
         static const uint32_t pageMask = (1 << poolPageSizeBits) - 1;
         static const uint32_t pageSize = 1 << poolPageSizeBits;
         std::vector<EntityId> dense;
         std::vector<std::shared_ptr<uint32_t[]>> sparse;
-        Signal<EntityId> onAddSignal;
-        Signal<EntityId> onRemoveSignal;
+        Signal<Registry *, EntityId> onAddSignal;
+        Signal<Registry *, EntityId> onRemoveSignal;
+        Registry *registry;
 
         uint32_t* assurePage(uint32_t pageIndex){
             if(pageIndex >= sparse.size()){

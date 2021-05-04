@@ -6,6 +6,7 @@
 #define TRIDOT_ENGINE_H
 
 #include "tridot/ecs/Registry.h"
+#include "Scene.h"
 #include "Time.h"
 #include "Input.h"
 #include "Physics.h"
@@ -18,7 +19,7 @@
 
 namespace tridot {
 
-    class Engine : public ecs::Registry {
+    class Engine : public Scene {
     public:
         Time time;
         Input input;
@@ -42,9 +43,6 @@ namespace tridot {
         ecs::SignalRef<> onUpdate();
         ecs::SignalRef<> onEndScene();
         ecs::SignalRef<> onShutdown();
-
-        bool loadScene(const std::string &file);
-        bool saveScene(const std::string &file);
 
     private:
         ecs::Signal<> onInitSignal;

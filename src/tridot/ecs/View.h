@@ -13,7 +13,9 @@ namespace ecs {
     class View {
     public:
         View(Registry *reg) : reg(reg){
-            signature = reg->createSignature<Components...>();
+            if(reg){
+                signature = reg->createSignature<Components...>();
+            }
             excludedSignature = 0;
             subViewCount = 1;
             subViewIndex = 0;
@@ -21,7 +23,9 @@ namespace ecs {
 
         template<typename... ExcludedComponents>
         View &excluded(){
-            excludedSignature = reg->createSignature<ExcludedComponents...>();
+            if(reg){
+                excludedSignature = reg->createSignature<ExcludedComponents...>();
+            }
             return *this;
         }
 
@@ -33,6 +37,10 @@ namespace ecs {
 
         template<typename Func>
         void each(const Func &func){
+            if(!reg){
+                return;
+            }
+
             Pool *pool = &reg->getEntityPool();
 
             if constexpr (sizeof...(Components) == 1) {

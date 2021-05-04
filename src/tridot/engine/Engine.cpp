@@ -59,14 +59,17 @@ namespace tridot {
         window.init(width, height, title);
         input.init();
         time.init();
+        resources.addSearchDirectory(resourceDirectory);
         if(resourceDirectory.back() == '/'){
             resources.addSearchDirectory(resourceDirectory + "textures/");
             resources.addSearchDirectory(resourceDirectory + "shaders/");
             resources.addSearchDirectory(resourceDirectory + "models/");
+            resources.addSearchDirectory(resourceDirectory + "scenes/");
         }else{
             resources.addSearchDirectory(resourceDirectory + "/textures/");
             resources.addSearchDirectory(resourceDirectory + "/shaders/");
             resources.addSearchDirectory(resourceDirectory + "/models/");
+            resources.addSearchDirectory(resourceDirectory + "/scenes/");
         }
         resources.autoReload = autoReload;
         physics.init();
@@ -144,16 +147,6 @@ namespace tridot {
 
     ecs::SignalRef<> Engine::onShutdown(){
         return onShutdownSignal.ref();
-    }
-
-    bool Engine::loadScene(const std::string &file) {
-        Serializer serializer;
-        return serializer.load(file, *this, resources);
-    }
-
-    bool Engine::saveScene(const std::string &file) {
-        Serializer serializer;
-        return serializer.save(file, *this, resources);
     }
 
 }

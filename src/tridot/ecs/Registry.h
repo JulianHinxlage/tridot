@@ -21,6 +21,7 @@ namespace ecs {
     public:
         Registry(){
             nextEntityId = 0;
+            entityPool.registry = this;
         }
 
         EntityId createHinted(EntityId hint){
@@ -209,11 +210,13 @@ namespace ecs {
             onUnregisterSignal = source.onUnregisterSignal;
 
             entityPool.copy(source.entityPool);
+            entityPool.registry = this;
             componentPools.resize(source.componentPools.size());
             for(int i = 0; i < source.componentPools.size(); i++){
                 if(source.componentPools[i]){
                     componentPools[i] = source.componentPools[i]->make();
                     componentPools[i]->copy(*source.componentPools[i]);
+                    componentPools[i]->registry = this;
                 }else{
                     componentPools[i] = nullptr;
                 }
@@ -232,11 +235,12 @@ namespace ecs {
             }
             if(componentPools[cid] == nullptr){
                 componentPools[cid] = std::make_shared<ComponentPool<Component>>();
-                componentPools[cid]->onAdd().add([this, cid](EntityId id){
-                    *(SignatureBitMap*)entityPool.getById(id) |= (SignatureBitMap(1) << cid);
+                componentPools[cid]->registry = this;
+                componentPools[cid]->onAdd().add([cid](Registry *reg, EntityId id){
+                    *(SignatureBitMap*)reg->entityPool.getById(id) |= (SignatureBitMap(1) << cid);
                 });
-                componentPools[cid]->onRemove().add([this, cid](EntityId id){
-                    *(SignatureBitMap*)entityPool.getById(id) &= ~(SignatureBitMap(1) << cid);
+                componentPools[cid]->onRemove().add([cid](Registry *reg, EntityId id){
+                    *(SignatureBitMap*)reg->entityPool.getById(id) &= ~(SignatureBitMap(1) << cid);
                 });
                 onRegisterSignal.invoke(Reflection::id<Component>());
             }
@@ -316,7 +320,7 @@ namespace ecs {
             return onRegisterSignal.ref();
         }
 
-    private:
+    protected:
         TypeMap componentMap;
         std::vector<std::shared_ptr<Pool>> componentPools;
         ComponentPool<SignatureBitMap> entityPool;

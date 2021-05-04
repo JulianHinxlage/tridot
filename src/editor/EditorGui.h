@@ -33,7 +33,7 @@ namespace tridot {
 
         template<typename T>
         static void drawResourceSelection(Ref<T> &res, const std::string &name){
-            std::string resName = engine.resources.getName<T>(res);
+            std::string resName = engine.resources.getName(res);
             if(resName.empty()){
                 if(res){
                     resName = "<unknown>";
@@ -47,7 +47,7 @@ namespace tridot {
                     res = nullptr;
                     ImGui::CloseCurrentPopup();
                 }
-                for (auto &n : engine.resources.getNames<T>()){
+                for (auto &n : engine.resources.getNameList<T>()){
                     if(ImGui::Selectable(n.c_str())){
                         res = engine.resources.get<T>(n);
                         ImGui::CloseCurrentPopup();
@@ -55,7 +55,6 @@ namespace tridot {
                 }
                 ImGui::EndCombo();
             }
-
 
             if(ImGui::BeginDragDropSource(ImGuiDragDropFlags_None)){
                 ImGui::SetDragDropPayload(ecs::Reflection::get<T>()->name().c_str(), &res, sizeof(res));
