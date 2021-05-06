@@ -7,8 +7,10 @@
 
 namespace tridot {
 
-    Ref<Mesh> MeshFactory::createQuad() {
-        Ref<Mesh> mesh(true);
+    Ref<Mesh> MeshFactory::createQuad(Ref<Mesh> mesh) {
+        if(mesh.get() == nullptr){
+            mesh = Ref<Mesh>::make();
+        }
         float vs[] = {
                 -0.5, -0.5, 0, 0.0, 0.0, 1.0, 0.0, 0.0,
                 -0.5, +0.5, 0, 0.0, 0.0, 1.0, 0.0, 1.0,
@@ -24,8 +26,11 @@ namespace tridot {
         return mesh;
     }
 
-    Ref<Mesh> MeshFactory::createCube() {
-        Ref<Mesh> mesh(true);
+    Ref<Mesh> MeshFactory::createCube(Ref<Mesh> mesh) {
+        if(mesh.get() == nullptr){
+            mesh = Ref<Mesh>::make();
+        }
+
         std::vector<float> vs;
         std::vector<int> is;
 
@@ -106,8 +111,10 @@ namespace tridot {
         return mesh;
     }
 
-    Ref<Mesh> MeshFactory::createRegularPolygon(int vertexCount) {
-        Ref<Mesh> mesh(true);
+    Ref<Mesh> MeshFactory::createRegularPolygon(int vertexCount, Ref<Mesh> mesh) {
+        if(mesh.get() == nullptr){
+            mesh = Ref<Mesh>::make();
+        }
 
         std::vector<float> vs;
         std::vector<int> is;
@@ -158,8 +165,10 @@ namespace tridot {
         return mesh;
     }
 
-    Ref<Mesh> MeshFactory::createSphere(int vertexCountX, int vertexCountY) {
-        Ref<Mesh> mesh(true);
+    Ref<Mesh> MeshFactory::createSphere(int vertexCountX, int vertexCountY, Ref<Mesh> mesh) {
+        if(mesh.get() == nullptr){
+            mesh = Ref<Mesh>::make();
+        }
 
         std::vector<float> vs;
         std::vector<int> is;

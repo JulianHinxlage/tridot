@@ -73,7 +73,7 @@ namespace tridot {
                 }
             }
         }
-        return true;
+        return sources.size() > 0;
     }
 
     bool Shader::postLoad() {
@@ -144,7 +144,8 @@ namespace tridot {
             glDeleteShader(shaderId);
         }
         id = programId;
-        Log::debug("created shader ", id, " ", file);
+        Log::trace("created shader ", id);
+        Log::debug("loaded shader ", file);
         locations.clear();
         bufferLocations.clear();
         return true;

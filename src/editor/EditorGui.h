@@ -47,7 +47,7 @@ namespace tridot {
                     res = nullptr;
                     ImGui::CloseCurrentPopup();
                 }
-                for (auto &n : engine.resources.getNameList<T>()){
+                for (auto &n : engine.resources.getNameList<T>(true)){
                     if(ImGui::Selectable(n.c_str())){
                         res = engine.resources.get<T>(n);
                         ImGui::CloseCurrentPopup();

@@ -11,10 +11,10 @@ namespace tridot {
 
     class MeshFactory{
     public:
-        static Ref<Mesh> createQuad();
-        static Ref<Mesh> createCube();
-        static Ref<Mesh> createRegularPolygon(int vertexCount);
-        static Ref<Mesh> createSphere(int vertexCountX, int vertexCountY);
+        static Ref<Mesh> createQuad(Ref<Mesh> mesh = nullptr);
+        static Ref<Mesh> createCube(Ref<Mesh> mesh = nullptr);
+        static Ref<Mesh> createRegularPolygon(int vertexCount, Ref<Mesh> mesh = nullptr);
+        static Ref<Mesh> createSphere(int vertexCountX, int vertexCountY, Ref<Mesh> mesh = nullptr);
     };
 
 }

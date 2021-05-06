@@ -8,6 +8,7 @@
 #include <vector>
 #include <memory>
 #include <time.h>
+#include <mutex>
 
 namespace tridot{
 
@@ -158,8 +159,11 @@ namespace tridot{
             }
 
             s << std::endl;
+            static std::mutex mutex;
+            mutex.lock();
             stream << s.str();
             stream.flush();
+            mutex.unlock();
         }
     }
 

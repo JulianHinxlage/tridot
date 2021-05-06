@@ -26,10 +26,15 @@ int main(int argc, char *argv[]){
     engine.init(1920, 1080, "Tridot Editor", "../res/", true);
     engine.window.setBackgroundColor(glm::vec4( 0.25, 0.25, 0.25, 1 ));
     Editor::init();
+    engine.resources.update();
 
-    engine.resources.setup<Mesh>("cube").setCreate([](){return MeshFactory::createCube();}).setOptions(ResourceManager::JUST_CREATE).get();
-    engine.resources.setup<Mesh>("sphere").setCreate([](){return MeshFactory::createSphere(32, 32);}).setOptions(ResourceManager::JUST_CREATE).get();
-    engine.resources.get<Mesh>("teapot.obj", ResourceManager::SYNCHRONOUS);
+    engine.resources.setup<Mesh>("cube")
+            .setPostLoad([](Ref<Mesh> &mesh){MeshFactory::createCube(mesh); return true;})
+            .setPreLoad(nullptr);
+    engine.resources.setup<Mesh>("sphere")
+            .setPostLoad([](Ref<Mesh> &mesh){MeshFactory::createSphere(32, 32, mesh); return true;})
+            .setPreLoad(nullptr);
+    engine.resources.setup<Mesh>("teapot.obj");
 
     engine.resources.setup<Texture>("Checkerboard.png");
 
@@ -66,8 +71,8 @@ int main(int argc, char *argv[]){
         engine.resources.setup<Scene>("scene")
                 .setInstance(&engine)
                 .setOptions(ResourceManager::LOAD_WITHOUT_FILE)
-                .setPreLoad([](Scene &scene, const std::string &file){
-                    createDefaultScene(scene);
+                .setPreLoad([](Ref<Scene> &scene, const std::string &file){
+                    createDefaultScene(*scene);
                     return true;
                 }).get();
     }

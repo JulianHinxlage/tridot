@@ -12,6 +12,7 @@
 #include <thread>
 #include <condition_variable>
 #include <filesystem>
+#include <algorithm>
 
 #define define_has_member(member_name)                                         \
     template <typename T>                                                      \
@@ -60,8 +61,8 @@ namespace tridot {
             std::string name;
             std::string file;
             int options;
-            std::function<bool(T &, const std::string &)> preLoad;
-            std::function<bool(T &)> postLoad;
+            std::function<bool(Ref<T> &, const std::string &)> preLoad;
+            std::function<bool(Ref<T> &)> postLoad;
             std::function<Ref<T>()> create;
             ResourceManager *manager;
 
@@ -71,12 +72,12 @@ namespace tridot {
                 file = "";
                 options = NONE;
                 if constexpr(has_member(T, preLoad)){
-                    preLoad = [](T &t, const std::string &file){return t.preLoad(file);};
+                    preLoad = [](Ref<T> &t, const std::string &file){return t->preLoad(file);};
                 }else{
                     preLoad = nullptr;
                 }
                 if constexpr(has_member(T, postLoad)){
-                    postLoad = [](T &t){return t.postLoad();};
+                    postLoad = [](Ref<T> &t){return t->postLoad();};
                 }else{
                     postLoad = nullptr;
                 }
@@ -89,16 +90,21 @@ namespace tridot {
             }
 
             ResourceOptions &setOptions(int options) {
+                this->options = options;
+                return *this;
+            }
+
+            ResourceOptions &addOptions(int options) {
                 this->options |= options;
                 return *this;
             }
 
-            ResourceOptions &setPreLoad(const std::function<bool(T &, const std::string &)> &preLoad) {
+            ResourceOptions &setPreLoad(const std::function<bool(Ref<T> &, const std::string &)> &preLoad) {
                 this->preLoad = preLoad;
                 return *this;
             }
 
-            ResourceOptions &setPostLoad(const std::function<bool(T &)> &postLoad) {
+            ResourceOptions &setPostLoad(const std::function<bool(Ref<T> &)> &postLoad) {
                 this->postLoad = postLoad;
                 return *this;
             }
@@ -183,12 +189,18 @@ namespace tridot {
             if(entry != nullptr){
                 uint32_t type = typeid(T).hash_code();
                 if(entry->type != type){
-                    Log::warning("resource ", name, " requested with different type");
-                    static ResourceOptions<T> options;
-                    return options;
+                    if(entry->status & UNCREATED){
+                        remove(name);
+                        return setup<T>(name);
+                    }else{
+                        Log::warning("resource ", name, " requested with different type");
+                        static ResourceOptions<T> options;
+                        return options;
+                    }
                 }
             }else{
                 Ref<Entry<T>> res = Ref<Entry<T>>::make();
+                res->options = defaultOptions<T>();
                 res->options.manager = this;
                 res->options.name = name;
                 res->options.file = name;
@@ -210,14 +222,21 @@ namespace tridot {
             }
             uint32_t type = typeid(T).hash_code();
             if(entry->type != type){
-                Log::warning("resource ", name, " requested with different type");
-                return nullptr;
+                if(entry->status & UNCREATED){
+                    remove(name);
+                    return get<T>(name);
+                }else{
+                    Log::warning("resource ", name, " requested with different type");
+                    return nullptr;
+                }
             }
             Entry<T> *res = ((Entry<T>*)entry);
             res->create();
             if(synchronousMode || res->options.options & SYNCHRONOUS){
+                res->mutex.lock();
                 res->pre();
                 res->post();
+                res->mutex.unlock();
             }else{
                 condition.notify_one();
             }
@@ -273,13 +292,16 @@ namespace tridot {
         }
 
         template<typename T>
-        std::vector<std::string> getNameList(){
+        std::vector<std::string> getNameList(bool alphabetical = false){
             std::vector<std::string> list;
             uint32_t type = typeid(T).hash_code();
             for(auto &entry : entries){
                 if(entry.second->type == type){
                     list.push_back(entry.first);
                 }
+            }
+            if(alphabetical){
+                std::sort(list.begin(), list.end());
             }
             return list;
         }
@@ -304,6 +326,30 @@ namespace tridot {
                         }
                     }
                 }
+            }
+        }
+
+        bool isLoading(){
+            for(auto &entry : entries){
+                if(entry.second->status == UNLOADED || entry.second->status == PRE_LOADED){
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        template<typename T>
+        ResourceOptions<T> &defaultOptions(){
+            uint32_t type = typeid(T).hash_code();
+            auto entry = defaultOptionEntries.find(type);
+            if(entry == defaultOptionEntries.end()){
+                Ref<Entry<T>> res = Ref<Entry<T>>::make();
+                defaultOptionEntries[type] = (Ref<EntryBase>)res;
+                return res->options;
+            }else{
+                Entry<T> *res = (Entry<T>*)entry->second.get();
+                return res->options;
+
             }
         }
 
@@ -361,7 +407,7 @@ namespace tridot {
                 if(status == UNLOADED){
                     if(options.preLoad){
                         if(options.options & LOAD_WITHOUT_FILE){
-                            if(options.preLoad(*resource.get(), "")){
+                            if(options.preLoad(resource, "")){
                                 status = PRE_LOADED;
                             }else{
                                 status = FAILED_TO_LOAD;
@@ -374,7 +420,7 @@ namespace tridot {
                                 timestamp = getTimestamp(filePath);
                                 if (timestamp != 0) {
                                     found = true;
-                                    if (options.preLoad(*resource.get(), filePath)) {
+                                    if (options.preLoad(resource, filePath)) {
                                         status = PRE_LOADED;
                                         break;
                                     }
@@ -413,7 +459,7 @@ namespace tridot {
             virtual void post(){
                 if(status == PRE_LOADED){
                     if(options.postLoad){
-                        if(options.postLoad(*resource.get())){
+                        if(options.postLoad(resource)){
                             status = LOADED;
                         }else{
                             status = FAILED_TO_LOAD;
@@ -451,6 +497,7 @@ namespace tridot {
         }
 
         std::unordered_map<std::string, Ref<EntryBase>> entries;
+        std::unordered_map<uint32_t, Ref<EntryBase>> defaultOptionEntries;
         std::vector<Ref<std::thread>> threads;
         std::vector<std::string> searchDirectories;
         std::mutex mutex;

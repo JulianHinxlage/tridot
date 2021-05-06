@@ -117,6 +117,7 @@ namespace tridot {
                 glDrawElementsInstanced(internalEnum(primitive), vertexCount, internalEnum(indexBuffer[0].type), nullptr, instanceCount);
             }
         }
+        unbind();
     }
 
     void VertexArray::setPrimitive(Primitive primitive) {

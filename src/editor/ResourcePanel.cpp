@@ -16,12 +16,13 @@ namespace tridot {
     template<typename T>
     void updateResourcePanel(const char* name, const char* panelName) {
         if (ImGui::GetCurrentContext() != nullptr) {
+            static Ref<T> res = nullptr;
+
             bool& open = Editor::getFlag(panelName);
             if (open) {
                 if (ImGui::Begin(panelName, &open)) {
                     ImGui::SetWindowSize(ImVec2(400, 400), ImGuiCond_FirstUseEver);
 
-                    static Ref<T> res = nullptr;
                     EditorGui::drawResourceSelection(res, name);
 
                     std::string newName = std::string("new ") + std::string(name);
@@ -86,6 +87,8 @@ namespace tridot {
                     ImGui::EndChild();
                 }
                 ImGui::End();
+            }else{
+                res = nullptr;
             }
         }
     }

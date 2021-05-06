@@ -9,9 +9,9 @@ namespace tridot {
     Material::Material(Color color, const Ref<Texture> &texture, Material::Mapping mapping) {
         this->color = color;
         this->mapping = mapping;
-        roughness = 0.6;
+        roughness = 1.0;
         metallic = 0.0;
-        normalMapFactor = 0.5;
+        normalMapFactor = 1.0;
 
         this->texture = texture;
         normalMap = nullptr;

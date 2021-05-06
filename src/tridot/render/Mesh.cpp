@@ -167,6 +167,10 @@ namespace tridot {
                 }
             }
 
+            if(vs.size() == 0 && is.size() == 0){
+                return false;
+            }
+
             std::map<Index, int> map;
 
             indexData.clear();
