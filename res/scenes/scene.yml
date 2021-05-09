@@ -8,7 +8,7 @@ Entities:
       up: [0, 0, 1]
       right: [-0.967936158, 0.251196265, 0]
       fieldOfView: 60
-      aspectRatio: 1.71276593
+      aspectRatio: 2.0631578
       near: 0.0500000007
       far: 1200
       target: ~
@@ -5202,7 +5202,7 @@ Entities:
       rotation: [1.56974447, -0.00156402565, 2.15948629]
       parent.id: 4294967295
     RenderComponent:
-      mesh: teapot.obj
+      mesh: models/teapot.obj
       material: marble
       color: [1, 1, 1, 1]
     RigidBody:
@@ -5303,66 +5303,6 @@ Entities:
       angularDamping: 0
       enablePhysics: true
 Materials:
-  - name: marble
-    material:
-      color: [1, 1, 1, 1]
-      mapping: 2
-      roughness: 2
-      metallic: 0.158000007
-      normalMapFactor: 1
-      texture: Marble012_1K_Color.jpg
-      normalMap: Marble012_1K_Normal.jpg
-      roughnessMap: Marble012_1K_Roughness.jpg
-      metallicMap: ""
-      textureOffset: [0, 0]
-      textureScale: [1, 1]
-      normalMapOffset: [0, 0]
-      normalMapScale: [1, 1]
-      roughnessMapOffset: [0, 0]
-      roughnessMapScale: [1, 1]
-      metallicMapOffset: [0, 0]
-      metallicMapScale: [1, 1]
-      shader: ""
-  - name: ground
-    material:
-      color: [1, 1, 1, 1]
-      mapping: 2
-      roughness: 2
-      metallic: 0
-      normalMapFactor: 1
-      texture: Ground037_1K_Color.jpg
-      normalMap: Ground037_1K_Normal.jpg
-      roughnessMap: Ground037_1K_Roughness.jpg
-      metallicMap: ""
-      textureOffset: [0, 0]
-      textureScale: [0.200000003, 0.200000003]
-      normalMapOffset: [0, 0]
-      normalMapScale: [0.200000003, 0.200000003]
-      roughnessMapOffset: [0, 0]
-      roughnessMapScale: [0.200000003, 0.200000003]
-      metallicMapOffset: [0, 0]
-      metallicMapScale: [1, 1]
-      shader: ""
-  - name: metal
-    material:
-      color: [1, 1, 1, 1]
-      mapping: 2
-      roughness: 1.89999998
-      metallic: 1.79999995
-      normalMapFactor: 0
-      texture: Metal038_1K_Color.jpg
-      normalMap: Metal038_1K_Normal.jpg
-      roughnessMap: Metal038_1K_Roughness.jpg
-      metallicMap: Metal038_1K_Metalness.jpg
-      textureOffset: [0, 0]
-      textureScale: [1, 1]
-      normalMapOffset: [0, 0]
-      normalMapScale: [1, 1]
-      roughnessMapOffset: [0, 0]
-      roughnessMapScale: [1, 1]
-      metallicMapOffset: [0, 0]
-      metallicMapScale: [1, 1]
-      shader: ""
   - name: rocks
     material:
       color: [1, 0.996078432, 0.996078432, 1]
@@ -5370,9 +5310,9 @@ Materials:
       roughness: 2
       metallic: 0
       normalMapFactor: 2
-      texture: Rocks022_1K_Color.jpg
-      normalMap: Rocks022_1K_Normal.jpg
-      roughnessMap: Rocks022_1K_Roughness.jpg
+      texture: textures/Rocks022_1K_Color.jpg
+      normalMap: textures/Rocks022_1K_Normal.jpg
+      roughnessMap: textures/Rocks022_1K_Roughness.jpg
       metallicMap: ""
       textureOffset: [0, 0]
       textureScale: [0.5, 0.5]
@@ -5390,9 +5330,9 @@ Materials:
       roughness: 2
       metallic: 0
       normalMapFactor: 1
-      texture: Tiles090_1K_Color.jpg
-      normalMap: Tiles090_1K_Normal.jpg
-      roughnessMap: Tiles090_1K_Roughness.jpg
+      texture: textures/Tiles090_1K_Color.jpg
+      normalMap: textures/Tiles090_1K_Normal.jpg
+      roughnessMap: textures/Tiles090_1K_Roughness.jpg
       metallicMap: ""
       textureOffset: [0, 0]
       textureScale: [1, 1]
@@ -5403,6 +5343,66 @@ Materials:
       metallicMapOffset: [0, 0]
       metallicMapScale: [1, 1]
       shader: ""
+  - name: metal
+    material:
+      color: [1, 1, 1, 1]
+      mapping: 2
+      roughness: 1.89999998
+      metallic: 1.79999995
+      normalMapFactor: 0
+      texture: textures/Metal038_1K_Color.jpg
+      normalMap: textures/Metal038_1K_Normal.jpg
+      roughnessMap: textures/Metal038_1K_Roughness.jpg
+      metallicMap: textures/Metal038_1K_Metalness.jpg
+      textureOffset: [0, 0]
+      textureScale: [1, 1]
+      normalMapOffset: [0, 0]
+      normalMapScale: [1, 1]
+      roughnessMapOffset: [0, 0]
+      roughnessMapScale: [1, 1]
+      metallicMapOffset: [0, 0]
+      metallicMapScale: [1, 1]
+      shader: ""
+  - name: marble
+    material:
+      color: [1, 1, 1, 1]
+      mapping: 2
+      roughness: 2
+      metallic: 0.158000007
+      normalMapFactor: 1
+      texture: textures/Marble012_1K_Color.jpg
+      normalMap: textures/Marble012_1K_Normal.jpg
+      roughnessMap: textures/Marble012_1K_Roughness.jpg
+      metallicMap: ""
+      textureOffset: [0, 0]
+      textureScale: [1, 1]
+      normalMapOffset: [0, 0]
+      normalMapScale: [1, 1]
+      roughnessMapOffset: [0, 0]
+      roughnessMapScale: [1, 1]
+      metallicMapOffset: [0, 0]
+      metallicMapScale: [1, 1]
+      shader: ""
+  - name: ground
+    material:
+      color: [1, 1, 1, 1]
+      mapping: 2
+      roughness: 2
+      metallic: 0
+      normalMapFactor: 1
+      texture: textures/Ground037_1K_Color.jpg
+      normalMap: textures/Ground037_1K_Normal.jpg
+      roughnessMap: textures/Ground037_1K_Roughness.jpg
+      metallicMap: ""
+      textureOffset: [0, 0]
+      textureScale: [0.200000003, 0.200000003]
+      normalMapOffset: [0, 0]
+      normalMapScale: [0.200000003, 0.200000003]
+      roughnessMapOffset: [0, 0]
+      roughnessMapScale: [0.200000003, 0.200000003]
+      metallicMapOffset: [0, 0]
+      metallicMapScale: [1, 1]
+      shader: ""
   - name: wood
     material:
       color: [1, 0.996078432, 0.996078432, 1]
@@ -5410,9 +5410,9 @@ Materials:
       roughness: 2
       metallic: 0
       normalMapFactor: 1
-      texture: Wood049_1K_Color.jpg
-      normalMap: Wood049_1K_Normal.jpg
-      roughnessMap: Wood049_1K_Roughness.jpg
+      texture: textures/Wood049_1K_Color.jpg
+      normalMap: textures/Wood049_1K_Normal.jpg
+      roughnessMap: textures/Wood049_1K_Roughness.jpg
       metallicMap: ""
       textureOffset: [0, 0]
       textureScale: [0.349999994, 0.25]

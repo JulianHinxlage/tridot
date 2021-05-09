@@ -21,8 +21,7 @@ int main(int argc, char *argv[]){
     Log::options.colorEnabled = false;
 #endif
 
-    engine.resources.addSearchDirectory(".");
-    engine.resources.threadCount = 4;
+    engine.resources.addSearchDirectory("plugins/");
     engine.init(1920, 1080, "Tridot Editor", "../res/", true);
     engine.window.setBackgroundColor(glm::vec4( 0.25, 0.25, 0.25, 1 ));
     Editor::init();
@@ -34,36 +33,14 @@ int main(int argc, char *argv[]){
     engine.resources.setup<Mesh>("sphere")
             .setPostLoad([](Ref<Mesh> &mesh){MeshFactory::createSphere(32, 32, mesh); return true;})
             .setPreLoad(nullptr);
-    engine.resources.setup<Mesh>("teapot.obj");
 
-    engine.resources.setup<Texture>("Checkerboard.png");
+    engine.resources.defaultOptions<Scene>().setInstance(&engine).setPostLoad([](Ref<Scene> &scene){
+        bool valid = scene->postLoad();
+        engine.resources.removeByFile<Scene>(scene->file);
+        return valid;
+    });
 
-    engine.resources.setup<Texture>("Tiles090_1K_Color.jpg");
-    engine.resources.setup<Texture>("Tiles090_1K_Normal.jpg");
-    engine.resources.setup<Texture>("Tiles090_1K_Roughness.jpg");
-
-    engine.resources.setup<Texture>("Wood049_1K_Color.jpg");
-    engine.resources.setup<Texture>("Wood049_1K_Normal.jpg");
-    engine.resources.setup<Texture>("Wood049_1K_Roughness.jpg");
-
-    engine.resources.setup<Texture>("Metal038_1K_Color.jpg");
-    engine.resources.setup<Texture>("Metal038_1K_Normal.jpg");
-    engine.resources.setup<Texture>("Metal038_1K_Roughness.jpg");
-    engine.resources.setup<Texture>("Metal038_1K_Metalness.jpg");
-
-    engine.resources.setup<Texture>("Marble012_1K_Color.jpg");
-    engine.resources.setup<Texture>("Marble012_1K_Normal.jpg");
-    engine.resources.setup<Texture>("Marble012_1K_Roughness.jpg");
-
-    engine.resources.setup<Texture>("Ground037_1K_Color.jpg");
-    engine.resources.setup<Texture>("Ground037_1K_Normal.jpg");
-    engine.resources.setup<Texture>("Ground037_1K_Roughness.jpg");
-
-    engine.resources.setup<Texture>("Rocks022_1K_Color.jpg");
-    engine.resources.setup<Texture>("Rocks022_1K_Normal.jpg");
-    engine.resources.setup<Texture>("Rocks022_1K_Roughness.jpg");
-
-    Editor::currentSceneFile = "scene.yml";
+    Editor::currentSceneFile = "scenes/scene.yml";
     if(engine.resources.searchFile(Editor::currentSceneFile) != ""){
         Editor::currentSceneFile = engine.resources.searchFile(Editor::currentSceneFile);
         engine.resources.setup<Scene>(Editor::currentSceneFile).setInstance(&engine).get();
@@ -74,6 +51,10 @@ int main(int argc, char *argv[]){
                 .setPreLoad([](Ref<Scene> &scene, const std::string &file){
                     createDefaultScene(*scene);
                     return true;
+                }).setPostLoad([](Ref<Scene> &scene){
+                    bool valid = scene->postLoad();
+                    engine.resources.remove("scene");
+                    return valid;
                 }).get();
     }
 

@@ -60,21 +60,11 @@ namespace tridot {
         input.init();
         time.init();
         resources.addSearchDirectory(resourceDirectory);
-        if(resourceDirectory.back() == '/'){
-            resources.addSearchDirectory(resourceDirectory + "textures/");
-            resources.addSearchDirectory(resourceDirectory + "shaders/");
-            resources.addSearchDirectory(resourceDirectory + "models/");
-            resources.addSearchDirectory(resourceDirectory + "scenes/");
-        }else{
-            resources.addSearchDirectory(resourceDirectory + "/textures/");
-            resources.addSearchDirectory(resourceDirectory + "/shaders/");
-            resources.addSearchDirectory(resourceDirectory + "/models/");
-            resources.addSearchDirectory(resourceDirectory + "/scenes/");
-        }
         resources.autoReload = autoReload;
+        resources.threadCount = 4;
         physics.init();
-        renderer.init(resources.get<Shader>("mesh.glsl"));
-        pbRenderer.init(resources.get<Shader>("PBR.glsl"));
+        renderer.init(resources.get<Shader>("shaders/mesh.glsl"));
+        pbRenderer.init(resources.get<Shader>("shaders/PBR.glsl"));
         glEnable(GL_DEPTH_TEST);
 
         onUpdate().add("time", [this](){

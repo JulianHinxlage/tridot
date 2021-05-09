@@ -170,8 +170,10 @@ namespace tridot {
                     }
                 }
             }
-            for(auto &entry : entries){
-                entry.second->post();
+
+            for (auto entry = entries.cbegin(), next = entry; entry != entries.cend(); entry = next){
+                ++next;
+                entry->second->post();
             }
         }
 
@@ -181,6 +183,10 @@ namespace tridot {
             }else{
                 searchDirectories.push_back(directory);
             }
+        }
+
+        const std::vector<std::string> &getSearchDirectories(){
+            return searchDirectories;
         }
 
         template<typename T>
@@ -249,6 +255,22 @@ namespace tridot {
         }
 
         template<typename T>
+        Ref<T> getByFile(const std::string &file){
+            uint32_t type = typeid(T).hash_code();
+            for(auto &entry : entries){
+                if(entry.second->type == type) {
+                    if(entry.second->filePath != ""){
+                        if(entry.second->filePath == file || isSubstring(entry.second->filePath, file) == 3){
+                            auto *res = (Entry<T>*)entry.second.get();
+                            return res->resource;
+                        }
+                    }
+                }
+            }
+            return nullptr;
+        }
+
+        template<typename T>
         std::string getName(Ref<T> &resource){
             uint32_t type = typeid(T).hash_code();
             for(auto &entry : entries){
@@ -289,6 +311,14 @@ namespace tridot {
 
         void remove(const std::string &name){
             entries.erase(name);
+        }
+
+        template<typename T>
+        void removeByFile(const std::string &file){
+            auto res = getByFile<T>(file);
+            if(res != nullptr){
+                remove(getName<T>(res));
+            }
         }
 
         template<typename T>
@@ -379,6 +409,8 @@ namespace tridot {
                 type = typeid(T).hash_code();
                 resource = nullptr;
                 status = UNCREATED;
+                timestamp = 0;
+                filePath = "";
             }
 
             static uint64_t getTimestamp(const std::string &file){
@@ -391,7 +423,11 @@ namespace tridot {
 
             virtual void create(){
                 if(resource == nullptr){
-                    if(options.create){
+                    auto res = options.manager->template getByFile<T>(options.file);
+                    if(res != nullptr){
+                        resource = res;
+                        status = LOADED;
+                    }else if(options.create){
                         resource = options.create();
                         status = UNLOADED;
                         if(options.options & JUST_CREATE){
@@ -426,7 +462,7 @@ namespace tridot {
                                     }
                                 }
                             }
-                            if(status != PRE_LOADED){
+                            if(status != PRE_LOADED && status != LOADED){
                                 timestamp = 0;
                                 filePath = "";
                                 if(found){
@@ -442,7 +478,7 @@ namespace tridot {
                         status = PRE_LOADED;
                     }
                 }else{
-                    if(options.manager->autoReload && status == LOADED){
+                    if(options.manager->autoReload && (status == LOADED || status == FAILED_TO_LOAD)){
                         if(!(options.options & LOAD_WITHOUT_FILE) && !(options.options & JUST_CREATE)){
                             if(timestamp != 0){
                                 uint64_t fileTimestamp = getTimestamp(filePath);
@@ -493,6 +529,20 @@ namespace tridot {
                 return nullptr;
             }else{
                 return entry->second.get();
+            }
+        }
+
+        //0 = no, 1 = yes, 2 = yes at start, 3 = yes at end
+        static int isSubstring(const std::string &s1, const std::string &s2){
+            auto pos = s1.find(s2);
+            if(pos == std::string::npos){
+                return 0;
+            }else if(pos == 0){
+                return 2;
+            }else if(pos == abs((int)s1.size() - (int)s2.size())){
+                return 3;
+            }else{
+                return 1;
             }
         }
 

@@ -32,6 +32,36 @@ namespace tridot {
         }
 
         template<typename T>
+        static void resourceDragDropSource(const std::string &name, const Ref<T> &resource = nullptr){
+            if(ImGui::BeginDragDropSource(ImGuiDragDropFlags_None)){
+                std::vector<uint8_t> buffer(sizeof(resource) + name.size());
+                memcpy(buffer.data(), &resource, sizeof(resource));
+                memcpy(buffer.data() + sizeof(resource), name.c_str(), name.size());
+                ImGui::SetDragDropPayload(ecs::Reflection::get<T>()->name().c_str(), buffer.data(), buffer.size());
+                ImGui::Text("%s", name.c_str());
+                ImGui::EndDragDropSource();
+            }
+        }
+
+        template<typename T>
+        static void resourceDragDropTarget(Ref<T> &resource){
+            if(ImGui::BeginDragDropTarget()){
+                if(const ImGuiPayload *payload = ImGui::AcceptDragDropPayload(ecs::Reflection::get<T>()->name().c_str())){
+                    Ref<T> res;
+                    uint8_t *buffer = (uint8_t*)payload->Data;
+                    memcpy(&res, buffer, sizeof(res));
+                    std::string name((char*)buffer + sizeof(res), payload->DataSize - sizeof(res));
+                    if(res != nullptr){
+                        resource = res;
+                    }else{
+                        resource = engine.resources.get<T>(name);
+                    }
+                }
+                ImGui::EndDragDropTarget();
+            }
+        }
+
+        template<typename T>
         static void drawResourceSelection(Ref<T> &res, const std::string &name){
             std::string resName = engine.resources.getName(res);
             if(resName.empty()){
@@ -56,17 +86,8 @@ namespace tridot {
                 ImGui::EndCombo();
             }
 
-            if(ImGui::BeginDragDropSource(ImGuiDragDropFlags_None)){
-                ImGui::SetDragDropPayload(ecs::Reflection::get<T>()->name().c_str(), &res, sizeof(res));
-                ImGui::Text("%s", resName.c_str());
-                ImGui::EndDragDropSource();
-            }
-            if(ImGui::BeginDragDropTarget()){
-                if(const ImGuiPayload *payload = ImGui::AcceptDragDropPayload(ecs::Reflection::get<T>()->name().c_str())){
-                    res = *(Ref<T>*)payload->Data;
-                }
-                ImGui::EndDragDropTarget();
-            }
+            resourceDragDropSource(resName, res);
+            resourceDragDropTarget(res);
         }
     };
 

@@ -16,6 +16,7 @@ namespace tridot {
     PropertiesPanel Editor::properties;
     ResourcePanel Editor::resource;
     ConsolePanel Editor::console;
+    ResourceBrowser Editor::resourceBrowser;
     Undo Editor::undo;
 
     ecs::EntityId Editor::cameraId = -1;
@@ -129,6 +130,7 @@ namespace tridot {
 
         viewport.init();
         console.init();
+        resourceBrowser.init();
 
         engine.onUpdate().add("editor", [](){
             Editor::update();
@@ -250,6 +252,7 @@ namespace tridot {
         properties.update();
         resource.update();
         console.update();
+        resourceBrowser.update();
 
         if(!runtime) {
             if (engine.input.down(Input::KEY_LEFT_CONTROL) || engine.input.down(Input::KEY_RIGHT_CONTROL)) {
