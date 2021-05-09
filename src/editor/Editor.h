@@ -31,7 +31,7 @@ namespace tridot {
         static ResourceBrowser resourceBrowser;
         static Undo undo;
 
-        static ecs::EntityId cameraId;
+        static EntityId cameraId;
         static std::map<std::string, bool> flags;
         static std::string currentSceneFile;
         static uint64_t propertiesWindowFlags;

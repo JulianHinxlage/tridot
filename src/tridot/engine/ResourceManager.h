@@ -14,23 +14,25 @@
 #include <filesystem>
 #include <algorithm>
 
-#define define_has_member(member_name)                                         \
-    template <typename T>                                                      \
-    class has_member_##member_name                                             \
-    {                                                                          \
-        typedef char yes_type;                                                 \
-        typedef long no_type;                                                  \
-        template <typename U> static yes_type test(decltype(&U::member_name)); \
-        template <typename U> static no_type  test(...);                       \
-    public:                                                                    \
-        static constexpr bool value = sizeof(test<T>(0)) == sizeof(yes_type);  \
-    };
-#define has_member(type, member_name)  has_member_##member_name<type>::value
-
-define_has_member(preLoad)
-define_has_member(postLoad)
-
 namespace tridot {
+
+    namespace impl{
+        #define define_has_member(member_name)                                         \
+            template <typename T>                                                      \
+            class has_member_##member_name                                             \
+            {                                                                          \
+                typedef char yes_type;                                                 \
+                typedef long no_type;                                                  \
+                template <typename U> static yes_type test(decltype(&U::member_name)); \
+                template <typename U> static no_type  test(...);                       \
+            public:                                                                    \
+                static constexpr bool value = sizeof(test<T>(0)) == sizeof(yes_type);  \
+            };
+        #define has_member(type, member_name)  tridot::impl::has_member_##member_name<type>::value
+
+        define_has_member(preLoad)
+        define_has_member(postLoad)
+    }
 
     class ResourceManager {
     public:

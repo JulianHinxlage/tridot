@@ -21,33 +21,26 @@ namespace tridot {
     }
 
     void ConsolePanel::update() {
-        if (ImGui::GetCurrentContext() != nullptr) {
-            bool& open = Editor::getFlag("Console");
-            if (open) {
-                if (ImGui::Begin("Console", &open, ImGuiWindowFlags_HorizontalScrollbar)) {
-                    ImGui::SetWindowSize(ImVec2(400, 400), ImGuiCond_FirstUseEver);
-                    std::string str = consoleLog.str();
-                    std::string line;
-                    for (char c : str) {
-                        if (c == '\n') {
-                            ImGui::Text("%s", line.c_str());
-                            line.clear();
-                        }
-                        else {
-                            line.push_back(c);
-                        }
-                    }
-                    if (line.size() > 0) {
-                        ImGui::Text("%s", line.c_str());
-                        line.clear();
-                    }
-                    if (ImGui::GetScrollY() >= ImGui::GetScrollMaxY()) {
-                        ImGui::SetScrollHereY(1.0f);
-                    }
+        EditorGui::window("Console", [](){
+            std::string str = consoleLog.str();
+            std::string line;
+            for (char c : str) {
+                if (c == '\n') {
+                    ImGui::Text("%s", line.c_str());
+                    line.clear();
                 }
-                ImGui::End();
+                else {
+                    line.push_back(c);
+                }
             }
-        }
+            if (line.size() > 0) {
+                ImGui::Text("%s", line.c_str());
+                line.clear();
+            }
+            if (ImGui::GetScrollY() >= ImGui::GetScrollMaxY()) {
+                ImGui::SetScrollHereY(1.0f);
+            }
+        });
     }
 
 }

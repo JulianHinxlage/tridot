@@ -5,7 +5,7 @@
 #ifndef TRIDOT_TRANSFORM_H
 #define TRIDOT_TRANSFORM_H
 
-#include "tridot/ecs/config.h"
+#include "tridot/core/config.h"
 #include <glm/glm.hpp>
 
 namespace tridot {
@@ -18,7 +18,7 @@ namespace tridot {
 
         class Parent{
         public:
-            ecs::EntityId id;
+            EntityId id;
             glm::mat4 matrix;
         } parent;
 

@@ -7,7 +7,7 @@
 
 #include "Registry.h"
 
-namespace ecs {
+namespace tridot {
 
     template<typename... Components>
     class View {

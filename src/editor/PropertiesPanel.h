@@ -5,14 +5,14 @@
 #ifndef TRIDOT_PROPERTIES_PANEL_H
 #define TRIDOT_PROPERTIES_PANEL_H
 
-#include "tridot/ecs/config.h"
+#include "tridot/core/config.h"
 
 namespace tridot {
 
 	class PropertiesPanel {
 	public:
 		void update();
-		void updateProperties(ecs::EntityId id);
+		void updateProperties(EntityId id);
 		void updateMultiProperties();
 	};
 

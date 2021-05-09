@@ -23,7 +23,7 @@ namespace tridot {
                 }
             }
             for(auto &comp : actions[nextAction-1].components){
-                ecs::EntityId id = comp.id;
+                EntityId id = comp.id;
                 if(!engine.exists(id)){
                     id = engine.createHinted(id);
                 }
@@ -31,7 +31,7 @@ namespace tridot {
                     engine.addReflect(id, comp.typeId);
                 }
                 void *data = engine.get(id, comp.typeId);
-                ecs::Reflection::get(comp.typeId)->copy(comp.startData.get(), data);
+                Reflection::get(comp.typeId)->copy(comp.startData.get(), data);
             }
             nextAction--;
         }
@@ -47,7 +47,7 @@ namespace tridot {
             for(auto &comp : actions[nextAction].components){
                 if(engine.has(comp.id, comp.typeId)){
                     void *data = engine.get(comp.id, comp.typeId);
-                    ecs::Reflection::get(comp.typeId)->copy(comp.endData.get(), data);
+                    Reflection::get(comp.typeId)->copy(comp.endData.get(), data);
                 }
             }
             nextAction++;
@@ -76,9 +76,9 @@ namespace tridot {
         }
     }
 
-    void Undo::destroyEntity(ecs::EntityId id) {
+    void Undo::destroyEntity(EntityId id) {
         if(enabled) {
-            for (auto &type : ecs::Reflection::getTypes()) {
+            for (auto &type : Reflection::getTypes()) {
                 if (engine.has(id, type->id())) {
                     changeComponent(id, type, engine.get(id, type->id()));
                 }
@@ -92,7 +92,7 @@ namespace tridot {
         }
     }
 
-    void Undo::duplicateEntity(ecs::EntityId id, ecs::EntityId newId) {
+    void Undo::duplicateEntity(EntityId id, EntityId newId) {
         if(enabled) {
             addCustomAction([newId]() {
                 engine.destroy(newId);
@@ -105,7 +105,7 @@ namespace tridot {
         }
     }
 
-    void Undo::changeComponent(ecs::EntityId id, ecs::Reflection::Type *type, void *value) {
+    void Undo::changeComponent(EntityId id, Reflection::Type *type, void *value) {
         if(enabled) {
             for (auto &comp : actionBuffer.components) {
                 if (comp.id == id && comp.typeId == type->id()) {

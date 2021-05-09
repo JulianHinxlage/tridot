@@ -5,11 +5,11 @@
 #ifndef TRIDOT_POOL_H
 #define TRIDOT_POOL_H
 
-#include "config.h"
+#include "tridot/core/config.h"
 #include "Signal.h"
 #include <memory>
 
-namespace ecs {
+namespace tridot {
 
     class Registry;
 
@@ -17,7 +17,7 @@ namespace ecs {
     public:
         uint32_t getIndex(EntityId id){
             uint32_t pageIndex = id >> poolPageSizeBits;
-            ECS_ASSERT(pageIndex >= 0 && pageIndex < sparse.size(), "index out of bounds")
+            TRI_ASSERT(pageIndex >= 0 && pageIndex < sparse.size(), "index out of bounds")
             uint32_t *page = sparse[pageIndex].get();
             if(page == nullptr){
                 return -1;
@@ -27,7 +27,7 @@ namespace ecs {
         }
 
         EntityId getId(uint32_t index){
-            ECS_ASSERT(index >= 0 && index < dense.size(), "index out of bounds")
+            TRI_ASSERT(index >= 0 && index < dense.size(), "index out of bounds")
             return dense[index];
         }
 
@@ -49,7 +49,7 @@ namespace ecs {
         }
 
         virtual void* get(uint32_t index){
-            ECS_ASSERT(index < dense.size(), "index out of bounds")
+            TRI_ASSERT(index < dense.size(), "index out of bounds")
             return &dense[index];
         }
 
@@ -84,8 +84,8 @@ namespace ecs {
         }
 
         virtual void swap(uint32_t index1, uint32_t index2){
-            ECS_ASSERT(index1 >= 0 && index1 < dense.size(), "index out of bounds")
-            ECS_ASSERT(index2 >= 0 && index2 < dense.size(), "index out of bounds")
+            TRI_ASSERT(index1 >= 0 && index1 < dense.size(), "index out of bounds")
+            TRI_ASSERT(index2 >= 0 && index2 < dense.size(), "index out of bounds")
             EntityId id1 = dense[index1];
             EntityId id2 = dense[index2];
             std::swap(dense[index1], dense[index2]);

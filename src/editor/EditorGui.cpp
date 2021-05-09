@@ -50,7 +50,7 @@ namespace tridot {
         }
 
         if(!noMember){
-            for(auto &member : ecs::Reflection::get(reflectId)->member()){
+            for(auto &member : Reflection::get(reflectId)->member()){
                 drawType(member.typeId, (char*)ptr + member.offset, member.name, reflectId);
             }
         }
@@ -81,6 +81,21 @@ namespace tridot {
     void EditorGui::addMember(int parentReflectId, int reflectId, const std::string &name,
                               std::function<void(void *, const std::string &)> func) {
         data.member.push_back({parentReflectId, reflectId, name, func});
+    }
+
+    void EditorGui::window(const std::string &name, const std::function<void()> &func) {
+        if (ImGui::GetCurrentContext() != nullptr) {
+            bool& open = Editor::getFlag(name);
+            if (open) {
+                if (ImGui::Begin(name.c_str(), &open, ImGuiWindowFlags_HorizontalScrollbar)) {
+                    ImGui::SetWindowSize(ImVec2(400, 400), ImGuiCond_FirstUseEver);
+                    if(func){
+                        func();
+                    }
+                }
+                ImGui::End();
+            }
+        }
     }
 
 }
@@ -228,7 +243,7 @@ TRI_INIT("panels"){
                         ImGui::Image((void *) (size_t) texture->getId(), ImVec2(200 * aspect, 200), ImVec2(0, 1), ImVec2(1, 0));
 
                         if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID)) {
-                            ImGui::SetDragDropPayload(ecs::Reflection::get<Texture>()->name().c_str(), &texture, sizeof(texture));
+                            ImGui::SetDragDropPayload(Reflection::get<Texture>()->name().c_str(), &texture, sizeof(texture));
                             ImGui::Text("Texture");
                             ImGui::EndDragDropSource();
                         }

@@ -7,7 +7,7 @@
 
 #include "Reflection.h"
 
-namespace ecs{
+namespace tridot{
 
     class TypeMap{
     public:

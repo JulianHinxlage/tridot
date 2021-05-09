@@ -5,7 +5,7 @@
 #ifndef TRIDOT_ENTITIES_PANEL_H
 #define TRIDOT_ENTITIES_PANEL_H
 
-#include "tridot/ecs/config.h"
+#include "tridot/core/config.h"
 #include <map>
 #include <vector>
 
@@ -15,12 +15,12 @@ namespace tridot {
 	public:
 		void update();
 		void updateChildren();
-        void updateEntity(ecs::EntityId id, bool controlDown, bool shiftDown);
-        void updateEntityMenu(ecs::EntityId id);
-        std::map<ecs::EntityId, std::vector<ecs::EntityId>> children;
-        std::map<ecs::EntityId, bool> treesOpen;
-        ecs::EntityId clickedEntity = -1;
-        ecs::EntityId hoveredEntity = -1;
+        void updateEntity(EntityId id, bool controlDown, bool shiftDown);
+        void updateEntityMenu(EntityId id);
+        std::map<EntityId, std::vector<EntityId>> children;
+        std::map<EntityId, bool> treesOpen;
+        EntityId clickedEntity = -1;
+        EntityId hoveredEntity = -1;
 	};
 
 }

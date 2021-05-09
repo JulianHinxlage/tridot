@@ -19,7 +19,7 @@ namespace tridot {
     ResourceBrowser Editor::resourceBrowser;
     Undo Editor::undo;
 
-    ecs::EntityId Editor::cameraId = -1;
+    EntityId Editor::cameraId = -1;
     std::map<std::string, bool> Editor::flags;
     std::string Editor::currentSceneFile = "";
     uint64_t Editor::propertiesWindowFlags = 0;

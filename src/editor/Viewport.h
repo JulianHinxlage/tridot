@@ -6,7 +6,7 @@
 #define TRIDOT_VIEWPORT_H
 
 #include "EditorCamera.h"
-#include "tridot/ecs/config.h"
+#include "tridot/core/config.h"
 #include <imgui/imgui.h>
 #include <imguizmo/ImGuizmo.h>
 

@@ -11,7 +11,7 @@
 #include <typeinfo>
 #include <map>
 
-namespace ecs{
+namespace tridot{
 
     namespace impl {
         template<class T, class EqualTo>
@@ -180,33 +180,33 @@ namespace ecs{
         class ReflectionRegisterer{
         public:
             ReflectionRegisterer(const std::string &name){
-                ecs::Reflection::registerType<T>(name);
+                Reflection::registerType<T>(name);
             }
             ~ReflectionRegisterer(){
-                ecs::Reflection::unregisterType<T>();
+                Reflection::unregisterType<T>();
             }
         };
     }
 
 }
 
-#define REFLECT_TYPE_NAME(type, name) ecs::impl::ReflectionRegisterer<type> ECS_UNIQUE_NAME(___ecs_global___)(#name);
-#define REFLECT_TYPE(type) REFLECT_TYPE_NAME(type, type)
+#define TRI_REFLECT_TYPE_NAME(type, name) tridot::impl::ReflectionRegisterer<type> TRI_UNIQUE_NAME(___tri_global___)(#name);
+#define TRI_REFLECT_TYPE(type) TRI_REFLECT_TYPE_NAME(type, type)
 
-#define REFLECT_MEMBER(type, member) bool ECS_UNIQUE_NAME(___ecs_global___) = (ecs::Reflection::registerMember<type, decltype(type::member)>(#member, offsetof(type, member)), true);
-#define REFLECT_MEMBER2(type, member, member2) REFLECT_MEMBER(type, member) REFLECT_MEMBER(type, member2)
-#define REFLECT_MEMBER3(type, member, member2, member3) REFLECT_MEMBER(type, member) REFLECT_MEMBER(type, member2) REFLECT_MEMBER(type, member3)
-#define REFLECT_MEMBER4(type, member, member2, member3, member4) REFLECT_MEMBER(type, member) REFLECT_MEMBER(type, member2) REFLECT_MEMBER(type, member3) REFLECT_MEMBER(type, member4)
-#define REFLECT_MEMBER5(type, member, member2, member3, member4, member5) REFLECT_MEMBER(type, member) REFLECT_MEMBER(type, member2) REFLECT_MEMBER(type, member3) REFLECT_MEMBER(type, member4) REFLECT_MEMBER(type, member5)
-#define REFLECT_MEMBER6(type, member, member2, member3, member4, member5, member6) REFLECT_MEMBER(type, member) REFLECT_MEMBER(type, member2) REFLECT_MEMBER(type, member3) REFLECT_MEMBER(type, member4) REFLECT_MEMBER(type, member5) REFLECT_MEMBER(type, member6)
-#define REFLECT_MEMBER7(type, member, member2, member3, member4, member5, member6, member7) REFLECT_MEMBER(type, member) REFLECT_MEMBER(type, member2) \
-    REFLECT_MEMBER(type, member3) REFLECT_MEMBER(type, member4) REFLECT_MEMBER(type, member5) REFLECT_MEMBER(type, member6) REFLECT_MEMBER(type, member7)
-#define REFLECT_MEMBER8(type, member, member2, member3, member4, member5, member6, member7, member8) REFLECT_MEMBER(type, member) REFLECT_MEMBER(type, member2) \
-    REFLECT_MEMBER(type, member3) REFLECT_MEMBER(type, member4) REFLECT_MEMBER(type, member5) REFLECT_MEMBER(type, member6) REFLECT_MEMBER(type, member7)  REFLECT_MEMBER(type, member8)
-#define REFLECT_MEMBER9(type, member, member2, member3, member4, member5, member6, member7, member8, member9) REFLECT_MEMBER(type, member) REFLECT_MEMBER(type, member2) \
-    REFLECT_MEMBER(type, member3) REFLECT_MEMBER(type, member4) REFLECT_MEMBER(type, member5) REFLECT_MEMBER(type, member6) REFLECT_MEMBER(type, member7)  REFLECT_MEMBER(type, member8) REFLECT_MEMBER(type, member9)
-#define REFLECT_MEMBER10(type, member, member2, member3, member4, member5, member6, member7, member8, member9, member10) REFLECT_MEMBER(type, member) REFLECT_MEMBER(type, member2) \
-    REFLECT_MEMBER(type, member3) REFLECT_MEMBER(type, member4) REFLECT_MEMBER(type, member5) REFLECT_MEMBER(type, member6) REFLECT_MEMBER(type, member7)  REFLECT_MEMBER(type, member8) REFLECT_MEMBER(type, member9) REFLECT_MEMBER(type, member10)
+#define TRI_REFLECT_MEMBER(type, member) bool TRI_UNIQUE_NAME(___tri_global___) = (Reflection::registerMember<type, decltype(type::member)>(#member, offsetof(type, member)), true);
+#define TRI_REFLECT_MEMBER2(type, member, member2) TRI_REFLECT_MEMBER(type, member) TRI_REFLECT_MEMBER(type, member2)
+#define TRI_REFLECT_MEMBER3(type, member, member2, member3) TRI_REFLECT_MEMBER(type, member) TRI_REFLECT_MEMBER(type, member2) TRI_REFLECT_MEMBER(type, member3)
+#define TRI_REFLECT_MEMBER4(type, member, member2, member3, member4) TRI_REFLECT_MEMBER(type, member) TRI_REFLECT_MEMBER(type, member2) TRI_REFLECT_MEMBER(type, member3) TRI_REFLECT_MEMBER(type, member4)
+#define TRI_REFLECT_MEMBER5(type, member, member2, member3, member4, member5) TRI_REFLECT_MEMBER(type, member) TRI_REFLECT_MEMBER(type, member2) TRI_REFLECT_MEMBER(type, member3) TRI_REFLECT_MEMBER(type, member4) TRI_REFLECT_MEMBER(type, member5)
+#define TRI_REFLECT_MEMBER6(type, member, member2, member3, member4, member5, member6) TRI_REFLECT_MEMBER(type, member) TRI_REFLECT_MEMBER(type, member2) TRI_REFLECT_MEMBER(type, member3) TRI_REFLECT_MEMBER(type, member4) TRI_REFLECT_MEMBER(type, member5) TRI_REFLECT_MEMBER(type, member6)
+#define TRI_REFLECT_MEMBER7(type, member, member2, member3, member4, member5, member6, member7) TRI_REFLECT_MEMBER(type, member) TRI_REFLECT_MEMBER(type, member2) \
+    TRI_REFLECT_MEMBER(type, member3) TRI_REFLECT_MEMBER(type, member4) TRI_REFLECT_MEMBER(type, member5) TRI_REFLECT_MEMBER(type, member6) TRI_REFLECT_MEMBER(type, member7)
+#define TRI_REFLECT_MEMBER8(type, member, member2, member3, member4, member5, member6, member7, member8) TRI_REFLECT_MEMBER(type, member) TRI_REFLECT_MEMBER(type, member2) \
+    TRI_REFLECT_MEMBER(type, member3) TRI_REFLECT_MEMBER(type, member4) TRI_REFLECT_MEMBER(type, member5) TRI_REFLECT_MEMBER(type, member6) TRI_REFLECT_MEMBER(type, member7)  TRI_REFLECT_MEMBER(type, member8)
+#define TRI_REFLECT_MEMBER9(type, member, member2, member3, member4, member5, member6, member7, member8, member9) TRI_REFLECT_MEMBER(type, member) TRI_REFLECT_MEMBER(type, member2) \
+    TRI_REFLECT_MEMBER(type, member3) TRI_REFLECT_MEMBER(type, member4) TRI_REFLECT_MEMBER(type, member5) TRI_REFLECT_MEMBER(type, member6) TRI_REFLECT_MEMBER(type, member7)  TRI_REFLECT_MEMBER(type, member8) TRI_REFLECT_MEMBER(type, member9)
+#define TRI_REFLECT_MEMBER10(type, member, member2, member3, member4, member5, member6, member7, member8, member9, member10) TRI_REFLECT_MEMBER(type, member) TRI_REFLECT_MEMBER(type, member2) \
+    TRI_REFLECT_MEMBER(type, member3) TRI_REFLECT_MEMBER(type, member4) TRI_REFLECT_MEMBER(type, member5) TRI_REFLECT_MEMBER(type, member6) TRI_REFLECT_MEMBER(type, member7)  TRI_REFLECT_MEMBER(type, member8) TRI_REFLECT_MEMBER(type, member9) TRI_REFLECT_MEMBER(type, member10)
 
 
 #endif //TRIDOT_REFLECTION_H

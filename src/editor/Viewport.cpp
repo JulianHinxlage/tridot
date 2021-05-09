@@ -25,27 +25,21 @@ namespace tridot {
 
     void Viewport::update() {
         if(ImGui::GetCurrentContext() != nullptr) {
-            bool &open = Editor::getFlag("Viewport");
-            if (open) {
-                ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
-                if (ImGui::Begin("Viewport", &open)) {
-                    ImGui::SetWindowSize(ImVec2(400, 400), ImGuiCond_FirstUseEver);
+            ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
+            EditorGui::window("Viewport", [this]() {
+                updateControlBar();
+                drawSelectionOverlay();
+                draw();
+                updateGizmos();
+                updateMousePicking();
 
-                    updateControlBar();
-                    drawSelectionOverlay();
-                    draw();
-                    updateGizmos();
-                    updateMousePicking();
-
-                    //camera control
-                    if(engine.has<PerspectiveCamera>(Editor::cameraId)) {
-                        PerspectiveCamera &camera = engine.get<PerspectiveCamera>(Editor::cameraId);
-                        editorCamera.update(camera, ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows), !controlDown);
-                    }
+                //camera control
+                if (engine.has<PerspectiveCamera>(Editor::cameraId)) {
+                    PerspectiveCamera &camera = engine.get<PerspectiveCamera>(Editor::cameraId);
+                    editorCamera.update(camera, ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows), !controlDown);
                 }
-                ImGui::End();
-                ImGui::PopStyleVar();
-            }
+            });
+            ImGui::PopStyleVar();
         }
     }
 
@@ -178,11 +172,11 @@ namespace tridot {
         }
     }
 
-    bool isParentSelected(ecs::EntityId id){
+    bool isParentSelected(EntityId id){
         if(engine.has<Transform>(id)){
             Transform &t = engine.get<Transform>(id);
             if(t.parent.id != -1){
-                for (auto &sel : Editor::selection.selectedEntities) {
+                for (auto &sel : Editor::selection.entities) {
                     if(sel.first == t.parent.id){
                         return true;
                     }
@@ -197,7 +191,7 @@ namespace tridot {
         if(engine.has<PerspectiveCamera>(Editor::cameraId)) {
             PerspectiveCamera &camera = engine.get<PerspectiveCamera>(Editor::cameraId);
 
-            ecs::EntityId selectedEntity = Editor::selection.getSingleSelection();
+            EntityId selectedEntity = Editor::selection.getSingleSelection();
             if(selectedEntity != -1) {
 
                 //single entity
@@ -228,14 +222,14 @@ namespace tridot {
                                             (float *) &matrix, nullptr, (snap ^ controlDown) ? (float*)&snapValues : nullptr)){
                         if (!modifiedLast) {
                             Editor::undo.beginAction();
-                            Editor::undo.changeComponent(selectedEntity, ecs::Reflection::get<Transform>(), &transform);
+                            Editor::undo.changeComponent(selectedEntity, Reflection::get<Transform>(), &transform);
                         }
 
                         matrix = glm::inverse(transform.parent.matrix) * matrix;
                         transform.decompose(matrix);
                         modifiedLast = true;
 
-                        Editor::undo.changeComponent(selectedEntity, ecs::Reflection::get<Transform>(), &transform);
+                        Editor::undo.changeComponent(selectedEntity, Reflection::get<Transform>(), &transform);
                     } else {
                         if (!ImGuizmo::IsUsing()) {
                             if (modifiedLast) {
@@ -249,12 +243,12 @@ namespace tridot {
             }else{
 
                 //multiple entities
-                if(Editor::selection.selectedEntities.size() > 1) {
+                if(Editor::selection.entities.size() > 1) {
 
                     Transform transform;
                     int count = 0;
-                    for (auto& sel : Editor::selection.selectedEntities) {
-                        ecs::EntityId id = sel.first;
+                    for (auto& sel : Editor::selection.entities) {
+                        EntityId id = sel.first;
                         if (engine.has<Transform>(id)) {
                             count++;
                         }
@@ -262,8 +256,8 @@ namespace tridot {
 
                     bool differeingRotation = false;
                     int index = 0;
-                    for (auto &sel : Editor::selection.selectedEntities) {
-                        ecs::EntityId id = sel.first;
+                    for (auto &sel : Editor::selection.entities) {
+                        EntityId id = sel.first;
                         if (engine.has<Transform>(id)) {
                             Transform t;
                             t.decompose(engine.get<Transform>(id).getMatrix());
@@ -305,15 +299,15 @@ namespace tridot {
                             Editor::undo.beginAction();
                         }
 
-                        for (auto &sel : Editor::selection.selectedEntities) {
-                            ecs::EntityId id = sel.first;
+                        for (auto &sel : Editor::selection.entities) {
+                            EntityId id = sel.first;
                             if (engine.has<Transform>(id)) {
                                 Transform &t = engine.get<Transform>(id);
 
 
                                 if(!isParentSelected(id)){
                                     if (!modifiedLast) {
-                                        Editor::undo.changeComponent(id, ecs::Reflection::get<Transform>(), &t);
+                                        Editor::undo.changeComponent(id, Reflection::get<Transform>(), &t);
                                     }
 
                                     glm::mat4 m = matrix * inverse * t.getMatrix();
@@ -327,7 +321,7 @@ namespace tridot {
                                         t.decompose(m);
                                     }
 
-                                    Editor::undo.changeComponent(id, ecs::Reflection::get<Transform>(), &t);
+                                    Editor::undo.changeComponent(id, Reflection::get<Transform>(), &t);
                                 }
                             }
                         }
@@ -406,7 +400,7 @@ namespace tridot {
     }
 
     void Viewport::clear() {
-        engine.view<PerspectiveCamera>().each([&](ecs::EntityId id, PerspectiveCamera &camera){
+        engine.view<PerspectiveCamera>().each([&](EntityId id, PerspectiveCamera &camera){
             if(Editor::cameraId == -1){
                 Editor::cameraId = id;
             }
@@ -417,7 +411,7 @@ namespace tridot {
             }
         });
 
-        engine.view<OrthographicCamera>().each([&](ecs::EntityId id, OrthographicCamera &camera){
+        engine.view<OrthographicCamera>().each([&](EntityId id, OrthographicCamera &camera){
             camera.aspectRatio = updateFramebuffer(camera.target, false, viewportSize);
         });
     }
@@ -430,8 +424,8 @@ namespace tridot {
             selectionOverlayTarget->clear(Color::transparent);
             engine.pbRenderer.begin(camera.getProjection(), camera.position, selectionOverlayTarget);
 
-            for (auto &sel : Editor::selection.selectedEntities) {
-                ecs::EntityId id = sel.first;
+            for (auto &sel : Editor::selection.entities) {
+                EntityId id = sel.first;
                 if (engine.exists(id)) {
                     if (engine.has<Transform>(id)) {
                         Transform &transform = engine.get<Transform>(id);
@@ -449,8 +443,8 @@ namespace tridot {
             selectionOverlayTarget->bind();
             glClear(GL_DEPTH_BUFFER_BIT);
 
-            for (auto &sel : Editor::selection.selectedEntities) {
-                ecs::EntityId id = sel.first;
+            for (auto &sel : Editor::selection.entities) {
+                EntityId id = sel.first;
                 if (engine.exists(id)) {
                     if (engine.has<Transform>(id)) {
                         Transform &transform = engine.get<Transform>(id);

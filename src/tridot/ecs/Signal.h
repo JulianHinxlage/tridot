@@ -7,7 +7,7 @@
 
 #include <functional>
 
-namespace ecs {
+namespace tridot {
 
     template<typename... Args>
     class SignalRef;

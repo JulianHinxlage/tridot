@@ -15,11 +15,11 @@
 #include "tridot/components/Tag.h"
 #include <fstream>
 
-using namespace ecs;
+using namespace tridot;
 
 namespace tridot {
 
-    void Serializer::serializeEntity(ecs::EntityId id, YAML::Emitter& out, ecs::Registry& reg, ResourceManager& resources){
+    void Serializer::serializeEntity(EntityId id, YAML::Emitter& out, Registry& reg, ResourceManager& resources){
         out << YAML::BeginMap;
         out << YAML::Key << "id" << YAML::Value << id;
 
@@ -35,7 +35,7 @@ namespace tridot {
         out << YAML::EndMap;
     }
     
-    ecs::EntityId Serializer::deserializeEntity(YAML::Node &in, ecs::Registry& reg, ResourceManager& resources) {
+    EntityId Serializer::deserializeEntity(YAML::Node &in, Registry& reg, ResourceManager& resources) {
         EntityId id = in["id"].as<EntityId>(-1);
         id = reg.createHinted(id);
         in.remove("id");
@@ -237,7 +237,7 @@ namespace tridot {
         }
     }
 
-    bool Serializer::save(const std::string &file, ecs::Registry &reg, ResourceManager &resources, bool binary) {
+    bool Serializer::save(const std::string &file, Registry &reg, ResourceManager &resources, bool binary) {
         if(binary){
             Log::error(false, "binary serialisation is not yet implemented");
             return false;
@@ -297,7 +297,7 @@ namespace tridot {
         }
     }
 
-    bool Serializer::load(const std::string &file, ecs::Registry &reg, ResourceManager &resources) {
+    bool Serializer::load(const std::string &file, Registry &reg, ResourceManager &resources) {
         std::ifstream stream(file);
         if(stream.is_open()){
             YAML::Node data;

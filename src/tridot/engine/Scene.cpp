@@ -48,7 +48,7 @@ namespace tridot {
 
     void Scene::copy(const Scene &source) {
         active = source.active;
-        ecs::Registry::copy(source);
+        Registry::copy(source);
     }
 
 }

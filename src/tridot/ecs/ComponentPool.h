@@ -7,13 +7,13 @@
 
 #include "Pool.h"
 
-namespace ecs {
+namespace tridot {
 
     template<typename Component>
     class ComponentPool : public Pool {
     public:
         virtual void* get(uint32_t index) override {
-            ECS_ASSERT(index >= 0 && index <= components.size(), "index out of bounds")
+            TRI_ASSERT(index >= 0 && index <= components.size(), "index out of bounds")
             return &components[index];
         }
 

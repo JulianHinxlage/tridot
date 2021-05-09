@@ -6,6 +6,7 @@
 #define TRIDOT_CONFIG_H
 
 #include <cassert>
+#include <cstdint>
 
 #if WIN32
 #ifdef TRI_DLL_EXPORT
@@ -37,5 +38,17 @@
 #else
 #define TRI_ASSERT(expr, msg)
 #endif
+
+#define TRI_UNIQUE_NAME_3(name, line, number) name##line##number
+#define TRI_UNIQUE_NAME_2(name, line, number) TRI_UNIQUE_NAME_3(name, line, number)
+#define TRI_UNIQUE_NAME(name) TRI_UNIQUE_NAME_2(name, __LINE__, __COUNTER__)
+
+namespace tridot{
+
+    const uint32_t poolPageSizeBits = 8;
+    typedef uint32_t EntityId;
+    typedef uint64_t SignatureBitMap;
+
+}
 
 #endif //TRIDOT_CONFIG_H

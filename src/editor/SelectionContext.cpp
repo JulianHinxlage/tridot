@@ -10,29 +10,29 @@
 
 namespace tridot {
 
-    void SelectionContext::select(ecs::EntityId id, bool reset) {
+    void SelectionContext::select(EntityId id, bool reset) {
         if(reset) {
-            selectedEntities.clear();
+            entities.clear();
         }
-        selectedEntities[id] = true;
+        entities[id] = true;
         lastSelected = id;
     }
 
     void SelectionContext::unselect() {
-        selectedEntities.clear();
+        entities.clear();
     }
 
-    void SelectionContext::unselect(ecs::EntityId id) {
-        selectedEntities.erase(id);
+    void SelectionContext::unselect(EntityId id) {
+        entities.erase(id);
     }
 
-    bool SelectionContext::isSelected(ecs::EntityId id) {
-        return selectedEntities.find(id) != selectedEntities.end();
+    bool SelectionContext::isSelected(EntityId id) {
+        return entities.find(id) != entities.end();
     }
 
-    ecs::EntityId SelectionContext::getSingleSelection() {
-        if(selectedEntities.size() == 1){
-            return selectedEntities.begin()->first;
+    EntityId SelectionContext::getSingleSelection() {
+        if(entities.size() == 1){
+            return entities.begin()->first;
         }else{
             return -1;
         }
@@ -40,17 +40,17 @@ namespace tridot {
 
     void SelectionContext::destroyAll() {
         Editor::undo.beginAction();
-        for(auto &id : selectedEntities){
+        for(auto &id : entities){
             Editor::undo.destroyEntity(id.first);
             engine.destroy(id.first);
         }
-        selectedEntities.clear();
+        entities.clear();
         Editor::undo.endAction();
     }
 
-    ecs::EntityId SelectionContext::duplicate(ecs::EntityId id, bool addAction) {
-        ecs::EntityId newId = engine.create();
-        for(auto &type : ecs::Reflection::getTypes()){
+    EntityId SelectionContext::duplicate(EntityId id, bool addAction) {
+        EntityId newId = engine.create();
+        for(auto &type : Reflection::getTypes()){
             auto *pool = engine.getPool(type->id());
             if(pool && pool->has(id)){
                 pool->add(newId, pool->getById(id));
@@ -67,13 +67,13 @@ namespace tridot {
     }
 
     void SelectionContext::duplicateAll() {
-        auto tmp = selectedEntities;
-        std::map<ecs::EntityId, bool> newTmp;
+        auto tmp = entities;
+        std::map<EntityId, bool> newTmp;
         unselect();
 
         Editor::undo.beginAction();
         for(auto &sel : tmp){
-            ecs::EntityId id = duplicate(sel.first);
+            EntityId id = duplicate(sel.first);
             newTmp[id] = true;
             select(id, false);
         }

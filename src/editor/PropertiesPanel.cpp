@@ -8,35 +8,28 @@
 #include "tridot/engine/Engine.h"
 #include <imgui/imgui.h>
 
-using namespace ecs;
+using namespace tridot;
 
 namespace tridot {
 
 	void PropertiesPanel::update(){
-        if (ImGui::GetCurrentContext() != nullptr) {
-            bool& open = Editor::getFlag("Properties");
-            if (open) {
-                if (ImGui::Begin("Properties", &open)) {
-                    ImGui::SetWindowSize(ImVec2(400, 400), ImGuiCond_FirstUseEver);
-                    EntityId id = Editor::selection.getSingleSelection();
-                    if (id != -1 && engine.exists(id)) {
-                        //single entity
-                        updateProperties(id);
-                    }
-                    else if (Editor::selection.selectedEntities.size() > 1) {
-                        //multiple entities
-                        updateMultiProperties();
-                    }
-                }
-                ImGui::End();
+        EditorGui::window("Properties", [this](){
+            EntityId id = Editor::selection.getSingleSelection();
+            if (id != -1 && engine.exists(id)) {
+                //single entity
+                updateProperties(id);
             }
-        }
+            else if (Editor::selection.entities.size() > 1) {
+                //multiple entities
+                updateMultiProperties();
+            }
+        });
 	}
 
-    bool getDifferences(ecs::Reflection::Type* type, void* v1, void* v2, std::vector<std::pair<int, ecs::Reflection::Type*>>& differences, int currentOffset = 0) {
+    bool getDifferences(Reflection::Type* type, void* v1, void* v2, std::vector<std::pair<int, Reflection::Type*>>& differences, int currentOffset = 0) {
         for (auto& member : type->member()) {
             currentOffset += member.offset;
-            getDifferences(ecs::Reflection::get(member.typeId), (uint8_t*)v1 + member.offset, (uint8_t*)v2 + member.offset, differences, currentOffset);
+            getDifferences(Reflection::get(member.typeId), (uint8_t*)v1 + member.offset, (uint8_t*)v2 + member.offset, differences, currentOffset);
             currentOffset -= member.offset;
         }
         if (type->member().size() == 0) {
@@ -47,8 +40,8 @@ namespace tridot {
         return differences.size() > 0;
     }
 
-	void PropertiesPanel::updateProperties(ecs::EntityId id){
-        auto& types = ecs::Reflection::getTypes();
+	void PropertiesPanel::updateProperties(EntityId id){
+        auto& types = Reflection::getTypes();
         if (ImGui::Button("add Component")) {
             ImGui::OpenPopup("add");
         }
@@ -82,7 +75,7 @@ namespace tridot {
         ImGui::BeginChild("properties", ImVec2(0, 0), false, Editor::propertiesWindowFlags);
         Editor::propertiesWindowFlags = 0;
 
-        static ecs::Reflection::Type *lastChange;
+        static Reflection::Type *lastChange;
 
         for (auto& type : types) {
             if (type) {
@@ -95,7 +88,7 @@ namespace tridot {
 
                         EditorGui::drawType(type->id(), comp, type->name());
 
-                        std::vector<std::pair<int, ecs::Reflection::Type*>> differences;
+                        std::vector<std::pair<int, Reflection::Type*>> differences;
                         if(getDifferences(type, comp, compBuffer,differences)){
                             Editor::undo.changeComponent(id, type, compBuffer);
                             Editor::undo.changeComponent(id, type, comp);
@@ -125,7 +118,7 @@ namespace tridot {
 	}
 
 	void PropertiesPanel::updateMultiProperties(){
-        auto& types = ecs::Reflection::getTypes();
+        auto& types = Reflection::getTypes();
         if (ImGui::Button("add Component")) {
             ImGui::OpenPopup("add");
         }
@@ -137,8 +130,8 @@ namespace tridot {
             for (auto& type : types) {
                 if (type) {
                     bool show = false;
-                    for (auto& sel : Editor::selection.selectedEntities) {
-                        ecs::EntityId id = sel.first;
+                    for (auto& sel : Editor::selection.entities) {
+                        EntityId id = sel.first;
                         auto* pool = engine.getPool(type->id());
                         if (pool && !pool->has(id)) {
                             show = true;
@@ -148,8 +141,8 @@ namespace tridot {
                     if (show) {
                         if (ImGui::Button(type->name().c_str())) {
 
-                            for (auto& sel : Editor::selection.selectedEntities) {
-                                ecs::EntityId id = sel.first;
+                            for (auto& sel : Editor::selection.entities) {
+                                EntityId id = sel.first;
                                 auto* pool = engine.getPool(type->id());
                                 if (pool && !pool->has(id)) {
                                     pool->add(id, nullptr);
@@ -174,12 +167,12 @@ namespace tridot {
                 bool first = true;
                 bool remove = false;
                 bool change = false;
-                static ecs::Reflection::Type *lastChange;
-                std::vector<std::pair<int, ecs::Reflection::Type*>> differences;
+                static Reflection::Type *lastChange;
+                std::vector<std::pair<int, Reflection::Type*>> differences;
                 uint8_t* compBuffer = new uint8_t[type->size()];
 
-                for (auto& sel : Editor::selection.selectedEntities) {
-                    ecs::EntityId id = sel.first;
+                for (auto& sel : Editor::selection.entities) {
+                    EntityId id = sel.first;
 
                     if (engine.has(id, type->id())) {
                         void* comp = engine.get(id, type->id());

@@ -7,7 +7,7 @@
 
 #include "Registry.h"
 
-namespace ecs {
+namespace tridot {
 
     class Prefab {
     public:

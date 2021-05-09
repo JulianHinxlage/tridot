@@ -38,18 +38,18 @@ namespace tridot {
         void endScene();
         void shutdown();
 
-        ecs::SignalRef<> onInit();
-        ecs::SignalRef<> onBeginScene();
-        ecs::SignalRef<> onUpdate();
-        ecs::SignalRef<> onEndScene();
-        ecs::SignalRef<> onShutdown();
+        SignalRef<> onInit();
+        SignalRef<> onBeginScene();
+        SignalRef<> onUpdate();
+        SignalRef<> onEndScene();
+        SignalRef<> onShutdown();
 
     private:
-        ecs::Signal<> onInitSignal;
-        ecs::Signal<> onBeginSceneSignal;
-        ecs::Signal<> onUpdateSignal;
-        ecs::Signal<> onEndSceneSignal;
-        ecs::Signal<> onShutdownSignal;
+        Signal<> onInitSignal;
+        Signal<> onBeginSceneSignal;
+        Signal<> onUpdateSignal;
+        Signal<> onEndSceneSignal;
+        Signal<> onShutdownSignal;
     };
 
 }
@@ -89,13 +89,13 @@ namespace tridot::impl {
 }
 
 #define TRI_UPDATE_2(name, func) static void func();\
-namespace{ tridot::impl::UpdateSignalRegisterer ECS_UNIQUE_NAME(___tri_global___)(name, &func);}\
+namespace{ tridot::impl::UpdateSignalRegisterer TRI_UNIQUE_NAME(___tri_global___)(name, &func);}\
 static void func()
-#define TRI_UPDATE(name) TRI_UPDATE_2(name, ECS_UNIQUE_NAME(___tri_update_func___))
+#define TRI_UPDATE(name) TRI_UPDATE_2(name, TRI_UNIQUE_NAME(___tri_update_func___))
 #define TRI_INIT_2(name, func) static void func();\
-namespace{ tridot::impl::InitSignalRegisterer ECS_UNIQUE_NAME(___tri_global___)(name, &func);}\
+namespace{ tridot::impl::InitSignalRegisterer TRI_UNIQUE_NAME(___tri_global___)(name, &func);}\
 static void func()
-#define TRI_INIT(name) TRI_INIT_2(name, ECS_UNIQUE_NAME(___tri_init_func___))
-#define TRI_COMPONENT(type) namespace{ tridot::impl::ComponentRegisterer<type> ECS_UNIQUE_NAME(___tri_global___); }
+#define TRI_INIT(name) TRI_INIT_2(name, TRI_UNIQUE_NAME(___tri_init_func___))
+#define TRI_COMPONENT(type) namespace{ tridot::impl::ComponentRegisterer<type> TRI_UNIQUE_NAME(___tri_global___); }
 
 #endif //TRIDOT_ENGINE_H

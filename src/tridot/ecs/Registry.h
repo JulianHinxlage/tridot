@@ -12,7 +12,7 @@
 #include <map>
 #include <functional>
 
-namespace ecs {
+namespace tridot {
 
     template<typename... Components>
     class View;
@@ -105,8 +105,8 @@ namespace ecs {
         template<typename Component>
         Component &get(EntityId id){
             uint32_t cid = componentMap.id<Component>();
-            ECS_ASSERT(cid < componentPools.size(), "index out of bounds")
-            ECS_ASSERT(componentPools[cid] != nullptr, "component pool not present")
+            TRI_ASSERT(cid < componentPools.size(), "index out of bounds")
+            TRI_ASSERT(componentPools[cid] != nullptr, "component pool not present")
             return *(Component*)componentPools[cid]->getById(id);
         }
 
@@ -134,7 +134,7 @@ namespace ecs {
         template<typename... Components>
         SignatureBitMap createSignature(){
             if constexpr (sizeof...(Components) != 0) {
-                ECS_ASSERT(!((componentMap.id<Components>() >= (sizeof(SignatureBitMap) * 8)) || ...),"to many component types")
+                TRI_ASSERT(!((componentMap.id<Components>() >= (sizeof(SignatureBitMap) * 8)) || ...),"to many component types")
                 return ((SignatureBitMap(1) << componentMap.id<Components>()) | ...);
             }else{
                 return SignatureBitMap(0);

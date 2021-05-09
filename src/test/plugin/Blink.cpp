@@ -15,8 +15,8 @@ public:
     float value = 1;
 };
 
-REFLECT_TYPE(Blink)
-REFLECT_MEMBER4(Blink, speed, color, flag, value)
+TRI_REFLECT_TYPE(Blink)
+TRI_REFLECT_MEMBER4(Blink, speed, color, flag, value)
 TRI_COMPONENT(Blink)
 
 extern "C" void update(){

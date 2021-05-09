@@ -17,18 +17,19 @@ namespace tridot {
         static void drawType(int reflectId, void *ptr, const std::string &name = "", int parentReflectId = -1);
         static void addType(int reflectId, bool replaceMember, std::function<void(void*, const std::string &name)> func);
         static void addMember(int reflectId, int memberReflectId, const std::string &name, std::function<void(void*, const std::string &name)> func);
+        static void window(const std::string &name, const std::function<void()> &func);
 
         template<typename T>
         static void drawType(T &t, const std::string &name = ""){
-            drawType(ecs::Reflection::id<T>(), &t, name);
+            drawType(Reflection::id<T>(), &t, name);
         }
         template<typename T>
         static void addType(bool replaceMember, std::function<void(T&, const std::string &)> func){
-            addType(ecs::Reflection::id<T>(), replaceMember, [func](void *ptr, const std::string &name){func(*(T*)ptr, name);});
+            addType(Reflection::id<T>(), replaceMember, [func](void *ptr, const std::string &name){func(*(T*)ptr, name);});
         }
         template<typename T, typename M>
         static void addMember(const std::string &name, std::function<void(M&, const std::string &)> func){
-            addMember(ecs::Reflection::id<T>(), ecs::Reflection::id<M>(), name, [func](void *ptr, const std::string &name){func(*(M*)ptr, name);});
+            addMember(Reflection::id<T>(), Reflection::id<M>(), name, [func](void *ptr, const std::string &name){func(*(M*)ptr, name);});
         }
 
         template<typename T>
@@ -37,7 +38,7 @@ namespace tridot {
                 std::vector<uint8_t> buffer(sizeof(resource) + name.size());
                 memcpy(buffer.data(), &resource, sizeof(resource));
                 memcpy(buffer.data() + sizeof(resource), name.c_str(), name.size());
-                ImGui::SetDragDropPayload(ecs::Reflection::get<T>()->name().c_str(), buffer.data(), buffer.size());
+                ImGui::SetDragDropPayload(Reflection::get<T>()->name().c_str(), buffer.data(), buffer.size());
                 ImGui::Text("%s", name.c_str());
                 ImGui::EndDragDropSource();
             }
@@ -46,7 +47,7 @@ namespace tridot {
         template<typename T>
         static void resourceDragDropTarget(Ref<T> &resource){
             if(ImGui::BeginDragDropTarget()){
-                if(const ImGuiPayload *payload = ImGui::AcceptDragDropPayload(ecs::Reflection::get<T>()->name().c_str())){
+                if(const ImGuiPayload *payload = ImGui::AcceptDragDropPayload(Reflection::get<T>()->name().c_str())){
                     Ref<T> res;
                     uint8_t *buffer = (uint8_t*)payload->Data;
                     memcpy(&res, buffer, sizeof(res));

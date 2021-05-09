@@ -9,13 +9,13 @@
 namespace tridot {
 
     bool ComponentCache::isCached(int reflectId) {
-        auto *type = ecs::Reflection::get(reflectId);
+        auto *type = Reflection::get(reflectId);
         auto comp = data[type->name()];
         return (bool)comp;
     }
 
     bool ComponentCache::load(int reflectId, void *ptr) {
-        auto *type = ecs::Reflection::get(reflectId);
+        auto *type = Reflection::get(reflectId);
         auto comp = data[type->name()];
         if(comp){
             Serializer s;
@@ -27,12 +27,12 @@ namespace tridot {
     }
 
     void ComponentCache::remove(int reflectId) {
-        auto *type = ecs::Reflection::get(reflectId);
+        auto *type = Reflection::get(reflectId);
         data.remove(type->name());
     }
 
-    void ComponentCache::update(ecs::EntityId id) {
-        for(auto &type : ecs::Reflection::getTypes()){
+    void ComponentCache::update(EntityId id) {
+        for(auto &type : Reflection::getTypes()){
             if(type){
                 if(isCached(type->id())){
                     if(!engine.has(id, type->id())){
@@ -53,8 +53,8 @@ namespace tridot {
 
     TRI_INIT("ComponentCache"){
         engine.onUnregister().add("ComponentCache", [](int reflectId){
-            engine.view<>().each([&](ecs::EntityId id){
-                if(reflectId != ecs::Reflection::id<ComponentCache>()) {
+            engine.view<>().each([&](EntityId id){
+                if(reflectId != Reflection::id<ComponentCache>()) {
                     if (engine.has(id, reflectId)) {
                         if (!engine.has<ComponentCache>(id)) {
                             engine.add<ComponentCache>(id);
@@ -65,7 +65,7 @@ namespace tridot {
                             Serializer s;
                             YAML::Emitter out;
                             out << YAML::BeginMap;
-                            auto *type = ecs::Reflection::get(reflectId);
+                            auto *type = Reflection::get(reflectId);
                             s.serializeType(type, type->name(), out, ptr, engine.resources);
                             out << YAML::EndMap;
                             YAML::Node node = YAML::Load(out.c_str());
@@ -81,7 +81,7 @@ namespace tridot {
         });
 
         engine.onRegister().add("ComponentCache", [](int reflectId){
-            engine.view<ComponentCache>().each([](ecs::EntityId id, ComponentCache &cache){
+            engine.view<ComponentCache>().each([](EntityId id, ComponentCache &cache){
                 cache.update(id);
             });
         });

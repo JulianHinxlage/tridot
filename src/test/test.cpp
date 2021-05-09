@@ -14,7 +14,6 @@
 #include <algorithm>
 
 using namespace tridot;
-using namespace ecs;
 
 float randu(){
     return (double)std::rand() / (double)RAND_MAX;
@@ -104,9 +103,12 @@ int main(int argc, char *argv[]){
     engine.init(1920, 1080, "Tridot " TRI_VERSION, "../res/", true);
     engine.window.setBackgroundColor(Color::white);
 
-    engine.resources.set<Mesh>("sphere") = MeshFactory::createSphere(32, 32);
-    engine.resources.set<Mesh>("cube") = MeshFactory::createCube();
-
+    engine.resources.setup<Mesh>("cube")
+            .setPostLoad([](Ref<Mesh> &mesh){MeshFactory::createCube(mesh); return true;})
+            .setPreLoad(nullptr);
+    engine.resources.setup<Mesh>("sphere")
+            .setPostLoad([](Ref<Mesh> &mesh){MeshFactory::createSphere(32, 32, mesh); return true;})
+            .setPreLoad(nullptr);
     createScene();
 
     //create lights
@@ -123,16 +125,16 @@ int main(int argc, char *argv[]){
     material->mapping = Material::TRI_PLANAR;
     material->roughness = 2;
     material->metallic = 2;
-    material->normalMap = engine.resources.get<Texture>("Metal038_1K_Normal.jpg");
-    material->texture = engine.resources.get<Texture>("Metal038_1K_Color.jpg");
-    material->roughnessMap = engine.resources.get<Texture>("Metal038_1K_Roughness.jpg");
-    material->metallicMap = engine.resources.get<Texture>("Metal038_1K_Metalness.jpg");
+    material->normalMap = engine.resources.get<Texture>("textures/Metal038_1K_Normal.jpg");
+    material->texture = engine.resources.get<Texture>("textures/Metal038_1K_Color.jpg");
+    material->roughnessMap = engine.resources.get<Texture>("textures/Metal038_1K_Roughness.jpg");
+    material->metallicMap = engine.resources.get<Texture>("textures/Metal038_1K_Metalness.jpg");
     material->normalMap->setMagMin(false, false);
     material->roughnessMapScale = {0.5f, 0.5f};
     material->metallicMapScale = {0.5f, 0.5f};
     material->normalMapFactor = 1.0;
 
-    *engine.resources.set<ecs::Prefab>("player") = ecs::Prefab(
+    *engine.resources.get<Prefab>("player") = Prefab(
         Transform(),
         RenderComponent()
             .setMaterial(material)
@@ -140,7 +142,7 @@ int main(int argc, char *argv[]){
         RigidBody(5),
         Collider(Collider::SPHERE)
     );
-    EntityId playerId = engine.resources.get<ecs::Prefab>("player")->instantiate(engine);
+    EntityId playerId = engine.resources.get<Prefab>("player")->instantiate(engine);
 
     //create camera
     PerspectiveCamera &camera = engine.add<PerspectiveCamera>(engine.create());
@@ -291,9 +293,9 @@ void createScene(){
     wallMaterial->roughness = 2;
     wallMaterial->metallic = 0;
     wallMaterial->normalMapFactor = 1.0;
-    wallMaterial->normalMap = engine.resources.get<Texture>("Tiles090_1K_Normal.jpg");
-    wallMaterial->texture = engine.resources.get<Texture>("Tiles090_1K_Color.jpg");
-    wallMaterial->roughnessMap = engine.resources.get<Texture>("Tiles090_1K_Roughness.jpg");
+    wallMaterial->normalMap = engine.resources.get<Texture>("textures/Tiles090_1K_Normal.jpg");
+    wallMaterial->texture = engine.resources.get<Texture>("textures/Tiles090_1K_Color.jpg");
+    wallMaterial->roughnessMap = engine.resources.get<Texture>("textures/Tiles090_1K_Roughness.jpg");
     wallMaterial->texture->setMagMin(false, false);
     wallMaterial->mapping = Material::SCALE_TRI_PLANAR;
 
@@ -333,9 +335,9 @@ void createScene(){
     platformMaterial->roughness = 2;
     platformMaterial->metallic = 0;
     platformMaterial->normalMapFactor = 1.0;
-    platformMaterial->normalMap = engine.resources.get<Texture>("Marble012_1K_Normal.jpg");
-    platformMaterial->texture = engine.resources.get<Texture>("Marble012_1K_Color.jpg");
-    platformMaterial->roughnessMap = engine.resources.get<Texture>("Marble012_1K_Roughness.jpg");
+    platformMaterial->normalMap = engine.resources.get<Texture>("textures/Marble012_1K_Normal.jpg");
+    platformMaterial->texture = engine.resources.get<Texture>("textures/Marble012_1K_Color.jpg");
+    platformMaterial->roughnessMap = engine.resources.get<Texture>("textures/Marble012_1K_Roughness.jpg");
     platformMaterial->texture->setMagMin(false, false);
     platformMaterial->mapping = Material::SCALE_TRI_PLANAR;
 

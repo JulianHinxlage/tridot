@@ -6,7 +6,7 @@
 #define TRIDOT_COMPONENTCACHE_H
 
 #include "tridot/ecs/Reflection.h"
-#include "tridot/ecs/config.h"
+#include "tridot/core/config.h"
 #include <yaml-cpp/yaml.h>
 
 namespace tridot {
@@ -23,19 +23,19 @@ namespace tridot {
         bool isCached(int reflectId);
         bool load(int reflectId, void *ptr);
         void remove(int reflectId);
-        void update(ecs::EntityId id);
+        void update(EntityId id);
 
         template<typename T>
         bool isCached(){
-            return isCahced(ecs::Reflection::id<T>());
+            return isCahced(Reflection::id<T>());
         }
         template<typename T>
         bool load(T &t){
-            return load(ecs::Reflection::id<T>(), &t);
+            return load(Reflection::id<T>(), &t);
         }
         template<typename T>
         void remove(){
-            remove(ecs::Reflection::id<T>());
+            remove(Reflection::id<T>());
         }
     };
 

@@ -123,7 +123,7 @@ namespace tridot{
         return stream.str();
     }
 
-    void logStream(tridot::Log::Level level, const std::string &message, Log::Options &options, std::ostream &stream) {
+    void logStream(Log::Level level, const std::string &message, Log::Options &options, std::ostream &stream) {
         if(level >= options.logLevel && level >= Log::TRACE && level < Log::OFF){
             std::stringstream s;
             std::string levelName = logGetLevelName(level);
@@ -167,7 +167,7 @@ namespace tridot{
         }
     }
 
-    void Log::log(tridot::Log::Level level, const std::string &message) {
+    void Log::log(Log::Level level, const std::string &message) {
         std::ios_base::Init init;
         logStream(level, message, options, std::cout);
         for(auto &target : logTargets){

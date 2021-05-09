@@ -21,22 +21,13 @@ namespace tridot {
     }
 
     void ResourceBrowser::update() {
-        if (ImGui::GetCurrentContext() != nullptr) {
-            bool& open = Editor::getFlag("Resource Browser");
-            if (open) {
-                if (ImGui::Begin("Resource Browser", &open, ImGuiWindowFlags_HorizontalScrollbar)) {
-                    ImGui::SetWindowSize(ImVec2(400, 400), ImGuiCond_FirstUseEver);
-
-                    for(auto &directory : engine.resources.getSearchDirectories()){
-                        if(!isSubdirectory(directory)){
-                            updateDirectory(directory, directory);
-                        }
-                    }
-
+        EditorGui::window("Resource Browser", [this](){
+            for(auto &directory : engine.resources.getSearchDirectories()){
+                if(!isSubdirectory(directory)){
+                    updateDirectory(directory, directory);
                 }
-                ImGui::End();
             }
-        }
+        });
     }
 
     void ResourceBrowser::updateDirectory(const std::string &directory, const std::string &baseDirectory) {

@@ -9,7 +9,7 @@
 
 namespace tridot {
 
-    class Scene : public ecs::Registry{
+    class Scene : public Registry{
     public:
         std::string name;
         std::string file;
@@ -24,11 +24,11 @@ namespace tridot {
         void copy(const Scene &source);
 
         template<typename... Components>
-        ecs::View<Components...> view(){
+        View<Components...> view(){
             if(active){
-                return ecs::View<Components...>(this);
+                return View<Components...>(this);
             }else{
-                return ecs::View<Components...>(nullptr);
+                return View<Components...>(nullptr);
             }
         }
 
@@ -37,7 +37,7 @@ namespace tridot {
             view<Components...>().each(func);
         }
 
-        ecs::Pool &getEntityPool(){
+        Pool &getEntityPool(){
             if(active){
                 return entityPool;
             }else{
@@ -46,7 +46,7 @@ namespace tridot {
         }
 
     private:
-        ecs::Pool emptyPool;
+        Pool emptyPool;
         bool active = true;
     };
 

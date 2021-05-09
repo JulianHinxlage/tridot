@@ -29,13 +29,13 @@ bool &isEngineDestructed(){
     return value;
 }
 
-ecs::Signal<> &tmpUpdateSignal(){
-    static ecs::Signal<> signal;
+tridot::Signal<> &tmpUpdateSignal(){
+    static tridot::Signal<> signal;
     return signal;
 }
 
-ecs::Signal<> &tmpInitSignal(){
-    static ecs::Signal<> signal;
+tridot::Signal<> &tmpInitSignal(){
+    static tridot::Signal<> signal;
     return signal;
 }
 
@@ -111,7 +111,7 @@ namespace tridot {
         onShutdownSignal.invoke();
     }
 
-    ecs::SignalRef<> Engine::onInit(){
+    SignalRef<> Engine::onInit(){
         if(isEngineConstructed()){
             return onInitSignal.ref();
         }else{
@@ -119,11 +119,11 @@ namespace tridot {
         }
     }
 
-    ecs::SignalRef<> Engine::onBeginScene(){
+    SignalRef<> Engine::onBeginScene(){
         return onBeginSceneSignal.ref();
     }
 
-    ecs::SignalRef<> Engine::onUpdate(){
+    SignalRef<> Engine::onUpdate(){
         if(isEngineConstructed()){
             return onUpdateSignal.ref();
         }else{
@@ -131,11 +131,11 @@ namespace tridot {
         }
     }
 
-    ecs::SignalRef<> Engine::onEndScene(){
+    SignalRef<> Engine::onEndScene(){
         return onEndSceneSignal.ref();
     }
 
-    ecs::SignalRef<> Engine::onShutdown(){
+    SignalRef<> Engine::onShutdown(){
         return onShutdownSignal.ref();
     }
 
