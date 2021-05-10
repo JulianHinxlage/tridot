@@ -8,6 +8,7 @@
 #include "TypeMap.h"
 #include "Pool.h"
 #include "ComponentPool.h"
+#include "ComponentRegister.h"
 #include <cstdint>
 #include <map>
 #include <functional>
@@ -22,6 +23,28 @@ namespace tridot {
         Registry(){
             nextEntityId = 0;
             entityPool.registry = this;
+
+            componentPools.resize(ComponentRegister::componentPools.size());
+            for(int cid = 0; cid < ComponentRegister::componentPools.size(); cid++){
+                setupPool(cid);
+            }
+
+            onRegisterCallbackId = ComponentRegister::onRegister().add([this](int typeId){
+                uint32_t cid = ComponentRegister::id(typeId);
+                setupPool(cid);
+            }, "Registry");
+
+            onUnregisterCallbackId = ComponentRegister::onUnregister().add([this](int typeId){
+                uint32_t cid = ComponentRegister::id(typeId);
+                if(cid < componentPools.size()){
+                    componentPools[cid] = nullptr;
+                }
+            }, "Registry");
+        }
+
+        ~Registry(){
+            ComponentRegister::onRegister().remove(onRegisterCallbackId);
+            ComponentRegister::onUnregister().remove(onUnregisterCallbackId);
         }
 
         EntityId createHinted(EntityId hint){
@@ -104,7 +127,7 @@ namespace tridot {
 
         template<typename Component>
         Component &get(EntityId id){
-            uint32_t cid = componentMap.id<Component>();
+            uint32_t cid = ComponentRegister::id<Component>();
             TRI_ASSERT(cid < componentPools.size(), "index out of bounds")
             TRI_ASSERT(componentPools[cid] != nullptr, "component pool not present")
             return *(Component*)componentPools[cid]->getById(id);
@@ -117,7 +140,7 @@ namespace tridot {
 
         template<typename Component>
         bool has(EntityId id){
-            uint32_t cid = componentMap.id<Component>();
+            uint32_t cid = ComponentRegister::id<Component>();
             if(cid >= componentPools.size()){
                 return false;
             }
@@ -134,8 +157,8 @@ namespace tridot {
         template<typename... Components>
         SignatureBitMap createSignature(){
             if constexpr (sizeof...(Components) != 0) {
-                TRI_ASSERT(!((componentMap.id<Components>() >= (sizeof(SignatureBitMap) * 8)) || ...),"to many component types")
-                return ((SignatureBitMap(1) << componentMap.id<Components>()) | ...);
+                TRI_ASSERT(!((ComponentRegister::id<Components>() >= (sizeof(SignatureBitMap) * 8)) || ...),"to many component types")
+                return ((SignatureBitMap(1) << ComponentRegister::id<Components>()) | ...);
             }else{
                 return SignatureBitMap(0);
             }
@@ -187,7 +210,7 @@ namespace tridot {
             return getPool<Component>().onRemove();
         }
 
-        void clear(bool unregisterComponents = false){
+        void clear(){
             freeEntityIds.clear();
             nextEntityId = 0;
             entityPool.clear();
@@ -196,29 +219,45 @@ namespace tridot {
                     pool->clear();
                 }
             }
-            if(unregisterComponents){
-                componentPools.clear();
-                componentMap.clear();
-            }
         }
 
         void copy(const Registry &source){
-            componentMap = source.componentMap;
             freeEntityIds = source.freeEntityIds;
             nextEntityId = source.nextEntityId;
-            onRegisterSignal = source.onRegisterSignal;
-            onUnregisterSignal = source.onUnregisterSignal;
-
             entityPool.copy(source.entityPool);
             entityPool.registry = this;
             componentPools.resize(source.componentPools.size());
-            for(int i = 0; i < source.componentPools.size(); i++){
-                if(source.componentPools[i]){
-                    componentPools[i] = source.componentPools[i]->make();
-                    componentPools[i]->copy(*source.componentPools[i]);
-                    componentPools[i]->registry = this;
+            for(int cid = 0; cid < source.componentPools.size(); cid++){
+                if(source.componentPools[cid]){
+                    componentPools[cid] = source.componentPools[cid]->make();
+                    componentPools[cid]->copy(*source.componentPools[cid]);
+                    componentPools[cid]->registry = this;
+                    componentPools[cid]->onAdd().add([cid](Registry *reg, EntityId id) {
+                        *(SignatureBitMap *) reg->entityPool.getById(id) |= (SignatureBitMap(1) << cid);
+                    });
+                    componentPools[cid]->onRemove().add([cid](Registry *reg, EntityId id) {
+                        *(SignatureBitMap *) reg->entityPool.getById(id) &= ~(SignatureBitMap(1) << cid);
+                    });
                 }else{
-                    componentPools[i] = nullptr;
+                    componentPools[cid] = nullptr;
+                }
+            }
+        }
+
+        void swap(Registry &other){
+            componentPools.swap(other.componentPools);
+            entityPool.swap(other.entityPool);
+            freeEntityIds.swap(other.freeEntityIds);
+            std::swap(nextEntityId, other.nextEntityId);
+
+            entityPool.registry = this;
+            other.entityPool.registry = &other;
+            for(int cid = 0; cid < componentPools.size(); cid++){
+                if(componentPools[cid] != nullptr){
+                    componentPools[cid]->registry = this;
+                }
+                if(cid < other.componentPools.size() && other.componentPools[cid] != nullptr){
+                    other.componentPools[cid]->registry = &other;
                 }
             }
         }
@@ -229,35 +268,28 @@ namespace tridot {
 
         template<typename Component>
         ComponentPool<Component> &getPool(){
-            uint32_t cid = componentMap.id<Component>();
+            uint32_t cid = ComponentRegister::id<Component>();
             while(cid >= componentPools.size()){
                 componentPools.push_back(nullptr);
             }
             if(componentPools[cid] == nullptr){
-                componentPools[cid] = std::make_shared<ComponentPool<Component>>();
-                componentPools[cid]->registry = this;
-                componentPools[cid]->onAdd().add([cid](Registry *reg, EntityId id){
-                    *(SignatureBitMap*)reg->entityPool.getById(id) |= (SignatureBitMap(1) << cid);
-                });
-                componentPools[cid]->onRemove().add([cid](Registry *reg, EntityId id){
-                    *(SignatureBitMap*)reg->entityPool.getById(id) &= ~(SignatureBitMap(1) << cid);
-                });
-                onRegisterSignal.invoke(Reflection::id<Component>());
+                ComponentRegister::registerComponent<Component>();
+                setupPool(cid);
             }
             return *(ComponentPool<Component>*)componentPools[cid].get();
         }
 
-        Pool *getPool(int reflectId){
-            int cid = componentMap.id(reflectId);
+        Pool *getPool(int typeId){
+            int cid = ComponentRegister::id(typeId);
             if(cid < 0 || cid >= componentPools.size()){
                 return nullptr;
             }else{
-                return componentPools[componentMap.id(reflectId)].get();
+                return componentPools[cid].get();
             }
         }
 
-        void *get(int id, int reflectId){
-            auto *pool = getPool(reflectId);
+        void *get(int id, int typeId){
+            auto *pool = getPool(typeId);
             if (pool && pool->has(id)) {
                 return pool->getById(id);
             }else{
@@ -265,8 +297,8 @@ namespace tridot {
             }
         }
 
-        void *addReflect(int id, int reflectId){
-            auto *pool = getPool(reflectId);
+        void *addByTypeId(int id, int typeId){
+            auto *pool = getPool(typeId);
             if (pool) {
                 uint32_t index = pool->add(id, nullptr);
                 return pool->get(index);
@@ -275,59 +307,45 @@ namespace tridot {
             }
         }
 
-        void remove(int id, int reflectId){
-            auto *pool = getPool(reflectId);
+        void remove(int id, int typeId){
+            auto *pool = getPool(typeId);
             if (pool && pool->has(id)) {
                 pool->remove(id);
             }
         }
 
-        bool has(int id, int reflectId){
-            auto *pool = getPool(reflectId);
+        bool has(int id, int typeId){
+            auto *pool = getPool(typeId);
             return (bool)pool && pool->has(id);
         }
 
-        template<typename... Components>
-        void registerComponent(){
-            (getPool<Components>() , ...);
-        }
-
-        template<typename... Components>
-        void unregisterComponent(){
-            (
-                (
-                    (componentMap.id<Components>() < componentPools.size() &&
-                            componentPools[componentMap.id<Components>()] != nullptr) ?
-                    (onUnregisterSignal.invoke(Reflection::id<Components>()),
-                            componentPools[componentMap.id<Components>()] = nullptr)
-                    : nullptr
-                )
-            , ...);
-        }
-
-        void unregisterComponent(int reflectId){
-            uint32_t cid = componentMap.id(reflectId);
-            if(cid < componentPools.size()){
-                componentPools[cid] = nullptr;
-            }
-        }
-
-        auto onUnregister(){
-            return onUnregisterSignal.ref();
-        }
-
-        auto onRegister(){
-            return onRegisterSignal.ref();
-        }
-
     protected:
-        TypeMap componentMap;
         std::vector<std::shared_ptr<Pool>> componentPools;
         ComponentPool<SignatureBitMap> entityPool;
         std::map<EntityId, bool> freeEntityIds;
         EntityId nextEntityId;
-        Signal<int> onUnregisterSignal;
-        Signal<int> onRegisterSignal;
+        int onRegisterCallbackId;
+        int onUnregisterCallbackId;
+
+        void setupPool(uint32_t cid){
+            if(cid < ComponentRegister::componentPools.size()) {
+                if (ComponentRegister::componentPools[cid]) {
+                    while (cid >= componentPools.size()) {
+                        componentPools.push_back(nullptr);
+                    }
+                    if (componentPools[cid] == nullptr) {
+                        componentPools[cid] = ComponentRegister::componentPools[cid]->make();
+                        componentPools[cid]->registry = this;
+                        componentPools[cid]->onAdd().add([cid](Registry *reg, EntityId id) {
+                            *(SignatureBitMap *) reg->entityPool.getById(id) |= (SignatureBitMap(1) << cid);
+                        });
+                        componentPools[cid]->onRemove().add([cid](Registry *reg, EntityId id) {
+                            *(SignatureBitMap *) reg->entityPool.getById(id) &= ~(SignatureBitMap(1) << cid);
+                        });
+                    }
+                }
+            }
+        }
     };
 
 }

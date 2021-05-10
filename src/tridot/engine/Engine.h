@@ -44,6 +44,28 @@ namespace tridot {
         SignalRef<> onEndScene();
         SignalRef<> onShutdown();
 
+        template<typename... Components>
+        void registerComponent(){
+            ComponentRegister::registerComponent<Components...>();
+        }
+
+        template<typename... Components>
+        void unregisterComponent(){
+            ComponentRegister::unregisterComponent<Components...>();
+        }
+
+        void unregisterComponent(int typeId){
+            ComponentRegister::unregisterComponent(typeId);
+        }
+
+        auto onRegister(){
+            return ComponentRegister::onRegister();
+        }
+
+        auto onUnregister(){
+            return ComponentRegister::onUnregister();
+        }
+
     private:
         Signal<> onInitSignal;
         Signal<> onBeginSceneSignal;

@@ -100,6 +100,11 @@ namespace tridot {
             return SignalRef<Args...>(this);
         }
 
+        void swap(Signal<Args...> &other){
+            listeners.swap(other.listeners);
+            std::swap(nextId, other.nextId);
+        }
+
     private:
         class Listener{
         public:

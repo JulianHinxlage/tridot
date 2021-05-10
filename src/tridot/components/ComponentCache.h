@@ -20,9 +20,9 @@ namespace tridot {
     public:
         YAML::Node data;
 
-        bool isCached(int reflectId);
-        bool load(int reflectId, void *ptr);
-        void remove(int reflectId);
+        bool isCached(int typeId);
+        bool load(int typeId, void *ptr);
+        void remove(int typeId);
         void update(EntityId id);
 
         template<typename T>

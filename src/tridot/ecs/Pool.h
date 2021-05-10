@@ -8,6 +8,7 @@
 #include "tridot/core/config.h"
 #include "Signal.h"
 #include <memory>
+#include <utility>
 
 namespace tridot {
 
@@ -115,6 +116,7 @@ namespace tridot {
             onAddSignal = source.onAddSignal;
             onRemoveSignal = source.onRemoveSignal;
             sparse.resize(source.sparse.size());
+            registry = source.registry;
             for(int i = 0; i < source.sparse.size(); i++){
                 if(source.sparse[i]){
                     sparse[i].reset(new EntityId[pageSize]);
@@ -129,6 +131,14 @@ namespace tridot {
 
         virtual std::shared_ptr<Pool> make(){
             return std::make_shared<Pool>();
+        }
+
+        virtual void swap(Pool &other){
+            dense.swap(other.dense);
+            sparse.swap(other.sparse);
+            onAddSignal.swap(other.onAddSignal);
+            onRemoveSignal.swap(other.onRemoveSignal);
+            std::swap(registry, other.registry);
         }
 
     protected:

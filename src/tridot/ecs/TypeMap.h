@@ -6,6 +6,7 @@
 #define TRIDOT_TYPEMAP_H
 
 #include "Reflection.h"
+#include <utility>
 
 namespace tridot{
 
@@ -16,14 +17,14 @@ namespace tridot{
             return id(Reflection::id<T>());
         }
 
-        int id(int reflectId){
-            while(reflectId >= map.size()){
+        int id(int typeId){
+            while(typeId >= map.size()){
                 map.push_back(-1);
             }
-            if(map[reflectId] == -1){
-                map[reflectId] = count++;
+            if(map[typeId] == -1){
+                map[typeId] = count++;
             }
-            return map[reflectId];
+            return map[typeId];
         }
 
         int size(){
@@ -33,6 +34,11 @@ namespace tridot{
         void clear(){
             map.clear();
             count = 0;
+        }
+
+        void swap(TypeMap &other){
+            map.swap(other.map);
+            std::swap(count, other.count);
         }
 
     private:

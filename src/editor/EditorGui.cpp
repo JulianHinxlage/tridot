@@ -17,15 +17,15 @@ class GuiData{
 public:
     class Member{
     public:
-        int parentReflectId;
-        int reflectId;
+        int parentTypeId;
+        int typeId;
         std::string name;
         std::function<void(void*, const std::string &)> func;
     };
 
     class Type{
     public:
-        int reflectId;
+        int typeId;
         bool replaceMember;
         std::function<void(void*, const std::string &)> func;
     };
@@ -37,11 +37,11 @@ GuiData data;
 
 namespace tridot {
 
-    void EditorGui::drawType(int reflectId, void *ptr, const std::string &name, int parentReflectId) {
+    void EditorGui::drawType(int typeId, void *ptr, const std::string &name, int parentTypeId) {
         ImGui::PushID(ptr);
         bool noMember = false;
         for(auto &type : data.types){
-            if(type.reflectId == reflectId){
+            if(type.typeId == typeId){
                 if(type.replaceMember){
                     noMember = true;
                     break;
@@ -50,14 +50,14 @@ namespace tridot {
         }
 
         if(!noMember){
-            for(auto &member : Reflection::get(reflectId)->member()){
-                drawType(member.typeId, (char*)ptr + member.offset, member.name, reflectId);
+            for(auto &member : Reflection::get(typeId)->member()){
+                drawType(member.typeId, (char*)ptr + member.offset, member.name, typeId);
             }
         }
 
         bool handled = false;
         for(auto &member : data.member){
-            if(member.reflectId == reflectId && parentReflectId == member.parentReflectId){
+            if(member.typeId == typeId && parentTypeId == member.parentTypeId){
                 if(member.name == name){
                     member.func(ptr, name);
                     handled = true;
@@ -66,7 +66,7 @@ namespace tridot {
         }
         if(!handled) {
             for (auto &type : data.types) {
-                if (type.reflectId == reflectId) {
+                if (type.typeId == typeId) {
                     type.func(ptr, name);
                 }
             }
@@ -74,13 +74,13 @@ namespace tridot {
         ImGui::PopID();
     }
 
-    void EditorGui::addType(int reflectId, bool replaceMember, std::function<void(void *, const std::string &)> func) {
-        data.types.push_back({reflectId, replaceMember, func});
+    void EditorGui::addType(int typeId, bool replaceMember, std::function<void(void *, const std::string &)> func) {
+        data.types.push_back({typeId, replaceMember, func});
     }
 
-    void EditorGui::addMember(int parentReflectId, int reflectId, const std::string &name,
+    void EditorGui::addMember(int parentTypeId, int typeId, const std::string &name,
                               std::function<void(void *, const std::string &)> func) {
-        data.member.push_back({parentReflectId, reflectId, name, func});
+        data.member.push_back({parentTypeId, typeId, name, func});
     }
 
     void EditorGui::window(const std::string &name, const std::function<void()> &func) {

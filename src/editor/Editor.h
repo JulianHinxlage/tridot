@@ -33,7 +33,6 @@ namespace tridot {
 
         static EntityId cameraId;
         static std::map<std::string, bool> flags;
-        static std::string currentSceneFile;
         static uint64_t propertiesWindowFlags;
         static bool runtime;
         static Scene runtimeSceneBuffer;

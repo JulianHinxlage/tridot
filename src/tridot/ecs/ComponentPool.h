@@ -74,6 +74,11 @@ namespace tridot {
             return std::make_shared<ComponentPool<Component>>();
         }
 
+        virtual void swap(Pool &other) override{
+            Pool::swap(other);
+            components.swap(((ComponentPool<Component>&)other).components);
+        }
+
     private:
         std::vector<Component> components;
     };

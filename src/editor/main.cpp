@@ -25,37 +25,18 @@ int main(int argc, char *argv[]){
     engine.init(1920, 1080, "Tridot Editor", "../res/", true);
     engine.window.setBackgroundColor(glm::vec4( 0.25, 0.25, 0.25, 1 ));
     Editor::init();
-    engine.resources.update();
 
-    engine.resources.setup<Mesh>("cube")
-            .setPostLoad([](Ref<Mesh> &mesh){MeshFactory::createCube(mesh); return true;})
-            .setPreLoad(nullptr);
-    engine.resources.setup<Mesh>("sphere")
-            .setPostLoad([](Ref<Mesh> &mesh){MeshFactory::createSphere(32, 32, mesh); return true;})
-            .setPreLoad(nullptr);
-
-    engine.resources.defaultOptions<Scene>().setInstance(&engine).setPostLoad([](Ref<Scene> &scene){
-        bool valid = scene->postLoad();
-        engine.resources.removeByFile<Scene>(scene->file);
-        return valid;
-    });
-
-    Editor::currentSceneFile = "scenes/scene.yml";
-    if(engine.resources.searchFile(Editor::currentSceneFile) != ""){
-        Editor::currentSceneFile = engine.resources.searchFile(Editor::currentSceneFile);
-        engine.resources.setup<Scene>(Editor::currentSceneFile).setInstance(&engine).get();
+    std::string sceneFile = "scenes/scene.yml";
+    if(engine.resources.searchFile(sceneFile) != ""){
+        sceneFile = engine.resources.searchFile(sceneFile);
+        engine.resources.get<Scene>(sceneFile);
     }else{
         engine.resources.setup<Scene>("scene")
-                .setInstance(&engine)
-                .setOptions(ResourceManager::LOAD_WITHOUT_FILE)
-                .setPreLoad([](Ref<Scene> &scene, const std::string &file){
-                    createDefaultScene(*scene);
-                    return true;
-                }).setPostLoad([](Ref<Scene> &scene){
-                    bool valid = scene->postLoad();
-                    engine.resources.remove("scene");
-                    return valid;
-                }).get();
+            .setOptions(ResourceManager::LOAD_WITHOUT_FILE)
+            .setPreLoad([](Ref<Scene> &scene, const std::string &file){
+                createDefaultScene(*scene);
+                return true;
+            }).get();
     }
 
     engine.onUpdate().add([&](){

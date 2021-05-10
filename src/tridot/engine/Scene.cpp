@@ -33,22 +33,21 @@ namespace tridot {
     }
 
     bool Scene::preLoad(const std::string &file) {
-        active = false;
-        bool valid = load(file);
-        if(!valid){
-            active = true;
-        }
-        return valid;
+        return load(file);
     }
 
     bool Scene::postLoad() {
-        active = true;
         return true;
     }
 
     void Scene::copy(const Scene &source) {
-        active = source.active;
         Registry::copy(source);
+    }
+
+    void Scene::swap(Scene &other) {
+        std::swap(file, other.file);
+        std::swap(name, other.name);
+        Registry::swap(other);
     }
 
 }

@@ -8,14 +8,14 @@
 
 namespace tridot {
 
-    bool ComponentCache::isCached(int reflectId) {
-        auto *type = Reflection::get(reflectId);
+    bool ComponentCache::isCached(int typeId) {
+        auto *type = Reflection::get(typeId);
         auto comp = data[type->name()];
         return (bool)comp;
     }
 
-    bool ComponentCache::load(int reflectId, void *ptr) {
-        auto *type = Reflection::get(reflectId);
+    bool ComponentCache::load(int typeId, void *ptr) {
+        auto *type = Reflection::get(typeId);
         auto comp = data[type->name()];
         if(comp){
             Serializer s;
@@ -26,8 +26,8 @@ namespace tridot {
         }
     }
 
-    void ComponentCache::remove(int reflectId) {
-        auto *type = Reflection::get(reflectId);
+    void ComponentCache::remove(int typeId) {
+        auto *type = Reflection::get(typeId);
         data.remove(type->name());
     }
 
@@ -36,7 +36,7 @@ namespace tridot {
             if(type){
                 if(isCached(type->id())){
                     if(!engine.has(id, type->id())){
-                        void *ptr = engine.addReflect(id, type->id());
+                        void *ptr = engine.addByTypeId(id, type->id());
                         if(ptr) {
                             load(type->id(), ptr);
                             remove(type->id());
@@ -52,20 +52,20 @@ namespace tridot {
     }
 
     TRI_INIT("ComponentCache"){
-        engine.onUnregister().add("ComponentCache", [](int reflectId){
+        engine.onUnregister().add("ComponentCache", [](int typeId){
             engine.view<>().each([&](EntityId id){
-                if(reflectId != Reflection::id<ComponentCache>()) {
-                    if (engine.has(id, reflectId)) {
+                if(typeId != Reflection::id<ComponentCache>()) {
+                    if (engine.has(id, typeId)) {
                         if (!engine.has<ComponentCache>(id)) {
                             engine.add<ComponentCache>(id);
                         }
                         auto &cache = engine.get<ComponentCache>(id);
-                        void *ptr = engine.get(id, reflectId);
+                        void *ptr = engine.get(id, typeId);
                         if (ptr) {
                             Serializer s;
                             YAML::Emitter out;
                             out << YAML::BeginMap;
-                            auto *type = Reflection::get(reflectId);
+                            auto *type = Reflection::get(typeId);
                             s.serializeType(type, type->name(), out, ptr, engine.resources);
                             out << YAML::EndMap;
                             YAML::Node node = YAML::Load(out.c_str());
@@ -79,12 +79,14 @@ namespace tridot {
                 }
             });
         });
+        engine.onUnregister().order({"ComponentCache", "Registry"});
 
-        engine.onRegister().add("ComponentCache", [](int reflectId){
+        engine.onRegister().add("ComponentCache", [](int typeId){
             engine.view<ComponentCache>().each([](EntityId id, ComponentCache &cache){
                 cache.update(id);
             });
         });
+        engine.onRegister().order({"Registry", "ComponentCache"});
 
         engine.onShutdown().add("ComponentCache", [](){
             engine.onUnregister().remove("ComponentCache");

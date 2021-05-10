@@ -14,9 +14,9 @@ namespace tridot {
 
     class EditorGui {
     public:
-        static void drawType(int reflectId, void *ptr, const std::string &name = "", int parentReflectId = -1);
-        static void addType(int reflectId, bool replaceMember, std::function<void(void*, const std::string &name)> func);
-        static void addMember(int reflectId, int memberReflectId, const std::string &name, std::function<void(void*, const std::string &name)> func);
+        static void drawType(int typeId, void *ptr, const std::string &name = "", int parentTypeId = -1);
+        static void addType(int typeId, bool replaceMember, std::function<void(void*, const std::string &name)> func);
+        static void addMember(int parentTypeId, int typeId, const std::string &name, std::function<void(void*, const std::string &name)> func);
         static void window(const std::string &name, const std::function<void()> &func);
 
         template<typename T>

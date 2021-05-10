@@ -257,22 +257,6 @@ namespace tridot {
         }
 
         template<typename T>
-        Ref<T> getByFile(const std::string &file){
-            uint32_t type = typeid(T).hash_code();
-            for(auto &entry : entries){
-                if(entry.second->type == type) {
-                    if(entry.second->filePath != ""){
-                        if(entry.second->filePath == file || isSubstring(entry.second->filePath, file) == 3){
-                            auto *res = (Entry<T>*)entry.second.get();
-                            return res->resource;
-                        }
-                    }
-                }
-            }
-            return nullptr;
-        }
-
-        template<typename T>
         std::string getName(Ref<T> &resource){
             uint32_t type = typeid(T).hash_code();
             for(auto &entry : entries){
@@ -313,14 +297,6 @@ namespace tridot {
 
         void remove(const std::string &name){
             entries.erase(name);
-        }
-
-        template<typename T>
-        void removeByFile(const std::string &file){
-            auto res = getByFile<T>(file);
-            if(res != nullptr){
-                remove(getName<T>(res));
-            }
         }
 
         template<typename T>
@@ -546,6 +522,22 @@ namespace tridot {
             }else{
                 return 1;
             }
+        }
+
+        template<typename T>
+        Ref<T> getByFile(const std::string &file){
+            uint32_t type = typeid(T).hash_code();
+            for(auto &entry : entries){
+                if(entry.second->type == type) {
+                    if(entry.second->filePath != ""){
+                        if(entry.second->filePath == file || isSubstring(entry.second->filePath, file) == 3){
+                            auto *res = (Entry<T>*)entry.second.get();
+                            return res->resource;
+                        }
+                    }
+                }
+            }
+            return nullptr;
         }
 
         std::unordered_map<std::string, Ref<EntryBase>> entries;

@@ -28,7 +28,7 @@ namespace tridot {
                     id = engine.createHinted(id);
                 }
                 if(!engine.has(id, comp.typeId)) {
-                    engine.addReflect(id, comp.typeId);
+                    engine.addByTypeId(id, comp.typeId);
                 }
                 void *data = engine.get(id, comp.typeId);
                 Reflection::get(comp.typeId)->copy(comp.startData.get(), data);

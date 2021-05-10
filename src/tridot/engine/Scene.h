@@ -22,32 +22,7 @@ namespace tridot {
         bool postLoad();
 
         void copy(const Scene &source);
-
-        template<typename... Components>
-        View<Components...> view(){
-            if(active){
-                return View<Components...>(this);
-            }else{
-                return View<Components...>(nullptr);
-            }
-        }
-
-        template<typename... Components, typename Func>
-        void each(const Func &func){
-            view<Components...>().each(func);
-        }
-
-        Pool &getEntityPool(){
-            if(active){
-                return entityPool;
-            }else{
-                return emptyPool;
-            }
-        }
-
-    private:
-        Pool emptyPool;
-        bool active = true;
+        void swap(Scene &other);
     };
 
 }

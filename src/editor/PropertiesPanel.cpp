@@ -60,7 +60,7 @@ namespace tridot {
                             Editor::undo.addCustomAction([id, rid = type->id()](){
                                 engine.remove(id, rid);
                             }, [id, rid = type->id()](){
-                                engine.addReflect(id, rid);
+                                engine.addByTypeId(id, rid);
                             });
                             Editor::undo.endAction();
                             ImGui::CloseCurrentPopup();

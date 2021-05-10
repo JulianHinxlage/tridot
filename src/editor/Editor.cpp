@@ -21,7 +21,6 @@ namespace tridot {
 
     EntityId Editor::cameraId = -1;
     std::map<std::string, bool> Editor::flags;
-    std::string Editor::currentSceneFile = "";
     uint64_t Editor::propertiesWindowFlags = 0;
     bool Editor::runtime = false;
     Scene Editor::runtimeSceneBuffer;
@@ -82,7 +81,7 @@ namespace tridot {
                 camera = cameraBuffer;
             }
         }
-        runtimeSceneBuffer.clear(true);
+        runtimeSceneBuffer.clear();
         engine.onUpdate().setActiveAll(false);
         engine.onUpdate().setActive("rendering", true);
         engine.onUpdate().setActive("panels", true);
@@ -137,9 +136,6 @@ namespace tridot {
         });
         engine.onUpdate().order({"imgui end", "window", "imgui begin", "rendering", "editor", "panels"});
         Editor::disableRuntime(false);
-        engine.onUnregister().add([](int reflectId){
-            Editor::runtimeSceneBuffer.unregisterComponent(reflectId);
-        });
     }
 
     void Editor::update() {
@@ -158,7 +154,7 @@ namespace tridot {
                         if(runtime){
                             disableRuntime();
                         }
-                        engine.save(Editor::currentSceneFile);
+                        engine.save();
                     }
                     if(ImGui::MenuItem("Save as")){
                         saveFilePopup = true;
@@ -199,9 +195,7 @@ namespace tridot {
                         std::string file(buffer);
                         if(engine.resources.searchFile(file) != ""){
                             file = engine.resources.searchFile(file);
-                            engine.resources.remove(Editor::currentSceneFile);
-                            engine.resources.setup<Scene>(file).setInstance(&engine).get();
-                            Editor::currentSceneFile = file;
+                            engine.resources.get<Scene>(file);
                             Editor::cameraId = -1;
                             Editor::selection.unselect();
                         }else{
@@ -231,11 +225,10 @@ namespace tridot {
                     static char buffer[256];
                     ImGui::InputText("File", buffer, sizeof(buffer));
                     if (ImGui::Button("Save")) {
-                        Editor::currentSceneFile = std::string(buffer);
                         if(runtime){
                             disableRuntime();
                         }
-                        engine.save(Editor::currentSceneFile);
+                        engine.save(std::string(buffer));
                         ImGui::CloseCurrentPopup();
                     }
                     ImGui::SameLine();
