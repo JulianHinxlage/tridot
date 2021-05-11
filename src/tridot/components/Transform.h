@@ -7,6 +7,7 @@
 
 #include "tridot/core/config.h"
 #include <glm/glm.hpp>
+#include <map>
 
 namespace tridot {
 
@@ -31,6 +32,10 @@ namespace tridot {
         glm::mat4 getMatrix() const;
         glm::mat4 getLocalMatrix() const;
         void decompose(const glm::mat4 &matrix);
+
+        static std::map<EntityId, std::vector<EntityId>> children;
+        static bool hasChildren(EntityId id);
+        static const std::vector<EntityId> &getChildren(EntityId id);
     };
 
 }

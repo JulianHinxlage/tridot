@@ -10,6 +10,8 @@
 
 namespace tridot {
 
+    std::map<EntityId, std::vector<EntityId>> Transform::children;
+
     glm::mat4 Transform::getMatrix() const {
         return parent.matrix * getLocalMatrix();
     }
@@ -33,11 +35,22 @@ namespace tridot {
 
     TRI_INIT("transform"){
         engine.onUpdate().order({"transform", "rendering"});
+        engine.onDestroy().add("transform", [](Registry *reg, EntityId id){
+            if(reg == &engine){
+                if(Transform::hasChildren(id)){
+                    for(EntityId child : Transform::getChildren(id)){
+                        reg->destroy(child);
+                    }
+                }
+            }
+        });
     }
 
     TRI_UPDATE("transform"){
-        engine.view<Transform>().each([](Transform &t){
+        Transform::children.clear();
+        engine.view<Transform>().each([](EntityId id, Transform &t){
             if(t.parent.id != -1){
+                Transform::children[t.parent.id].push_back(id);
                 if(engine.has<Transform>(t.parent.id)){
                     Transform &pt = engine.get<Transform>(t.parent.id);
                     t.parent.matrix = pt.getMatrix();
@@ -46,6 +59,14 @@ namespace tridot {
                 t.parent.matrix = glm::mat4(1);
             }
         });
+    }
+
+    const std::vector<EntityId> &Transform::getChildren(EntityId id) {
+        return Transform::children[id];
+    }
+
+    bool Transform::hasChildren(EntityId id) {
+        return Transform::children.contains(id);
     }
 
 }

@@ -14,10 +14,9 @@ namespace tridot {
 	class EntitiesPanel {
 	public:
 		void update();
-		void updateChildren();
         void updateEntity(EntityId id, bool controlDown, bool shiftDown);
         void updateEntityMenu(EntityId id);
-        std::map<EntityId, std::vector<EntityId>> children;
+        void newEntity(EntityId parentId = -1, bool addAction = true);
         std::map<EntityId, bool> treesOpen;
         EntityId clickedEntity = -1;
         EntityId hoveredEntity = -1;

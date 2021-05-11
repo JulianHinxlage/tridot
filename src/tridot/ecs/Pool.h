@@ -71,9 +71,10 @@ namespace tridot {
 
         virtual uint32_t remove(EntityId id){
             uint32_t index1 = getIndex(id);
-            uint32_t index2 = dense.size() - 1;
             if(index1 != -1){
                 onRemoveSignal.invoke(registry, id);
+                index1 = getIndex(id);
+                uint32_t index2 = dense.size() - 1;
                 EntityId id1 = getId(index1);
                 EntityId id2 = getId(index2);
                 dense[index1] = id2;
@@ -133,11 +134,13 @@ namespace tridot {
             return std::make_shared<Pool>();
         }
 
-        virtual void swap(Pool &other){
+        virtual void swap(Pool &other, bool swapSignals = false){
             dense.swap(other.dense);
             sparse.swap(other.sparse);
-            onAddSignal.swap(other.onAddSignal);
-            onRemoveSignal.swap(other.onRemoveSignal);
+            if(swapSignals){
+                onAddSignal.swap(other.onAddSignal);
+                onRemoveSignal.swap(other.onRemoveSignal);
+            }
             std::swap(registry, other.registry);
         }
 

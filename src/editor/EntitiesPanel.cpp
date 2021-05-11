@@ -91,6 +91,9 @@ namespace tridot {
                     }
                 }
             }
+            if(ImGui::Selectable("add child")){
+                newEntity(id);
+            }
             ImGui::EndPopup();
         }
     }
@@ -104,7 +107,7 @@ namespace tridot {
             label = "Entity " + std::to_string(id);
         }
 
-        bool hasChildren = children.find(id) != children.end();
+        bool hasChildren = Transform::hasChildren(id);
         ImGuiTreeNodeFlags flags =
                 ImGuiTreeNodeFlags_OpenOnArrow |
                 ImGuiTreeNodeFlags_SpanAvailWidth |
@@ -155,7 +158,7 @@ namespace tridot {
         updateEntityMenu(id);
 
         if(hasChildren && treeOpen){
-            for(auto &child : children[id]){
+            for(auto &child : Transform::getChildren(id)){
                 ImGui::PushID(child);
                 updateEntity(child, controlDown, shiftDown);
                 ImGui::PopID();
@@ -168,31 +171,17 @@ namespace tridot {
         }
     }
 
-    void EntitiesPanel::updateChildren() {
-        children.clear();
-        engine.view<>().each([&](EntityId id) {
-            if(engine.has<Transform>(id)){
-                Transform &t = engine.get<Transform>(id);
-                if(t.parent.id != -1){
-                    children[t.parent.id].push_back(id);
-                }
-            }
-        });
-    }
-
     void EntitiesPanel::update(){
         if(engine.input.pressed(Input::MOUSE_BUTTON_LEFT)){
             clickedEntity = -1;
             hoveredEntity = -1;
         }
         EditorGui::window("Entities", [this](){
-            updateChildren();
-
             bool controlDown = engine.input.down(Input::KEY_RIGHT_CONTROL) || engine.input.down(Input::KEY_LEFT_CONTROL);
             bool shiftDown = engine.input.down(Input::KEY_RIGHT_SHIFT) || engine.input.down(Input::KEY_LEFT_SHIFT);
 
             if (ImGui::Button("add Entity")) {
-                Editor::selection.select(engine.create(Transform(), Tag(), uuid()));
+                newEntity();
             }
 
             if (ImGui::IsWindowHovered(ImGuiFocusedFlags_ChildWindows)) {
@@ -250,6 +239,23 @@ namespace tridot {
 
             ImGui::EndChild();
         });
+    }
+
+    void EntitiesPanel::newEntity(EntityId parentId, bool addAction) {
+        Transform transform;
+        transform.parent.id = parentId;
+        EntityId id = engine.create(transform, Tag(), uuid());
+        Editor::selection.select(id);
+
+        if(addAction) {
+            Editor::undo.beginAction();
+            Editor::undo.addCustomAction([id]() {
+                engine.destroy(id);
+            }, [parentId, this]() {
+                newEntity(parentId, false);
+            });
+            Editor::undo.endAction();
+        }
     }
 
 }
