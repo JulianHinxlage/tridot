@@ -17,6 +17,7 @@ namespace tridot {
     ResourcePanel Editor::resource;
     ConsolePanel Editor::console;
     ResourceBrowser Editor::resourceBrowser;
+    ProfilerPanel Editor::profiler;
     Undo Editor::undo;
 
     EntityId Editor::cameraId = -1;
@@ -94,6 +95,7 @@ namespace tridot {
         engine.onUpdate().setActive("clear", true);
         engine.onUpdate().setActive("resources", true);
         engine.onUpdate().setActive("transform", true);
+        engine.onUpdate().setActive("profiler", true);
         runtime = false;
         undo.enabled = true;
         Log::debug("runtime disabled");
@@ -130,6 +132,7 @@ namespace tridot {
         viewport.init();
         console.init();
         resourceBrowser.init();
+        profiler.init();
 
         engine.onUpdate().add("editor", [](){
             Editor::update();
@@ -139,113 +142,41 @@ namespace tridot {
     }
 
     void Editor::update() {
+        TRI_PROFILE("editor")
+
         if(ImGui::GetCurrentContext() != nullptr) {
             ImGui::DockSpaceOverViewport();
-
-            bool openFilePopup = false;
-            bool saveFilePopup = false;
-
-            if (ImGui::BeginMainMenuBar()) {
-                if(ImGui::BeginMenu("File")){
-                    if(ImGui::MenuItem("Open")){
-                        openFilePopup = true;
-                    }
-                    if(ImGui::MenuItem("Save")){
-                        if(runtime){
-                            disableRuntime();
-                        }
-                        engine.save();
-                    }
-                    if(ImGui::MenuItem("Save as")){
-                        saveFilePopup = true;
-                    }
-                    ImGui::EndMenu();
-                }
-
-
-                if (ImGui::BeginMenu("View")) {
-                    for (auto &panel : Editor::flags) {
-                        if (ImGui::MenuItem(panel.first.c_str(), nullptr, panel.second)) {
-                            panel.second = !panel.second;
-                        }
-                    }
-                    ImGui::EndMenu();
-                }
-                ImGui::EndMainMenuBar();
-            }
-
-            //Open File
-            if(openFilePopup){
-                ImGui::OpenPopup("Open File");
-            }
-            {
-                bool popupOpen = true;
-                if (ImGui::BeginPopupModal("Open File", &popupOpen)){
-                    if (!popupOpen) {
-                        ImGui::CloseCurrentPopup();
-                    }
-                    static char buffer[256];
-                    ImGui::InputText("File", buffer, sizeof(buffer));
-                    if (ImGui::Button("Open")) {
-                        if(runtime){
-                            disableRuntime();
-                        }
-                        Editor::undo.clearActions();
-
-                        std::string file(buffer);
-                        if(engine.resources.searchFile(file) != ""){
-                            file = engine.resources.searchFile(file);
-                            engine.resources.get<Scene>(file);
-                            Editor::cameraId = -1;
-                            Editor::selection.unselect();
-                        }else{
-                            Log::warning("file ", file, " not found");
-                        }
-                        ImGui::CloseCurrentPopup();
-                    }
-                    ImGui::SameLine();
-                    if(ImGui::Button("Cancel")){
-                        ImGui::CloseCurrentPopup();
-                    }
-                    ImGui::EndPopup();
-                }
-            }
-
-
-            //Save File
-            if(saveFilePopup){
-                ImGui::OpenPopup("Save File");
-            }
-            {
-                bool popupOpen = true;
-                if (ImGui::BeginPopupModal("Save File", &popupOpen)){
-                    if (!popupOpen) {
-                        ImGui::CloseCurrentPopup();
-                    }
-                    static char buffer[256];
-                    ImGui::InputText("File", buffer, sizeof(buffer));
-                    if (ImGui::Button("Save")) {
-                        if(runtime){
-                            disableRuntime();
-                        }
-                        engine.save(std::string(buffer));
-                        ImGui::CloseCurrentPopup();
-                    }
-                    ImGui::SameLine();
-                    if(ImGui::Button("Cancel")){
-                        ImGui::CloseCurrentPopup();
-                    }
-                    ImGui::EndPopup();
-                }
-            }
+            updateMenuBar();
         }
 
-        viewport.update();
-        entities.update();
-        properties.update();
-        resource.update();
-        console.update();
-        resourceBrowser.update();
+        {
+            TRI_PROFILE("editor/viewport")
+            viewport.update();
+        }
+        {
+            TRI_PROFILE("editor/entities")
+            entities.update();
+        }
+        {
+            TRI_PROFILE("editor/properties")
+            properties.update();
+        }
+        {
+            TRI_PROFILE("editor/resource panles")
+            resource.update();
+        }
+        {
+            TRI_PROFILE("editor/console")
+            console.update();
+        }
+        {
+            TRI_PROFILE("editor/resource browser")
+            resourceBrowser.update();
+        }
+        {
+            TRI_PROFILE("editor/profiler")
+            profiler.update();
+        }
 
         if(!runtime) {
             if (engine.input.down(Input::KEY_LEFT_CONTROL) || engine.input.down(Input::KEY_RIGHT_CONTROL)) {
@@ -258,6 +189,111 @@ namespace tridot {
                         undo.undoAction();
                     }
                 }
+            }
+        }
+    }
+
+    void Editor::updateMenuBar() {
+        bool openFilePopup = false;
+        bool saveFilePopup = false;
+
+        if (ImGui::BeginMainMenuBar()) {
+            if(ImGui::BeginMenu("File")){
+                if(ImGui::MenuItem("Open")){
+                    openFilePopup = true;
+                }
+                if(ImGui::MenuItem("Save")){
+                    if(runtime){
+                        disableRuntime();
+                    }
+                    engine.save();
+                }
+                if(ImGui::MenuItem("Save as")){
+                    saveFilePopup = true;
+                }
+                if(ImGui::MenuItem("Close")){
+                    engine.resources.setup<Scene>("").setPreLoad(nullptr).get();
+                }
+                if(ImGui::MenuItem("Exit")){
+                    engine.window.close();
+                }
+                ImGui::EndMenu();
+            }
+
+
+            if (ImGui::BeginMenu("View")) {
+                for (auto &panel : Editor::flags) {
+                    if (ImGui::MenuItem(panel.first.c_str(), nullptr, panel.second)) {
+                        panel.second = !panel.second;
+                    }
+                }
+                ImGui::EndMenu();
+            }
+            ImGui::EndMainMenuBar();
+        }
+
+        //Open File
+        if(openFilePopup){
+            ImGui::OpenPopup("Open File");
+        }
+        {
+            bool popupOpen = true;
+            if (ImGui::BeginPopupModal("Open File", &popupOpen)){
+                if (!popupOpen) {
+                    ImGui::CloseCurrentPopup();
+                }
+                static char buffer[256];
+                ImGui::InputText("File", buffer, sizeof(buffer));
+                if (ImGui::Button("Open")) {
+                    if(runtime){
+                        disableRuntime();
+                    }
+                    Editor::undo.clearActions();
+
+                    std::string file(buffer);
+                    if(engine.resources.searchFile(file) != ""){
+                        file = engine.resources.searchFile(file);
+                        engine.resources.get<Scene>(file);
+                        Editor::cameraId = -1;
+                        Editor::selection.unselect();
+                    }else{
+                        Log::warning("file ", file, " not found");
+                    }
+                    ImGui::CloseCurrentPopup();
+                }
+                ImGui::SameLine();
+                if(ImGui::Button("Cancel")){
+                    ImGui::CloseCurrentPopup();
+                }
+                ImGui::EndPopup();
+            }
+        }
+
+
+        //Save File
+        if(saveFilePopup){
+            ImGui::OpenPopup("Save File");
+        }
+        {
+            bool popupOpen = true;
+            if (ImGui::BeginPopupModal("Save File", &popupOpen)){
+                if (!popupOpen) {
+                    ImGui::CloseCurrentPopup();
+                }
+                static char buffer[256];
+                ImGui::InputText("File", buffer, sizeof(buffer));
+                if (ImGui::Button("Save")) {
+                    if(runtime){
+                        disableRuntime();
+                    }
+                    engine.save(std::string(buffer));
+                    ImGui::CloseCurrentPopup();
+                }
+                ImGui::SameLine();
+                if(ImGui::Button("Cancel")){
+                    ImGui::CloseCurrentPopup();
+                }
+                ImGui::EndPopup();
             }
         }
     }

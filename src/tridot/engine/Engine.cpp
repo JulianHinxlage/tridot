@@ -98,7 +98,6 @@ namespace tridot {
             resources.update();
         });
         onUpdate().add("window", [this](){
-            glFinish();
             window.update();
         });
 

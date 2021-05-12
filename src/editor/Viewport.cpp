@@ -27,11 +27,27 @@ namespace tridot {
         if(ImGui::GetCurrentContext() != nullptr) {
             ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
             EditorGui::window("Viewport", [this]() {
-                updateControlBar();
-                drawSelectionOverlay();
-                draw();
-                updateGizmos();
-                updateMousePicking();
+
+                {
+                    TRI_PROFILE("editor/viewport/control bar")
+                    updateControlBar();
+                }
+                {
+                    TRI_PROFILE("editor/viewport/outlines")
+                    drawSelectionOverlay();
+                }
+                {
+                    TRI_PROFILE("editor/viewport/draw")
+                    draw();
+                }
+                {
+                    TRI_PROFILE("editor/viewport/gizmos")
+                    updateGizmos();
+                }
+                {
+                    TRI_PROFILE("editor/viewport/mouse picking")
+                    updateMousePicking();
+                }
 
                 //camera control
                 if (engine.has<PerspectiveCamera>(Editor::cameraId)) {
@@ -400,6 +416,7 @@ namespace tridot {
     }
 
     void Viewport::clear() {
+        TRI_PROFILE("editor/viewport/clear")
         engine.view<PerspectiveCamera>().each([&](EntityId id, PerspectiveCamera &camera){
             if(Editor::cameraId == -1){
                 Editor::cameraId = id;
@@ -457,7 +474,6 @@ namespace tridot {
             }
 
             engine.pbRenderer.end();
-            glFinish();
         }
     }
 

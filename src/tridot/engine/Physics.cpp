@@ -53,10 +53,17 @@ namespace tridot {
     }
 
     TRI_UPDATE("physics"){
-        engine.physics.step(engine.time.deltaTime);
-        engine.view<Transform, RigidBody, Collider>().each([](EntityId id, Transform &t, RigidBody &rb, Collider &c){
-            engine.physics.update(rb, t, c, id);
-        });
+        TRI_PROFILE("physics");
+        {
+            TRI_PROFILE("physics/step");
+            engine.physics.step(engine.time.deltaTime);
+        }
+        {
+            TRI_PROFILE("physics/update");
+            engine.view<Transform, RigidBody, Collider>().each([](EntityId id, Transform &t, RigidBody &rb, Collider &c){
+                engine.physics.update(rb, t, c, id);
+            });
+        }
     }
 
     TRI_INIT("physics"){

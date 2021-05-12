@@ -11,6 +11,7 @@
 #include "Input.h"
 #include "Physics.h"
 #include "ResourceManager.h"
+#include "Profiler.h"
 #include "tridot/render/MeshRenderer.h"
 #include "tridot/render/PBRenderer.h"
 #include "tridot/render/Window.h"
@@ -28,6 +29,7 @@ namespace tridot {
         MeshRenderer renderer;
         PBRenderer pbRenderer;
         Window window;
+        Profiler profiler;
 
         Engine();
         ~Engine();

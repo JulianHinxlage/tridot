@@ -5,6 +5,8 @@
 #include "PBRenderer.h"
 #include "MeshFactory.h"
 #include "BatchBuffer.h"
+#include "tridot/engine/Profiler.h"
+#include <GL/gl.h>
 
 namespace tridot {
 
@@ -268,6 +270,7 @@ namespace tridot {
             }
         }
         lights.reset();
+        glFlush();
     }
 
     void PBRenderer::flushBatch(PBBatch *batch) {
@@ -308,7 +311,10 @@ namespace tridot {
             }
 
             //draw call
-            batch->vertexArray->submit(-1, batch->instances.size());
+            {
+                TRI_PROFILE("render/draw call")
+                batch->vertexArray->submit(-1, batch->instances.size());
+            }
 
             batch->textureMap.clear();
             batch->materialMap.clear();

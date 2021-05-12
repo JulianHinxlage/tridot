@@ -14,6 +14,7 @@
 #include "ResourcePanel.h"
 #include "ConsolePanel.h"
 #include "ResourceBrowser.h"
+#include "ProfilerPanel.h"
 #include "Undo.h"
 #include <glm/glm.hpp>
 #include <map>
@@ -29,6 +30,7 @@ namespace tridot {
         static ResourcePanel resource;
         static ConsolePanel console;
         static ResourceBrowser resourceBrowser;
+        static ProfilerPanel profiler;
         static Undo undo;
 
         static EntityId cameraId;
@@ -39,6 +41,7 @@ namespace tridot {
 
         static void init();
         static void update();
+        static void updateMenuBar();
 
         static void enableRuntime();
         static void disableRuntime(bool restoreScene = true);

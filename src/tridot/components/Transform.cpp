@@ -47,6 +47,7 @@ namespace tridot {
     }
 
     TRI_UPDATE("transform"){
+        TRI_PROFILE("transforms");
         Transform::children.clear();
         engine.view<Transform>().each([](EntityId id, Transform &t){
             if(t.parent.id != -1){

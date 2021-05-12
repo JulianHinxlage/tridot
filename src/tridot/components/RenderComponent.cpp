@@ -38,9 +38,13 @@ namespace tridot {
     }
 
     TRI_UPDATE("rendering"){
+        TRI_PROFILE("render");
         auto render = [](const glm::mat4 &projection, glm::vec3 cameraPosition, const Ref<FrameBuffer> &frameBuffer){
-            engine.renderer.begin(projection, cameraPosition, frameBuffer);
-            engine.pbRenderer.begin(projection, cameraPosition, frameBuffer);
+            {
+                TRI_PROFILE("render/begin");
+                engine.renderer.begin(projection, cameraPosition, frameBuffer);
+                engine.pbRenderer.begin(projection, cameraPosition, frameBuffer);
+            }
 
             engine.view<Light, Transform>().each([](Light &light, Transform &transform){
                 if(light.type == LightType::POINT_LIGHT){
@@ -51,11 +55,17 @@ namespace tridot {
                 }
             });
 
-            engine.view<Transform, RenderComponent>().each([&](EntityId id, Transform &transform, RenderComponent &rc){
-                engine.pbRenderer.submit(transform.getMatrix(), rc.color, rc.mesh.get(), rc.material.get(), id);
-            });
-            engine.renderer.end();
-            engine.pbRenderer.end();
+            {
+                TRI_PROFILE("render/submit");
+                engine.view<Transform, RenderComponent>().each([&](EntityId id, Transform &transform, RenderComponent &rc){
+                    engine.pbRenderer.submit(transform.getMatrix(), rc.color, rc.mesh.get(), rc.material.get(), id);
+                });
+            }
+            {
+                TRI_PROFILE("render/end");
+                engine.renderer.end();
+                engine.pbRenderer.end();
+            }
         };
 
         engine.view<PerspectiveCamera>().each([&](PerspectiveCamera &camera){

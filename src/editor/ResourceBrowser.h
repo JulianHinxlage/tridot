@@ -39,7 +39,6 @@ namespace tridot {
     private:
         void updateDirectory(const std::string &directory, const std::string &baseDirectory);
         bool isSubdirectory(const std::string &directory);
-        int stringMatch(const std::string &v1, const std::string &v2);
 
         class Association{
         public:

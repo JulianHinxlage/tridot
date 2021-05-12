@@ -3,6 +3,7 @@
 //
 
 #include "ResourceBrowser.h"
+#include "tridot/core/StrUtil.h"
 #include "Editor.h"
 #include "tridot/engine/Engine.h"
 #include "tridot/engine/Plugin.h"
@@ -63,7 +64,7 @@ namespace tridot {
                 std::string extension = std::filesystem::path(file).extension();
 
                 //relative path to baseDirectory
-                std::string path = file.substr(stringMatch(baseDirectory, file));
+                std::string path = file.substr(StrUtil::match(baseDirectory, file));
 
                 if (ImGui::TreeNodeEx(name.c_str(), ImGuiTreeNodeFlags_Leaf)) {
                     if(fileAssociations.contains(extension)){
@@ -89,25 +90,12 @@ namespace tridot {
     bool ResourceBrowser::isSubdirectory(const std::string &directory) {
         for(auto &dir : engine.resources.getSearchDirectories()){
             if(dir.size() < directory.size()){
-                if(stringMatch(dir, directory) == dir.size()){
+                if(StrUtil::match(dir, directory) == dir.size()){
                     return true;
                 }
             }
         }
         return false;
-    }
-
-    int ResourceBrowser::stringMatch(const std::string &v1, const std::string &v2) {
-        int match = 0;
-        int size = std::min(v1.size(), v2.size());
-        for(int i = 0; i < size; i++){
-            if(v1[i] == v2[i]){
-                match++;
-            }else{
-                break;
-            }
-        }
-        return match;
     }
 
 }

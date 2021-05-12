@@ -4,6 +4,7 @@
 
 #include "Window.h"
 #include "FrameBuffer.h"
+#include "tridot/engine/Profiler.h"
 #include "tridot/core/Log.h"
 #include "GL/glew.h"
 #include "GLFW/glfw3.h"
@@ -53,7 +54,7 @@ namespace tridot {
         bindWindow(nullptr);
     }
 
-    void Window::init(int width, int height, const std::string &title) {
+    void Window::init(int width, int height, const std::string &title, bool fullscreen) {
         //init glfw
         if(glfwInit() != GLFW_TRUE) {
             Log::error("failed to initialize GLFW");
@@ -61,7 +62,7 @@ namespace tridot {
         }
 
         //create window context
-        GLFWwindow *window = glfwCreateWindow(width, height, title.c_str(), nullptr, nullptr);
+        GLFWwindow *window = glfwCreateWindow(width, height, title.c_str(), fullscreen ? glfwGetPrimaryMonitor() : nullptr, nullptr);
         if(!window){
             Log::error("failed to create GLFW window");
             return;
@@ -100,6 +101,7 @@ namespace tridot {
     }
 
     void Window::update() {
+        TRI_PROFILE("window");
         if(context != nullptr) {
             GLFWwindow *window = (GLFWwindow*)context;
             bind();
@@ -113,11 +115,20 @@ namespace tridot {
             } else {
                 glfwSwapInterval(0);
             }
-
-            glfwSwapBuffers(window);
-            glm::vec4 color = backgroundColor.vec();
-            glClearColor(color.r, color.g, color.b, color.a);
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+            {
+                TRI_PROFILE("window/wait for GPU");
+                glFinish();
+            }
+            {
+                TRI_PROFILE("window/swap buffers");
+                glfwSwapBuffers(window);
+            }
+            {
+                TRI_PROFILE("window/clear");
+                glm::vec4 color = backgroundColor.vec();
+                glClearColor(color.r, color.g, color.b, color.a);
+                glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+            }
         }else{
             Log::warning("window: update called before init or after close");
         }

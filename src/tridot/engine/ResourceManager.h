@@ -7,6 +7,8 @@
 
 #include "tridot/core/Ref.h"
 #include "tridot/core/Log.h"
+#include "tridot/core/StrUtil.h"
+#include "Profiler.h"
 #include <map>
 #include <functional>
 #include <thread>
@@ -149,6 +151,7 @@ namespace tridot {
         }
 
         void update(){
+            TRI_PROFILE("resources")
             if(synchronousMode){
                 for(auto &entry : entries) {
                     entry.second->pre();
@@ -428,6 +431,7 @@ namespace tridot {
                                 Log::warning("failed to load resource ", options.name);
                             }
                         }else {
+                            TRI_PROFILE("resources/preLoad")
                             bool found = false;
                             for (auto &directory : options.manager->searchDirectories) {
                                 filePath = directory + options.file;
@@ -473,6 +477,7 @@ namespace tridot {
             virtual void post(){
                 if(status == PRE_LOADED){
                     if(options.postLoad){
+                        TRI_PROFILE("resources/postLoad")
                         if(options.postLoad(resource)){
                             status = LOADED;
                         }else{
@@ -510,27 +515,13 @@ namespace tridot {
             }
         }
 
-        //0 = no, 1 = yes, 2 = yes at start, 3 = yes at end
-        static int isSubstring(const std::string &s1, const std::string &s2){
-            auto pos = s1.find(s2);
-            if(pos == std::string::npos){
-                return 0;
-            }else if(pos == 0){
-                return 2;
-            }else if(pos == abs((int)s1.size() - (int)s2.size())){
-                return 3;
-            }else{
-                return 1;
-            }
-        }
-
         template<typename T>
         Ref<T> getByFile(const std::string &file){
             uint32_t type = typeid(T).hash_code();
             for(auto &entry : entries){
                 if(entry.second->type == type) {
                     if(entry.second->filePath != ""){
-                        if(entry.second->filePath == file || isSubstring(entry.second->filePath, file) == 3){
+                        if(entry.second->filePath == file || StrUtil::isSubstring(entry.second->filePath, file) == 3){
                             auto *res = (Entry<T>*)entry.second.get();
                             return res->resource;
                         }

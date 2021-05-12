@@ -16,7 +16,7 @@ namespace tridot {
         Window();
         Window(int width, int height, const std::string &title);
         ~Window();
-        void init(int width, int height, const std::string &title);
+        void init(int width, int height, const std::string &title, bool fullscreen = false);
         void update();
         bool isOpen();
         void close();

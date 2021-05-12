@@ -22,6 +22,7 @@ void imguiInit(){
 }
 
 TRI_UPDATE("imgui begin"){
+    TRI_PROFILE("imgui/begin")
     if(engine.window.isOpen()){
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
@@ -35,6 +36,7 @@ TRI_UPDATE("imgui begin"){
 }
 
 TRI_UPDATE("imgui end"){
+    TRI_PROFILE("imgui/end")
     if(inFrame && engine.window.isOpen()){
         FrameBuffer::unbind();
         ImGui::Render();
