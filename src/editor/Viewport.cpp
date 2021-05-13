@@ -175,7 +175,7 @@ namespace tridot {
                 mousePickPosition.x = ImGui::GetMousePos().x - ImGui::GetItemRectMin().x;
                 mousePickPosition.y = ImGui::GetMousePos().y - ImGui::GetItemRectMin().y;
 
-                if(selectionOverlayTarget && selectionOverlay){
+                if(selectionOverlayTarget && selectionOverlay && Editor::selection.entities.size() > 0){
                     ImGui::SetCursorPos(ImVec2(viewportPosition.x, viewportPosition.y));
                     auto overlay = selectionOverlayTarget->getTexture(TextureAttachment(COLOR + 0));
                     if(overlay){
@@ -436,44 +436,45 @@ namespace tridot {
     void Viewport::drawSelectionOverlay() {
         if(engine.has<PerspectiveCamera>(Editor::cameraId) && selectionOverlay) {
             PerspectiveCamera &camera = engine.get<PerspectiveCamera>(Editor::cameraId);
+            if(Editor::selection.entities.size() > 0){
+                updateFramebuffer(selectionOverlayTarget, false, viewportSize);
+                selectionOverlayTarget->clear(Color::transparent);
+                engine.pbRenderer.begin(camera.getProjection(), camera.position, selectionOverlayTarget);
 
-            updateFramebuffer(selectionOverlayTarget, false, viewportSize);
-            selectionOverlayTarget->clear(Color::transparent);
-            engine.pbRenderer.begin(camera.getProjection(), camera.position, selectionOverlayTarget);
-
-            for (auto &sel : Editor::selection.entities) {
-                EntityId id = sel.first;
-                if (engine.exists(id)) {
-                    if (engine.has<Transform>(id)) {
-                        Transform &transform = engine.get<Transform>(id);
-                        if (engine.has<RenderComponent>(id)) {
-                            RenderComponent &rc = engine.get<RenderComponent>(id);
-                            transform.scale *= 1.05f;
-                            engine.pbRenderer.submit(transform.getMatrix(), Color(255,128,0,255), rc.mesh.get(), nullptr, id);
-                            transform.scale /= 1.05f;
+                for (auto &sel : Editor::selection.entities) {
+                    EntityId id = sel.first;
+                    if (engine.exists(id)) {
+                        if (engine.has<Transform>(id)) {
+                            Transform &transform = engine.get<Transform>(id);
+                            if (engine.has<RenderComponent>(id)) {
+                                RenderComponent &rc = engine.get<RenderComponent>(id);
+                                transform.scale *= 1.05f;
+                                engine.pbRenderer.submit(transform.getMatrix(), Color(255,128,0,255), rc.mesh.get(), nullptr, id);
+                                transform.scale /= 1.05f;
+                            }
                         }
                     }
                 }
-            }
 
-            engine.pbRenderer.end();
-            selectionOverlayTarget->bind();
-            glClear(GL_DEPTH_BUFFER_BIT);
+                engine.pbRenderer.end();
+                selectionOverlayTarget->bind();
+                glClear(GL_DEPTH_BUFFER_BIT);
 
-            for (auto &sel : Editor::selection.entities) {
-                EntityId id = sel.first;
-                if (engine.exists(id)) {
-                    if (engine.has<Transform>(id)) {
-                        Transform &transform = engine.get<Transform>(id);
-                        if (engine.has<RenderComponent>(id)) {
-                            RenderComponent &rc = engine.get<RenderComponent>(id);
-                            engine.pbRenderer.submit(transform.getMatrix(), Color::transparent, rc.mesh.get(), nullptr, id);
+                for (auto &sel : Editor::selection.entities) {
+                    EntityId id = sel.first;
+                    if (engine.exists(id)) {
+                        if (engine.has<Transform>(id)) {
+                            Transform &transform = engine.get<Transform>(id);
+                            if (engine.has<RenderComponent>(id)) {
+                                RenderComponent &rc = engine.get<RenderComponent>(id);
+                                engine.pbRenderer.submit(transform.getMatrix(), Color::transparent, rc.mesh.get(), nullptr, id);
+                            }
                         }
                     }
                 }
-            }
 
-            engine.pbRenderer.end();
+                engine.pbRenderer.end();
+            }
         }
     }
 

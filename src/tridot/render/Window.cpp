@@ -6,6 +6,7 @@
 #include "FrameBuffer.h"
 #include "tridot/engine/Profiler.h"
 #include "tridot/core/Log.h"
+#include "RenderContext.h"
 #include "GL/glew.h"
 #include "GLFW/glfw3.h"
 
@@ -29,50 +30,32 @@ namespace tridot {
     }
 
     Window::~Window() {
-        if(context != nullptr){
-            clear();
-        }
-    }
-
-    void bindWindow(GLFWwindow* window){
-        static GLFWwindow* currentWindow = nullptr;
-        if(window != currentWindow){
-            glfwMakeContextCurrent(window);
-            currentWindow = window;
-        }
+        clear();
     }
 
     void Window::bind() {
         FrameBuffer::unbind();
-        bindWindow((GLFWwindow*)context);
+        RenderContext::set(context);
         if(context != nullptr){
             glViewport(0, 0, size.x, size.y);
         }
     }
 
     void Window::unbind() {
-        bindWindow(nullptr);
+        RenderContext::set(nullptr);
     }
 
     void Window::init(int width, int height, const std::string &title, bool fullscreen) {
-        //init glfw
-        if(glfwInit() != GLFW_TRUE) {
-            Log::error("failed to initialize GLFW");
+        context = RenderContext::create();
+        if(!context){
             return;
         }
-
-        //create window context
-        GLFWwindow *window = glfwCreateWindow(width, height, title.c_str(), fullscreen ? glfwGetPrimaryMonitor() : nullptr, nullptr);
-        if(!window){
-            Log::error("failed to create GLFW window");
-            return;
-        }
-        bindWindow(window);
-
-        //init glew
-        if(glewInit() != GLEW_OK) {
-            Log::error("failed to initialize GLEW");
-            return;
+        GLFWwindow *window = (GLFWwindow*)context;
+        glfwSetWindowTitle(window, title.c_str());
+        glfwSetWindowSize(window, width, height);
+        if(fullscreen){
+            GLFWmonitor *monitor = glfwGetPrimaryMonitor();
+            glfwSetWindowMonitor(window, monitor, 0, 0, width, height, 0);
         }
 
         //setup callbacks
@@ -96,8 +79,6 @@ namespace tridot {
         position = {x, y};
         glfwGetWindowSize(window, &x, &y);
         size =  {x, y};
-
-        context = (void*)window;
     }
 
     void Window::update() {
@@ -117,7 +98,7 @@ namespace tridot {
             }
             {
                 TRI_PROFILE("window/wait for GPU");
-                glFinish();
+                RenderContext::flush(true);
             }
             {
                 TRI_PROFILE("window/swap buffers");
@@ -153,7 +134,12 @@ namespace tridot {
 
     void Window::clear() {
         if(context != nullptr) {
-            glfwDestroyWindow((GLFWwindow *) context);
+            void *current = RenderContext::get();
+            RenderContext::set(context);
+            RenderContext::destroy();
+            if(current != context){
+                RenderContext::set(current);
+            }
             context = nullptr;
             Log::trace("window closed");
         }

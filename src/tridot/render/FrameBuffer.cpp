@@ -4,6 +4,7 @@
 
 #include "FrameBuffer.h"
 #include "tridot/core/Log.h"
+#include "RenderContext.h"
 #include "GL/glew.h"
 #include "GLFW/glfw3.h"
 #include <algorithm>
@@ -53,7 +54,7 @@ namespace tridot {
     void FrameBuffer::unbind() {
         if(currentFrameBufferId != 0) {
             bindFrameBuffer(0);
-            GLFWwindow *window = glfwGetCurrentContext();
+            GLFWwindow *window = (GLFWwindow*)RenderContext::get();
             if (window) {
                 int width = 0;
                 int height = 0;

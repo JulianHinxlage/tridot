@@ -42,7 +42,6 @@ namespace tridot {
         auto render = [](const glm::mat4 &projection, glm::vec3 cameraPosition, const Ref<FrameBuffer> &frameBuffer){
             {
                 TRI_PROFILE("render/begin");
-                engine.renderer.begin(projection, cameraPosition, frameBuffer);
                 engine.pbRenderer.begin(projection, cameraPosition, frameBuffer);
             }
 
@@ -63,7 +62,6 @@ namespace tridot {
             }
             {
                 TRI_PROFILE("render/end");
-                engine.renderer.end();
                 engine.pbRenderer.end();
             }
         };

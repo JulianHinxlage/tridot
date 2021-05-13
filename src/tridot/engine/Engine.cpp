@@ -9,6 +9,7 @@
 #include "tridot/render/Camera.h"
 #include "tridot/engine/Serializer.h"
 #include "tridot/render/MeshFactory.h"
+#include "tridot/render/RenderContext.h"
 #include <GL/glew.h>
 
 tridot::Engine engine;
@@ -63,7 +64,7 @@ namespace tridot {
         physics.init();
         renderer.init(resources.get<Shader>("shaders/mesh.glsl"));
         pbRenderer.init(resources.get<Shader>("shaders/PBR.glsl"));
-        glEnable(GL_DEPTH_TEST);
+        RenderContext::setDepth(true);
 
         resources.addSearchDirectory(resourceDirectory);
         resources.autoReload = autoReload;

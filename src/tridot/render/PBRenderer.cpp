@@ -6,6 +6,7 @@
 #include "MeshFactory.h"
 #include "BatchBuffer.h"
 #include "tridot/engine/Profiler.h"
+#include "tridot/render/RenderContext.h"
 #include <GL/gl.h>
 
 namespace tridot {
@@ -270,7 +271,7 @@ namespace tridot {
             }
         }
         lights.reset();
-        glFlush();
+        RenderContext::flush(false);
     }
 
     void PBRenderer::flushBatch(PBBatch *batch) {

@@ -3,6 +3,7 @@
 //
 
 #include "Engine.h"
+#include "tridot/render/RenderContext.h"
 #include <imgui/imgui.h>
 #include <imgui/backends/imgui_impl_glfw.h>
 #include <imgui/backends/imgui_impl_opengl3.h>
@@ -16,7 +17,7 @@ void imguiInit(){
     ImGui::CreateContext();
     ImGuiIO &io = ImGui::GetIO();
     ImGui::StyleColorsDark();
-    ImGui_ImplGlfw_InitForOpenGL((GLFWwindow*)engine.window.getContext(), true);
+    ImGui_ImplGlfw_InitForOpenGL((GLFWwindow*)RenderContext::get(), true);
     ImGui_ImplOpenGL3_Init("#version 130");
     engine.onUpdate().order({"imgui end", "window", "imgui begin"});
 }
