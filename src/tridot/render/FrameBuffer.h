@@ -11,9 +11,20 @@
 
 namespace tridot {
 
+    class FrameBufferAttachmentSpec {
+    public:
+        TextureAttachment type = COLOR;
+        Color clearColor = Color::white;
+        glm::vec2 resizeFactor = {1, 1};
+        bool clear = true;
+        bool resize = true;
+    };
+
     class FrameBuffer {
     public:
         FrameBuffer();
+        FrameBuffer(const FrameBuffer &frameBuffer);
+        FrameBuffer(uint32_t width, uint32_t height, std::vector<FrameBufferAttachmentSpec> specs);
         ~FrameBuffer();
 
         void bind() const;
@@ -21,17 +32,27 @@ namespace tridot {
         uint32_t getId() const;
         glm::vec2 getSize();
 
-        Ref<Texture> getTexture(TextureAttachment attachment);
-        Ref<Texture> setTexture(TextureAttachment attachment, const Ref<Texture> &texture);
-        Ref<Texture> setTexture(TextureAttachment attachment);
+        void init(uint32_t width, uint32_t height, std::vector<FrameBufferAttachmentSpec> specs);
+
+        Ref<Texture> getAttachment(TextureAttachment attachment);
+        Ref<Texture> setAttachment(FrameBufferAttachmentSpec spec, const Ref<Texture> &texture);
+        Ref<Texture> setAttachment(FrameBufferAttachmentSpec spec);
 
         void resize(uint32_t width, uint32_t height);
-        void clear(Color color);
+        void clear();
+        void clear(TextureAttachment attachment);
     private:
         uint32_t id;
         uint32_t width;
         uint32_t height;
-        std::unordered_map<uint32_t, Ref<Texture>> textures;
+
+        class Attachment{
+        public:
+            Ref<Texture> texture;
+            FrameBufferAttachmentSpec spec;
+        };
+
+        std::unordered_map<uint32_t, Attachment> attachments;
     };
 
 }

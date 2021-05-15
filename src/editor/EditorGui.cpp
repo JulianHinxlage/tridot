@@ -234,7 +234,7 @@ TRI_INIT("panels"){
                 attachments.push_back(STENCIL);
 
                 for (TextureAttachment attachment : attachments) {
-                    auto texture = v->getTexture(attachment);
+                    auto texture = v->getAttachment(attachment);
                     if (texture) {
                         float aspect = 1;
                         if (texture->getHeight() != 0) {
@@ -268,7 +268,7 @@ TRI_INIT("panels"){
     EditorGui::addType<PerspectiveCamera>(false, [](PerspectiveCamera &v, const std::string &name) {
        if(v.target) {
            if(ImGui::TreeNode("View")) {
-               auto texture = v.target->getTexture(COLOR);
+               auto texture = v.target->getAttachment(COLOR);
                if (texture) {
                    float aspect = 1;
                    if (texture->getHeight() != 0) {

@@ -166,7 +166,7 @@ namespace tridot {
 
                 viewportPosition.x = ImGui::GetCursorPos().x;
                 viewportPosition.y = ImGui::GetCursorPos().y;
-                auto texture = camera.target->getTexture(TextureAttachment(COLOR + 0));
+                auto texture = camera.target->getAttachment(TextureAttachment(COLOR + 0));
                 if(texture) {
                     ImGui::Image((void *) (size_t) texture->getId(),
                                  ImVec2(viewportSize.x, viewportSize.y),
@@ -177,7 +177,7 @@ namespace tridot {
 
                 if(selectionOverlayTarget && selectionOverlay && Editor::selection.entities.size() > 0){
                     ImGui::SetCursorPos(ImVec2(viewportPosition.x, viewportPosition.y));
-                    auto overlay = selectionOverlayTarget->getTexture(TextureAttachment(COLOR + 0));
+                    auto overlay = selectionOverlayTarget->getAttachment(TextureAttachment(COLOR + 0));
                     if(overlay){
                         ImGui::Image((void *) (size_t) overlay->getId(),
                                      ImVec2(viewportSize.x, viewportSize.y),
@@ -365,7 +365,7 @@ namespace tridot {
         if(engine.has<PerspectiveCamera>(Editor::cameraId)) {
             PerspectiveCamera &camera = engine.get<PerspectiveCamera>(Editor::cameraId);
             if(camera.target) {
-                auto idBuffer = camera.target->getTexture(TextureAttachment(COLOR + 1));
+                auto idBuffer = camera.target->getAttachment(TextureAttachment(COLOR + 1));
                 if (idBuffer && mousePickPosition.x >= 0 && mousePickPosition.y >= 0 &&
                         mousePickPosition.x < idBuffer->getWidth() && mousePickPosition.y < idBuffer->getHeight()) {
 
@@ -391,10 +391,17 @@ namespace tridot {
     float updateFramebuffer(Ref<FrameBuffer> &target, bool useIdBuffer, glm::vec2 viewportSize){
         if(target.get() == nullptr) {
             target = Ref<FrameBuffer>::make();
-            target->setTexture(COLOR);
-            target->setTexture(DEPTH);
             if(useIdBuffer){
-                target->setTexture(TextureAttachment(COLOR + 1));
+                target->init(viewportSize.x, viewportSize.y, {
+                        {COLOR, engine.window.getBackgroundColor()},
+                        {DEPTH},
+                        {TextureAttachment(COLOR + 1), Color::white},
+                });
+            }else{
+                target->init(viewportSize.x, viewportSize.y, {
+                        {COLOR, engine.window.getBackgroundColor()},
+                        {DEPTH},
+                });
             }
         }
         if (target->getSize() != viewportSize) {
@@ -404,14 +411,7 @@ namespace tridot {
         if (target->getSize().y != 0) {
             aspectRatio = target->getSize().x / target->getSize().y;
         }
-        target->clear(engine.window.getBackgroundColor());
-
-        if(useIdBuffer) {
-            auto idBuffer = target->getTexture(TextureAttachment(COLOR + 1));
-            if (idBuffer) {
-                idBuffer->clear(Color(255, 255, 255, 255));
-            }
-        }
+        target->clear();
         return aspectRatio;
     }
 
@@ -438,7 +438,8 @@ namespace tridot {
             PerspectiveCamera &camera = engine.get<PerspectiveCamera>(Editor::cameraId);
             if(Editor::selection.entities.size() > 0){
                 updateFramebuffer(selectionOverlayTarget, false, viewportSize);
-                selectionOverlayTarget->clear(Color::transparent);
+                selectionOverlayTarget->setAttachment({COLOR, Color::transparent});
+                selectionOverlayTarget->clear();
                 engine.pbRenderer.begin(camera.getProjection(), camera.position, selectionOverlayTarget);
 
                 for (auto &sel : Editor::selection.entities) {
@@ -458,7 +459,7 @@ namespace tridot {
 
                 engine.pbRenderer.end();
                 selectionOverlayTarget->bind();
-                glClear(GL_DEPTH_BUFFER_BIT);
+                selectionOverlayTarget->clear(DEPTH);
 
                 for (auto &sel : Editor::selection.entities) {
                     EntityId id = sel.first;
