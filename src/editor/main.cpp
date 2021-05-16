@@ -87,8 +87,9 @@ int main(int argc, char *argv[]){
 void createDefaultScene(Scene &scene){
     Editor::cameraId = scene.create(Tag("Camera"));
     PerspectiveCamera &camera = scene.add<PerspectiveCamera>(Editor::cameraId);
-    camera.position = glm::vec3(3, 5, 2) * 0.5f;
-    camera.forward = -glm::normalize(camera.position);
+    Transform &transform = scene.add<Transform>(Editor::cameraId);
+    transform.position = glm::vec3(3, 5, 2) * 0.5f;
+    camera.forward = -glm::normalize(transform.position);
     camera.up = {0, 0, 1};
     camera.right = {1, 0, 0};
     camera.near = 0.05;

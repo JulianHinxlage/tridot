@@ -277,11 +277,17 @@ TRI_INIT("panels"){
                    ImGui::Image((void *) (size_t) texture->getId(), ImVec2(200 * aspect, 200), ImVec2(0, 1),
                                 ImVec2(1, 0));
 
-                   static EditorCamera editorCamera;
-                   if(ImGui::IsItemHovered()) {
-                       Editor::propertiesWindowFlags |= ImGuiWindowFlags_NoScrollWithMouse;
+                   EntityId id = engine.getIdByComponent(v);
+                   if(id != -1){
+                       if(engine.has<Transform>(id)){
+                           Transform &transform = engine.get<Transform>(id);
+                           static EditorCamera editorCamera;
+                           if(ImGui::IsItemHovered()) {
+                               Editor::propertiesWindowFlags |= ImGuiWindowFlags_NoScrollWithMouse;
+                           }
+                           editorCamera.update(v, transform, ImGui::IsItemHovered());
+                       }
                    }
-                   editorCamera.update(v, ImGui::IsItemHovered());
                }
                ImGui::TreePop();
            }

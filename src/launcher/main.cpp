@@ -10,6 +10,7 @@ using namespace tridot;
 int main(int argc, char *argv[]){
     engine.resources.addSearchDirectory("plugins/");
     engine.init(1920, 1080, "Tridot Launcher", "../res/", false);
+    engine.window.setBackgroundColor(glm::vec4( 0.25, 0.25, 0.25, 1 ));
 
     std::string sceneFile = "scenes/scene.yml";
     if(engine.resources.searchFile(sceneFile) != ""){
@@ -26,7 +27,7 @@ int main(int argc, char *argv[]){
        engine.view<PerspectiveCamera>().each([](PerspectiveCamera &camera){
             if(camera.target.get() == nullptr){
                 camera.target = Ref<FrameBuffer>::make();
-                camera.target->init(engine.window.getSize().x, engine.window.getSize().y, {{COLOR}, {DEPTH}});
+                camera.target->init(engine.window.getSize().x, engine.window.getSize().y, {{COLOR, engine.window.getBackgroundColor()}, {DEPTH}});
             }
             if(camera.target->getSize() != engine.window.getSize()){
                 camera.target->resize(engine.window.getSize().x, engine.window.getSize().y);

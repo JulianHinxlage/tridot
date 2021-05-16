@@ -72,14 +72,15 @@ namespace tridot {
         engine.endScene();
         if(restoreScene){
             PerspectiveCamera cameraBuffer;
-            if(engine.has<PerspectiveCamera>(Editor::cameraId)){
-                PerspectiveCamera &camera = engine.get<PerspectiveCamera>(Editor::cameraId);
-                cameraBuffer = camera;
+            Transform cameraTransformBuffer;
+            if(engine.hasAll<PerspectiveCamera, Transform>(Editor::cameraId)){
+                cameraBuffer = engine.get<PerspectiveCamera>(Editor::cameraId);
+                cameraTransformBuffer = engine.get<Transform>(Editor::cameraId);
             }
             engine.copy(runtimeSceneBuffer);
-            if(engine.has<PerspectiveCamera>(Editor::cameraId)){
-                PerspectiveCamera &camera = engine.get<PerspectiveCamera>(Editor::cameraId);
-                camera = cameraBuffer;
+            if(engine.hasAll<PerspectiveCamera, Transform>(Editor::cameraId)){
+                engine.get<PerspectiveCamera>(Editor::cameraId) = cameraBuffer;
+                engine.get<Transform>(Editor::cameraId) = cameraTransformBuffer;
             }
         }
         runtimeSceneBuffer.clear();

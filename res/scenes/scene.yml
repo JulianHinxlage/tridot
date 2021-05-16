@@ -2,14 +2,15 @@ Entities:
   - id: 0
     Tag: Camera
     uuid: 0b7325677ede1850dc4d42acf6d55a26
+    Transform:
+      position: [0.561112344, 12.1031561, 9.10451698]
+      scale: [1, 1, 1]
+      rotation: [0.996175706, 0, -3.59900403]
+      parent.id: 4294967295
     PerspectiveCamera:
-      position: [-0.629953265, 11.2933397, 10.0646477]
-      forward: [-0.212951809, -0.820568502, -0.530394971]
-      up: [0, 0, 1]
-      right: [-0.967936158, 0.251196265, 0]
       fieldOfView: 60
-      aspectRatio: 2.0631578
-      near: 0.0500000007
+      aspectRatio: 2.19457746
+      near: 0.100000001
       far: 1200
       target: ~
   - id: 3

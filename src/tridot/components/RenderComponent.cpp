@@ -67,18 +67,23 @@ namespace tridot {
             }
         };
 
-        engine.view<PerspectiveCamera>().each([&](PerspectiveCamera &camera){
+        engine.view<PerspectiveCamera, Transform>().each([&](PerspectiveCamera &camera, Transform &transform){
+            camera.forward = transform.getMatrix() * glm::vec4(0, 0, 1, 0);
+            camera.up = transform.getMatrix() * glm::vec4(0, 1, 0, 0);
+            camera.right = glm::cross(camera.forward, camera.up);
             if(camera.target.get() == nullptr){
                 camera.aspectRatio = engine.window.getAspectRatio();
             }
-            render(camera.getProjection(), camera.position, camera.target);
+            render(camera.getProjection() * glm::inverse(transform.getMatrix()), transform.position, camera.target);
             camera.output = camera.target;
         });
-        engine.view<OrthographicCamera>().each([&](OrthographicCamera &camera){
+        engine.view<OrthographicCamera, Transform>().each([&](OrthographicCamera &camera, Transform &transform){
+            camera.right = transform.getMatrix() * glm::vec4(1, 0, 0, 0);
+            camera.up = transform.getMatrix() * glm::vec4(0, 1, 0, 0);
             if(camera.target.get() == nullptr) {
                 camera.aspectRatio = engine.window.getAspectRatio();
             }
-            render(camera.getProjection(), glm::vec3(camera.position, 0.0f), camera.target);
+            render(camera.getProjection() * glm::inverse(transform.getMatrix()), transform.position, camera.target);
             camera.output = camera.target;
         });
     }

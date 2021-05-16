@@ -84,7 +84,9 @@ namespace tridot {
         }
         if(count == 0){
             time = sum;
-            count = 1;
+            if(sum != 0){
+                count = 1;
+            }
         }
         return time;
     }

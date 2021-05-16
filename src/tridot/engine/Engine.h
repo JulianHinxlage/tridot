@@ -82,6 +82,18 @@ namespace tridot {
             return nullptr;
         }
 
+        template<typename Component>
+        EntityId getIdByComponent(Component &component){
+            ComponentPool<Component> &pool = getPool<Component>();
+            if(pool.getEntities().size() > 0){
+                int index = &component - (Component*)pool.get(0);
+                if(index >= 0 && index < pool.getEntities().size()){
+                    return pool.getId(index);
+                }
+            }
+            return -1;
+        }
+
     private:
         Signal<> onInitSignal;
         Signal<> onBeginSceneSignal;

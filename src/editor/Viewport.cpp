@@ -50,9 +50,10 @@ namespace tridot {
                 }
 
                 //camera control
-                if (engine.has<PerspectiveCamera>(Editor::cameraId)) {
+                if (engine.hasAll<PerspectiveCamera, Transform>(Editor::cameraId)) {
                     PerspectiveCamera &camera = engine.get<PerspectiveCamera>(Editor::cameraId);
-                    editorCamera.update(camera, ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows), !controlDown);
+                    Transform &transform = engine.get<Transform>(Editor::cameraId);
+                    editorCamera.update(camera, transform, ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows), !controlDown);
                 }
             });
             ImGui::PopStyleVar();
@@ -204,8 +205,9 @@ namespace tridot {
     }
 
     void Viewport::updateGizmos() {
-        if(engine.has<PerspectiveCamera>(Editor::cameraId)) {
+        if(engine.hasAll<PerspectiveCamera, Transform>(Editor::cameraId)) {
             PerspectiveCamera &camera = engine.get<PerspectiveCamera>(Editor::cameraId);
+            Transform &cameraTransform = engine.get<Transform>(Editor::cameraId);
 
             EntityId selectedEntity = Editor::selection.getSingleSelection();
             if(selectedEntity != -1) {
@@ -220,8 +222,8 @@ namespace tridot {
                     ImGuizmo::SetRect(ImGui::GetWindowPos().x + viewportPosition.x, ImGui::GetWindowPos().y + viewportPosition.y, viewportSize.x, viewportSize.y);
 
                     glm::mat4 matrix = transform.getMatrix();
-                    glm::mat4 view = camera.getView();
-                    glm::mat4 projection = camera.getPerspective();
+                    glm::mat4 view = glm::inverse(cameraTransform.getMatrix());
+                    glm::mat4 projection = camera.getProjection();
 
                     glm::vec3 snapValues = glm::vec3(1);
                     if(operation == ImGuizmo::OPERATION::TRANSLATE){
@@ -294,8 +296,8 @@ namespace tridot {
 
                     glm::mat4 matrix = transform.getMatrix();
                     glm::mat4 inverse = glm::inverse(matrix);
-                    glm::mat4 view = camera.getView();
-                    glm::mat4 projection = camera.getPerspective();
+                    glm::mat4 view = glm::inverse(cameraTransform.getMatrix());
+                    glm::mat4 projection = camera.getProjection();
 
                     glm::vec3 snapValues = glm::vec3(1);
                     if(operation == ImGuizmo::OPERATION::TRANSLATE){
@@ -434,13 +436,14 @@ namespace tridot {
     }
 
     void Viewport::drawSelectionOverlay() {
-        if(engine.has<PerspectiveCamera>(Editor::cameraId) && selectionOverlay) {
+        if(engine.hasAll<PerspectiveCamera, Transform>(Editor::cameraId) && selectionOverlay) {
             PerspectiveCamera &camera = engine.get<PerspectiveCamera>(Editor::cameraId);
+            Transform &cameraTransform = engine.get<Transform>(Editor::cameraId);
             if(Editor::selection.entities.size() > 0){
                 updateFramebuffer(selectionOverlayTarget, false, viewportSize);
                 selectionOverlayTarget->setAttachment({COLOR, Color::transparent});
                 selectionOverlayTarget->clear();
-                engine.pbRenderer.begin(camera.getProjection(), camera.position, selectionOverlayTarget);
+                engine.pbRenderer.begin(camera.getProjection() * glm::inverse(cameraTransform.getMatrix()), cameraTransform.position, selectionOverlayTarget);
 
                 for (auto &sel : Editor::selection.entities) {
                     EntityId id = sel.first;

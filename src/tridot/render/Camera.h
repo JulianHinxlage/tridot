@@ -12,7 +12,6 @@ namespace tridot {
 
     class PerspectiveCamera {
     public:
-        glm::vec3 position;
         glm::vec3 forward;
         glm::vec3 up;
         glm::vec3 right;
@@ -25,13 +24,10 @@ namespace tridot {
 
         PerspectiveCamera();
         glm::mat4 getProjection();
-        glm::mat4 getView();
-        glm::mat4 getPerspective();
     };
 
     class OrthographicCamera {
     public:
-        glm::vec2 position;
         glm::vec2 scale;
         glm::vec2 up;
         glm::vec2 right;
@@ -42,8 +38,6 @@ namespace tridot {
 
         OrthographicCamera();
         glm::mat4 getProjection();
-        glm::mat4 getView();
-        glm::mat4 getPerspective();
     };
 
 }

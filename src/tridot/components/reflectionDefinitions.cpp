@@ -53,10 +53,10 @@ namespace tridot {
     TRI_REFLECT_MEMBER3(Light, color, intensity, type)
 
     TRI_REFLECT_TYPE(PerspectiveCamera)
-    TRI_REFLECT_MEMBER9(PerspectiveCamera, position, forward, up, right, fieldOfView, aspectRatio, near, far, target)
+    TRI_REFLECT_MEMBER5(PerspectiveCamera, fieldOfView, aspectRatio, near, far, target)
 
     TRI_REFLECT_TYPE(OrthographicCamera)
-    TRI_REFLECT_MEMBER7(OrthographicCamera, position, scale, up, right, rotation, aspectRatio, target)
+    TRI_REFLECT_MEMBER4(OrthographicCamera, scale, rotation, aspectRatio, target)
 
     TRI_REFLECT_TYPE(Material)
     TRI_REFLECT_MEMBER10(Material,

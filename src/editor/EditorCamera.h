@@ -6,6 +6,7 @@
 #define TRIDOT_EDITORCAMERA_H
 
 #include "tridot/render/Camera.h"
+#include "tridot/components/Transform.h"
 
 namespace tridot {
 
@@ -16,7 +17,7 @@ namespace tridot {
         bool dragMiddle = false;
         bool dragRight = false;
 
-        void update(PerspectiveCamera &camera, bool hovered, bool useKeyboard = true);
+        void update(PerspectiveCamera &camera, Transform &transform, bool hovered, bool useKeyboard = true);
     };
 
 }
