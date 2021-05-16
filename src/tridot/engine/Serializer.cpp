@@ -216,7 +216,7 @@ namespace tridot {
             }else{
                 v = nullptr;
             }
-        }else if(type->id() == Reflection::id<Ref<Mesh>>()){
+        }else if(type->id() == Reflection::id<Ref<Shader>>()){
             std::string name = in.as<std::string>("");
             Ref<Shader> &v = *(Ref<Shader> *) ptr;
             if(!name.empty()) {

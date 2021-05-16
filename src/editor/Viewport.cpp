@@ -160,13 +160,13 @@ namespace tridot {
     void Viewport::draw() {
         if(engine.has<PerspectiveCamera>(Editor::cameraId)) {
             PerspectiveCamera &camera = engine.get<PerspectiveCamera>(Editor::cameraId);
-            if (camera.target) {
+            if (camera.output) {
                 viewportSize.x = ImGui::GetContentRegionAvail().x;
                 viewportSize.y = ImGui::GetContentRegionAvail().y;
 
                 viewportPosition.x = ImGui::GetCursorPos().x;
                 viewportPosition.y = ImGui::GetCursorPos().y;
-                auto texture = camera.target->getAttachment(TextureAttachment(COLOR + 0));
+                auto texture = camera.output->getAttachment(TextureAttachment(COLOR + 0));
                 if(texture) {
                     ImGui::Image((void *) (size_t) texture->getId(),
                                  ImVec2(viewportSize.x, viewportSize.y),

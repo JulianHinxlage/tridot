@@ -6,6 +6,7 @@
 #include "Transform.h"
 #include "Tag.h"
 #include "RenderComponent.h"
+#include "PostProcessingEffect.h"
 #include "ComponentCache.h"
 #include "tridot/render/Camera.h"
 #include "tridot/render/Light.h"
@@ -38,6 +39,9 @@ namespace tridot {
 
     TRI_REFLECT_TYPE(RenderComponent)
     TRI_REFLECT_MEMBER3(RenderComponent, mesh, material, color)
+
+    TRI_REFLECT_TYPE(PostProcessingEffect)
+    TRI_REFLECT_MEMBER2(PostProcessingEffect, shader, frameBuffer)
 
     TRI_REFLECT_TYPE(Collider)
     TRI_REFLECT_MEMBER2(Collider, scale, type)

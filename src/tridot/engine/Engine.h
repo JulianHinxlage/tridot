@@ -68,6 +68,20 @@ namespace tridot {
             return ComponentRegister::onUnregister();
         }
 
+        template<typename Component>
+        Component *getComponentByHierarchy(EntityId id){
+            if(has<Component>(id)){
+                return &get<Component>(id);
+            }
+            if(has<Transform>(id)){
+                EntityId parent = get<Transform>(id).parent.id;
+                if(parent != -1){
+                    return getComponentByHierarchy<Component>(parent);
+                }
+            }
+            return nullptr;
+        }
+
     private:
         Signal<> onInitSignal;
         Signal<> onBeginSceneSignal;

@@ -5,6 +5,7 @@
 #include "Engine.h"
 #include "tridot/components/Tag.h"
 #include "tridot/components/RenderComponent.h"
+#include "tridot/components/PostProcessingEffect.h"
 #include "tridot/components/ComponentCache.h"
 #include "tridot/render/Camera.h"
 #include "tridot/engine/Serializer.h"
@@ -56,7 +57,7 @@ namespace tridot {
     void Engine::init(uint32_t width, uint32_t height, const std::string &title, const std::string &resourceDirectory, bool autoReload) {
         Log::info("Tridot version " TRI_VERSION);
 
-        registerComponent<Tag, uuid, Transform, RenderComponent, PerspectiveCamera, OrthographicCamera, Light, RigidBody, Collider, ComponentCache>();
+        registerComponent<Tag, uuid, Transform, RenderComponent, PostProcessingEffect, PerspectiveCamera, OrthographicCamera, Light, RigidBody, Collider, ComponentCache>();
 
         window.init(width, height, title);
         input.init();
@@ -101,6 +102,8 @@ namespace tridot {
         onUpdate().add("window", [this](){
             window.update();
         });
+
+        engine.onUpdate().order({"imgui end", "window", "imgui begin", "rendering", "post processing"});
 
         imguiInit();
         onInitSignal.invoke();

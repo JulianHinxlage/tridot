@@ -96,6 +96,7 @@ namespace tridot {
         engine.onUpdate().setActive("resources", true);
         engine.onUpdate().setActive("transform", true);
         engine.onUpdate().setActive("profiler", true);
+        engine.onUpdate().setActive("post processing", true);
         runtime = false;
         undo.enabled = true;
         Log::debug("runtime disabled");
@@ -137,7 +138,7 @@ namespace tridot {
         engine.onUpdate().add("editor", [](){
             Editor::update();
         });
-        engine.onUpdate().order({"imgui end", "window", "imgui begin", "rendering", "editor", "panels"});
+        engine.onUpdate().order({"post processing", "editor", "panels"});
         Editor::disableRuntime(false);
     }
 

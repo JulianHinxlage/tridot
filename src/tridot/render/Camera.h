@@ -21,6 +21,7 @@ namespace tridot {
         float near;
         float far;
         Ref<FrameBuffer> target;
+        Ref<FrameBuffer> output;
 
         PerspectiveCamera();
         glm::mat4 getProjection();
@@ -37,6 +38,7 @@ namespace tridot {
         float rotation;
         float aspectRatio;
         Ref<FrameBuffer> target;
+        Ref<FrameBuffer> output;
 
         OrthographicCamera();
         glm::mat4 getProjection();

@@ -3,6 +3,7 @@
 //
 
 #include "RenderComponent.h"
+#include "PostProcessingEffect.h"
 #include "tridot/engine/Engine.h"
 #include "tridot/render/Camera.h"
 
@@ -71,12 +72,14 @@ namespace tridot {
                 camera.aspectRatio = engine.window.getAspectRatio();
             }
             render(camera.getProjection(), camera.position, camera.target);
+            camera.output = camera.target;
         });
         engine.view<OrthographicCamera>().each([&](OrthographicCamera &camera){
             if(camera.target.get() == nullptr) {
                 camera.aspectRatio = engine.window.getAspectRatio();
             }
             render(camera.getProjection(), glm::vec3(camera.position, 0.0f), camera.target);
+            camera.output = camera.target;
         });
     }
 

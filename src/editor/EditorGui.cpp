@@ -266,9 +266,9 @@ TRI_INIT("panels"){
     });
 
     EditorGui::addType<PerspectiveCamera>(false, [](PerspectiveCamera &v, const std::string &name) {
-       if(v.target) {
+       if(v.output) {
            if(ImGui::TreeNode("View")) {
-               auto texture = v.target->getAttachment(COLOR);
+               auto texture = v.output->getAttachment(COLOR);
                if (texture) {
                    float aspect = 1;
                    if (texture->getHeight() != 0) {
@@ -286,6 +286,23 @@ TRI_INIT("panels"){
                ImGui::TreePop();
            }
        }
+    });
+
+    EditorGui::addType<OrthographicCamera>(false, [](OrthographicCamera &v, const std::string &name) {
+        if(v.output) {
+            if(ImGui::TreeNode("View")) {
+                auto texture = v.output->getAttachment(COLOR);
+                if (texture) {
+                    float aspect = 1;
+                    if (texture->getHeight() != 0) {
+                        aspect = (float) texture->getWidth() / (float) texture->getHeight();
+                    }
+                    ImGui::Image((void *) (size_t) texture->getId(), ImVec2(200 * aspect, 200), ImVec2(0, 1),
+                                 ImVec2(1, 0));
+                }
+                ImGui::TreePop();
+            }
+        }
     });
 
     EditorGui::addType<ComponentCache>(true, [](ComponentCache &v, const std::string &name){
