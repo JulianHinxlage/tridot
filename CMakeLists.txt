@@ -88,6 +88,11 @@ add_executable(${PROJECT_NAME} ${SOURCES})
 target_link_libraries(${PROJECT_NAME} PUBLIC tridot)
 add_dependencies(${PROJECT_NAME} blink)
 
+project(launcher)
+file(GLOB_RECURSE SOURCES src/launcher/*.cpp)
+add_executable(${PROJECT_NAME} ${SOURCES})
+target_link_libraries(${PROJECT_NAME} PUBLIC tridot)
+
 project(test)
 file(GLOB_RECURSE SOURCES src/test/test.cpp)
 add_executable(${PROJECT_NAME} ${SOURCES})

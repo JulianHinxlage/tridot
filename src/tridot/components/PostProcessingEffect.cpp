@@ -15,7 +15,7 @@ namespace tridot {
 
     TRI_UPDATE("post processing"){
         auto postProcess = [&](PostProcessingEffect &effect, Ref<FrameBuffer> &output){
-            if(output.get() != nullptr && effect.shader.get() != nullptr){
+            if(output.get() != nullptr && effect.shader.get() != nullptr && effect.shader->getId() != 0){
                 TRI_PROFILE("post processing");
                 if(effect.frameBuffer.get() == nullptr){
                     effect.frameBuffer = Ref<FrameBuffer>::make();
