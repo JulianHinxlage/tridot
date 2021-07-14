@@ -4,6 +4,7 @@
 
 #include "RenderComponent.h"
 #include "PostProcessingEffect.h"
+#include "SkyBox.h"
 #include "tridot/engine/Engine.h"
 #include "tridot/render/Camera.h"
 
@@ -45,6 +46,12 @@ namespace tridot {
                 TRI_PROFILE("render/begin");
                 engine.pbRenderer.begin(projection, cameraPosition, frameBuffer);
             }
+
+            engine.view<SkyBox>().each([](SkyBox &skybox){
+               if(skybox.useEnvironmentMap && skybox.texture.get() != nullptr){
+                   engine.pbRenderer.submitEnvironmentMap(skybox.texture, skybox.irradianceTexture, skybox.intensity);
+               }
+            });
 
             engine.view<Light, Transform>().each([](Light &light, Transform &transform){
                 if(light.type == LightType::POINT_LIGHT){

@@ -33,8 +33,10 @@ namespace tridot {
         uint32_t getHeight();
         uint32_t getChannels();
         TextureFormat getFormat();
+        TextureType getType();
         Color getPixel(int x, int y);
         void clear(Color color);
+        void setCubeMap(bool enableMipMapping = false);
 
     private:
         uint32_t id;
@@ -45,6 +47,7 @@ namespace tridot {
         uint32_t channels;
         uint32_t mipCount;
         TextureFormat format;
+        TextureType type;
 
         bool magNearest;
         bool minNearest;

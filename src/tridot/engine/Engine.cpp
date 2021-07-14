@@ -69,7 +69,7 @@ namespace tridot {
 
         resources.addSearchDirectory(resourceDirectory);
         resources.autoReload = autoReload;
-        resources.threadCount = 4;
+        resources.threadCount = 8;
         engine.resources.update();
         engine.resources.setup<Mesh>("cube")
                 .setPostLoad([](Ref<Mesh> &mesh){MeshFactory::createCube(mesh); return true;})
@@ -103,7 +103,7 @@ namespace tridot {
             window.update();
         });
 
-        engine.onUpdate().order({"imgui end", "window", "imgui begin", "rendering", "post processing"});
+        engine.onUpdate().order({"imgui end", "window", "imgui begin", "resources", "clear", "skybox", "rendering", "post processing", "transform", "physics"});
 
         imguiInit();
         onInitSignal.invoke();

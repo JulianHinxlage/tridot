@@ -33,7 +33,6 @@ namespace tridot {
 
     class PBMaterial{
     public:
-
         glm::vec4 color;
         int mapping;
         float roughness;
@@ -58,6 +57,17 @@ namespace tridot {
         glm::vec2 metallicMapScale;
     };
 
+    class PBEnvironment{
+    public:
+        glm::mat4 projection;
+        glm::vec3 cameraPosition;
+        int align1;
+        int lightCount;
+        float environmentMapIntensity;
+        int environmentMapIndex;
+        int irradianceMapIndex;
+    };
+
     class PBRenderer::PBBatch{
     public:
         BatchBuffer instances;
@@ -76,6 +86,7 @@ namespace tridot {
         defaultShader = nullptr;
         defaultMaterial = nullptr;
         frameBuffer = nullptr;
+        environmentMap = nullptr;
     }
 
     template<typename T>
@@ -109,12 +120,15 @@ namespace tridot {
         defaultMaterial = Ref<Material>::make();
 
         lights.init(sizeof(PBLight), UNIFORM_BUFFER);
+        environmentBuffer = Ref<Buffer>::make();
+        environmentBuffer->init(nullptr, 0, sizeof(PBEnvironment), UNIFORM_BUFFER, true);
     }
 
     void PBRenderer::begin(const glm::mat4 &projection, const glm::vec3 &cameraPosition, const Ref<FrameBuffer> &frameBuffer) {
         this->projection = projection;
         this->cameraPosition = cameraPosition;
         this->frameBuffer = frameBuffer;
+        environmentMap = nullptr;
     }
 
     void PBRenderer::submit(const Light &light, const glm::vec3 &positionOrDirection) {
@@ -285,13 +299,22 @@ namespace tridot {
             }
 
             batch->shader->set("uProjection", projection);
-            batch->shader->set("uCameraPosition", cameraPosition);
 
-            int textures[32];
-            for (int i = 0; i < 32; i++) {
-                textures[i] = i;
+            //textures
+            if(batch->shader->getLocation("uTextures", false) != -1) {
+                int textures[30];
+                for (int i = 0; i < 30; i++) {
+                    textures[i] = i;
+                }
+                batch->shader->set("uTextures", textures, 30);
             }
-            batch->shader->set("uTextures", textures, 32);
+            if(batch->shader->getLocation("uCubeTextures", false) != -1) {
+                int textures[2];
+                for (int i = 0; i < 2; i++) {
+                    textures[i] = i + 30;
+                }
+                batch->shader->set("uCubeTextures", textures, 2);
+            }
 
             //instances
             batch->instances.update();
@@ -299,17 +322,36 @@ namespace tridot {
             //lights
             lights.update();
             batch->shader->set("uLights", lights.buffer.get());
-            batch->shader->set("uLightCount", (int)lights.size());
 
             //materials
             batch->materials.update();
             batch->shader->set("uMaterials", batch->materials.buffer.get());
 
-
             //textures
             for(auto &texture : batch->textureMap){
                 texture.first->bind(texture.second);
             }
+
+            //environment
+            PBEnvironment environment;
+            environment.projection = projection;
+            environment.cameraPosition = cameraPosition;
+            environment.environmentMapIntensity = environmentMapIntensity;
+            environment.lightCount = lights.size();
+            environment.environmentMapIndex = -1;
+            environment.irradianceMapIndex = -1;
+            if(environmentMap.get() != nullptr && environmentMap->getId() != 0){
+                environmentMap->bind(30);
+                environment.environmentMapIndex = 0;
+            }else{
+                environment.environmentMapIntensity = 0;
+            }
+            if(irradianceMap.get() != nullptr && irradianceMap->getId() != 0){
+                irradianceMap->bind(31);
+                environment.irradianceMapIndex = 1;
+            }
+            environmentBuffer->setData(&environment, sizeof(PBEnvironment));
+            batch->shader->set("uEnvironment", environmentBuffer.get());
 
             //draw call
             {
@@ -322,6 +364,12 @@ namespace tridot {
             batch->materials.reset();
             batch->instances.reset();
         }
+    }
+
+    void PBRenderer::submitEnvironmentMap(const Ref<Texture> &environmentMap, const Ref<Texture> &irradianceMap, float intensity) {
+        this->environmentMap = environmentMap;
+        this->irradianceMap = irradianceMap;
+        this->environmentMapIntensity = intensity;
     }
 
 }

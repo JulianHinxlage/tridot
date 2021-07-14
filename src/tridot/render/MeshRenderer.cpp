@@ -138,11 +138,14 @@ namespace tridot {
 
             batch->shader->set("uProjection", projection);
             batch->shader->set("uCameraPosition", cameraPosition);
-            int textures[32];
-            for (int i = 0; i < 32; i++) {
-                textures[i] = i;
+
+            if(batch->shader->getLocation("uTextures", false) != -1) {
+                int textures[32];
+                for (int i = 0; i < 32; i++) {
+                    textures[i] = i;
+                }
+                batch->shader->set("uTextures", textures, 32);
             }
-            batch->shader->set("uTextures", textures, 32);
 
             batch->updateBuffer();
             batch->submit();

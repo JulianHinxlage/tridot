@@ -34,7 +34,6 @@ namespace tridot {
     }
 
     TRI_INIT("transform"){
-        engine.onUpdate().order({"transform", "rendering"});
         engine.onDestroy().add("transform", [](Registry *reg, EntityId id){
             if(reg == &engine){
                 if(Transform::hasChildren(id)){

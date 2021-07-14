@@ -3,40 +3,77 @@ Entities:
     Tag: Camera
     uuid: 0b7325677ede1850dc4d42acf6d55a26
     Transform:
-      position: [0.561112344, 12.1031561, 9.10451698]
+      position: [-12.4803362, 11.3103876, 11.7499847]
       scale: [1, 1, 1]
-      rotation: [0.996175706, 0, -3.59900403]
+      rotation: [1.19716787, 0, -2.68767762]
       parent.id: 4294967295
     PerspectiveCamera:
       fieldOfView: 60
-      aspectRatio: 2.19457746
+      aspectRatio: 1.89024389
       near: 0.100000001
       far: 1200
       target: ~
-  - id: 3
-    Tag: Ambient Light
-    uuid: 31d8b2f99134e87e89c559c918aaa721
+  - id: 280
+    Tag: Ground
+    uuid: edd3900c3cda6990c8508c4df8a00947
+    Transform:
+      position: [49.4999924, 0.00220249407, 3.99899244]
+      scale: [0.999999106, 99.9999771, 8.96387196]
+      rotation: [0, -0, -5.36441519e-07]
+      parent.id: 284
+    RenderComponent:
+      mesh: cube
+      material: brick
+      color: [1, 0.996078432, 0.996078432, 1]
+    Collider:
+      scale: [1, 1, 1]
+      type: 0
+    RigidBody:
+      velocity: [0, 0, 0]
+      angular: [0, 0, 0]
+      mass: 0
+      friction: 1
+      restitution: 0
+      linearDamping: 0
+      angularDamping: 0
+      enablePhysics: true
+  - id: 2
+    Tag: Ambient
+    uuid: e1c16e00c142461d89c96130b5f9d492
     Transform:
       position: [0, 0, 0]
       scale: [1, 1, 1]
-      rotation: [0, -0, 0]
+      rotation: [0, 0, 0]
       parent.id: 4294967295
     Light:
       color: [1, 1, 1]
-      intensity: 0.5
+      intensity: 0.400000006
       type: 0
-  - id: 2
-    Tag: Directional Light
-    uuid: 3fc6c0461452feab7e6cc72e3321c6fe
+  - id: 218
+    Tag: Directional
+    uuid: 528f879028008f6571bb6964a47f5141
     Transform:
       position: [0, 0, 0]
-      scale: [0.999981284, 1, 1.00000012]
-      rotation: [2.4846518, 0.318181932, -1.03675246]
+      scale: [1, 0.999999881, 0.999999523]
+      rotation: [-1.31799603, -0.796579659, 0.757973611]
       parent.id: 4294967295
     Light:
-      color: [1, 0.999989986, 0.999989986]
-      intensity: 2.70000005
+      color: [1, 1, 1]
+      intensity: 1.88999999
       type: 1
+  - id: 217
+    SkyBox:
+      texture: textures/skybox/Grass.png
+      drawSkybox: true
+      useEnvironmentMap: true
+      intensity: 1
+    Tag: SkyBox
+    uuid: 84476b4f7003db426f8b45a1b7913c8f
+    Transform:
+      position: [0, 0, 0]
+      scale: [1, 1, 1]
+      rotation: [0, 0, 0]
+      parent.id: 4294967295
   - id: 1
     Tag: Ground
     uuid: 6d651cf8c84f200583f1960f885a8a08
@@ -1817,14 +1854,14 @@ Entities:
     Tag: Ball
     uuid: 39496cbd0e29776a02dad7be0191b5d3
     Transform:
-      position: [-1.00001049, 1, 8.25654125]
+      position: [-10.5893927, 1, 8.25654125]
       scale: [1, 1, 1]
       rotation: [0, -0, 0]
       parent.id: 107
     RenderComponent:
       mesh: sphere
-      material: metal
-      color: [1, 1, 1, 1]
+      material: test
+      color: [0.996078432, 0.996078432, 1, 1]
     Collider:
       scale: [1, 1, 1]
       type: 1
@@ -5279,30 +5316,18 @@ Entities:
       linearDamping: 0
       angularDamping: 0
       enablePhysics: true
-  - id: 280
-    Tag: Ground
-    uuid: edd3900c3cda6990c8508c4df8a00947
+  - id: 3
+    Tag: Circle
+    uuid: 540ebfdadc24bc95c6e40c7a532b5bbc
     Transform:
-      position: [49.4999924, 0.00220249407, 3.99899244]
-      scale: [0.999999106, 99.9999771, 8.96387196]
-      rotation: [0, -0, -5.36441519e-07]
-      parent.id: 284
+      position: [0, 0, -0.444223285]
+      scale: [33.5611649, 33.5611649, 33.5611649]
+      rotation: [0, -0, 0]
+      parent.id: 4294967295
     RenderComponent:
-      mesh: cube
-      material: brick
-      color: [1, 0.996078432, 0.996078432, 1]
-    Collider:
-      scale: [1, 1, 1]
-      type: 0
-    RigidBody:
-      velocity: [0, 0, 0]
-      angular: [0, 0, 0]
-      mass: 0
-      friction: 1
-      restitution: 0
-      linearDamping: 0
-      angularDamping: 0
-      enablePhysics: true
+      mesh: circle
+      material: metal
+      color: [1, 1, 1, 1]
 Materials:
   - name: rocks
     material:
@@ -5328,7 +5353,7 @@ Materials:
     material:
       color: [1, 1, 1, 1]
       mapping: 2
-      roughness: 2
+      roughness: 1
       metallic: 0
       normalMapFactor: 1
       texture: textures/Tiles090_1K_Color.jpg
@@ -5344,12 +5369,52 @@ Materials:
       metallicMapOffset: [0, 0]
       metallicMapScale: [1, 1]
       shader: ""
+  - name: test
+    material:
+      color: [0.619607866, 0.619607866, 0.619607866, 1]
+      mapping: 0
+      roughness: 0.398000002
+      metallic: 0
+      normalMapFactor: 1
+      texture: ""
+      normalMap: ""
+      roughnessMap: ""
+      metallicMap: ""
+      textureOffset: [0, 0]
+      textureScale: [1, 1]
+      normalMapOffset: [0, 0]
+      normalMapScale: [1, 1]
+      roughnessMapOffset: [0, 0]
+      roughnessMapScale: [1, 1]
+      metallicMapOffset: [0, 0]
+      metallicMapScale: [1, 1]
+      shader: ""
+  - name: wood
+    material:
+      color: [1, 0.996078432, 0.996078432, 1]
+      mapping: 2
+      roughness: 1
+      metallic: 0
+      normalMapFactor: 1
+      texture: textures/Wood049_1K_Color.jpg
+      normalMap: textures/Wood049_1K_Normal.jpg
+      roughnessMap: textures/Wood049_1K_Roughness.jpg
+      metallicMap: ""
+      textureOffset: [0, 0]
+      textureScale: [0.349999994, 0.25]
+      normalMapOffset: [0, 0]
+      normalMapScale: [0.25, 0.349999994]
+      roughnessMapOffset: [0, 0]
+      roughnessMapScale: [0.25, 0.25]
+      metallicMapOffset: [0, 0]
+      metallicMapScale: [1, 1]
+      shader: ""
   - name: metal
     material:
       color: [1, 1, 1, 1]
       mapping: 2
-      roughness: 1.89999998
-      metallic: 1.79999995
+      roughness: 1.5
+      metallic: 1
       normalMapFactor: 0
       texture: textures/Metal038_1K_Color.jpg
       normalMap: textures/Metal038_1K_Normal.jpg
@@ -5364,31 +5429,11 @@ Materials:
       metallicMapOffset: [0, 0]
       metallicMapScale: [1, 1]
       shader: ""
-  - name: marble
-    material:
-      color: [1, 1, 1, 1]
-      mapping: 2
-      roughness: 2
-      metallic: 0.158000007
-      normalMapFactor: 1
-      texture: textures/Marble012_1K_Color.jpg
-      normalMap: textures/Marble012_1K_Normal.jpg
-      roughnessMap: textures/Marble012_1K_Roughness.jpg
-      metallicMap: ""
-      textureOffset: [0, 0]
-      textureScale: [1, 1]
-      normalMapOffset: [0, 0]
-      normalMapScale: [1, 1]
-      roughnessMapOffset: [0, 0]
-      roughnessMapScale: [1, 1]
-      metallicMapOffset: [0, 0]
-      metallicMapScale: [1, 1]
-      shader: ""
   - name: ground
     material:
       color: [1, 1, 1, 1]
       mapping: 2
-      roughness: 2
+      roughness: 1
       metallic: 0
       normalMapFactor: 1
       texture: textures/Ground037_1K_Color.jpg
@@ -5404,23 +5449,23 @@ Materials:
       metallicMapOffset: [0, 0]
       metallicMapScale: [1, 1]
       shader: ""
-  - name: wood
+  - name: marble
     material:
-      color: [1, 0.996078432, 0.996078432, 1]
+      color: [1, 1, 1, 1]
       mapping: 2
-      roughness: 2
-      metallic: 0
+      roughness: 1
+      metallic: 0.164000005
       normalMapFactor: 1
-      texture: textures/Wood049_1K_Color.jpg
-      normalMap: textures/Wood049_1K_Normal.jpg
-      roughnessMap: textures/Wood049_1K_Roughness.jpg
+      texture: textures/Marble012_1K_Color.jpg
+      normalMap: textures/Marble012_1K_Normal.jpg
+      roughnessMap: textures/Marble012_1K_Roughness.jpg
       metallicMap: ""
       textureOffset: [0, 0]
-      textureScale: [0.349999994, 0.25]
+      textureScale: [1, 1]
       normalMapOffset: [0, 0]
-      normalMapScale: [0.25, 0.349999994]
+      normalMapScale: [1, 1]
       roughnessMapOffset: [0, 0]
-      roughnessMapScale: [0.25, 0.25]
+      roughnessMapScale: [1, 1]
       metallicMapOffset: [0, 0]
       metallicMapScale: [1, 1]
       shader: ""

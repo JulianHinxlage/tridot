@@ -32,7 +32,8 @@ int main(int argc, char *argv[]){
             if(camera.target->getSize() != engine.window.getSize()){
                 camera.target->resize(engine.window.getSize().x, engine.window.getSize().y);
             }
-            camera.target->clear();
+           camera.aspectRatio = engine.window.getAspectRatio();
+           camera.target->clear();
        });
     }, "clear");
 

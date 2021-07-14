@@ -98,6 +98,7 @@ namespace tridot {
         engine.onUpdate().setActive("transform", true);
         engine.onUpdate().setActive("profiler", true);
         engine.onUpdate().setActive("post processing", true);
+        engine.onUpdate().setActive("skybox", true);
         runtime = false;
         undo.enabled = true;
         Log::debug("runtime disabled");

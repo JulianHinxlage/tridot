@@ -17,6 +17,7 @@ namespace tridot {
         height = 0;
         channels = 0;
         mipCount = 0;
+        type = TEXTURE_2D;
 
         magNearest = true;
         minNearest = false;
@@ -32,30 +33,30 @@ namespace tridot {
         }
     }
 
-    void bindTexture(uint32_t id) {
+    void bindTexture(uint32_t id, TextureType type) {
         static int32_t currentId;
         if (currentId != id) {
-            glBindTexture(GL_TEXTURE_2D, id);
+            glBindTexture(internalEnum(type), id);
             currentId = id;
         }
     }
 
-    void bindTexture(uint32_t id, int32_t slot){
+    void bindTexture(uint32_t id, int32_t slot, TextureType type){
         static int32_t currentIds[128];
         if(slot >= 0 && currentIds[slot] != id){
             glActiveTexture(GL_TEXTURE0 + slot);
-            glBindTexture(GL_TEXTURE_2D, id);
+            glBindTexture(internalEnum(type), id);
             currentIds[slot] = id;
         }
     }
 
     void Texture::bind(int32_t slot) {
-        bindTexture(id, slot);
+        bindTexture(id, slot, type);
         this->slot = slot;
     }
 
     void Texture::unbind() {
-        bindTexture(0, slot);
+        bindTexture(0, slot, type);
         slot = -1;
     }
 
@@ -64,21 +65,21 @@ namespace tridot {
     }
 
     void Texture::setMagMin(bool magNearest, bool minNearest) {
-        bindTexture(id);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, magNearest ? GL_NEAREST : GL_LINEAR);
+        bindTexture(id, type);
+        glTexParameteri(internalEnum(type), GL_TEXTURE_MAG_FILTER, magNearest ? GL_NEAREST : GL_LINEAR);
         if(mipCount > 1){
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, minNearest ? GL_NEAREST_MIPMAP_NEAREST : GL_LINEAR_MIPMAP_LINEAR);
+            glTexParameteri(internalEnum(type), GL_TEXTURE_MIN_FILTER, minNearest ? GL_NEAREST_MIPMAP_NEAREST : GL_LINEAR_MIPMAP_LINEAR);
         }else{
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, minNearest ? GL_NEAREST : GL_LINEAR);
+            glTexParameteri(internalEnum(type), GL_TEXTURE_MIN_FILTER, minNearest ? GL_NEAREST : GL_LINEAR);
         }
         this->magNearest = magNearest;
         this->minNearest = minNearest;
     }
 
     void Texture::setWrap(bool sRepeat, bool tRepeat) {
-        bindTexture(id);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, sRepeat ? GL_REPEAT : GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, tRepeat ? GL_REPEAT : GL_CLAMP_TO_EDGE);
+        bindTexture(id, type);
+        glTexParameteri(internalEnum(type), GL_TEXTURE_WRAP_S, sRepeat ? GL_REPEAT : GL_CLAMP_TO_EDGE);
+        glTexParameteri(internalEnum(type), GL_TEXTURE_WRAP_T, tRepeat ? GL_REPEAT : GL_CLAMP_TO_EDGE);
         this->sRepeat = sRepeat;
         this->tRepeat = tRepeat;
     }
@@ -106,7 +107,7 @@ namespace tridot {
         bind(0);
         setMagMin(magNearest, minNearest);
         setWrap(sRepeat, tRepeat);
-        glTexStorage2D(GL_TEXTURE_2D, mipCount, internalEnum(format), width, height);
+        glTexStorage2D(internalEnum(type), mipCount, internalEnum(format), width, height);
     }
 
     bool Texture::load(const Image &image) {
@@ -131,9 +132,9 @@ namespace tridot {
         }
 
         create(image.getWidth(), image.getHeight(), format);
-        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, image.getWidth(), image.getHeight(), dataFormat, GL_UNSIGNED_BYTE, image.getData());
+        glTexSubImage2D(internalEnum(type), 0, 0, 0, image.getWidth(), image.getHeight(), dataFormat, GL_UNSIGNED_BYTE, image.getData());
         if(mipCount > 1){
-            glGenerateMipmap(GL_TEXTURE_2D);
+            glGenerateMipmap(internalEnum(type));
         }
         return true;
     }
@@ -187,7 +188,7 @@ namespace tridot {
         }
         colors.resize(width * height);
         bind(0);
-        glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, colors.data());
+        glGetTexImage(internalEnum(type), 0, GL_RGBA, GL_UNSIGNED_BYTE, colors.data());
         return colors[index];
 #else
         Color color;
@@ -204,10 +205,93 @@ namespace tridot {
         std::vector<Color> colors;
         colors.resize(width * height, color);
         bind(0);
-        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, colors.data());
+        glTexSubImage2D(internalEnum(type), 0, 0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, colors.data());
 #else
         glClearTexImage(id, 0, GL_RGBA, GL_UNSIGNED_BYTE, &color);
 #endif
+    }
+
+    void Texture::setCubeMap(bool enableMipMapping) {
+        if(type != TEXTURE_CUBE_MAP && id != 0 && width != 0 && height != 0) {
+            bind(0);
+            int x = width / 4;
+            int y = height / 3;
+            int xs[] = {2, 0, 3, 1, 1, 1};
+            int ys[] = {1, 1, 1, 1, 0, 2};
+            int rs[] = {1, 3, 2, 0, 0, 2};
+
+            std::vector<Color> colors[6];
+            for(int i = 0; i < 6; i++) {
+                colors[i].resize(x * y);
+                glGetTextureSubImage(id, 0, xs[i] * x, ys[i] * y, 0, x, y, 1, GL_RGBA, GL_UNSIGNED_BYTE, sizeof(Color) * colors[i].size(), colors[i].data());
+                std::vector<Color> tmp;
+                tmp.resize(x * y);
+                for(int j = 0; j < rs[i]; j++) {
+                    for(int ix = 0; ix < x; ix++) {
+                        for(int iy = 0; iy < y; iy++) {
+                            tmp[ix + iy * x] = colors[i][(y - 1 - iy) + ix * x];
+                        }
+                    }
+                    colors[i] = tmp;
+                }
+            }
+
+
+            if(id != 0){
+                glDeleteTextures(1, &id);
+                glGenTextures(1, &id);
+            }
+            if(id == 0){
+                glGenTextures(1, &id);
+                Log::trace("created texture ", id);
+            }
+
+            type = TEXTURE_CUBE_MAP;
+            width = x;
+            height = y;
+            channels = internalEnumSize(format) / 8;
+
+
+            bind(0);
+
+            setMagMin(true, true);
+            setWrap(false, false);
+
+            mipCount = std::max(1, (int)std::log2(std::min(width, height)) - 1);
+            if(!enableMipMapping) {
+                mipCount = 1;
+            }
+
+            //for(int i = 0; i < 6; i++) {
+            //    glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, internalEnum(format), x, y, 0, GL_RGBA, GL_UNSIGNED_BYTE, colors[i].data());
+            //}
+
+            //mipCount = std::max(1, (int)std::log2(std::min(width, height)) - 1);
+            //glTexStorage2D(internalEnum(type), mipCount, internalEnum(format), width, height);
+
+            for(int i = 0; i < 6; i++) {
+                glTexParameteri(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, GL_TEXTURE_MAX_LEVEL, mipCount);
+                glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, internalEnum(format), x, y, 0, GL_RGBA, GL_UNSIGNED_BYTE, colors[i].data());
+                //if(mipCount > 1){
+                //    glGenerateMipmap(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i);
+                //}
+
+
+                //glTexStorage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, mipCount, internalEnum(format), width, height);
+                //glTexSubImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, 0, 0, image.getWidth(), image.getHeight(), GL_RGBA, GL_UNSIGNED_BYTE, image.getData());
+
+                //if(mipCount > 1){
+                //    glGenerateMipmap(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i);
+                //}
+            }
+            if(mipCount > 1){
+                glGenerateMipmap(internalEnum(type));
+            }
+        }
+    }
+
+    TextureType Texture::getType() {
+        return type;
     }
 
 }

@@ -63,7 +63,6 @@ struct Light{
 layout(std140) uniform uLights {
     Light lights[128];
 };
-uniform int uLightCount;
 
 struct Material{
     vec4 color;
@@ -88,9 +87,20 @@ layout(std140) uniform uMaterials {
     Material materials[128];
 };
 
-uniform sampler2D uTextures[32];
-uniform vec3 uCameraPosition;
+layout(std140) uniform uEnvironment {
+    mat4 projection;
+    vec3 cameraPosition;
+    int align1;
+    int lightCount;
+    float environmentMapIntensity;
+    int environmentMapIndex;
+    int irradianceMapIndex;
+};
+
+uniform sampler2D uTextures[30];
+uniform samplerCube uCubeTextures[2];
 const float PI = 3.14159265359;
+
 layout(location = 0) out vec4 oColor;
 layout(location = 1) out vec4 oId;
 
@@ -99,6 +109,37 @@ float distributionFunction(vec3 N, vec3 H, float roughness);
 float geometrySubFunction(float NdotV, float roughness);
 float geometryFunction(vec3 N, vec3 V, vec3 L, float roughness);
 vec3 fresnelFunction(float cosTheta, vec3 F0);
+
+vec3 fresnelFunctionRoughness(float cosTheta, vec3 F0, float roughness){
+    return F0 + (max(vec3(1.0 - roughness), F0) - F0) * pow(max(1.0 - cosTheta, 0.0), 5.0);
+}
+
+vec4 sampleTextureIndexed(int textureIndex, vec2 textureCoords){
+    for(int i = 0; i < 30; i++){
+        if(i == textureIndex){
+            return texture(uTextures[i], textureCoords);
+        }
+    }
+    return vec4(0, 0, 0, 1);
+}
+
+vec4 sampleCubeTextureIndexed(int textureIndex, vec3 textureCoords){
+    for(int i = 0; i < 2; i++){
+        if(i == textureIndex){
+            return texture(uCubeTextures[i], textureCoords);
+        }
+    }
+    return vec4(0, 0, 0, 1);
+}
+
+vec4 sampleCubeTextureIndexedLod(int textureIndex, vec3 textureCoords, int lod){
+    for(int i = 0; i < 2; i++){
+        if(i == textureIndex){
+            return texture(uCubeTextures[i], textureCoords, lod);
+        }
+    }
+    return vec4(0, 0, 0, 1);
+}
 
 void main(){
     Material material = materials[int(fMaterialIndex)];
@@ -131,11 +172,11 @@ void main(){
         metallic *= (sampleTexture(material.metallicMap, material.mapping, material.metallicMapScale, material.metallicMapOffset).r);
     }
 
-    vec3 viewDirection = normalize(uCameraPosition - fPosition);
+    vec3 viewDirection = normalize(cameraPosition - fPosition);
     vec3 surfaceReflection = mix(vec3(0.04), albedo.rgb, metallic);
     vec3 lightOutput = vec3(0.0);
 
-    for(int i = 0; i < uLightCount; i++){
+    for(int i = 0; i < lightCount; i++){
         Light light = lights[i];
 
         vec3 lightDirection = normalize(-light.position);
@@ -168,28 +209,33 @@ void main(){
 
                 float cosTheta = max(dot(normal, lightDirection), 0.0);
                 lightOutput += (diffuse * albedo.rgb / PI + specular) * radiance * cosTheta;
+                //lightOutput += (diffuse * albedo.rgb / PI) * radiance * cosTheta;
             }
         }
     }
 
-    if(uLightCount == 0){
+    //environment mapping
+    if(environmentMapIntensity != 0){
+        vec3 reflectionDirection = normalize(-reflect(viewDirection, normal));
+
+        vec3 radiance = sampleCubeTextureIndexed(environmentMapIndex, reflectionDirection).xyz * environmentMapIntensity;
+        vec3 irradiance = sampleCubeTextureIndexed(irradianceMapIndex, normal).xyz * environmentMapIntensity;
+
+        lightOutput += albedo.rgb * irradiance * (1.0 - metallic);
+        lightOutput += radiance * (1.0f - roughness);
+    }
+
+    //flat shading for no lights
+    if(lightCount == 0 && environmentMapIntensity == 0){
         lightOutput = albedo.rgb;
     }
+
     oColor = vec4(lightOutput, albedo.a);
     oId = fId;
 
     //gamma correction
     //float gamma = 2.2;
     //oColor.rgb = pow(oColor.rgb, vec3(1.0 / gamma));
-}
-
-vec4 sampleTextureIndexed(int textureIndex, vec2 textureCoords){
-    for(int i = 0; i < 32; i++){
-        if(i == textureIndex){
-            return texture(uTextures[i], textureCoords);
-        }
-    }
-    return vec4(0, 0, 0, 1);
 }
 
 vec4 sampleTexture(int textureIndex, int mapping, vec2 textureScale, vec2 textureOffset){

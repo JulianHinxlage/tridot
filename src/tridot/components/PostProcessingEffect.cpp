@@ -32,28 +32,26 @@ namespace tridot {
                 output = effect.frameBuffer;
             }
         };
-        {
-            engine.view<PostProcessingEffect>().each([&](EntityId id, PostProcessingEffect &effect){
-                if(auto *camera = engine.getComponentByHierarchy<PerspectiveCamera>(id)){
-                    postProcess(effect, camera->output);
-                }else if(auto *camera = engine.getComponentByHierarchy<OrthographicCamera>(id)){
-                    postProcess(effect, camera->output);
-                }else{
-                    bool processed = false;
-                    engine.view<PerspectiveCamera>().each([&](PerspectiveCamera &camera){
-                        if(!processed) {
-                            postProcess(effect, camera.output);
-                            processed = true;
-                        }
-                    });
-                    engine.view<OrthographicCamera>().each([&](OrthographicCamera &camera){
-                        if(!processed){
-                            postProcess(effect, camera.output);
-                            processed = true;
-                        }
-                    });
-                }
-            });
-        }
+        engine.view<PostProcessingEffect>().each([&](EntityId id, PostProcessingEffect &effect){
+            if(auto *camera = engine.getComponentByHierarchy<PerspectiveCamera>(id)){
+                postProcess(effect, camera->output);
+            }else if(auto *camera = engine.getComponentByHierarchy<OrthographicCamera>(id)){
+                postProcess(effect, camera->output);
+            }else{
+                bool processed = false;
+                engine.view<PerspectiveCamera>().each([&](PerspectiveCamera &camera){
+                    if(!processed) {
+                        postProcess(effect, camera.output);
+                        processed = true;
+                    }
+                });
+                engine.view<OrthographicCamera>().each([&](OrthographicCamera &camera){
+                    if(!processed){
+                        postProcess(effect, camera.output);
+                        processed = true;
+                    }
+                });
+            }
+        });
     }
 }

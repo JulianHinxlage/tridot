@@ -87,6 +87,19 @@ namespace tridot {
         }
     }
 
+    uint32_t internalEnum(TextureType type) {
+        switch (type) {
+            case TEXTURE_2D:
+                return GL_TEXTURE_2D;
+            case TEXTURE_3D:
+                return GL_TEXTURE_3D;
+            case TEXTURE_CUBE_MAP:
+                return GL_TEXTURE_CUBE_MAP;
+            default:
+                return GL_NONE;
+        }
+    }
+
     uint32_t internalEnum(BufferType type) {
         switch (type) {
             case VERTEX_BUFFER:

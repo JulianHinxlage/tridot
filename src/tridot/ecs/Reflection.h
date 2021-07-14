@@ -190,7 +190,7 @@ namespace tridot{
 
 }
 
-#define TRI_REFLECT_TYPE_NAME(type, name) tridot::impl::ReflectionRegisterer<type> TRI_UNIQUE_NAME(___tri_global___)(#name);
+#define TRI_REFLECT_TYPE_NAME(type, name) static tridot::impl::ReflectionRegisterer<type> TRI_UNIQUE_NAME(___tri_global___)(#name);
 #define TRI_REFLECT_TYPE(type) TRI_REFLECT_TYPE_NAME(type, type)
 
 #define TRI_REFLECT_MEMBER(type, member) bool TRI_UNIQUE_NAME(___tri_global___) = (Reflection::registerMember<type, decltype(type::member)>(#member, offsetof(type, member)), true);
