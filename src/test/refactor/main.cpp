@@ -22,6 +22,11 @@ TRI_REGISTER_CALLBACK(){
 
 int main(int argc, char *argv[]) {
     Environment::init();
+
+    env->console->options.level = DEBUG;
+    env->console->addLogFile("log.txt", Console::Options(TRACE, true, true, false));
+    env->console->addLogFile("error.txt", Console::Options(ERROR, true, true, false));
+
     env->events->init.invoke();
 
     bool running = true;

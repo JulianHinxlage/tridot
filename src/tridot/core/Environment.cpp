@@ -31,6 +31,7 @@ namespace tridot {
             env->systems->setSystem<Environment>(env);
             env->systems->setSystem<SystemManager>(env->systems);
             env->events = env->systems->addSystem<EventManager>();
+            env->console = env->systems->addSystem<Console>();
             env->events->init.addCallback("env", [](){
 
             });
