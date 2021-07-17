@@ -93,6 +93,11 @@ file(GLOB_RECURSE SOURCES src/launcher/*.cpp)
 add_executable(${PROJECT_NAME} ${SOURCES})
 target_link_libraries(${PROJECT_NAME} PUBLIC tridot)
 
+project(refactor)
+file(GLOB_RECURSE SOURCES src/test/refactor/*.cpp)
+add_executable(${PROJECT_NAME} ${SOURCES})
+target_link_libraries(${PROJECT_NAME} PUBLIC tridot)
+
 project(test)
 file(GLOB_RECURSE SOURCES src/test/test.cpp)
 add_executable(${PROJECT_NAME} ${SOURCES})
