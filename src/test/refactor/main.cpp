@@ -4,25 +4,11 @@
 
 #include "tridot/core/Environment.h"
 #include "tridot/render/Window.h"
+#include "tridot/engine/engine.h"
 
 using namespace tridot;
 
-TRI_REGISTER_CALLBACK(){
-    Window &window = *env->systems->addSystem<Window>();
-    env->events->init.addCallback([&](){
-        window.init(800, 600, "Window");
-    });
-    env->events->update.addCallback([&](){
-        window.update();
-        if(!window.isOpen()){
-            env->events->exit.invoke();
-        }
-    });
-}
-
 int main(int argc, char *argv[]) {
-    Environment::init();
-
     env->console->options.level = DEBUG;
     env->console->addLogFile("log.txt", Console::Options(TRACE, true, true, false));
     env->console->addLogFile("error.txt", Console::Options(ERROR, true, true, false));
@@ -40,5 +26,4 @@ int main(int argc, char *argv[]) {
     }
 
     env->events->shutdown.invoke();
-    Environment::shutdown();
 }

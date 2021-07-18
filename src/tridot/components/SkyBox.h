@@ -5,7 +5,7 @@
 #ifndef TRIDOT_SKYBOX_H
 #define TRIDOT_SKYBOX_H
 
-#include "tridot/core/Ref.h"
+#include "tridot/util/Ref.h"
 #include "tridot/render/Texture.h"
 
 namespace tridot {

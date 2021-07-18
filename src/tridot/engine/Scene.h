@@ -5,7 +5,7 @@
 #ifndef TRIDOT_SCENE_H
 #define TRIDOT_SCENE_H
 
-#include "tridot/ecs/Registry.h"
+#include "tridot/entity/Registry.h"
 
 namespace tridot {
 

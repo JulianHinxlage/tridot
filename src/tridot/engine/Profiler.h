@@ -5,7 +5,7 @@
 #ifndef TRIDOT_PROFILER_H
 #define TRIDOT_PROFILER_H
 
-#include "Clock.h"
+#include "tridot/util/Clock.h"
 #include <vector>
 #include <unordered_map>
 

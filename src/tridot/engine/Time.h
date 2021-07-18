@@ -5,7 +5,7 @@
 #ifndef TRIDOT_TIME_H
 #define TRIDOT_TIME_H
 
-#include "Clock.h"
+#include "tridot/util/Clock.h"
 #include <vector>
 
 namespace tridot {

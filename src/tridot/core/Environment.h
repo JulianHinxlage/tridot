@@ -9,14 +9,41 @@
 #include "SystemManager.h"
 #include "EventManager.h"
 #include "Console.h"
+#include "Reflection.h"
 
 namespace tridot {
 
+    class Time;
+    class Input;
+    class Physics;
+    class Profiler;
+    class ResourceManager;
+    class Scene;
+
+    class Window;
+    class MeshRenderer;
+    class PBRenderer;
+
     class Environment {
     public:
+        //core systems
         SystemManager *systems;
         EventManager *events;
         Console *console;
+        Reflection *reflection;
+
+        //engine systems
+        Time *time;
+        Input *input;
+        Physics *physics;
+        Profiler *profiler;
+        ResourceManager *resources;
+        Scene *scene;
+
+        //rendering systems
+        Window *window;
+        MeshRenderer *renderer;
+        PBRenderer *pbRenderer;
 
         static Environment *init();
         static void shutdown();

@@ -3,7 +3,7 @@
 //
 
 #include "ResourceBrowser.h"
-#include "tridot/core/StrUtil.h"
+#include "tridot/util/StrUtil.h"
 #include "Editor.h"
 #include "tridot/engine/Engine.h"
 #include "tridot/engine/Plugin.h"

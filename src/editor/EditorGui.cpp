@@ -50,8 +50,8 @@ namespace tridot {
         }
 
         if(!noMember){
-            for(auto &member : Reflection::get(typeId)->member()){
-                drawType(member.typeId, (char*)ptr + member.offset, member.name, typeId);
+            for(auto &member : env->reflection->getDescriptor(typeId)->member()){
+                drawType(member.descriptor->id(), (char*)ptr + member.offset, member.name, typeId);
             }
         }
 
@@ -243,7 +243,7 @@ TRI_INIT("panels"){
                         ImGui::Image((void *) (size_t) texture->getId(), ImVec2(200 * aspect, 200), ImVec2(0, 1), ImVec2(1, 0));
 
                         if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID)) {
-                            ImGui::SetDragDropPayload(Reflection::get<Texture>()->name().c_str(), &texture, sizeof(texture));
+                            ImGui::SetDragDropPayload(env->reflection->getDescriptor<Texture>()->name().c_str(), &texture, sizeof(texture));
                             ImGui::Text("Texture");
                             ImGui::EndDragDropSource();
                         }

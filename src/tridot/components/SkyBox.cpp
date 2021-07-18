@@ -17,8 +17,8 @@ namespace tridot {
         intensity = 1.0f;
     }
 
-    TRI_REFLECT_TYPE(SkyBox)
-    TRI_REFLECT_MEMBER4(SkyBox, texture, drawSkybox, useEnvironmentMap, intensity)
+    TRI_REGISTER_TYPE(SkyBox)
+    TRI_REGISTER_MEMBER4(SkyBox, texture, drawSkybox, useEnvironmentMap, intensity)
     TRI_COMPONENT(SkyBox)
 
     Ref<Texture> createIrradianceMap(Ref<Texture> &texture){

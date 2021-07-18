@@ -5,7 +5,7 @@
 #ifndef TRIDOT_ENGINE_H
 #define TRIDOT_ENGINE_H
 
-#include "tridot/ecs/Registry.h"
+#include "tridot/entity/Registry.h"
 #include "Scene.h"
 #include "Time.h"
 #include "Input.h"

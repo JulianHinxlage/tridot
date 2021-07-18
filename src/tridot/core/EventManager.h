@@ -179,8 +179,14 @@ namespace tridot {
         EventSignal<> exit;
         EventSignal<> shutdown;
 
+        EventSignal<> sceneBegin;
+        EventSignal<> sceneEnd;
+
         EventSignal<EntityId> entityCreate;
         EventSignal<EntityId> entityDestroy;
+
+        EventSignal<int, int> windowResize;
+        EventSignal<int, int> windowMoved;
 
         EventSignal<int> keyPressed;
         EventSignal<int> keyReleased;
@@ -191,17 +197,20 @@ namespace tridot {
         EventSignal<float, float> mouseMoved;
         EventSignal<int> mouseWheel;
 
-        EventSignal<int, int> windowResize;
-        EventSignal<int, int> windowMoved;
-
         EventManager(){
             setSignal(&init, "init");
             setSignal(&update, "update");
             setSignal(&exit, "exit");
             setSignal(&shutdown, "shutdown");
 
+            setSignal(&sceneBegin, "sceneBegin");
+            setSignal(&sceneEnd, "sceneEnd");
+
             setSignal(&entityCreate, "entityCreate");
             setSignal(&entityDestroy, "entityDestroy");
+
+            setSignal(&windowResize, "windowResize");
+            setSignal(&windowMoved, "windowMoved");
 
             setSignal(&keyPressed, "keyPressed");
             setSignal(&keyReleased, "keyReleased");
@@ -211,9 +220,6 @@ namespace tridot {
             setSignal(&mouseDown, "mouseDown");
             setSignal(&mouseMoved, "mouseMoved");
             setSignal(&mouseWheel, "mouseWheel");
-
-            setSignal(&windowResize, "windowResize");
-            setSignal(&windowMoved, "windowMoved");
         }
 
         template<typename Component>

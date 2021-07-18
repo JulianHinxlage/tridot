@@ -9,13 +9,13 @@
 namespace tridot {
 
     bool ComponentCache::isCached(int typeId) {
-        auto *type = Reflection::get(typeId);
+        auto *type = env->reflection->getDescriptor(typeId);
         auto comp = data[type->name()];
         return (bool)comp;
     }
 
     bool ComponentCache::load(int typeId, void *ptr) {
-        auto *type = Reflection::get(typeId);
+        auto *type = env->reflection->getDescriptor(typeId);
         auto comp = data[type->name()];
         if(comp){
             Serializer s;
@@ -27,12 +27,12 @@ namespace tridot {
     }
 
     void ComponentCache::remove(int typeId) {
-        auto *type = Reflection::get(typeId);
+        auto *type = env->reflection->getDescriptor(typeId);
         data.remove(type->name());
     }
 
     void ComponentCache::update(EntityId id) {
-        for(auto &type : Reflection::getTypes()){
+        for(auto &type : env->reflection->getDescriptors()){
             if(type){
                 if(isCached(type->id())){
                     if(!engine.has(id, type->id())){
@@ -54,7 +54,7 @@ namespace tridot {
     TRI_INIT("ComponentCache"){
         engine.onUnregister().add("ComponentCache", [](int typeId){
             engine.view<>().each([&](EntityId id){
-                if(typeId != Reflection::id<ComponentCache>()) {
+                if(typeId != env->reflection->getTypeId<ComponentCache>()) {
                     if (engine.has(id, typeId)) {
                         if (!engine.has<ComponentCache>(id)) {
                             engine.add<ComponentCache>(id);
@@ -65,7 +65,7 @@ namespace tridot {
                             Serializer s;
                             YAML::Emitter out;
                             out << YAML::BeginMap;
-                            auto *type = Reflection::get(typeId);
+                            auto *type = env->reflection->getDescriptor(typeId);
                             s.serializeType(type, type->name(), out, ptr, engine.resources);
                             out << YAML::EndMap;
                             YAML::Node node = YAML::Load(out.c_str());

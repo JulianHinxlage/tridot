@@ -5,7 +5,7 @@
 #ifndef TRIDOT_COMPONENTCACHE_H
 #define TRIDOT_COMPONENTCACHE_H
 
-#include "tridot/ecs/Reflection.h"
+#include "tridot/core/Environment.h"
 #include "tridot/core/config.h"
 #include <yaml-cpp/yaml.h>
 
@@ -27,15 +27,15 @@ namespace tridot {
 
         template<typename T>
         bool isCached(){
-            return isCahced(Reflection::id<T>());
+            return isCahced(env->reflection->getTypeId<T>());
         }
         template<typename T>
         bool load(T &t){
-            return load(Reflection::id<T>(), &t);
+            return load(env->reflection->getTypeId<T>(), &t);
         }
         template<typename T>
         void remove(){
-            remove(Reflection::id<T>());
+            remove(env->reflection->getTypeId<T>());
         }
     };
 

@@ -55,10 +55,10 @@ namespace tridot {
                     for(auto &sel : Editor::selection.entities){
                         if(engine.has<Transform>(sel.first)){
                             Transform &transform = engine.get<Transform>(sel.first);
-                            Editor::undo.changeComponent(sel.first, Reflection::get<Transform>(), &transform);
+                            Editor::undo.changeComponent(sel.first, env->reflection->getDescriptor<Transform>(), &transform);
                             transform.decompose(glm::inverse(parentTransform.getMatrix()) * transform.getMatrix());
                             transform.parent.id = id;
-                            Editor::undo.changeComponent(sel.first, Reflection::get<Transform>(), &transform);
+                            Editor::undo.changeComponent(sel.first, env->reflection->getDescriptor<Transform>(), &transform);
                         }
                     }
                     Editor::undo.endAction();
@@ -71,10 +71,10 @@ namespace tridot {
                         EntityId id = sel.first;
                         if(engine.has<Transform>(id)){
                             Transform &transform = engine.get<Transform>(id);
-                            Editor::undo.changeComponent(sel.first, Reflection::get<Transform>(), &transform);
+                            Editor::undo.changeComponent(sel.first, env->reflection->getDescriptor<Transform>(), &transform);
                             transform.decompose(transform.getMatrix());
                             transform.parent.id = -1;
-                            Editor::undo.changeComponent(sel.first, Reflection::get<Transform>(), &transform);
+                            Editor::undo.changeComponent(sel.first, env->reflection->getDescriptor<Transform>(), &transform);
                         }
                     }
                     Editor::undo.endAction();
@@ -83,10 +83,10 @@ namespace tridot {
                     if(engine.has<Transform>(id)){
                         Editor::undo.beginAction();
                         Transform &transform = engine.get<Transform>(id);
-                        Editor::undo.changeComponent(id, Reflection::get<Transform>(), &transform);
+                        Editor::undo.changeComponent(id, env->reflection->getDescriptor<Transform>(), &transform);
                         transform.decompose(transform.getMatrix());
                         transform.parent.id = -1;
-                        Editor::undo.changeComponent(id, Reflection::get<Transform>(), &transform);
+                        Editor::undo.changeComponent(id, env->reflection->getDescriptor<Transform>(), &transform);
                         Editor::undo.endAction();
                     }
                 }

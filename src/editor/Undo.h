@@ -6,7 +6,7 @@
 #define TRIDOT_UNDO_H
 
 #include "tridot/core/config.h"
-#include "tridot/ecs/Reflection.h"
+#include "tridot/core/Environment.h"
 #include <functional>
 
 namespace tridot {
@@ -18,7 +18,7 @@ namespace tridot {
 		void beginAction();
         void destroyEntity(EntityId id);
         void duplicateEntity(EntityId id, EntityId newId);
-        void changeComponent(EntityId id, Reflection::Type *type, void *value);
+        void changeComponent(EntityId id, Reflection::TypeDescriptor *type, void *value);
         void endAction();
 
 		void undoAction();

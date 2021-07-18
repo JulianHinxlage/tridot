@@ -4,7 +4,7 @@
 
 #include "Console.h"
 #include "Environment.h"
-#include "StrUtil.h"
+#include "tridot/util/StrUtil.h"
 #include <cstdarg>
 #include <chrono>
 #include <thread>

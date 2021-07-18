@@ -5,7 +5,7 @@
 #ifndef TRIDOT_PHYSICS_H
 #define TRIDOT_PHYSICS_H
 
-#include "tridot/core/Ref.h"
+#include "tridot/util/Ref.h"
 #include "tridot/components/Transform.h"
 #include <glm/glm.hpp>
 #include <functional>

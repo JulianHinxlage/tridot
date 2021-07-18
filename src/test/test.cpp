@@ -7,7 +7,7 @@
 #include "tridot/render/MeshFactory.h"
 #include "tridot/components/Transform.h"
 #include "tridot/components/RenderComponent.h"
-#include "tridot/ecs/Prefab.h"
+#include "tridot/entity/Prefab.h"
 #include <GLFW/glfw3.h>
 #include <glm/gtx/vector_angle.hpp>
 #include <imgui/imgui.h>

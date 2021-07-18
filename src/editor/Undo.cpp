@@ -31,7 +31,7 @@ namespace tridot {
                     engine.addByTypeId(id, comp.typeId);
                 }
                 void *data = engine.get(id, comp.typeId);
-                Reflection::get(comp.typeId)->copy(comp.startData.get(), data);
+                env->reflection->getDescriptor(comp.typeId)->copy(comp.startData.get(), data);
             }
             nextAction--;
         }
@@ -47,7 +47,7 @@ namespace tridot {
             for(auto &comp : actions[nextAction].components){
                 if(engine.has(comp.id, comp.typeId)){
                     void *data = engine.get(comp.id, comp.typeId);
-                    Reflection::get(comp.typeId)->copy(comp.endData.get(), data);
+                    env->reflection->getDescriptor(comp.typeId)->copy(comp.endData.get(), data);
                 }
             }
             nextAction++;
@@ -78,7 +78,7 @@ namespace tridot {
 
     void Undo::destroyEntity(EntityId id) {
         if(enabled) {
-            for (auto &type : Reflection::getTypes()) {
+            for (auto &type : env->reflection->getDescriptors()) {
                 if (engine.has(id, type->id())) {
                     changeComponent(id, type, engine.get(id, type->id()));
                 }
@@ -105,7 +105,7 @@ namespace tridot {
         }
     }
 
-    void Undo::changeComponent(EntityId id, Reflection::Type *type, void *value) {
+    void Undo::changeComponent(EntityId id, Reflection::TypeDescriptor *type, void *value) {
         if(enabled) {
             for (auto &comp : actionBuffer.components) {
                 if (comp.id == id && comp.typeId == type->id()) {

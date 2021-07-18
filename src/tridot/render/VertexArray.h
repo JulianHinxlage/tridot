@@ -5,7 +5,7 @@
 #ifndef TRIDOT_VERTEXARRAY_H
 #define TRIDOT_VERTEXARRAY_H
 
-#include "tridot/core/Ref.h"
+#include "tridot/util/Ref.h"
 #include "Buffer.h"
 #include "enum.h"
 #include <vector>

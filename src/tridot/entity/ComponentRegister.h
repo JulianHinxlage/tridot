@@ -19,7 +19,7 @@ namespace tridot {
 
         template<typename... Components>
         static void unregisterComponent(){
-            (unregisterComponent(Reflection::id<Components>()) , ...);
+            (unregisterComponent(env->reflection->getTypeId<Components>()) , ...);
         }
 
         static void unregisterComponent(int typeId){
@@ -62,7 +62,7 @@ namespace tridot {
             }
             if(componentPools[cid] == nullptr){
                 componentPools[cid] = std::make_shared<ComponentPool<Component>>();
-                onRegisterSignal.invoke(Reflection::id<Component>());
+                onRegisterSignal.invoke(env->reflection->getTypeId<Component>());
             }
         }
 

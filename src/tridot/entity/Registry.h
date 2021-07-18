@@ -350,6 +350,6 @@ namespace tridot {
 
 }
 
-#include "tridot/ecs/View.h"
+#include "tridot/entity/View.h"
 
 #endif //TRIDOT_REGISTRY_H

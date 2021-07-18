@@ -6,7 +6,7 @@
 #define TRIDOT_FRAMEBUFFER_H
 
 #include "Texture.h"
-#include "tridot/core/Ref.h"
+#include "tridot/util/Ref.h"
 #include <unordered_map>
 
 namespace tridot {

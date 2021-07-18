@@ -6,7 +6,7 @@
 #define TRIDOT_BATCHBUFFER_H
 
 #include "Buffer.h"
-#include "tridot/core/Ref.h"
+#include "tridot/util/Ref.h"
 #include <vector>
 
 namespace tridot {

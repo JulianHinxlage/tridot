@@ -8,7 +8,7 @@
 #include "Color.h"
 #include "Texture.h"
 #include "Shader.h"
-#include "tridot/core/Ref.h"
+#include "tridot/util/Ref.h"
 
 namespace tridot {
 

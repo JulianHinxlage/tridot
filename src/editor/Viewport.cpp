@@ -240,14 +240,14 @@ namespace tridot {
                                             (float *) &matrix, nullptr, (snap ^ controlDown) ? (float*)&snapValues : nullptr)){
                         if (!modifiedLast) {
                             Editor::undo.beginAction();
-                            Editor::undo.changeComponent(selectedEntity, Reflection::get<Transform>(), &transform);
+                            Editor::undo.changeComponent(selectedEntity, env->reflection->getDescriptor<Transform>(), &transform);
                         }
 
                         matrix = glm::inverse(transform.parent.matrix) * matrix;
                         transform.decompose(matrix);
                         modifiedLast = true;
 
-                        Editor::undo.changeComponent(selectedEntity, Reflection::get<Transform>(), &transform);
+                        Editor::undo.changeComponent(selectedEntity, env->reflection->getDescriptor<Transform>(), &transform);
                     } else {
                         if (!ImGuizmo::IsUsing()) {
                             if (modifiedLast) {
@@ -325,7 +325,7 @@ namespace tridot {
 
                                 if(!isParentSelected(id)){
                                     if (!modifiedLast) {
-                                        Editor::undo.changeComponent(id, Reflection::get<Transform>(), &t);
+                                        Editor::undo.changeComponent(id, env->reflection->getDescriptor<Transform>(), &t);
                                     }
 
                                     glm::mat4 m = matrix * inverse * t.getMatrix();
@@ -339,7 +339,7 @@ namespace tridot {
                                         t.decompose(m);
                                     }
 
-                                    Editor::undo.changeComponent(id, Reflection::get<Transform>(), &t);
+                                    Editor::undo.changeComponent(id, env->reflection->getDescriptor<Transform>(), &t);
                                 }
                             }
                         }

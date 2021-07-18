@@ -23,7 +23,7 @@ namespace tridot {
         out << YAML::BeginMap;
         out << YAML::Key << "id" << YAML::Value << id;
 
-        for (auto& type : Reflection::getTypes()) {
+        for (auto& type : env->reflection->getDescriptors()) {
             if (type) {
                 if (reg.has(id, type->id())) {
                     void* ptr = reg.get(id, type->id());
@@ -40,7 +40,7 @@ namespace tridot {
         id = reg.createHinted(id);
         in.remove("id");
 
-        for (auto& type : Reflection::getTypes()) {
+        for (auto& type : env->reflection->getDescriptors()) {
             if (type) {
                 auto comp = in[type->name()];
                 if (comp) {
@@ -76,58 +76,58 @@ namespace tridot {
         return id;
     }
 
-    void Serializer::serializeType(Reflection::Type *type, const std::string &name, YAML::Emitter &out, void *ptr, ResourceManager &resources){
+    void Serializer::serializeType(Reflection::TypeDescriptor *type, const std::string &name, YAML::Emitter &out, void *ptr, ResourceManager &resources){
         out << YAML::Key << name;
-        if(type->id() == Reflection::id<float>()){
+        if(type->id() == env->reflection->getTypeId<float>()){
             out << YAML::Value << *(float*)ptr;
-        }else if(type->id() == Reflection::id<int>()){
+        }else if(type->id() == env->reflection->getTypeId<int>()){
             out << YAML::Value << *(int*)ptr;
-        }else if(type->id() == Reflection::id<uint32_t>()){
+        }else if(type->id() == env->reflection->getTypeId<uint32_t>()){
             out << YAML::Value << *(uint32_t*)ptr;
-        }else if(type->id() == Reflection::id<uint64_t>()){
+        }else if(type->id() == env->reflection->getTypeId<uint64_t>()){
             out << YAML::Value << *(uint64_t*)ptr;
-        }else if(type->id() == Reflection::id<bool>()){
+        }else if(type->id() == env->reflection->getTypeId<bool>()){
             out << YAML::Value << *(bool*)ptr;
-        }else if(type->id() == Reflection::id<std::string>()){
+        }else if(type->id() == env->reflection->getTypeId<std::string>()){
             std::string &v = *(std::string*)ptr;
             out << YAML::Value << v;
-        }else if(type->id() == Reflection::id<Color>()){
+        }else if(type->id() == env->reflection->getTypeId<Color>()){
             Color &v = *(Color*)ptr;
             out << YAML::Flow << YAML::BeginSeq << v.vec().x << v.vec().y << v.vec().z << v.vec().w << YAML::EndSeq;
-        }else if(type->id() == Reflection::id<glm::vec2>()){
+        }else if(type->id() == env->reflection->getTypeId<glm::vec2>()){
             glm::vec2 &v = *(glm::vec2*)ptr;
             out << YAML::Flow << YAML::BeginSeq << v.x << v.y << YAML::EndSeq;
-        }else if(type->id() == Reflection::id<glm::vec3>()){
+        }else if(type->id() == env->reflection->getTypeId<glm::vec3>()){
             glm::vec3 &v = *(glm::vec3*)ptr;
             out << YAML::Flow << YAML::BeginSeq << v.x << v.y << v.z << YAML::EndSeq;
-        }else if(type->id() == Reflection::id<glm::vec4>()){
+        }else if(type->id() == env->reflection->getTypeId<glm::vec4>()){
             glm::vec4 &v = *(glm::vec4*)ptr;
             out << YAML::Flow << YAML::BeginSeq << v.x << v.y << v.z << v.w << YAML::EndSeq;
-        }else if(type->id() == Reflection::id<Tag>()){
+        }else if(type->id() == env->reflection->getTypeId<Tag>()){
             Tag &v = *(Tag*)ptr;
             out << v.tag;
-        }else if(type->id() == Reflection::id<uuid>()){
+        }else if(type->id() == env->reflection->getTypeId<uuid>()){
             uuid &v = *(uuid*)ptr;
             out << v.str();
-        }else if(type->id() == Reflection::id<LightType>()){
+        }else if(type->id() == env->reflection->getTypeId<LightType>()){
             out << YAML::Value << *(int*)ptr;
-        }else if(type->id() == Reflection::id<Material::Mapping>()){
+        }else if(type->id() == env->reflection->getTypeId<Material::Mapping>()){
             out << YAML::Value << *(int*)ptr;
-        }else if(type->id() == Reflection::id<Collider::Type>()){
+        }else if(type->id() == env->reflection->getTypeId<Collider::Type>()){
             out << YAML::Value << *(int*)ptr;
-        }else if(type->id() == Reflection::id<Ref<Texture>>()){
+        }else if(type->id() == env->reflection->getTypeId<Ref<Texture>>()){
             Ref<Texture> &v = *(Ref<Texture>*)ptr;
             out << YAML::Value << resources.getName(v);
-        }else if(type->id() == Reflection::id<Ref<Material>>()){
+        }else if(type->id() == env->reflection->getTypeId<Ref<Material>>()){
             Ref<Material> &v = *(Ref<Material>*)ptr;
             out << YAML::Value << resources.getName(v);
-        }else if(type->id() == Reflection::id<Ref<Mesh>>()){
+        }else if(type->id() == env->reflection->getTypeId<Ref<Mesh>>()){
             Ref<Mesh> &v = *(Ref<Mesh>*)ptr;
             out << YAML::Value << resources.getName(v);
-        }else if(type->id() == Reflection::id<Ref<Shader>>()){
+        }else if(type->id() == env->reflection->getTypeId<Ref<Shader>>()){
             Ref<Shader> &v = *(Ref<Shader>*)ptr;
             out << YAML::Value << resources.getName(v);
-        }else if(type->id() == Reflection::id<YAML::Node>()){
+        }else if(type->id() == env->reflection->getTypeId<YAML::Node>()){
             YAML::Node &v = *(YAML::Node*)ptr;
             out << v;
         }else {
@@ -136,27 +136,27 @@ namespace tridot {
             }else{
                 out << YAML::BeginMap;
                 for(auto &member : type->member()){
-                    serializeType(Reflection::get(member.typeId), member.name, out, (char*)ptr + member.offset, resources);
+                    serializeType(member.descriptor, member.name, out, (char*)ptr + member.offset, resources);
                 }
                 out << YAML::EndMap;
             }
         }
     }
 
-    void Serializer::deserializeType(Reflection::Type *type, YAML::Node &in, void *ptr, ResourceManager &resources) {
-        if(type->id() == Reflection::id<float>()){
+    void Serializer::deserializeType(Reflection::TypeDescriptor *type, YAML::Node &in, void *ptr, ResourceManager &resources) {
+        if(type->id() == env->reflection->getTypeId<float>()){
             *(float*)ptr = in.as<float>(0);
-        }else if(type->id() == Reflection::id<int>()){
+        }else if(type->id() == env->reflection->getTypeId<int>()){
             *(int*)ptr = in.as<int>(0);
-        }else if(type->id() == Reflection::id<uint32_t>()){
+        }else if(type->id() == env->reflection->getTypeId<uint32_t>()){
             *(uint32_t*)ptr = in.as<uint32_t>(0);
-        }else if(type->id() == Reflection::id<uint64_t>()){
+        }else if(type->id() == env->reflection->getTypeId<uint64_t>()){
             *(uint64_t*)ptr = in.as<uint64_t>(0);
-        }else if(type->id() == Reflection::id<bool>()){
+        }else if(type->id() == env->reflection->getTypeId<bool>()){
             *(bool*)ptr = in.as<bool>(false);
-        }else if(type->id() == Reflection::id<std::string>()){
+        }else if(type->id() == env->reflection->getTypeId<std::string>()){
             *(std::string*)ptr = in.as<std::string>("");
-        }else if(type->id() == Reflection::id<Color>()){
+        }else if(type->id() == env->reflection->getTypeId<Color>()){
             glm::vec4 v;
             for(int i = 0; i < in.size(); i++){
                 if(i <= 4){
@@ -164,35 +164,35 @@ namespace tridot {
                 }
             }
             *(Color*)ptr = Color(v);
-        }else if(type->id() == Reflection::id<glm::vec2>()){
+        }else if(type->id() == env->reflection->getTypeId<glm::vec2>()){
             for(int i = 0; i < in.size(); i++){
                 if(i <= 2){
                     *((float*)ptr + i) = in[i].as<float>(0);
                 }
             }
-        }else if(type->id() == Reflection::id<glm::vec3>()){
+        }else if(type->id() == env->reflection->getTypeId<glm::vec3>()){
             for(int i = 0; i < in.size(); i++){
                 if(i <= 3){
                     *((float*)ptr + i) = in[i].as<float>(0);
                 }
             }
-        }else if(type->id() == Reflection::id<glm::vec4>()){
+        }else if(type->id() == env->reflection->getTypeId<glm::vec4>()){
             for(int i = 0; i < in.size(); i++){
                 if(i <= 4){
                     *((float*)ptr + i) = in[i].as<float>(0);
                 }
             }
-        }else if(type->id() == Reflection::id<uuid>()){
+        }else if(type->id() == env->reflection->getTypeId<uuid>()){
             (*(uuid*)ptr).set(in.as<std::string>(""));
-        }else if(type->id() == Reflection::id<Tag>()){
+        }else if(type->id() == env->reflection->getTypeId<Tag>()){
             (*(Tag*)ptr).tag = in.as<std::string>("");
-        }else if(type->id() == Reflection::id<LightType>()){
+        }else if(type->id() == env->reflection->getTypeId<LightType>()){
             *(int*)ptr = in.as<int>(0);
-        }else if(type->id() == Reflection::id<Material::Mapping>()){
+        }else if(type->id() == env->reflection->getTypeId<Material::Mapping>()){
             *(int*)ptr = in.as<int>(0);
-        }else if(type->id() == Reflection::id<Collider::Type>()){
+        }else if(type->id() == env->reflection->getTypeId<Collider::Type>()){
             *(int*)ptr = in.as<int>(0);
-        }else if(type->id() == Reflection::id<Ref<Texture>>()){
+        }else if(type->id() == env->reflection->getTypeId<Ref<Texture>>()){
             std::string name = in.as<std::string>("");
             Ref<Texture> &v = *(Ref<Texture>*)ptr;
             if(!name.empty()){
@@ -200,7 +200,7 @@ namespace tridot {
             }else{
                 v = nullptr;
             }
-        }else if(type->id() == Reflection::id<Ref<Material>>()){
+        }else if(type->id() == env->reflection->getTypeId<Ref<Material>>()){
             std::string name = in.as<std::string>("");
             Ref<Material> &v = *(Ref<Material> *) ptr;
             if(!name.empty()) {
@@ -208,7 +208,7 @@ namespace tridot {
             }else{
                 v = nullptr;
             }
-        }else if(type->id() == Reflection::id<Ref<Mesh>>()){
+        }else if(type->id() == env->reflection->getTypeId<Ref<Mesh>>()){
             std::string name = in.as<std::string>("");
             Ref<Mesh> &v = *(Ref<Mesh> *) ptr;
             if(!name.empty()) {
@@ -216,7 +216,7 @@ namespace tridot {
             }else{
                 v = nullptr;
             }
-        }else if(type->id() == Reflection::id<Ref<Shader>>()){
+        }else if(type->id() == env->reflection->getTypeId<Ref<Shader>>()){
             std::string name = in.as<std::string>("");
             Ref<Shader> &v = *(Ref<Shader> *) ptr;
             if(!name.empty()) {
@@ -224,14 +224,14 @@ namespace tridot {
             }else{
                 v = nullptr;
             }
-        }else if(type->id() == Reflection::id<YAML::Node>()){
+        }else if(type->id() == env->reflection->getTypeId<YAML::Node>()){
             YAML::Node &v = *(YAML::Node*)ptr;
             v = in.as<YAML::Node>();
         }else {
             for(auto &member : type->member()){
                 auto node = in[member.name];
                 if(node){
-                    deserializeType(Reflection::get(member.typeId), node, (char*)ptr + member.offset, resources);
+                    deserializeType(member.descriptor, node, (char*)ptr + member.offset, resources);
                 }
             }
         }
@@ -265,7 +265,7 @@ namespace tridot {
                     out << YAML::BeginMap;
                     Ref<Material> material = resources.get<Material>(name);
                     out << YAML::Key << "name" << YAML::Value << name;
-                    serializeType(Reflection::get<Material>(), "material", out, material.get(), resources);
+                    serializeType(env->reflection->getDescriptor<Material>(), "material", out, material.get(), resources);
                     out << YAML::EndMap;
                 }
 
@@ -315,7 +315,7 @@ namespace tridot {
                         auto node = material["material"];
                         if(node){
                             Ref<Material> mat = resources.get<Material>(name, ResourceManager::JUST_CREATE);
-                            deserializeType(Reflection::get<Material>(), node, mat.get(), resources);
+                            deserializeType(env->reflection->getDescriptor<Material>(), node, mat.get(), resources);
                         }
                     }
                 }

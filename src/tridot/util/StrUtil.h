@@ -5,7 +5,7 @@
 #ifndef TRIDOT_STRUTIL_H
 #define TRIDOT_STRUTIL_H
 
-#include "config.h"
+#include "tridot/core/config.h"
 #include <string>
 #include <vector>
 

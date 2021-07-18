@@ -5,7 +5,7 @@
 #ifndef TRIDOT_TYPEMAP_H
 #define TRIDOT_TYPEMAP_H
 
-#include "Reflection.h"
+#include "tridot/core/Environment.h"
 #include <utility>
 
 namespace tridot{
@@ -14,7 +14,7 @@ namespace tridot{
     public:
         template<typename T>
         int id(){
-            return id(Reflection::id<T>());
+            return id(env->reflection->getTypeId<T>());
         }
 
         int id(int typeId){

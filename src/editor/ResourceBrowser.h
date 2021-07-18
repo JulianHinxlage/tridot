@@ -5,7 +5,6 @@
 #ifndef TRIDOT_RESOURCEBROWSER_H
 #define TRIDOT_RESOURCEBROWSER_H
 
-#include "tridot/ecs/Reflection.h"
 #include "tridot/engine/Engine.h"
 #include "editor/EditorGui.h"
 #include <string>

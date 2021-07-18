@@ -50,7 +50,7 @@ namespace tridot {
 
     EntityId SelectionContext::duplicate(EntityId id, bool addAction) {
         EntityId newId = engine.create();
-        for(auto &type : Reflection::getTypes()){
+        for(auto &type : env->reflection->getDescriptors()){
             auto *pool = engine.getPool(type->id());
             if(pool && pool->has(id)){
                 pool->add(newId, pool->getById(id));

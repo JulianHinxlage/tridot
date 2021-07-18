@@ -3,7 +3,7 @@
 //
 
 #include "ProfilerPanel.h"
-#include "tridot/core/StrUtil.h"
+#include "tridot/util/StrUtil.h"
 #include "EditorGui.h"
 #include "tridot/engine/Engine.h"
 

@@ -5,9 +5,9 @@
 #ifndef TRIDOT_RESOURCEMANAGER_H
 #define TRIDOT_RESOURCEMANAGER_H
 
-#include "tridot/core/Ref.h"
+#include "tridot/util/Ref.h"
 #include "tridot/core/Log.h"
-#include "tridot/core/StrUtil.h"
+#include "tridot/util/StrUtil.h"
 #include "Profiler.h"
 #include <map>
 #include <functional>

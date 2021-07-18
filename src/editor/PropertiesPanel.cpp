@@ -26,10 +26,10 @@ namespace tridot {
         });
 	}
 
-    bool getDifferences(Reflection::Type* type, void* v1, void* v2, std::vector<std::pair<int, Reflection::Type*>>& differences, int currentOffset = 0) {
+    bool getDifferences(Reflection::TypeDescriptor* type, void* v1, void* v2, std::vector<std::pair<int, Reflection::TypeDescriptor*>>& differences, int currentOffset = 0) {
         for (auto& member : type->member()) {
             currentOffset += member.offset;
-            getDifferences(Reflection::get(member.typeId), (uint8_t*)v1 + member.offset, (uint8_t*)v2 + member.offset, differences, currentOffset);
+            getDifferences(member.descriptor, (uint8_t*)v1 + member.offset, (uint8_t*)v2 + member.offset, differences, currentOffset);
             currentOffset -= member.offset;
         }
         if (type->member().size() == 0) {
@@ -41,7 +41,7 @@ namespace tridot {
     }
 
 	void PropertiesPanel::updateProperties(EntityId id){
-        auto& types = Reflection::getTypes();
+        auto& types = env->reflection->getDescriptors();
         if (ImGui::Button("add Component")) {
             ImGui::OpenPopup("add");
         }
@@ -75,7 +75,7 @@ namespace tridot {
         ImGui::BeginChild("properties", ImVec2(0, 0), false, Editor::propertiesWindowFlags);
         Editor::propertiesWindowFlags = 0;
 
-        static Reflection::Type *lastChange;
+        static Reflection::TypeDescriptor *lastChange;
 
         for (auto& type : types) {
             if (type) {
@@ -88,7 +88,7 @@ namespace tridot {
 
                         EditorGui::drawType(type->id(), comp, type->name());
 
-                        std::vector<std::pair<int, Reflection::Type*>> differences;
+                        std::vector<std::pair<int, Reflection::TypeDescriptor*>> differences;
                         if(getDifferences(type, comp, compBuffer,differences)){
                             Editor::undo.changeComponent(id, type, compBuffer);
                             Editor::undo.changeComponent(id, type, comp);
@@ -118,7 +118,7 @@ namespace tridot {
 	}
 
 	void PropertiesPanel::updateMultiProperties(){
-        auto& types = Reflection::getTypes();
+        auto& types = env->reflection->getDescriptors();
         if (ImGui::Button("add Component")) {
             ImGui::OpenPopup("add");
         }
@@ -167,8 +167,8 @@ namespace tridot {
                 bool first = true;
                 bool remove = false;
                 bool change = false;
-                static Reflection::Type *lastChange;
-                std::vector<std::pair<int, Reflection::Type*>> differences;
+                static Reflection::TypeDescriptor *lastChange;
+                std::vector<std::pair<int, Reflection::TypeDescriptor*>> differences;
                 uint8_t* compBuffer = new uint8_t[type->size()];
 
                 for (auto& sel : Editor::selection.entities) {

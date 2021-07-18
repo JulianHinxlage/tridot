@@ -9,7 +9,24 @@ tridot::Environment *env = tridot::Environment::init();
 namespace tridot {
 
     Environment::Environment() {
+        //core systems
+        systems = nullptr;
+        events = nullptr;
+        console = nullptr;
+        reflection = nullptr;
 
+        //engine system
+        time = nullptr;
+        input = nullptr;
+        physics = nullptr;
+        profiler = nullptr;
+        resources = nullptr;
+        scene = nullptr;
+
+        //rendering system
+        window = nullptr;
+        renderer = nullptr;
+        pbRenderer = nullptr;
     }
 
     static bool &getInitFlag(){
@@ -32,9 +49,7 @@ namespace tridot {
             env->systems->setSystem<SystemManager>(env->systems);
             env->events = env->systems->addSystem<EventManager>();
             env->console = env->systems->addSystem<Console>();
-            env->events->init.addCallback("env", [](){
-
-            });
+            env->reflection = env->systems->addSystem<Reflection>();
         }else{
             env = getInstance();
         }
@@ -44,9 +59,6 @@ namespace tridot {
     void Environment::shutdown() {
         env = getInstance();
         if(env != nullptr){
-            if(env->events){
-                env->events->init.removeCallback("env");
-            }
             delete env->systems;
             delete env;
             getInstance() = nullptr;
