@@ -100,7 +100,7 @@ namespace tridot {
 
 }
 
-TRI_INIT("panels"){
+TRI_INIT_CALLBACK("panels"){
     EditorGui::addType<float>(true, [](float &v, const std::string &name) {
         ImGui::SliderFloat(name.c_str(), &v, 0, 1);
     });
@@ -203,7 +203,7 @@ TRI_INIT("panels"){
     });
     EditorGui::addType<RigidBody>(false, [](RigidBody &rb, const std::string &name){
         if(ImGui::Button("update")){
-            engine.physics.remove(rb);
+            env->physics->remove(rb);
             rb.physicsReference = nullptr;
         }
     });
@@ -277,10 +277,10 @@ TRI_INIT("panels"){
                    ImGui::Image((void *) (size_t) texture->getId(), ImVec2(200 * aspect, 200), ImVec2(0, 1),
                                 ImVec2(1, 0));
 
-                   EntityId id = engine.getIdByComponent(v);
+                   EntityId id = env->scene->getIdByComponent(v);
                    if(id != -1){
-                       if(engine.has<Transform>(id)){
-                           Transform &transform = engine.get<Transform>(id);
+                       if(env->scene->has<Transform>(id)){
+                           Transform &transform = env->scene->get<Transform>(id);
                            static EditorCamera editorCamera;
                            if(ImGui::IsItemHovered()) {
                                Editor::propertiesWindowFlags |= ImGuiWindowFlags_NoScrollWithMouse;

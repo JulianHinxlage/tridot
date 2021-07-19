@@ -2,8 +2,7 @@
 // Copyright (c) 2021 Julian Hinxlage. All rights reserved.
 //
 
-#ifndef TRIDOT_UNDO_H
-#define TRIDOT_UNDO_H
+#pragma once
 
 #include "tridot/core/config.h"
 #include "tridot/core/Environment.h"
@@ -47,4 +46,3 @@ namespace tridot {
 
 }
 
-#endif //TRIDOT_UNDO_H

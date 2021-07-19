@@ -23,7 +23,7 @@ namespace tridot {
 
     void ResourceBrowser::update() {
         EditorGui::window("Resource Browser", [this](){
-            for(auto &directory : engine.resources.getSearchDirectories()){
+            for(auto &directory : env->resources->getSearchDirectories()){
                 if(!isSubdirectory(directory)){
                     updateDirectory(directory, directory);
                 }
@@ -88,7 +88,7 @@ namespace tridot {
     }
 
     bool ResourceBrowser::isSubdirectory(const std::string &directory) {
-        for(auto &dir : engine.resources.getSearchDirectories()){
+        for(auto &dir : env->resources->getSearchDirectories()){
             if(dir.size() < directory.size()){
                 if(StrUtil::match(dir, directory) == dir.size()){
                     return true;

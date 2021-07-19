@@ -2,8 +2,7 @@
 // Copyright (c) 2021 Julian Hinxlage. All rights reserved.
 //
 
-#ifndef TRIDOT_MESHRENDERERBATCH_H
-#define TRIDOT_MESHRENDERERBATCH_H
+#pragma once
 
 #include "Mesh.h"
 #include "Shader.h"
@@ -40,4 +39,3 @@ namespace tridot {
 
 }
 
-#endif //TRIDOT_MESHRENDERERBATCH_H

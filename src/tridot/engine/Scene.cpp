@@ -10,7 +10,7 @@ namespace tridot {
 
     bool Scene::load() {
         Serializer serializer;
-        bool valid = serializer.load(file, *this, engine.resources);
+        bool valid = serializer.load(file, *this, *env->resources);
         if(valid){
             Log::debug("loaded scene ", file);
         }
@@ -19,7 +19,7 @@ namespace tridot {
 
     bool Scene::save() {
         Serializer serializer;
-        return serializer.save(file, *this, engine.resources);
+        return serializer.save(file, *this, *env->resources);
     }
 
     bool Scene::load(const std::string &file) {

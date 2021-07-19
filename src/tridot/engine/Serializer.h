@@ -2,8 +2,7 @@
 // Copyright (c) 2021 Julian Hinxlage. All rights reserved.
 //
 
-#ifndef TRIDOT_SERIALIZER_H
-#define TRIDOT_SERIALIZER_H
+#pragma once
 
 #include "tridot/entity/Registry.h"
 #include "tridot/core/Environment.h"
@@ -26,4 +25,3 @@ namespace tridot {
 
 }
 
-#endif //TRIDOT_SERIALIZER_H

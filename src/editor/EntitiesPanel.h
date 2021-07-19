@@ -2,8 +2,7 @@
 // Copyright (c) 2021 Julian Hinxlage. All rights reserved.
 //
 
-#ifndef TRIDOT_ENTITIES_PANEL_H
-#define TRIDOT_ENTITIES_PANEL_H
+#pragma once
 
 #include "tridot/core/config.h"
 #include <map>
@@ -24,4 +23,3 @@ namespace tridot {
 
 }
 
-#endif //TRIDOT_ENTITIES_PANEL_H

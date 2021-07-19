@@ -13,7 +13,7 @@ namespace tridot {
         frameBuffer = nullptr;
     }
 
-    TRI_UPDATE("post processing"){
+    TRI_UPDATE_CALLBACK("post processing"){
         auto postProcess = [&](PostProcessingEffect &effect, Ref<FrameBuffer> &output){
             if(output.get() != nullptr && effect.shader.get() != nullptr && effect.shader->getId() != 0){
                 TRI_PROFILE("post processing");
@@ -25,27 +25,27 @@ namespace tridot {
                     effect.frameBuffer->resize(output->getSize().x, output->getSize().y);
                 }
                 effect.frameBuffer->clear();
-                engine.renderer.begin(glm::mat4(1), {0, 0, 0}, effect.frameBuffer);
-                engine.renderer.submit({{0, 0, 0}, {2, 2, 2}},
+                env->renderer->begin(glm::mat4(1), {0, 0, 0}, effect.frameBuffer);
+                env->renderer->submit({{0, 0, 0}, {2, 2, 2}},
                                        output->getAttachment(COLOR).get(), nullptr, effect.shader.get());
-                engine.renderer.end();
+                env->renderer->end();
                 output = effect.frameBuffer;
             }
         };
-        engine.view<PostProcessingEffect>().each([&](EntityId id, PostProcessingEffect &effect){
-            if(auto *camera = engine.getComponentByHierarchy<PerspectiveCamera>(id)){
+        env->scene->view<PostProcessingEffect>().each([&](EntityId id, PostProcessingEffect &effect){
+            if(auto *camera = env->scene->getComponentByHierarchy<PerspectiveCamera>(id)){
                 postProcess(effect, camera->output);
-            }else if(auto *camera = engine.getComponentByHierarchy<OrthographicCamera>(id)){
+            }else if(auto *camera = env->scene->getComponentByHierarchy<OrthographicCamera>(id)){
                 postProcess(effect, camera->output);
             }else{
                 bool processed = false;
-                engine.view<PerspectiveCamera>().each([&](PerspectiveCamera &camera){
+                env->scene->view<PerspectiveCamera>().each([&](PerspectiveCamera &camera){
                     if(!processed) {
                         postProcess(effect, camera.output);
                         processed = true;
                     }
                 });
-                engine.view<OrthographicCamera>().each([&](OrthographicCamera &camera){
+                env->scene->view<OrthographicCamera>().each([&](OrthographicCamera &camera){
                     if(!processed){
                         postProcess(effect, camera.output);
                         processed = true;

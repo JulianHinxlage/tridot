@@ -2,8 +2,7 @@
 // Copyright (c) 2021 Julian Hinxlage. All rights reserved.
 //
 
-#ifndef TRIDOT_TRANSFORM_H
-#define TRIDOT_TRANSFORM_H
+#pragma once
 
 #include "tridot/core/config.h"
 #include <glm/glm.hpp>
@@ -40,4 +39,3 @@ namespace tridot {
 
 }
 
-#endif //TRIDOT_TRANSFORM_H

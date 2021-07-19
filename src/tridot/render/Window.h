@@ -2,8 +2,7 @@
 // Copyright (c) 2021 Julian Hinxlage. All rights reserved.
 //
 
-#ifndef TRIDOT_WINDOW_H
-#define TRIDOT_WINDOW_H
+#pragma once
 
 #include "Color.h"
 #include "glm/glm.hpp"
@@ -46,4 +45,3 @@ namespace tridot {
 
 }
 
-#endif //TRIDOT_WINDOW_H

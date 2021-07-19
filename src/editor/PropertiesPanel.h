@@ -2,8 +2,7 @@
 // Copyright (c) 2021 Julian Hinxlage. All rights reserved.
 //
 
-#ifndef TRIDOT_PROPERTIES_PANEL_H
-#define TRIDOT_PROPERTIES_PANEL_H
+#pragma once
 
 #include "tridot/core/config.h"
 
@@ -18,4 +17,3 @@ namespace tridot {
 
 }
 
-#endif //TRIDOT_PROPERTIES_PANEL_H

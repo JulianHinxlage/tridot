@@ -2,8 +2,7 @@
 // Copyright (c) 2021 Julian Hinxlage. All rights reserved.
 //
 
-#ifndef TRIDOT_PREFAB_H
-#define TRIDOT_PREFAB_H
+#pragma once
 
 #include "Registry.h"
 
@@ -98,4 +97,3 @@ namespace tridot {
 
 }
 
-#endif //TRIDOT_PREFAB_H

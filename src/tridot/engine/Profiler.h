@@ -2,8 +2,7 @@
 // Copyright (c) 2021 Julian Hinxlage. All rights reserved.
 //
 
-#ifndef TRIDOT_PROFILER_H
-#define TRIDOT_PROFILER_H
+#pragma once
 
 #include "tridot/util/Clock.h"
 #include <vector>
@@ -60,4 +59,3 @@ namespace tridot {
 #define TRI_PROFILE(name)
 #endif
 
-#endif //TRIDOT_PROFILER_H

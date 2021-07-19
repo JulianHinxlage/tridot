@@ -2,8 +2,7 @@
 // Copyright (c) 2021 Julian Hinxlage. All rights reserved.
 //
 
-#ifndef TRIDOT_CONSOLE_H
-#define TRIDOT_CONSOLE_H
+#pragma once
 
 #include <string>
 #include <functional>
@@ -109,4 +108,3 @@ namespace tridot {
 
 }
 
-#endif //TRIDOT_CONSOLE_H

@@ -2,8 +2,7 @@
 // Copyright (c) 2021 Julian Hinxlage. All rights reserved.
 //
 
-#ifndef TRIDOT_TEXTURE_H
-#define TRIDOT_TEXTURE_H
+#pragma once
 
 #include "Image.h"
 #include "enum.h"
@@ -57,4 +56,3 @@ namespace tridot {
 
 }
 
-#endif //TRIDOT_TEXTURE_H

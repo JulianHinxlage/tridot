@@ -2,8 +2,7 @@
 // Copyright (c) 2021 Julian Hinxlage. All rights reserved.
 //
 
-#ifndef TRIDOT_PROFILERPANEL_H
-#define TRIDOT_PROFILERPANEL_H
+#pragma once
 
 namespace tridot {
 
@@ -15,4 +14,3 @@ namespace tridot {
 
 }
 
-#endif //TRIDOT_PROFILERPANEL_H

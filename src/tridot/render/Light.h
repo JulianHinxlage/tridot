@@ -2,8 +2,7 @@
 // Copyright (c) 2021 Julian Hinxlage. All rights reserved.
 //
 
-#ifndef TRIDOT_LIGHT_H
-#define TRIDOT_LIGHT_H
+#pragma once
 
 #include <glm/glm.hpp>
 
@@ -26,4 +25,3 @@ namespace tridot {
 
 }
 
-#endif //TRIDOT_LIGHT_H

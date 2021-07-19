@@ -2,8 +2,7 @@
 // Copyright (c) 2021 Julian Hinxlage. All rights reserved.
 //
 
-#ifndef TRIDOT_STRUTIL_H
-#define TRIDOT_STRUTIL_H
+#pragma once
 
 #include "tridot/core/config.h"
 #include <string>
@@ -23,4 +22,3 @@ namespace tridot {
 
 }
 
-#endif //TRIDOT_STRUTIL_H

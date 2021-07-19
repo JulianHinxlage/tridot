@@ -2,8 +2,7 @@
 // Copyright (c) 2021 Julian Hinxlage. All rights reserved.
 //
 
-#ifndef TRIDOT_REF_H
-#define TRIDOT_REF_H
+#pragma once
 
 #include <memory>
 
@@ -25,4 +24,3 @@ namespace tridot {
 
 }
 
-#endif //TRIDOT_REF_H

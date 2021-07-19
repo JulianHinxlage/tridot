@@ -2,18 +2,24 @@
 // Copyright (c) 2021 Julian Hinxlage. All rights reserved.
 //
 
-#include "tridot/core/Environment.h"
+#include "tridot/entity/ComponentRegister.h"
 #include "Transform.h"
 #include "Tag.h"
 #include "RenderComponent.h"
 #include "PostProcessingEffect.h"
 #include "ComponentCache.h"
+#include "SkyBox.h"
 #include "tridot/render/Camera.h"
 #include "tridot/render/Light.h"
 #include "tridot/engine/Physics.h"
 #include <glm/glm.hpp>
 
+
 namespace tridot {
+
+    TRI_INIT_CALLBACK("type registering"){
+        ComponentRegister::registerComponent<Tag, uuid, Transform, RenderComponent, PostProcessingEffect, PerspectiveCamera, OrthographicCamera, Light, RigidBody, Collider, ComponentCache, SkyBox>();
+    }
 
     TRI_REGISTER_TYPE(float)
     TRI_REGISTER_TYPE(bool)
@@ -84,5 +90,8 @@ namespace tridot {
 
     TRI_REGISTER_TYPE(ComponentCache)
     TRI_REGISTER_MEMBER(ComponentCache, data)
+
+    TRI_REGISTER_TYPE(SkyBox)
+    TRI_REGISTER_MEMBER4(SkyBox, texture, drawSkybox, useEnvironmentMap, intensity)
 
 }

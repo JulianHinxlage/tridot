@@ -2,8 +2,7 @@
 // Copyright (c) 2021 Julian Hinxlage. All rights reserved.
 //
 
-#ifndef TRIDOT_COMPONENTPOOL_H
-#define TRIDOT_COMPONENTPOOL_H
+#pragma once
 
 #include "Pool.h"
 
@@ -85,4 +84,3 @@ namespace tridot {
 
 }
 
-#endif //TRIDOT_COMPONENTPOOL_H

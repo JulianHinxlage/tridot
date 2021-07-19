@@ -2,8 +2,7 @@
 // Copyright (c) 2021 Julian Hinxlage. All rights reserved.
 //
 
-#ifndef TRIDOT_REGISTRY_H
-#define TRIDOT_REGISTRY_H
+#pragma once
 
 #include "TypeMap.h"
 #include "Pool.h"
@@ -352,4 +351,3 @@ namespace tridot {
 
 #include "tridot/entity/View.h"
 
-#endif //TRIDOT_REGISTRY_H

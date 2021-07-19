@@ -31,7 +31,7 @@ namespace tridot {
             entry.second.counts.push_back(entry.second.times.size());
             entry.second.times.clear();
         }
-        if(engine.time.frameTicks(interval)) {
+        if(env->time->frameTicks(interval)) {
             node.clear();
             for(auto &entry : entries){
                 Node *node = &this->node;
@@ -141,12 +141,6 @@ namespace tridot {
             }
         }
 
-    }
-
-    TRI_UPDATE("profiler"){
-        engine.profiler.end("total");
-        engine.profiler.update();
-        engine.profiler.begin("total");
     }
 
 }

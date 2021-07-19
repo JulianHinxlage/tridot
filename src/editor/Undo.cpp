@@ -24,13 +24,13 @@ namespace tridot {
             }
             for(auto &comp : actions[nextAction-1].components){
                 EntityId id = comp.id;
-                if(!engine.exists(id)){
-                    id = engine.createHinted(id);
+                if(!env->scene->exists(id)){
+                    id = env->scene->createHinted(id);
                 }
-                if(!engine.has(id, comp.typeId)) {
-                    engine.addByTypeId(id, comp.typeId);
+                if(!env->scene->has(id, comp.typeId)) {
+                    env->scene->addByTypeId(id, comp.typeId);
                 }
-                void *data = engine.get(id, comp.typeId);
+                void *data = env->scene->get(id, comp.typeId);
                 env->reflection->getDescriptor(comp.typeId)->copy(comp.startData.get(), data);
             }
             nextAction--;
@@ -45,8 +45,8 @@ namespace tridot {
                 }
             }
             for(auto &comp : actions[nextAction].components){
-                if(engine.has(comp.id, comp.typeId)){
-                    void *data = engine.get(comp.id, comp.typeId);
+                if(env->scene->has(comp.id, comp.typeId)){
+                    void *data = env->scene->get(comp.id, comp.typeId);
                     env->reflection->getDescriptor(comp.typeId)->copy(comp.endData.get(), data);
                 }
             }
@@ -79,12 +79,12 @@ namespace tridot {
     void Undo::destroyEntity(EntityId id) {
         if(enabled) {
             for (auto &type : env->reflection->getDescriptors()) {
-                if (engine.has(id, type->id())) {
-                    changeComponent(id, type, engine.get(id, type->id()));
+                if (env->scene->has(id, type->id())) {
+                    changeComponent(id, type, env->scene->get(id, type->id()));
                 }
             }
             addCustomAction(nullptr, [id]() {
-                engine.destroy(id);
+                env->scene->destroy(id);
             });
             if (!inAction) {
                 endAction();
@@ -95,7 +95,7 @@ namespace tridot {
     void Undo::duplicateEntity(EntityId id, EntityId newId) {
         if(enabled) {
             addCustomAction([newId]() {
-                engine.destroy(newId);
+                env->scene->destroy(newId);
             }, [id]() {
                 Editor::selection.duplicate(id, false);
             });

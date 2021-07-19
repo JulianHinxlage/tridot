@@ -2,8 +2,7 @@
 // Copyright (c) 2021 Julian Hinxlage. All rights reserved.
 //
 
-#ifndef TRIDOT_RENDERCONTEXT_H
-#define TRIDOT_RENDERCONTEXT_H
+#pragma once
 
 #include "tridot/core/config.h"
 
@@ -26,4 +25,3 @@ namespace tridot {
 
 }
 
-#endif //TRIDOT_RENDERCONTEXT_H

@@ -2,8 +2,7 @@
 // Copyright (c) 2021 Julian Hinxlage. All rights reserved.
 //
 
-#ifndef TRIDOT_MESHFACTORY_H
-#define TRIDOT_MESHFACTORY_H
+#pragma once
 
 #include "Mesh.h"
 
@@ -19,4 +18,3 @@ namespace tridot {
 
 }
 
-#endif //TRIDOT_MESHFACTORY_H

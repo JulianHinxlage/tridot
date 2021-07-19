@@ -2,8 +2,7 @@
 // Copyright (c) 2021 Julian Hinxlage. All rights reserved.
 //
 
-#ifndef TRIDOT_PLUGIN_H
-#define TRIDOT_PLUGIN_H
+#pragma once
 
 #include <string>
 #include <functional>
@@ -28,4 +27,3 @@ namespace tridot {
 
 }
 
-#endif //TRIDOT_PLUGIN_H

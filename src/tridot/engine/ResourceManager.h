@@ -2,8 +2,7 @@
 // Copyright (c) 2021 Julian Hinxlage. All rights reserved.
 //
 
-#ifndef TRIDOT_RESOURCEMANAGER_H
-#define TRIDOT_RESOURCEMANAGER_H
+#pragma once
 
 #include "tridot/util/Ref.h"
 #include "tridot/core/Log.h"
@@ -542,4 +541,3 @@ namespace tridot {
 
 }
 
-#endif //TRIDOT_RESOURCEMANAGER_H

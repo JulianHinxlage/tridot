@@ -2,8 +2,7 @@
 // Copyright (c) 2021 Julian Hinxlage. All rights reserved.
 //
 
-#ifndef TRIDOT_PHYSICS_H
-#define TRIDOT_PHYSICS_H
+#pragma once
 
 #include "tridot/util/Ref.h"
 #include "tridot/components/Transform.h"
@@ -65,4 +64,3 @@ namespace tridot {
 
 }
 
-#endif //TRIDOT_PHYSICS_H

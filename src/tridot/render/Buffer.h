@@ -2,8 +2,7 @@
 // Copyright (c) 2021 Julian Hinxlage. All rights reserved.
 //
 
-#ifndef TRIDOT_BUFFER_H
-#define TRIDOT_BUFFER_H
+#pragma once
 
 #include "enum.h"
 
@@ -36,4 +35,3 @@ namespace tridot {
 
 }
 
-#endif //TRIDOT_BUFFER_H

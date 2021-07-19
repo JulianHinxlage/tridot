@@ -2,8 +2,7 @@
 // Copyright (c) 2021 Julian Hinxlage. All rights reserved.
 //
 
-#ifndef TRIDOT_CONFIG_H
-#define TRIDOT_CONFIG_H
+#pragma once
 
 #include <cassert>
 #include <cstdint>
@@ -51,4 +50,3 @@ namespace tridot{
 
 }
 
-#endif //TRIDOT_CONFIG_H

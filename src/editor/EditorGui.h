@@ -2,8 +2,7 @@
 // Copyright (c) 2021 Julian Hinxlage. All rights reserved.
 //
 
-#ifndef TRIDOT_EDITORGUI_H
-#define TRIDOT_EDITORGUI_H
+#pragma once
 
 #include "tridot/engine/Engine.h"
 #include <functional>
@@ -55,7 +54,7 @@ namespace tridot {
                     if(res != nullptr){
                         resource = res;
                     }else{
-                        resource = engine.resources.get<T>(name);
+                        resource = env->resources->get<T>(name);
                     }
                 }
                 ImGui::EndDragDropTarget();
@@ -64,7 +63,7 @@ namespace tridot {
 
         template<typename T>
         static void drawResourceSelection(Ref<T> &res, const std::string &name){
-            std::string resName = engine.resources.getName(res);
+            std::string resName = env->resources->getName(res);
             if(resName.empty()){
                 if(res){
                     resName = "<unknown>";
@@ -78,9 +77,9 @@ namespace tridot {
                     res = nullptr;
                     ImGui::CloseCurrentPopup();
                 }
-                for (auto &n : engine.resources.getNameList<T>(true)){
+                for (auto &n : env->resources->getNameList<T>(true)){
                     if(ImGui::Selectable(n.c_str())){
-                        res = engine.resources.get<T>(n);
+                        res = env->resources->get<T>(n);
                         ImGui::CloseCurrentPopup();
                     }
                 }
@@ -94,4 +93,3 @@ namespace tridot {
 
 }
 
-#endif //TRIDOT_EDITORGUI_H

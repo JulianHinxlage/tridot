@@ -2,8 +2,7 @@
 // Copyright (c) 2021 Julian Hinxlage. All rights reserved.
 //
 
-#ifndef TRIDOT_COMPONENTREGISTER_H
-#define TRIDOT_COMPONENTREGISTER_H
+#pragma once
 
 #include "ComponentPool.h"
 #include "TypeMap.h"
@@ -70,4 +69,3 @@ namespace tridot {
 
 }
 
-#endif //TRIDOT_COMPONENTREGISTER_H

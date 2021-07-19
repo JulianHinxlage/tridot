@@ -16,22 +16,32 @@ using namespace tridot;
 void createDefaultScene(Scene &scene);
 
 int main(int argc, char *argv[]){
+    env->console->options.level = DEBUG;
+    env->console->addLogFile("log.txt", Console::Options(TRACE, true, true, false));
+    env->console->addLogFile("error.txt", Console::Options(ERROR, true, true, false));
+
     Log::options.logLevel = Log::DEBUG;
 #if WIN32
     Log::options.colorEnabled = false;
 #endif
 
-    engine.resources.addSearchDirectory("plugins/");
-    engine.init(1920, 1080, "Tridot Editor", "../res/", true);
-    engine.window.setBackgroundColor(glm::vec4( 0.25, 0.25, 0.25, 1 ));
+    env->events->init.invoke();
     Editor::init();
 
+    env->resources->defaultOptions<Scene>().setPostLoad([](Ref<Scene> &scene){
+        bool valid = scene->postLoad();
+        env->scene->swap(*scene);
+        env->resources->remove(env->resources->getName(scene));
+        return valid;
+    });
+
     std::string sceneFile = "scenes/scene.yml";
-    if(engine.resources.searchFile(sceneFile) != ""){
-        sceneFile = engine.resources.searchFile(sceneFile);
-        engine.resources.get<Scene>(sceneFile);
+    if(env->resources->searchFile(sceneFile) != ""){
+        sceneFile = env->resources->searchFile(sceneFile);
+        env->resources->setup<Scene>(sceneFile).setInstance(env->scene).get();
     }else{
-        engine.resources.setup<Scene>("scene")
+        env->scene->name = sceneFile;
+        env->resources->setup<Scene>("scene")
             .setOptions(ResourceManager::LOAD_WITHOUT_FILE)
             .setPreLoad([](Ref<Scene> &scene, const std::string &file){
                 createDefaultScene(*scene);
@@ -39,7 +49,7 @@ int main(int argc, char *argv[]){
             }).get();
     }
 
-    engine.onUpdate().add([&](){
+    env->events->update.addCallback([&](){
         if(ImGui::GetCurrentContext() != nullptr){
             {
                 bool &open = Editor::getFlag("ImGui Demo");
@@ -50,23 +60,23 @@ int main(int argc, char *argv[]){
             {
                 bool &open = Editor::getFlag("Statistics");
                 static std::vector<float> frameTimes;
-                frameTimes.push_back(engine.time.frameTime);
+                frameTimes.push_back(env->time->frameTime);
                 while(frameTimes.size() > 305){
                     frameTimes.erase(frameTimes.begin());
                 }
                 if (open) {
                     if(ImGui::Begin("Statistics", &open)){
-                        ImGui::Text("fps: %f", engine.time.framesPerSecond);
+                        ImGui::Text("fps: %f", env->time->framesPerSecond);
                         ImGui::PlotLines("frame time", frameTimes.data() + 5, (int)frameTimes.size() - 5, 0,
-                            (std::to_string(engine.time.frameTime * 1000.0f) + "ms").c_str(), std::numeric_limits<float>::max(),
+                            (std::to_string(env->time->frameTime * 1000.0f) + "ms").c_str(), std::numeric_limits<float>::max(),
                             std::numeric_limits<float>::max(), ImVec2(300, 100));
 
-                        bool vsync = engine.window.getVSync();
+                        bool vsync = env->window->getVSync();
                         if(ImGui::Checkbox("VSync", &vsync)){
-                            engine.window.setVSync(vsync);
+                            env->window->setVSync(vsync);
                         }
                         ImGui::Text("%i entities selected", (int)Editor::selection.entities.size());
-                        ImGui::Text("%i entities in scene", (int)engine.getEntityPool().getEntities().size());
+                        ImGui::Text("%i entities in scene", (int)env->scene->getEntityPool().getEntities().size());
                         if(Editor::selection.entities.size() == 1){
                             ImGui::Text("selected entity id: %i", (int)Editor::selection.entities.begin()->first);
                         }
@@ -78,9 +88,12 @@ int main(int argc, char *argv[]){
     }, "panels");
 
     Editor::loadFlags();
-    engine.run();
+    while(env->window->isOpen()){
+        env->events->update.invoke();
+        env->events->pollEvents();
+    }
     Editor::saveFlags();
-    engine.shutdown();
+    env->events->shutdown.invoke();
     return 0;
 }
 
@@ -89,6 +102,8 @@ void createDefaultScene(Scene &scene){
     PerspectiveCamera &camera = scene.add<PerspectiveCamera>(Editor::cameraId);
     Transform &transform = scene.add<Transform>(Editor::cameraId);
     transform.position = glm::vec3(3, 5, 2) * 0.5f;
+    transform.rotation.x = glm::radians(60.0);
+    transform.rotation.z = glm::radians(160.0);
     camera.forward = -glm::normalize(transform.position);
     camera.up = {0, 0, 1};
     camera.right = {1, 0, 0};
@@ -96,7 +111,7 @@ void createDefaultScene(Scene &scene){
     camera.far = 1200;
     camera.aspectRatio = 1;
 
-    scene.create(Tag("Cube"), Transform(), RenderComponent(Color::white).setMesh(engine.resources.get<Mesh>("cube")));
+    scene.create(Tag("Cube"), Transform(), RenderComponent(Color::white).setMesh(env->resources->get<Mesh>("cube")));
     scene.create(Tag("Directional Light"), Light(DIRECTIONAL_LIGHT, {1, 1, 1}, 2.7),
                   Transform({0, 0, 0}, {1, 1, 1}, glm::radians(glm::vec3(80, 35, -145))));
     scene.create(Tag("Ambient Light"), Light(AMBIENT_LIGHT, {1, 1, 1}, 0.5), Transform());

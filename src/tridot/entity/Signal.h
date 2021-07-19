@@ -2,8 +2,7 @@
 // Copyright (c) 2021 Julian Hinxlage. All rights reserved.
 //
 
-#ifndef TRIDOT_SIGNAL_H
-#define TRIDOT_SIGNAL_H
+#pragma once
 
 #include <functional>
 
@@ -202,4 +201,3 @@ namespace tridot {
 
 }
 
-#endif //TRIDOT_SIGNAL_H

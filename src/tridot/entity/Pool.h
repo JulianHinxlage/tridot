@@ -2,8 +2,7 @@
 // Copyright (c) 2021 Julian Hinxlage. All rights reserved.
 //
 
-#ifndef TRIDOT_POOL_H
-#define TRIDOT_POOL_H
+#pragma once
 
 #include "tridot/core/config.h"
 #include "Signal.h"
@@ -172,4 +171,3 @@ namespace tridot {
 
 }
 
-#endif //TRIDOT_POOL_H

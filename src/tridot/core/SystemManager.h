@@ -2,8 +2,7 @@
 // Copyright (c) 2021 Julian Hinxlage. All rights reserved.
 //
 
-#ifndef TRIDOT_SYSTEMMANAGER_H
-#define TRIDOT_SYSTEMMANAGER_H
+#pragma once
 
 #include <unordered_map>
 #include <memory>
@@ -62,4 +61,3 @@ namespace tridot {
 
 }
 
-#endif //TRIDOT_SYSTEMMANAGER_H

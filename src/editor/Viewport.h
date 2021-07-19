@@ -2,8 +2,7 @@
 // Copyright (c) 2021 Julian Hinxlage. All rights reserved.
 //
 
-#ifndef TRIDOT_VIEWPORT_H
-#define TRIDOT_VIEWPORT_H
+#pragma once
 
 #include "EditorCamera.h"
 #include "tridot/core/config.h"
@@ -40,4 +39,3 @@ namespace tridot {
 
 }
 
-#endif //TRIDOT_VIEWPORT_H

@@ -19,12 +19,12 @@ void imguiInit(){
     ImGui::StyleColorsDark();
     ImGui_ImplGlfw_InitForOpenGL((GLFWwindow*)RenderContext::get(), true);
     ImGui_ImplOpenGL3_Init("#version 130");
-    engine.onUpdate().order({"imgui end", "window", "imgui begin"});
+    env->events->update.callbackOrder({"imgui end", "window", "imgui begin"});
 }
 
-TRI_UPDATE("imgui begin"){
+TRI_UPDATE_CALLBACK("imgui begin"){
     TRI_PROFILE("imgui/begin")
-    if(engine.window.isOpen()){
+    if(env->window->isOpen()){
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
@@ -36,9 +36,9 @@ TRI_UPDATE("imgui begin"){
     }
 }
 
-TRI_UPDATE("imgui end"){
+TRI_UPDATE_CALLBACK("imgui end"){
     TRI_PROFILE("imgui/end")
-    if(inFrame && engine.window.isOpen()){
+    if(inFrame && env->window->isOpen()){
         FrameBuffer::unbind();
         ImGui::Render();
         auto *data = ImGui::GetDrawData();

@@ -15,10 +15,13 @@ namespace tridot{
         env->resources = env->systems->addSystem<ResourceManager>();
 
         env->time->init();
-        env->input->init();
         env->physics->init();
 
         env->resources->addSearchDirectory("../res");
+        env->resources->addSearchDirectory("plugins");
+        env->resources->autoReload = true;
+        env->resources->threadCount = 8;
+        env->resources->update();
 
         env->events->sceneEnd.addCallback("physics", [](){
             env->scene->view<RigidBody>().each([](EntityId id, RigidBody &rb){

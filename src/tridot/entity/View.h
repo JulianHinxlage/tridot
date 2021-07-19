@@ -2,8 +2,7 @@
 // Copyright (c) 2021 Julian Hinxlage. All rights reserved.
 //
 
-#ifndef TRIDOT_VIEW_H
-#define TRIDOT_VIEW_H
+#pragma once
 
 #include "Registry.h"
 
@@ -99,4 +98,3 @@ namespace tridot {
 
 }
 
-#endif //TRIDOT_VIEW_H

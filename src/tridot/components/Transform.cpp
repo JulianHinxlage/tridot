@@ -33,7 +33,7 @@ namespace tridot {
         rotation = glm::radians(rotation);
     }
 
-    TRI_INIT("transform"){
+    TRI_INIT_CALLBACK("transform"){
         engine.onDestroy().add("transform", [](Registry *reg, EntityId id){
             if(reg == &engine){
                 if(Transform::hasChildren(id)){
@@ -45,14 +45,14 @@ namespace tridot {
         });
     }
 
-    TRI_UPDATE("transform"){
+    TRI_UPDATE_CALLBACK("transform"){
         TRI_PROFILE("transforms");
         Transform::children.clear();
-        engine.view<Transform>().each([](EntityId id, Transform &t){
+        env->scene->view<Transform>().each([](EntityId id, Transform &t){
             if(t.parent.id != -1){
                 Transform::children[t.parent.id].push_back(id);
-                if(engine.has<Transform>(t.parent.id)){
-                    Transform &pt = engine.get<Transform>(t.parent.id);
+                if(env->scene->has<Transform>(t.parent.id)){
+                    Transform &pt = env->scene->get<Transform>(t.parent.id);
                     t.parent.matrix = pt.getMatrix();
                 }
             }else{

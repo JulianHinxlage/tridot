@@ -13,8 +13,8 @@ using namespace tridot;
 namespace tridot {
 
     bool isParentOf(EntityId id, EntityId parentId){
-        if(engine.has<Transform>(id)){
-            auto &t = engine.get<Transform>(id);
+        if(env->scene->has<Transform>(id)){
+            auto &t = env->scene->get<Transform>(id);
             if(t.parent.id != -1) {
                 if(t.parent.id == parentId){
                     return true;
@@ -34,7 +34,7 @@ namespace tridot {
                 }
                 else {
                     Editor::undo.destroyEntity(id);
-                    engine.destroy(id);
+                    env->scene->destroy(id);
                     if (Editor::selection.isSelected(id)) {
                         Editor::selection.unselect(id);
                     }
@@ -49,12 +49,12 @@ namespace tridot {
                 }
             }
             if (ImGui::Selectable("parent")) {
-                if(engine.has<Transform>(id)){
+                if(env->scene->has<Transform>(id)){
                     Editor::undo.beginAction();
-                    Transform &parentTransform = engine.get<Transform>(id);
+                    Transform &parentTransform = env->scene->get<Transform>(id);
                     for(auto &sel : Editor::selection.entities){
-                        if(engine.has<Transform>(sel.first)){
-                            Transform &transform = engine.get<Transform>(sel.first);
+                        if(env->scene->has<Transform>(sel.first)){
+                            Transform &transform = env->scene->get<Transform>(sel.first);
                             Editor::undo.changeComponent(sel.first, env->reflection->getDescriptor<Transform>(), &transform);
                             transform.decompose(glm::inverse(parentTransform.getMatrix()) * transform.getMatrix());
                             transform.parent.id = id;
@@ -69,8 +69,8 @@ namespace tridot {
                     Editor::undo.beginAction();
                     for(auto &sel : Editor::selection.entities){
                         EntityId id = sel.first;
-                        if(engine.has<Transform>(id)){
-                            Transform &transform = engine.get<Transform>(id);
+                        if(env->scene->has<Transform>(id)){
+                            Transform &transform = env->scene->get<Transform>(id);
                             Editor::undo.changeComponent(sel.first, env->reflection->getDescriptor<Transform>(), &transform);
                             transform.decompose(transform.getMatrix());
                             transform.parent.id = -1;
@@ -80,9 +80,9 @@ namespace tridot {
                     Editor::undo.endAction();
                 }
                 else {
-                    if(engine.has<Transform>(id)){
+                    if(env->scene->has<Transform>(id)){
                         Editor::undo.beginAction();
-                        Transform &transform = engine.get<Transform>(id);
+                        Transform &transform = env->scene->get<Transform>(id);
                         Editor::undo.changeComponent(id, env->reflection->getDescriptor<Transform>(), &transform);
                         transform.decompose(transform.getMatrix());
                         transform.parent.id = -1;
@@ -100,8 +100,8 @@ namespace tridot {
 
     void EntitiesPanel::updateEntity(EntityId id, bool controlDown, bool shiftDown){
         std::string label = "";
-        if (engine.has<Tag>(id)) {
-            label = engine.get<Tag>(id).tag;
+        if (env->scene->has<Tag>(id)) {
+            label = env->scene->get<Tag>(id).tag;
         }
         if (label.empty()) {
             label = "Entity " + std::to_string(id);
@@ -127,7 +127,7 @@ namespace tridot {
         if(ImGui::IsItemClicked() && treeOpen == treesOpen[id]){
             clickedEntity = id;
             if (shiftDown) {
-                auto &pool = engine.getEntityPool();
+                auto &pool = env->scene->getEntityPool();
                 int min = pool.getIndex(id);
                 int max = pool.getIndex(Editor::selection.lastSelected);
                 if(min > max){
@@ -135,7 +135,7 @@ namespace tridot {
                 }
                 for(int i = min; i <= max; i++){
                     EntityId id = pool.getId(i);
-                    if (engine.exists(id)) {
+                    if (env->scene->exists(id)) {
                         Editor::selection.select(id, false);
                     }
                 }
@@ -172,13 +172,13 @@ namespace tridot {
     }
 
     void EntitiesPanel::update(){
-        if(engine.input.pressed(Input::MOUSE_BUTTON_LEFT)){
+        if(env->input->pressed(Input::MOUSE_BUTTON_LEFT)){
             clickedEntity = -1;
             hoveredEntity = -1;
         }
         EditorGui::window("Entities", [this](){
-            bool controlDown = engine.input.down(Input::KEY_RIGHT_CONTROL) || engine.input.down(Input::KEY_LEFT_CONTROL);
-            bool shiftDown = engine.input.down(Input::KEY_RIGHT_SHIFT) || engine.input.down(Input::KEY_LEFT_SHIFT);
+            bool controlDown = env->input->down(Input::KEY_RIGHT_CONTROL) || env->input->down(Input::KEY_LEFT_CONTROL);
+            bool shiftDown = env->input->down(Input::KEY_RIGHT_SHIFT) || env->input->down(Input::KEY_LEFT_SHIFT);
 
             if (ImGui::Button("add Entity")) {
                 newEntity();
@@ -186,11 +186,11 @@ namespace tridot {
 
             if (ImGui::IsWindowHovered(ImGuiFocusedFlags_ChildWindows)) {
                 if (controlDown) {
-                    if (engine.input.pressed('D')) {
+                    if (env->input->pressed('D')) {
                         Editor::selection.duplicateAll();
                     }
                 }
-                if (engine.input.pressed(engine.input.KEY_DELETE)) {
+                if (env->input->pressed(env->input->KEY_DELETE)) {
                     Editor::selection.destroyAll();
                 }
             }
@@ -198,12 +198,12 @@ namespace tridot {
             ImGui::Separator();
             ImGui::BeginChild("entities");
 
-            auto &pool = engine.getEntityPool();
+            auto &pool = env->scene->getEntityPool();
             for(int i = 0; i < pool.getEntities().size(); i++){
                 EntityId id = pool.getId(i);
                 bool root = false;
-                if(engine.has<Transform>(id)){
-                    Transform &t = engine.get<Transform>(id);
+                if(env->scene->has<Transform>(id)){
+                    Transform &t = env->scene->get<Transform>(id);
                     if(t.parent.id == -1){
                         root = true;
                     }
@@ -217,7 +217,7 @@ namespace tridot {
                 }
             }
 
-            if(engine.input.down(Input::MOUSE_BUTTON_LEFT)){
+            if(env->input->down(Input::MOUSE_BUTTON_LEFT)){
                 if(clickedEntity != -1 && hoveredEntity != -1){
                     if(clickedEntity != hoveredEntity){
                         if(!isParentOf(hoveredEntity, clickedEntity)) {
@@ -244,13 +244,13 @@ namespace tridot {
     void EntitiesPanel::newEntity(EntityId parentId, bool addAction) {
         Transform transform;
         transform.parent.id = parentId;
-        EntityId id = engine.create(transform, Tag(), uuid());
+        EntityId id = env->scene->create(transform, Tag(), uuid());
         Editor::selection.select(id);
 
         if(addAction) {
             Editor::undo.beginAction();
             Editor::undo.addCustomAction([id]() {
-                engine.destroy(id);
+                env->scene->destroy(id);
             }, [parentId, this]() {
                 newEntity(parentId, false);
             });

@@ -2,8 +2,7 @@
 // Copyright (c) 2021 Julian Hinxlage. All rights reserved.
 //
 
-#ifndef TRIDOT_CAMERA_H
-#define TRIDOT_CAMERA_H
+#pragma once
 
 #include "FrameBuffer.h"
 #include <glm/glm.hpp>
@@ -42,4 +41,3 @@ namespace tridot {
 
 }
 
-#endif //TRIDOT_CAMERA_H

@@ -34,7 +34,7 @@ void cameraControl(PerspectiveCamera &cam, bool move, bool look, bool lockUp, fl
 
 void lightGui(){
     if(ImGui::BeginTabItem("Lights")) {
-        engine.view<Light, Transform>().each([](EntityId id, Light &light, Transform &transform) {
+        env->scene->view<Light, Transform>().each([](EntityId id, Light &light, Transform &transform) {
             ImGui::Separator();
             ImGui::PushID(id);
 
@@ -49,7 +49,7 @@ void lightGui(){
             ImGui::ColorEdit3("color", (float *) &light.color);
             ImGui::DragFloat("intensity", &light.intensity, 0.01, 0.0, 1000);
             if (ImGui::Button("remove")) {
-                engine.destroy(id);
+                env->scene->destroy(id);
             }
 
             ImGui::PopID();
@@ -57,7 +57,7 @@ void lightGui(){
         ImGui::Separator();
 
         if (ImGui::Button("add light")) {
-            engine.create(Transform(), Light(POINT_LIGHT, glm::vec3(Color::white.vec()), 1));
+            env->scene->create(Transform(), Light(POINT_LIGHT, glm::vec3(Color::white.vec()), 1));
         }
 
         ImGui::EndTabItem();
@@ -67,7 +67,7 @@ void lightGui(){
 void materialGui(){
     if(ImGui::BeginTabItem("Materials")) {
         std::map<Material *, bool> materials;
-        engine.view<RenderComponent>().each([&](RenderComponent &rc) {
+        env->scene->view<RenderComponent>().each([&](RenderComponent &rc) {
             if (rc.material.get() != nullptr) {
                 materials[rc.material.get()] = true;
             }
@@ -101,21 +101,21 @@ void materialGui(){
 int main(int argc, char *argv[]){
     Log::options.logLevel = Log::TRACE;
     engine.init(1920, 1080, "Tridot " TRI_VERSION, "../res/", true);
-    engine.window.setBackgroundColor(Color::white);
+    env->window->setBackgroundColor(Color::white);
 
-    engine.resources.setup<Mesh>("cube")
+    env->resources->setup<Mesh>("cube")
             .setPostLoad([](Ref<Mesh> &mesh){MeshFactory::createCube(mesh); return true;})
             .setPreLoad(nullptr);
-    engine.resources.setup<Mesh>("sphere")
+    env->resources->setup<Mesh>("sphere")
             .setPostLoad([](Ref<Mesh> &mesh){MeshFactory::createSphere(32, 32, mesh); return true;})
             .setPreLoad(nullptr);
     createScene();
 
     //create lights
-    engine.create(
+    env->scene->create(
             Transform(),
             Light(AMBIENT_LIGHT, glm::vec3(Color::white.vec()), 0.6));
-    engine.create(
+    env->scene->create(
             Transform({0, 0, 0}, {1, 1, 1}, glm::radians(glm::vec3(80, 35, -145))),
             Light(DIRECTIONAL_LIGHT, glm::vec3(Color::white.vec()), 2.5));
 
@@ -125,27 +125,27 @@ int main(int argc, char *argv[]){
     material->mapping = Material::TRI_PLANAR;
     material->roughness = 2;
     material->metallic = 2;
-    material->normalMap = engine.resources.get<Texture>("textures/Metal038_1K_Normal.jpg");
-    material->texture = engine.resources.get<Texture>("textures/Metal038_1K_Color.jpg");
-    material->roughnessMap = engine.resources.get<Texture>("textures/Metal038_1K_Roughness.jpg");
-    material->metallicMap = engine.resources.get<Texture>("textures/Metal038_1K_Metalness.jpg");
+    material->normalMap = env->resources->get<Texture>("textures/Metal038_1K_Normal.jpg");
+    material->texture = env->resources->get<Texture>("textures/Metal038_1K_Color.jpg");
+    material->roughnessMap = env->resources->get<Texture>("textures/Metal038_1K_Roughness.jpg");
+    material->metallicMap = env->resources->get<Texture>("textures/Metal038_1K_Metalness.jpg");
     material->normalMap->setMagMin(false, false);
     material->roughnessMapScale = {0.5f, 0.5f};
     material->metallicMapScale = {0.5f, 0.5f};
     material->normalMapFactor = 1.0;
 
-    *engine.resources.get<Prefab>("player") = Prefab(
+    *env->resources->get<Prefab>("player") = Prefab(
         Transform(),
         RenderComponent()
             .setMaterial(material)
-            .setMesh(engine.resources.get<Mesh>("sphere")),
+            .setMesh(env->resources->get<Mesh>("sphere")),
         RigidBody(5),
         Collider(Collider::SPHERE)
     );
-    EntityId playerId = engine.resources.get<Prefab>("player")->instantiate(engine);
+    EntityId playerId = env->resources->get<Prefab>("player")->instantiate(engine);
 
     //create camera
-    PerspectiveCamera &camera = engine.add<PerspectiveCamera>(engine.create());
+    PerspectiveCamera &camera = env->scene->add<PerspectiveCamera>(env->scene->create());
     camera.position = {0, -2, 0};
     camera.forward = {0, 1, 0};
     camera.right = {1, 0, 0};
@@ -153,20 +153,20 @@ int main(int argc, char *argv[]){
     camera.near = 0.05;
     camera.far = 1200;
 
-    engine.onUpdate().add([&](){
-        if(engine.input.pressed(Input::KEY_ESCAPE)){
-            engine.window.close();
+    env->events->update.add([&](){
+        if(env->input->pressed(Input::KEY_ESCAPE)){
+            env->window->close();
         }
-        if(engine.time.frameTicks(0.5)){
-            Log::info(engine.time.framesPerSecond, " fps, ", engine.time.avgFrameTime * 1000, "ms [", engine.time.minFrameTime * 1000, " ms, ", engine.time.maxFrameTime * 1000, " ms]");
+        if(env->time->frameTicks(0.5)){
+            Log::info(env->time->framesPerSecond, " fps, ", env->time->avgFrameTime * 1000, "ms [", env->time->minFrameTime * 1000, " ms, ", env->time->maxFrameTime * 1000, " ms]");
         }
-        if(engine.input.pressed('V')){
-            engine.window.setVSync(!engine.window.getVSync());
+        if(env->input->pressed('V')){
+            env->window->setVSync(!env->window->getVSync());
         }
 
 
         static bool debugOpen = false;
-        if(engine.input.pressed('P')){
+        if(env->input->pressed('P')){
             debugOpen = !debugOpen;
         }
         if(debugOpen && ImGui::GetCurrentContext() != nullptr){
@@ -179,7 +179,7 @@ int main(int argc, char *argv[]){
         }
 
 
-        engine.view<PerspectiveCamera>().each([&](PerspectiveCamera &camera){
+        env->scene->view<PerspectiveCamera>().each([&](PerspectiveCamera &camera){
             playerControl(playerId, camera);
         });
     }, "camera");
@@ -193,25 +193,25 @@ void playerControl(EntityId playerId, PerspectiveCamera &camera){
     static float jumpBufferTimer = 0;
     static float cameraDistance = 5;
 
-    if(!engine.exists(playerId)){
+    if(!env->scene->exists(playerId)){
         return;
     }
-    if(!engine.hasAll<RigidBody, Transform, Collider>(playerId)){
+    if(!env->scene->hasAll<RigidBody, Transform, Collider>(playerId)){
         return;
     }
 
-    RigidBody &rigidBody = engine.get<RigidBody>(playerId);
-    Transform &transform = engine.get<Transform>(playerId);
+    RigidBody &rigidBody = env->scene->get<RigidBody>(playerId);
+    Transform &transform = env->scene->get<Transform>(playerId);
 
 
     glm::vec2 in = {0, 0};
-    if(engine.input.down('W')) {
+    if(env->input->down('W')) {
         in.y += 1;
-    }if(engine.input.down('S')) {
+    }if(env->input->down('S')) {
         in.y -= 1;
-    }if(engine.input.down('A')) {
+    }if(env->input->down('A')) {
         in.x -= 1;
-    }if(engine.input.down('D')) {
+    }if(env->input->down('D')) {
         in.x += 1;
     }
 
@@ -228,17 +228,17 @@ void playerControl(EntityId playerId, PerspectiveCamera &camera){
     dirY = glm::normalize(dirY);
 
 
-    rigidBody.velocity += (dirX * in.x + dirY * in.y) * speed * engine.time.deltaTime;
+    rigidBody.velocity += (dirX * in.x + dirY * in.y) * speed * env->time->deltaTime;
 
     if(in.x == 0 && in.y == 0){
-        rigidBody.velocity.x *= std::pow(0.0001, engine.time.deltaTime);
-        rigidBody.velocity.y *= std::pow(0.0001, engine.time.deltaTime);
+        rigidBody.velocity.x *= std::pow(0.0001, env->time->deltaTime);
+        rigidBody.velocity.y *= std::pow(0.0001, env->time->deltaTime);
     }else{
-        rigidBody.velocity.x *= std::pow(0.1, engine.time.deltaTime);
-        rigidBody.velocity.y *= std::pow(0.1, engine.time.deltaTime);
+        rigidBody.velocity.x *= std::pow(0.1, env->time->deltaTime);
+        rigidBody.velocity.y *= std::pow(0.1, env->time->deltaTime);
     }
 
-    if(engine.input.pressed(engine.input.KEY_SPACE)) {
+    if(env->input->pressed(env->input->KEY_SPACE)) {
         jumpBufferTimer = 0.1;
     }
 
@@ -256,8 +256,8 @@ void playerControl(EntityId playerId, PerspectiveCamera &camera){
             rigidBody.velocity.z = 10;
         }
     }
-    jumpBufferTimer -= engine.time.deltaTime;
-    if(engine.input.released(engine.input.KEY_SPACE)){
+    jumpBufferTimer -= env->time->deltaTime;
+    if(env->input->released(env->input->KEY_SPACE)){
         if(rigidBody.velocity.z > 0.1){
             rigidBody.velocity.z /= 2;
         }
@@ -267,23 +267,23 @@ void playerControl(EntityId playerId, PerspectiveCamera &camera){
         rigidBody.velocity.z = 10;
     }
 
-    engine.physics.update(rigidBody, transform, engine.get<Collider>(playerId), playerId);
+    engine.physics.update(rigidBody, transform, env->scene->get<Collider>(playerId), playerId);
 
     static bool look = true;
-    if(engine.input.pressed('C')){
+    if(env->input->pressed('C')){
         look = !look;
     }
     cameraControl(camera, true, look, true, 0);
 
     //camera
     if(look){
-        cameraDistance /= std::pow(1.3f, engine.input.getMouseWheelDelta());
+        cameraDistance /= std::pow(1.3f, env->input->getMouseWheelDelta());
     }
     camera.position = transform.position - camera.forward * cameraDistance;
 }
 
 void createScene(){
-    Ref<Mesh> cube = engine.resources.get<Mesh>("cube");
+    Ref<Mesh> cube = env->resources->get<Mesh>("cube");
 
     int groundSize = 200;
     int wallHeight = 30;
@@ -293,9 +293,9 @@ void createScene(){
     wallMaterial->roughness = 2;
     wallMaterial->metallic = 0;
     wallMaterial->normalMapFactor = 1.0;
-    wallMaterial->normalMap = engine.resources.get<Texture>("textures/Tiles090_1K_Normal.jpg");
-    wallMaterial->texture = engine.resources.get<Texture>("textures/Tiles090_1K_Color.jpg");
-    wallMaterial->roughnessMap = engine.resources.get<Texture>("textures/Tiles090_1K_Roughness.jpg");
+    wallMaterial->normalMap = env->resources->get<Texture>("textures/Tiles090_1K_Normal.jpg");
+    wallMaterial->texture = env->resources->get<Texture>("textures/Tiles090_1K_Color.jpg");
+    wallMaterial->roughnessMap = env->resources->get<Texture>("textures/Tiles090_1K_Roughness.jpg");
     wallMaterial->texture->setMagMin(false, false);
     wallMaterial->mapping = Material::SCALE_TRI_PLANAR;
 
@@ -335,9 +335,9 @@ void createScene(){
     platformMaterial->roughness = 2;
     platformMaterial->metallic = 0;
     platformMaterial->normalMapFactor = 1.0;
-    platformMaterial->normalMap = engine.resources.get<Texture>("textures/Marble012_1K_Normal.jpg");
-    platformMaterial->texture = engine.resources.get<Texture>("textures/Marble012_1K_Color.jpg");
-    platformMaterial->roughnessMap = engine.resources.get<Texture>("textures/Marble012_1K_Roughness.jpg");
+    platformMaterial->normalMap = env->resources->get<Texture>("textures/Marble012_1K_Normal.jpg");
+    platformMaterial->texture = env->resources->get<Texture>("textures/Marble012_1K_Color.jpg");
+    platformMaterial->roughnessMap = env->resources->get<Texture>("textures/Marble012_1K_Roughness.jpg");
     platformMaterial->texture->setMagMin(false, false);
     platformMaterial->mapping = Material::SCALE_TRI_PLANAR;
 
@@ -351,7 +351,7 @@ void createScene(){
                 height += x * 0.001 + y * 0.001;
 
 
-                engine.create(
+                env->scene->create(
                         Transform({x, y, height}, {width, depth, 0.5}),
                         RenderComponent(randu3() * 0.05f + 0.5f).setMesh(cube).setMaterial(platformMaterial),
                         RigidBody(0),
@@ -367,36 +367,36 @@ void createScene(){
 
 void cameraControl(PerspectiveCamera &cam, bool move, bool look, bool lockUp, float speed){
     GLFWwindow  *window = glfwGetCurrentContext();
-    speed *= engine.time.deltaTime;
+    speed *= env->time->deltaTime;
 
     if(move) {
-        if (engine.input.down('W')) {
+        if (env->input->down('W')) {
             cam.position += cam.forward * speed;
         }
-        if (engine.input.down('S')) {
+        if (env->input->down('S')) {
             cam.position -= cam.forward * speed;
         }
-        if (engine.input.down('D')) {
+        if (env->input->down('D')) {
             cam.position += cam.right * speed;
         }
-        if (engine.input.down('A')) {
+        if (env->input->down('A')) {
             cam.position -= cam.right * speed;
         }
-        if (engine.input.down('R')) {
+        if (env->input->down('R')) {
             cam.position += cam.up * speed;
         }
-        if (engine.input.down('F')) {
+        if (env->input->down('F')) {
             cam.position -= cam.up * speed;
         }
 
         float angle = 0;
-        if (engine.input.down('E')) {
+        if (env->input->down('E')) {
             angle += 1;
         }
-        if (engine.input.down('Q')) {
+        if (env->input->down('Q')) {
             angle -= 1;
         }
-        cam.up = glm::rotate(glm::mat4(1), angle * (float) engine.time.deltaTime, cam.forward) * glm::vec4(cam.up, 1.0f);
+        cam.up = glm::rotate(glm::mat4(1), angle * (float) env->time->deltaTime, cam.forward) * glm::vec4(cam.up, 1.0f);
     }
 
     //look

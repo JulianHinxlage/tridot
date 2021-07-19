@@ -56,11 +56,11 @@ namespace tridot {
         TRI_PROFILE("physics");
         {
             TRI_PROFILE("physics/step");
-            engine.physics.step(engine.time.deltaTime);
+            engine.physics.step(env->time->deltaTime);
         }
         {
             TRI_PROFILE("physics/update");
-            engine.view<Transform, RigidBody, Collider>().each([](EntityId id, Transform &t, RigidBody &rb, Collider &c){
+            env->scene->view<Transform, RigidBody, Collider>().each([](EntityId id, Transform &t, RigidBody &rb, Collider &c){
                 engine.physics.update(rb, t, c, id);
             });
         }
@@ -68,7 +68,7 @@ namespace tridot {
 
     TRI_INIT("physics"){
         engine.onEndScene().add("physics", [](){
-            engine.view<RigidBody>().each([](EntityId id, RigidBody &rb){
+            env->scene->view<RigidBody>().each([](EntityId id, RigidBody &rb){
                 engine.physics.remove(rb);
             });
         });
@@ -150,7 +150,7 @@ namespace tridot {
     void Physics::update(RigidBody &rigidBody, Transform &transform, Collider &collider, int index) {
         if(impl && impl->world) {
             if(!rigidBody.enablePhysics){
-                float dt = engine.time.deltaTime;
+                float dt = env->time->deltaTime;
                 transform.position += rigidBody.velocity * dt;
                 transform.rotation += rigidBody.angular * dt;
                 if(rigidBody.linearDamping != 0){

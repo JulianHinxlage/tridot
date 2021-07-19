@@ -2,8 +2,7 @@
 // Copyright (c) 2021 Julian Hinxlage. All rights reserved.
 //
 
-#ifndef TRIDOT_TAG_H
-#define TRIDOT_TAG_H
+#pragma once
 
 #include <string>
 
@@ -28,4 +27,3 @@ namespace tridot {
 
 }
 
-#endif //TRIDOT_TAG_H

@@ -2,8 +2,7 @@
 // Copyright (c) 2021 Julian Hinxlage. All rights reserved.
 //
 
-#ifndef TRIDOT_SELECTIONCONTEXT_H
-#define TRIDOT_SELECTIONCONTEXT_H
+#pragma once
 
 #include "tridot/core/config.h"
 #include <map>
@@ -28,4 +27,3 @@ namespace tridot {
 
 }
 
-#endif //TRIDOT_SELECTIONCONTEXT_H

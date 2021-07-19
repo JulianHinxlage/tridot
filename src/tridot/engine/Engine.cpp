@@ -70,23 +70,23 @@ namespace tridot {
         resources.addSearchDirectory(resourceDirectory);
         resources.autoReload = autoReload;
         resources.threadCount = 8;
-        engine.resources.update();
-        engine.resources.setup<Mesh>("cube")
+        env->resources->update();
+        env->resources->setup<Mesh>("cube")
                 .setPostLoad([](Ref<Mesh> &mesh){MeshFactory::createCube(mesh); return true;})
                 .setPreLoad(nullptr);
-        engine.resources.setup<Mesh>("sphere")
+        env->resources->setup<Mesh>("sphere")
                 .setPostLoad([](Ref<Mesh> &mesh){MeshFactory::createSphere(32, 32, mesh); return true;})
                 .setPreLoad(nullptr);
-        engine.resources.setup<Mesh>("quad")
+        env->resources->setup<Mesh>("quad")
                 .setPostLoad([](Ref<Mesh> &mesh){MeshFactory::createQuad(mesh); return true;})
                 .setPreLoad(nullptr);
-        engine.resources.setup<Mesh>("circle")
+        env->resources->setup<Mesh>("circle")
                 .setPostLoad([](Ref<Mesh> &mesh){MeshFactory::createRegularPolygon(64, mesh); return true;})
                 .setPreLoad(nullptr);
-        engine.resources.defaultOptions<Scene>().setPostLoad([](Ref<Scene> &scene){
+        env->resources->defaultOptions<Scene>().setPostLoad([](Ref<Scene> &scene){
             bool valid = scene->postLoad();
             engine.swap(*scene);
-            engine.resources.remove(engine.resources.getName(scene));
+            env->resources->remove(env->resources->getName(scene));
             return valid;
         });
 
@@ -103,7 +103,7 @@ namespace tridot {
             window.update();
         });
 
-        engine.onUpdate().order({"imgui end", "window", "imgui begin", "resources", "clear", "skybox", "rendering", "post processing", "transform", "physics"});
+        onUpdate().order({"imgui end", "window", "imgui begin", "resources", "clear", "skybox", "rendering", "post processing", "transform", "physics"});
 
         imguiInit();
         onInitSignal.invoke();

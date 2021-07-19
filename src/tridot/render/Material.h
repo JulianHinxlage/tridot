@@ -2,8 +2,7 @@
 // Copyright (c) 2021 Julian Hinxlage. All rights reserved.
 //
 
-#ifndef TRIDOT_MATERIAL_H
-#define TRIDOT_MATERIAL_H
+#pragma once
 
 #include "Color.h"
 #include "Texture.h"
@@ -50,4 +49,3 @@ namespace tridot {
 
 }
 
-#endif //TRIDOT_MATERIAL_H

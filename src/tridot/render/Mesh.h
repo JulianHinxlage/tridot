@@ -2,8 +2,7 @@
 // Copyright (c) 2021 Julian Hinxlage. All rights reserved.
 //
 
-#ifndef TRIDOT_MESH_H
-#define TRIDOT_MESH_H
+#pragma once
 
 #include "VertexArray.h"
 #include <glm/glm.hpp>
@@ -30,4 +29,3 @@ namespace tridot {
 
 }
 
-#endif //TRIDOT_MESH_H

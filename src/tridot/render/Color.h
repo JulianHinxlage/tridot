@@ -2,8 +2,7 @@
 // Copyright (c) 2021 Julian Hinxlage. All rights reserved.
 //
 
-#ifndef TRIDOT_COLOR_H
-#define TRIDOT_COLOR_H
+#pragma once
 
 #include "tridot/core/config.h"
 #include <cstdint>
@@ -46,4 +45,3 @@ namespace tridot {
 
 }
 
-#endif //TRIDOT_COLOR_H

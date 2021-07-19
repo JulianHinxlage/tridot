@@ -42,22 +42,22 @@ namespace tridot {
         Editor::undo.beginAction();
         for(auto &id : entities){
             Editor::undo.destroyEntity(id.first);
-            engine.destroy(id.first);
+            env->scene->destroy(id.first);
         }
         entities.clear();
         Editor::undo.endAction();
     }
 
     EntityId SelectionContext::duplicate(EntityId id, bool addAction) {
-        EntityId newId = engine.create();
+        EntityId newId = env->scene->create();
         for(auto &type : env->reflection->getDescriptors()){
-            auto *pool = engine.getPool(type->id());
+            auto *pool = env->scene->getPool(type->id());
             if(pool && pool->has(id)){
                 pool->add(newId, pool->getById(id));
             }
         }
-        if(engine.has<uuid>(newId)){
-            engine.get<uuid>(newId).make();
+        if(env->scene->has<uuid>(newId)){
+            env->scene->get<uuid>(newId).make();
         }
 
         if (addAction) {
@@ -81,7 +81,7 @@ namespace tridot {
         /*
         Editor::undo.addAction([newTmp]() {
             for (auto& sel : newTmp) {
-                engine.destroy(sel.first);
+                env->scene->destroy(sel.first);
             }
         }, [tmp]() {
             for (auto& sel : tmp) {

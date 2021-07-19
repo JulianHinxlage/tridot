@@ -2,8 +2,7 @@
 // Copyright (c) 2021 Julian Hinxlage. All rights reserved.
 //
 
-#ifndef TRIDOT_POSTPROCESSINGEFFECT_H
-#define TRIDOT_POSTPROCESSINGEFFECT_H
+#pragma once
 
 #include "tridot/render/Shader.h"
 #include "tridot/render/FrameBuffer.h"
@@ -20,4 +19,3 @@ namespace tridot {
 
 }
 
-#endif //TRIDOT_POSTPROCESSINGEFFECT_H

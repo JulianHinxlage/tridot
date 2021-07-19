@@ -11,16 +11,16 @@
 namespace tridot {
 
     void Viewport::init() {
-        engine.onUpdate().add("imguizmo begin", [](){
-            if(engine.window.isOpen()){
+        env->events->update.addCallback("imguizmo begin", [](){
+            if(env->window->isOpen()){
                 ImGuizmo::BeginFrame();
             }
         });
-        engine.onUpdate().add("clear", [](){
+        env->events->update.addCallback("clear", [](){
             Editor::viewport.clear();
         });
-        engine.onUpdate().order({"imgui begin", "imguizmo begin"});
-        engine.onUpdate().order({"window", "clear", "rendering"});
+        env->events->update.callbackOrder({"imgui begin", "imguizmo begin"});
+        env->events->update.callbackOrder({"window", "clear", "rendering"});
     }
 
     void Viewport::update() {
@@ -50,9 +50,9 @@ namespace tridot {
                 }
 
                 //camera control
-                if (engine.hasAll<PerspectiveCamera, Transform>(Editor::cameraId)) {
-                    PerspectiveCamera &camera = engine.get<PerspectiveCamera>(Editor::cameraId);
-                    Transform &transform = engine.get<Transform>(Editor::cameraId);
+                if (env->scene->hasAll<PerspectiveCamera, Transform>(Editor::cameraId)) {
+                    PerspectiveCamera &camera = env->scene->get<PerspectiveCamera>(Editor::cameraId);
+                    Transform &transform = env->scene->get<Transform>(Editor::cameraId);
                     editorCamera.update(camera, transform, ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows), !controlDown);
                 }
             });
@@ -61,7 +61,7 @@ namespace tridot {
     }
 
     void Viewport::updateControlBar() {
-        controlDown = engine.input.down(Input::KEY_LEFT_CONTROL) || engine.input.down(Input::KEY_RIGHT_CONTROL);
+        controlDown = env->input->down(Input::KEY_LEFT_CONTROL) || env->input->down(Input::KEY_RIGHT_CONTROL);
 
         ImGui::BeginTable("controls", 6, ImGuiTableFlags_SizingStretchSame);
         ImGui::TableSetupColumn("1", ImGuiTableColumnFlags_None, 0.25);
@@ -131,7 +131,7 @@ namespace tridot {
 
         //cycle gizmo mode and operation
         if(ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows)) {
-            if(engine.input.pressed('E')){
+            if(env->input->pressed('E')){
                 if(operation == ImGuizmo::OPERATION::TRANSLATE){
                     operation = ImGuizmo::OPERATION::SCALE;
                 }else if(operation == ImGuizmo::OPERATION::SCALE){
@@ -139,7 +139,7 @@ namespace tridot {
                 }else if(operation == ImGuizmo::OPERATION::ROTATE){
                     operation = ImGuizmo::OPERATION::TRANSLATE;
                 }
-            }else if(engine.input.pressed('R')){
+            }else if(env->input->pressed('R')){
                 if(mode == ImGuizmo::MODE::LOCAL){
                     mode = ImGuizmo::MODE::WORLD;
                 }else{
@@ -147,11 +147,11 @@ namespace tridot {
                 }
             }
             if(controlDown){
-                if(engine.input.pressed('D')){
+                if(env->input->pressed('D')){
                     Editor::selection.duplicateAll();
                 }
             }
-            if (engine.input.pressed(engine.input.KEY_DELETE)) {
+            if (env->input->pressed(env->input->KEY_DELETE)) {
                 Editor::selection.destroyAll();
             }
         }
@@ -159,8 +159,8 @@ namespace tridot {
     }
 
     void Viewport::draw() {
-        if(engine.has<PerspectiveCamera>(Editor::cameraId)) {
-            PerspectiveCamera &camera = engine.get<PerspectiveCamera>(Editor::cameraId);
+        if(env->scene->has<PerspectiveCamera>(Editor::cameraId)) {
+            PerspectiveCamera &camera = env->scene->get<PerspectiveCamera>(Editor::cameraId);
             if (camera.output) {
                 viewportSize.x = ImGui::GetContentRegionAvail().x;
                 viewportSize.y = ImGui::GetContentRegionAvail().y;
@@ -190,8 +190,8 @@ namespace tridot {
     }
 
     bool isParentSelected(EntityId id){
-        if(engine.has<Transform>(id)){
-            Transform &t = engine.get<Transform>(id);
+        if(env->scene->has<Transform>(id)){
+            Transform &t = env->scene->get<Transform>(id);
             if(t.parent.id != -1){
                 for (auto &sel : Editor::selection.entities) {
                     if(sel.first == t.parent.id){
@@ -205,16 +205,16 @@ namespace tridot {
     }
 
     void Viewport::updateGizmos() {
-        if(engine.hasAll<PerspectiveCamera, Transform>(Editor::cameraId)) {
-            PerspectiveCamera &camera = engine.get<PerspectiveCamera>(Editor::cameraId);
-            Transform &cameraTransform = engine.get<Transform>(Editor::cameraId);
+        if(env->scene->hasAll<PerspectiveCamera, Transform>(Editor::cameraId)) {
+            PerspectiveCamera &camera = env->scene->get<PerspectiveCamera>(Editor::cameraId);
+            Transform &cameraTransform = env->scene->get<Transform>(Editor::cameraId);
 
             EntityId selectedEntity = Editor::selection.getSingleSelection();
             if(selectedEntity != -1) {
 
                 //single entity
-                if(engine.has<Transform>(selectedEntity)){
-                    Transform &transform = engine.get<Transform>(selectedEntity);
+                if(env->scene->has<Transform>(selectedEntity)){
+                    Transform &transform = env->scene->get<Transform>(selectedEntity);
 
                     ImGuizmo::Enable(true);
                     ImGuizmo::SetOrthographic(false);
@@ -267,7 +267,7 @@ namespace tridot {
                     int count = 0;
                     for (auto& sel : Editor::selection.entities) {
                         EntityId id = sel.first;
-                        if (engine.has<Transform>(id)) {
+                        if (env->scene->has<Transform>(id)) {
                             count++;
                         }
                     }
@@ -276,9 +276,9 @@ namespace tridot {
                     int index = 0;
                     for (auto &sel : Editor::selection.entities) {
                         EntityId id = sel.first;
-                        if (engine.has<Transform>(id)) {
+                        if (env->scene->has<Transform>(id)) {
                             Transform t;
-                            t.decompose(engine.get<Transform>(id).getMatrix());
+                            t.decompose(env->scene->get<Transform>(id).getMatrix());
                             transform.position += t.position / (float)count;
                             transform.scale *= glm::pow(t.scale, glm::vec3(1, 1, 1) / (float)count);
                             transform.rotation += t.rotation / (float)count;
@@ -319,8 +319,8 @@ namespace tridot {
 
                         for (auto &sel : Editor::selection.entities) {
                             EntityId id = sel.first;
-                            if (engine.has<Transform>(id)) {
-                                Transform &t = engine.get<Transform>(id);
+                            if (env->scene->has<Transform>(id)) {
+                                Transform &t = env->scene->get<Transform>(id);
 
 
                                 if(!isParentSelected(id)){
@@ -364,8 +364,8 @@ namespace tridot {
     }
 
     void Viewport::updateMousePicking() {
-        if(engine.has<PerspectiveCamera>(Editor::cameraId)) {
-            PerspectiveCamera &camera = engine.get<PerspectiveCamera>(Editor::cameraId);
+        if(env->scene->has<PerspectiveCamera>(Editor::cameraId)) {
+            PerspectiveCamera &camera = env->scene->get<PerspectiveCamera>(Editor::cameraId);
             if(camera.target) {
                 auto idBuffer = camera.target->getAttachment(TextureAttachment(COLOR + 1));
                 if (idBuffer && mousePickPosition.x >= 0 && mousePickPosition.y >= 0 &&
@@ -374,7 +374,7 @@ namespace tridot {
                     if (ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows)) {
                         if (ImGui::IsMouseClicked(0) && !(ImGuizmo::IsOver() && ImGuizmo::IsUsing())) {
                             int id = idBuffer->getPixel(mousePickPosition.x, idBuffer->getHeight() - mousePickPosition.y).value;
-                            if (id != -1 && engine.exists(id)) {
+                            if (id != -1 && env->scene->exists(id)) {
                                 if(Editor::selection.isSelected(id) && controlDown){
                                     Editor::selection.unselect(id);
                                 }else{
@@ -395,13 +395,13 @@ namespace tridot {
             target = Ref<FrameBuffer>::make();
             if(useIdBuffer){
                 target->init(viewportSize.x, viewportSize.y, {
-                        {COLOR, engine.window.getBackgroundColor()},
+                        {COLOR, env->window->getBackgroundColor()},
                         {DEPTH},
                         {TextureAttachment(COLOR + 1), Color::white},
                 });
             }else{
                 target->init(viewportSize.x, viewportSize.y, {
-                        {COLOR, engine.window.getBackgroundColor()},
+                        {COLOR, env->window->getBackgroundColor()},
                         {DEPTH},
                 });
             }
@@ -419,7 +419,7 @@ namespace tridot {
 
     void Viewport::clear() {
         TRI_PROFILE("editor/viewport/clear")
-        engine.view<PerspectiveCamera>().each([&](EntityId id, PerspectiveCamera &camera){
+        env->scene->view<PerspectiveCamera>().each([&](EntityId id, PerspectiveCamera &camera){
             if(Editor::cameraId == -1){
                 Editor::cameraId = id;
             }
@@ -430,54 +430,54 @@ namespace tridot {
             }
         });
 
-        engine.view<OrthographicCamera>().each([&](EntityId id, OrthographicCamera &camera){
+        env->scene->view<OrthographicCamera>().each([&](EntityId id, OrthographicCamera &camera){
             camera.aspectRatio = updateFramebuffer(camera.target, false, viewportSize);
         });
     }
 
     void Viewport::drawSelectionOverlay() {
-        if(engine.hasAll<PerspectiveCamera, Transform>(Editor::cameraId) && selectionOverlay) {
-            PerspectiveCamera &camera = engine.get<PerspectiveCamera>(Editor::cameraId);
-            Transform &cameraTransform = engine.get<Transform>(Editor::cameraId);
+        if(env->scene->hasAll<PerspectiveCamera, Transform>(Editor::cameraId) && selectionOverlay) {
+            PerspectiveCamera &camera = env->scene->get<PerspectiveCamera>(Editor::cameraId);
+            Transform &cameraTransform = env->scene->get<Transform>(Editor::cameraId);
             if(Editor::selection.entities.size() > 0){
                 updateFramebuffer(selectionOverlayTarget, false, viewportSize);
                 selectionOverlayTarget->setAttachment({COLOR, Color::transparent});
                 selectionOverlayTarget->clear();
-                engine.pbRenderer.begin(camera.getProjection() * glm::inverse(cameraTransform.getMatrix()), cameraTransform.position, selectionOverlayTarget);
+                env->pbRenderer->begin(camera.getProjection() * glm::inverse(cameraTransform.getMatrix()), cameraTransform.position, selectionOverlayTarget);
 
                 for (auto &sel : Editor::selection.entities) {
                     EntityId id = sel.first;
-                    if (engine.exists(id)) {
-                        if (engine.has<Transform>(id)) {
-                            Transform &transform = engine.get<Transform>(id);
-                            if (engine.has<RenderComponent>(id)) {
-                                RenderComponent &rc = engine.get<RenderComponent>(id);
+                    if (env->scene->exists(id)) {
+                        if (env->scene->has<Transform>(id)) {
+                            Transform &transform = env->scene->get<Transform>(id);
+                            if (env->scene->has<RenderComponent>(id)) {
+                                RenderComponent &rc = env->scene->get<RenderComponent>(id);
                                 transform.scale *= 1.05f;
-                                engine.pbRenderer.submit(transform.getMatrix(), Color(255,128,0,255), rc.mesh.get(), nullptr, id);
+                                env->pbRenderer->submit(transform.getMatrix(), Color(255,128,0,255), rc.mesh.get(), nullptr, id);
                                 transform.scale /= 1.05f;
                             }
                         }
                     }
                 }
 
-                engine.pbRenderer.end();
+                env->pbRenderer->end();
                 selectionOverlayTarget->bind();
                 selectionOverlayTarget->clear(DEPTH);
 
                 for (auto &sel : Editor::selection.entities) {
                     EntityId id = sel.first;
-                    if (engine.exists(id)) {
-                        if (engine.has<Transform>(id)) {
-                            Transform &transform = engine.get<Transform>(id);
-                            if (engine.has<RenderComponent>(id)) {
-                                RenderComponent &rc = engine.get<RenderComponent>(id);
-                                engine.pbRenderer.submit(transform.getMatrix(), Color::transparent, rc.mesh.get(), nullptr, id);
+                    if (env->scene->exists(id)) {
+                        if (env->scene->has<Transform>(id)) {
+                            Transform &transform = env->scene->get<Transform>(id);
+                            if (env->scene->has<RenderComponent>(id)) {
+                                RenderComponent &rc = env->scene->get<RenderComponent>(id);
+                                env->pbRenderer->submit(transform.getMatrix(), Color::transparent, rc.mesh.get(), nullptr, id);
                             }
                         }
                     }
                 }
 
-                engine.pbRenderer.end();
+                env->pbRenderer->end();
             }
         }
     }

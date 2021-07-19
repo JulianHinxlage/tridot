@@ -31,7 +31,7 @@ namespace tridot {
 
     void ProfilerPanel::update() {
         EditorGui::window("Profiler", [](){
-            updateNode(engine.profiler.node, true);
+            updateNode(env->profiler->node, true);
         });
     }
 

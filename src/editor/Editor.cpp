@@ -60,8 +60,8 @@ namespace tridot {
     }
 
     void Editor::enableRuntime() {
-        runtimeSceneBuffer.copy(engine);
-        engine.onUpdate().setActiveAll(true);
+        runtimeSceneBuffer.copy(*env->scene);
+        env->events->update.setActiveAll(true);
         runtime = true;
         engine.beginScene();
         undo.enabled = false;
@@ -73,32 +73,32 @@ namespace tridot {
         if(restoreScene){
             PerspectiveCamera cameraBuffer;
             Transform cameraTransformBuffer;
-            if(engine.hasAll<PerspectiveCamera, Transform>(Editor::cameraId)){
-                cameraBuffer = engine.get<PerspectiveCamera>(Editor::cameraId);
-                cameraTransformBuffer = engine.get<Transform>(Editor::cameraId);
+            if(env->scene->hasAll<PerspectiveCamera, Transform>(Editor::cameraId)){
+                cameraBuffer = env->scene->get<PerspectiveCamera>(Editor::cameraId);
+                cameraTransformBuffer = env->scene->get<Transform>(Editor::cameraId);
             }
-            engine.copy(runtimeSceneBuffer);
-            if(engine.hasAll<PerspectiveCamera, Transform>(Editor::cameraId)){
-                engine.get<PerspectiveCamera>(Editor::cameraId) = cameraBuffer;
-                engine.get<Transform>(Editor::cameraId) = cameraTransformBuffer;
+            env->scene->copy(runtimeSceneBuffer);
+            if(env->scene->hasAll<PerspectiveCamera, Transform>(Editor::cameraId)){
+                env->scene->get<PerspectiveCamera>(Editor::cameraId) = cameraBuffer;
+                env->scene->get<Transform>(Editor::cameraId) = cameraTransformBuffer;
             }
         }
         runtimeSceneBuffer.clear();
-        engine.onUpdate().setActiveAll(false);
-        engine.onUpdate().setActive("rendering", true);
-        engine.onUpdate().setActive("panels", true);
-        engine.onUpdate().setActive("window", true);
-        engine.onUpdate().setActive("imgui begin", true);
-        engine.onUpdate().setActive("imgui end", true);
-        engine.onUpdate().setActive("input", true);
-        engine.onUpdate().setActive("time", true);
-        engine.onUpdate().setActive("editor", true);
-        engine.onUpdate().setActive("clear", true);
-        engine.onUpdate().setActive("resources", true);
-        engine.onUpdate().setActive("transform", true);
-        engine.onUpdate().setActive("profiler", true);
-        engine.onUpdate().setActive("post processing", true);
-        engine.onUpdate().setActive("skybox", true);
+        env->events->update.setActiveAll(false);
+        env->events->update.setActiveCallback("rendering", true);
+        env->events->update.setActiveCallback("panels", true);
+        env->events->update.setActiveCallback("window", true);
+        env->events->update.setActiveCallback("imgui begin", true);
+        env->events->update.setActiveCallback("imgui end", true);
+        env->events->update.setActiveCallback("input", true);
+        env->events->update.setActiveCallback("time", true);
+        env->events->update.setActiveCallback("editor", true);
+        env->events->update.setActiveCallback("clear", true);
+        env->events->update.setActiveCallback("resources", true);
+        env->events->update.setActiveCallback("transform", true);
+        env->events->update.setActiveCallback("profiler", true);
+        env->events->update.setActiveCallback("post processing", true);
+        env->events->update.setActiveCallback("skybox", true);
         runtime = false;
         undo.enabled = true;
         Log::debug("runtime disabled");
@@ -137,10 +137,10 @@ namespace tridot {
         resourceBrowser.init();
         profiler.init();
 
-        engine.onUpdate().add("editor", [](){
+        env->events->update.addCallback("editor", [](){
             Editor::update();
         });
-        engine.onUpdate().order({"post processing", "editor", "panels"});
+        env->events->update.callbackOrder({"post processing", "editor", "panels"});
         Editor::disableRuntime(false);
     }
 
@@ -182,13 +182,13 @@ namespace tridot {
         }
 
         if(!runtime) {
-            if (engine.input.down(Input::KEY_LEFT_CONTROL) || engine.input.down(Input::KEY_RIGHT_CONTROL)) {
-                if (engine.input.down(Input::KEY_LEFT_SHIFT) || engine.input.down(Input::KEY_RIGHT_SHIFT)) {
-                    if (engine.input.pressed('Y')) {
+            if (env->input->down(Input::KEY_LEFT_CONTROL) || env->input->down(Input::KEY_RIGHT_CONTROL)) {
+                if (env->input->down(Input::KEY_LEFT_SHIFT) || env->input->down(Input::KEY_RIGHT_SHIFT)) {
+                    if (env->input->pressed('Y')) {
                         undo.redoAction();
                     }
                 } else {
-                    if (engine.input.pressed('Y')) {
+                    if (env->input->pressed('Y')) {
                         undo.undoAction();
                     }
                 }
@@ -209,16 +209,16 @@ namespace tridot {
                     if(runtime){
                         disableRuntime();
                     }
-                    engine.save();
+                    env->scene->save();
                 }
                 if(ImGui::MenuItem("Save as")){
                     saveFilePopup = true;
                 }
                 if(ImGui::MenuItem("Close")){
-                    engine.resources.setup<Scene>("").setPreLoad(nullptr).get();
+                    env->resources->setup<Scene>("").setPreLoad(nullptr).get();
                 }
                 if(ImGui::MenuItem("Exit")){
-                    engine.window.close();
+                    env->window->close();
                 }
                 ImGui::EndMenu();
             }
@@ -254,9 +254,9 @@ namespace tridot {
                     Editor::undo.clearActions();
 
                     std::string file(buffer);
-                    if(engine.resources.searchFile(file) != ""){
-                        file = engine.resources.searchFile(file);
-                        engine.resources.get<Scene>(file);
+                    if(env->resources->searchFile(file) != ""){
+                        file = env->resources->searchFile(file);
+                        env->resources->get<Scene>(file);
                         Editor::cameraId = -1;
                         Editor::selection.unselect();
                     }else{
@@ -289,7 +289,7 @@ namespace tridot {
                     if(runtime){
                         disableRuntime();
                     }
-                    engine.save(std::string(buffer));
+                    env->scene->save(std::string(buffer));
                     ImGui::CloseCurrentPopup();
                 }
                 ImGui::SameLine();

@@ -2,8 +2,7 @@
 // Copyright (c) 2021 Julian Hinxlage. All rights reserved.
 //
 
-#ifndef TRIDOT_EVENTMANAGER_H
-#define TRIDOT_EVENTMANAGER_H
+#pragma once
 
 #include "config.h"
 #include <functional>
@@ -263,4 +262,3 @@ namespace tridot {
 
 }
 
-#endif //TRIDOT_EVENTMANAGER_H

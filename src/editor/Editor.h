@@ -2,8 +2,7 @@
 // Copyright (c) 2021 Julian Hinxlage. All rights reserved.
 //
 
-#ifndef TRIDOT_EDITOR_H
-#define TRIDOT_EDITOR_H
+#pragma once
 
 #include "tridot/engine/Scene.h"
 #include "tridot/render/Camera.h"
@@ -53,4 +52,3 @@ namespace tridot {
 
 }
 
-#endif //TRIDOT_EDITOR_H

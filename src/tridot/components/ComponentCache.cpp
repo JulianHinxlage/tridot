@@ -19,7 +19,7 @@ namespace tridot {
         auto comp = data[type->name()];
         if(comp){
             Serializer s;
-            s.deserializeType(type, comp, ptr, engine.resources);
+            s.deserializeType(type, comp, ptr, *env->resources);
             return true;
         }else{
             return false;
@@ -35,13 +35,13 @@ namespace tridot {
         for(auto &type : env->reflection->getDescriptors()){
             if(type){
                 if(isCached(type->id())){
-                    if(!engine.has(id, type->id())){
-                        void *ptr = engine.addByTypeId(id, type->id());
+                    if(!env->scene->has(id, type->id())){
+                        void *ptr = env->scene->addByTypeId(id, type->id());
                         if(ptr) {
                             load(type->id(), ptr);
                             remove(type->id());
                             if (data.size() == 0) {
-                                engine.remove<ComponentCache>(id);
+                                env->scene->remove<ComponentCache>(id);
                                 break;
                             }
                         }
@@ -51,22 +51,22 @@ namespace tridot {
         }
     }
 
-    TRI_INIT("ComponentCache"){
+    TRI_INIT_CALLBACK("ComponentCache"){
         engine.onUnregister().add("ComponentCache", [](int typeId){
-            engine.view<>().each([&](EntityId id){
+            env->scene->view<>().each([&](EntityId id){
                 if(typeId != env->reflection->getTypeId<ComponentCache>()) {
-                    if (engine.has(id, typeId)) {
-                        if (!engine.has<ComponentCache>(id)) {
-                            engine.add<ComponentCache>(id);
+                    if (env->scene->has(id, typeId)) {
+                        if (!env->scene->has<ComponentCache>(id)) {
+                            env->scene->add<ComponentCache>(id);
                         }
-                        auto &cache = engine.get<ComponentCache>(id);
-                        void *ptr = engine.get(id, typeId);
+                        auto &cache = env->scene->get<ComponentCache>(id);
+                        void *ptr = env->scene->get(id, typeId);
                         if (ptr) {
                             Serializer s;
                             YAML::Emitter out;
                             out << YAML::BeginMap;
                             auto *type = env->reflection->getDescriptor(typeId);
-                            s.serializeType(type, type->name(), out, ptr, engine.resources);
+                            s.serializeType(type, type->name(), out, ptr, *env->resources);
                             out << YAML::EndMap;
                             YAML::Node node = YAML::Load(out.c_str());
                             for (auto comp : node) {
@@ -82,7 +82,7 @@ namespace tridot {
         engine.onUnregister().order({"ComponentCache", "Registry"});
 
         engine.onRegister().add("ComponentCache", [](int typeId){
-            engine.view<ComponentCache>().each([](EntityId id, ComponentCache &cache){
+            env->scene->view<ComponentCache>().each([](EntityId id, ComponentCache &cache){
                 cache.update(id);
             });
         });

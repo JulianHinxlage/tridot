@@ -2,8 +2,7 @@
 // Copyright (c) 2021 Julian Hinxlage. All rights reserved.
 //
 
-#ifndef TRIDOT_IMAGE_H
-#define TRIDOT_IMAGE_H
+#pragma once
 
 #include "Color.h"
 #include <vector>
@@ -40,4 +39,3 @@ namespace tridot {
 
 }
 
-#endif //TRIDOT_IMAGE_H

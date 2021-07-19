@@ -2,8 +2,7 @@
 // Copyright (c) 2021 Julian Hinxlage. All rights reserved.
 //
 
-#ifndef TRIDOT_LOG_H
-#define TRIDOT_LOG_H
+#pragma once
 
 #include "tridot/core/config.h"
 #include <sstream>
@@ -88,4 +87,3 @@ namespace tridot {
 
 }
 
-#endif //TRIDOT_LOG_H

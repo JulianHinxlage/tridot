@@ -2,8 +2,7 @@
 // Copyright (c) 2021 Julian Hinxlage. All rights reserved.
 //
 
-#ifndef TRIDOT_INPUT_H
-#define TRIDOT_INPUT_H
+#pragma once
 
 #include <unordered_map>
 #include <glm/glm.hpp>
@@ -195,4 +194,3 @@ namespace tridot {
 
 }
 
-#endif //TRIDOT_INPUT_H

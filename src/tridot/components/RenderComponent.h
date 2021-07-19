@@ -2,8 +2,7 @@
 // Copyright (c) 2021 Julian Hinxlage. All rights reserved.
 //
 
-#ifndef TRIDOT_RENDERCOMPONENT_H
-#define TRIDOT_RENDERCOMPONENT_H
+#pragma once
 
 #include "tridot/render/Mesh.h"
 #include "tridot/render/Texture.h"
@@ -28,4 +27,3 @@ namespace tridot {
 
 }
 
-#endif //TRIDOT_RENDERCOMPONENT_H

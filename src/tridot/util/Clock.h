@@ -2,8 +2,7 @@
 // Copyright (c) 2021 Julian Hinxlage. All rights reserved.
 //
 
-#ifndef TRIDOT_CLOCK_H
-#define TRIDOT_CLOCK_H
+#pragma once
 
 #include <cstdint>
 
@@ -22,4 +21,3 @@ namespace tridot {
 
 }
 
-#endif //TRIDOT_CLOCK_H

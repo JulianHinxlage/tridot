@@ -2,8 +2,7 @@
 // Copyright (c) 2021 Julian Hinxlage. All rights reserved.
 //
 
-#ifndef TRIDOT_SHADER_H
-#define TRIDOT_SHADER_H
+#pragma once
 
 #include "Buffer.h"
 #include <cstdint>
@@ -59,4 +58,3 @@ namespace tridot {
 
 }
 
-#endif //TRIDOT_SHADER_H

@@ -2,8 +2,7 @@
 // Copyright (c) 2021 Julian Hinxlage. All rights reserved.
 //
 
-#ifndef TRIDOT_TIME_H
-#define TRIDOT_TIME_H
+#pragma once
 
 #include "tridot/util/Clock.h"
 #include <vector>
@@ -48,4 +47,3 @@ namespace tridot {
 
 }
 
-#endif //TRIDOT_TIME_H

@@ -2,8 +2,7 @@
 // Copyright (c) 2021 Julian Hinxlage. All rights reserved.
 //
 
-#ifndef TRIDOT_ENUM_H
-#define TRIDOT_ENUM_H
+#pragma once
 
 #include <cstdint>
 
@@ -70,4 +69,3 @@ namespace tridot {
 
 }
 
-#endif //TRIDOT_ENUM_H

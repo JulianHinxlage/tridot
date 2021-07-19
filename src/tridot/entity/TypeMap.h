@@ -2,8 +2,7 @@
 // Copyright (c) 2021 Julian Hinxlage. All rights reserved.
 //
 
-#ifndef TRIDOT_TYPEMAP_H
-#define TRIDOT_TYPEMAP_H
+#pragma once
 
 #include "tridot/core/Environment.h"
 #include <utility>
@@ -48,4 +47,3 @@ namespace tridot{
 
 }
 
-#endif //TRIDOT_TYPEMAP_H

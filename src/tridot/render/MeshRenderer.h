@@ -2,8 +2,7 @@
 // Copyright (c) 2021 Julian Hinxlage. All rights reserved.
 //
 
-#ifndef TRIDOT_MESHRENDERER_H
-#define TRIDOT_MESHRENDERER_H
+#pragma once
 
 #include "Mesh.h"
 #include "Texture.h"
@@ -47,4 +46,3 @@ namespace tridot {
 
 }
 
-#endif //TRIDOT_MESHRENDERER_H

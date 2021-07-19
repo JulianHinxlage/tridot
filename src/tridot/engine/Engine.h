@@ -2,8 +2,7 @@
 // Copyright (c) 2021 Julian Hinxlage. All rights reserved.
 //
 
-#ifndef TRIDOT_ENGINE_H
-#define TRIDOT_ENGINE_H
+#pragma once
 
 #include "tridot/entity/Registry.h"
 #include "Scene.h"
@@ -68,32 +67,6 @@ namespace tridot {
             return ComponentRegister::onUnregister();
         }
 
-        template<typename Component>
-        Component *getComponentByHierarchy(EntityId id){
-            if(has<Component>(id)){
-                return &get<Component>(id);
-            }
-            if(has<Transform>(id)){
-                EntityId parent = get<Transform>(id).parent.id;
-                if(parent != -1){
-                    return getComponentByHierarchy<Component>(parent);
-                }
-            }
-            return nullptr;
-        }
-
-        template<typename Component>
-        EntityId getIdByComponent(Component &component){
-            ComponentPool<Component> &pool = getPool<Component>();
-            if(pool.getEntities().size() > 0){
-                int index = &component - (Component*)pool.get(0);
-                if(index >= 0 && index < pool.getEntities().size()){
-                    return pool.getId(index);
-                }
-            }
-            return -1;
-        }
-
     private:
         Signal<> onInitSignal;
         Signal<> onBeginSceneSignal;
@@ -148,4 +121,3 @@ static void func()
 #define TRI_INIT(name) TRI_INIT_2(name, TRI_UNIQUE_NAME(___tri_init_func___))
 #define TRI_COMPONENT(type) namespace{ tridot::impl::ComponentRegisterer<type> TRI_UNIQUE_NAME(___tri_global___); }
 
-#endif //TRIDOT_ENGINE_H

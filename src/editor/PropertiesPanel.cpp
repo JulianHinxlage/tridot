@@ -15,7 +15,7 @@ namespace tridot {
 	void PropertiesPanel::update(){
         EditorGui::window("Properties", [this](){
             EntityId id = Editor::selection.getSingleSelection();
-            if (id != -1 && engine.exists(id)) {
+            if (id != -1 && env->scene->exists(id)) {
                 //single entity
                 updateProperties(id);
             }
@@ -52,15 +52,15 @@ namespace tridot {
         if (ImGui::BeginPopup("add")) {
             for (auto& type : types) {
                 if (type) {
-                    auto* pool = engine.getPool(type->id());
+                    auto* pool = env->scene->getPool(type->id());
                     if (pool && !pool->has(id)) {
                         if (ImGui::Button(type->name().c_str())) {
                             pool->add(id, nullptr);
                             Editor::undo.beginAction();
                             Editor::undo.addCustomAction([id, rid = type->id()](){
-                                engine.remove(id, rid);
+                                env->scene->remove(id, rid);
                             }, [id, rid = type->id()](){
-                                engine.addByTypeId(id, rid);
+                                env->scene->addByTypeId(id, rid);
                             });
                             Editor::undo.endAction();
                             ImGui::CloseCurrentPopup();
@@ -79,8 +79,8 @@ namespace tridot {
 
         for (auto& type : types) {
             if (type) {
-                if (engine.has(id, type->id())) {
-                    void* comp = engine.get(id, type->id());
+                if (env->scene->has(id, type->id())) {
+                    void* comp = env->scene->get(id, type->id());
                     bool open = true;
                     if (ImGui::CollapsingHeader(type->name().c_str(), &open, ImGuiTreeNodeFlags_DefaultOpen)) {
                         uint8_t* compBuffer = new uint8_t[type->size()];
@@ -105,10 +105,10 @@ namespace tridot {
                         Editor::undo.beginAction();
                         Editor::undo.changeComponent(id, type, comp);
                         Editor::undo.addCustomAction(nullptr, [id, rid = type->id()](){
-                            engine.remove(id, rid);
+                            env->scene->remove(id, rid);
                         });
                         Editor::undo.endAction();
-                        engine.remove(id, type->id());
+                        env->scene->remove(id, type->id());
                     }
                 }
             }
@@ -132,7 +132,7 @@ namespace tridot {
                     bool show = false;
                     for (auto& sel : Editor::selection.entities) {
                         EntityId id = sel.first;
-                        auto* pool = engine.getPool(type->id());
+                        auto* pool = env->scene->getPool(type->id());
                         if (pool && !pool->has(id)) {
                             show = true;
                         }
@@ -143,7 +143,7 @@ namespace tridot {
 
                             for (auto& sel : Editor::selection.entities) {
                                 EntityId id = sel.first;
-                                auto* pool = engine.getPool(type->id());
+                                auto* pool = env->scene->getPool(type->id());
                                 if (pool && !pool->has(id)) {
                                     pool->add(id, nullptr);
                                     ImGui::CloseCurrentPopup();
@@ -174,8 +174,8 @@ namespace tridot {
                 for (auto& sel : Editor::selection.entities) {
                     EntityId id = sel.first;
 
-                    if (engine.has(id, type->id())) {
-                        void* comp = engine.get(id, type->id());
+                    if (env->scene->has(id, type->id())) {
+                        void* comp = env->scene->get(id, type->id());
 
                         if (first) {
                             type->copy(comp, compBuffer);
@@ -202,7 +202,7 @@ namespace tridot {
                             }
                         }
                         if (remove) {
-                            engine.remove(id, type->id());
+                            env->scene->remove(id, type->id());
                         }
 
                         first = false;

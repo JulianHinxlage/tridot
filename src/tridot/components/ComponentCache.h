@@ -2,8 +2,7 @@
 // Copyright (c) 2021 Julian Hinxlage. All rights reserved.
 //
 
-#ifndef TRIDOT_COMPONENTCACHE_H
-#define TRIDOT_COMPONENTCACHE_H
+#pragma once
 
 #include "tridot/core/Environment.h"
 #include "tridot/core/config.h"
@@ -41,4 +40,3 @@ namespace tridot {
 
 }
 
-#endif //TRIDOT_COMPONENTCACHE_H

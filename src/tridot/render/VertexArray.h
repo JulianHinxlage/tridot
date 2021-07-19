@@ -2,8 +2,7 @@
 // Copyright (c) 2021 Julian Hinxlage. All rights reserved.
 //
 
-#ifndef TRIDOT_VERTEXARRAY_H
-#define TRIDOT_VERTEXARRAY_H
+#pragma once
 
 #include "tridot/util/Ref.h"
 #include "Buffer.h"
@@ -62,4 +61,3 @@ namespace tridot {
 
 }
 
-#endif //TRIDOT_VERTEXARRAY_H

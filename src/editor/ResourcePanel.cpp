@@ -33,7 +33,7 @@ namespace tridot {
             if (res) {
                 ImGui::SameLine();
                 if (ImGui::Button("remove")) {
-                    engine.resources.remove(engine.resources.getName(res));
+                    env->resources->remove(env->resources->getName(res));
                     res = nullptr;
                 }
             }
@@ -46,7 +46,7 @@ namespace tridot {
                 static char buffer[256];
                 ImGui::InputText("Name", buffer, sizeof(buffer));
                 if (ImGui::Button("Create")) {
-                    res = engine.resources.get<T>(std::string(buffer), ResourceManager::JUST_CREATE);
+                    res = env->resources->get<T>(std::string(buffer), ResourceManager::JUST_CREATE);
                     ImGui::CloseCurrentPopup();
                 }
                 ImGui::SameLine();
@@ -63,7 +63,7 @@ namespace tridot {
                 static char buffer[256];
                 ImGui::InputText("File", buffer, sizeof(buffer));
                 if (ImGui::Button("Open")) {
-                    res = engine.resources.get<T>(std::string(buffer));
+                    res = env->resources->get<T>(std::string(buffer));
                     ImGui::CloseCurrentPopup();
                 }
                 ImGui::SameLine();

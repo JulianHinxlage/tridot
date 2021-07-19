@@ -2,8 +2,7 @@
 // Copyright (c) 2021 Julian Hinxlage. All rights reserved.
 //
 
-#ifndef TRIDOT_BATCHBUFFER_H
-#define TRIDOT_BATCHBUFFER_H
+#pragma once
 
 #include "Buffer.h"
 #include "tridot/util/Ref.h"
@@ -30,4 +29,3 @@ namespace tridot {
 
 }
 
-#endif //TRIDOT_BATCHBUFFER_H

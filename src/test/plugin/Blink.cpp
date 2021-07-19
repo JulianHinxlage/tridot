@@ -20,9 +20,9 @@ TRI_REGISTER_MEMBER4(Blink, speed, color, flag, value)
 TRI_COMPONENT(Blink)
 
 extern "C" void update(){
-    engine.view<Blink, RenderComponent>().each([](Blink &blink, RenderComponent &r){
+    env->scene->view<Blink, RenderComponent>().each([](Blink &blink, RenderComponent &r){
         if(blink.flag){
-            blink.value -= engine.time.deltaTime * blink.speed * 4;
+            blink.value -= env->time->deltaTime * blink.speed * 4;
             if(blink.value <= 0.0f){
                 blink.flag = !blink.flag;
                 blink.value = 0.0f;
@@ -31,7 +31,7 @@ extern "C" void update(){
             r.color.g = blink.value * (255.0f - blink.color.g) + blink.color.g;
             r.color.b = blink.value * (255.0f - blink.color.b) + blink.color.b;
         }else{
-            blink.value += engine.time.deltaTime * blink.speed * 4;
+            blink.value += env->time->deltaTime * blink.speed * 4;
             if(blink.value >= 1.0f){
                 blink.flag = !blink.flag;
                 blink.value = 1.0f;

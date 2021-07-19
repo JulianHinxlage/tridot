@@ -2,8 +2,7 @@
 // Copyright (c) 2021 Julian Hinxlage. All rights reserved.
 //
 
-#ifndef TRIDOT_FRAMEBUFFER_H
-#define TRIDOT_FRAMEBUFFER_H
+#pragma once
 
 #include "Texture.h"
 #include "tridot/util/Ref.h"
@@ -57,4 +56,3 @@ namespace tridot {
 
 }
 
-#endif //TRIDOT_FRAMEBUFFER_H
