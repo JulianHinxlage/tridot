@@ -2,7 +2,7 @@
 // Copyright (c) 2021 Julian Hinxlage. All rights reserved.
 //
 
-#include "tridot/engine/Engine.h"
+#include "tridot/engine/engine.h"
 #include "tridot/components/RenderComponent.h"
 
 using namespace tridot;
@@ -17,7 +17,7 @@ public:
 
 TRI_REGISTER_TYPE(Blink)
 TRI_REGISTER_MEMBER4(Blink, speed, color, flag, value)
-TRI_COMPONENT(Blink)
+TRI_REGISTER_COMPONENT(Blink)
 
 extern "C" void update(){
     env->scene->view<Blink, RenderComponent>().each([](Blink &blink, RenderComponent &r){

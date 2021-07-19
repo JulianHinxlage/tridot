@@ -4,7 +4,6 @@
 
 #include "ConsolePanel.h"
 #include "Editor.h"
-#include "tridot/engine/Engine.h"
 #include <imgui.h>
 
 namespace tridot {

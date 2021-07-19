@@ -4,7 +4,9 @@
 
 #include "Viewport.h"
 #include "Editor.h"
-#include "tridot/engine/Engine.h"
+#include "tridot/engine/Input.h"
+#include "tridot/render/Window.h"
+#include "tridot/render/PBRenderer.h"
 #include "tridot/components/RenderComponent.h"
 #include <GL/glew.h>
 

@@ -10,6 +10,8 @@
 
 namespace tridot {
 
+    class Registry;
+
     class BaseEventSignal{
     public:
         virtual void pollEvents() = 0;
@@ -181,8 +183,11 @@ namespace tridot {
         EventSignal<> sceneBegin;
         EventSignal<> sceneEnd;
 
-        EventSignal<EntityId> entityCreate;
-        EventSignal<EntityId> entityDestroy;
+        EventSignal<Registry*, EntityId> entityCreate;
+        EventSignal<Registry*, EntityId> entityDestroy;
+
+        EventSignal<int> componentRegister;
+        EventSignal<int> componentUnregister;
 
         EventSignal<int, int> windowResize;
         EventSignal<int, int> windowMoved;

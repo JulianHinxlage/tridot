@@ -3,7 +3,8 @@
 //
 
 #include "Plugin.h"
-#include "Engine.h"
+#include "tridot/core/Environment.h"
+#include "tridot/engine/ResourceManager.h"
 #include "tridot/core/Log.h"
 #if WIN32
     #include <windows.h>
@@ -88,7 +89,7 @@ namespace tridot {
         }
     }
 
-    TRI_UPDATE("plugins"){
+    TRI_UPDATE_CALLBACK("plugins"){
         for(auto &name : env->resources->getNameList<Plugin>()){
             auto plugin = env->resources->get<Plugin>(name);
             if(plugin){
@@ -99,8 +100,8 @@ namespace tridot {
         }
     }
 
-    TRI_INIT("plugins"){
-        engine.onShutdown().add("plugins", [](){
+    TRI_INIT_CALLBACK("plugins"){
+        env->events->shutdown.addCallback("plugins", [](){
             for(auto &name : env->resources->getNameList<Plugin>()){
                 auto plugin = env->resources->get<Plugin>(name);
                 if(plugin){

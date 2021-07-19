@@ -3,7 +3,7 @@
 //
 
 #include "ResourcePanel.h"
-#include "tridot/engine/Engine.h"
+#include "tridot/render/render.h"
 #include "tridot/engine/Plugin.h"
 #include "Editor.h"
 #include "EditorGui.h"

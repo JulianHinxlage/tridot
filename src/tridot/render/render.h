@@ -11,3 +11,5 @@
 #include "MeshFactory.h"
 #include "RenderContext.h"
 #include "Camera.h"
+#include "Light.h"
+

@@ -4,8 +4,8 @@
 
 #include "Profiler.h"
 #include "tridot/util/StrUtil.h"
-#include "Engine.h"
 #include "tridot/core/Environment.h"
+#include "tridot/engine/Time.h"
 
 namespace tridot {
 
@@ -127,7 +127,6 @@ namespace tridot {
     namespace impl {
 
         ProfileScope::ProfileScope(const char *name) {
-            engine.profiler.begin(name);
             if(env->profiler){
                 env->profiler->begin(name);
             }
@@ -135,7 +134,6 @@ namespace tridot {
         }
 
         ProfileScope::~ProfileScope() {
-            engine.profiler.end(name);
             if(env->profiler) {
                 env->profiler->end(name);
             }

@@ -3,7 +3,6 @@
 //
 
 #include "Scene.h"
-#include "Engine.h"
 #include "Serializer.h"
 
 namespace tridot {

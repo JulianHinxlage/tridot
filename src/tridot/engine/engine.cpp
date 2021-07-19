@@ -61,5 +61,12 @@ namespace tridot{
             });
         }
     }
+    TRI_INIT_CALLBACK("physics"){
+        env->events->sceneEnd.addCallback("physics", [](){
+            env->scene->view<RigidBody>().each([](EntityId id, RigidBody &rb){
+                env->physics->remove(rb);
+            });
+        });
+    }
 
 }

@@ -2,8 +2,11 @@
 // Copyright (c) 2021 Julian Hinxlage. All rights reserved.
 //
 
-#include "Engine.h"
+#include "tridot/core/Environment.h"
+#include "tridot/engine/Profiler.h"
 #include "tridot/render/RenderContext.h"
+#include "tridot/render/Window.h"
+#include "tridot/render/FrameBuffer.h"
 #include <imgui/imgui.h>
 #include <imgui/backends/imgui_impl_glfw.h>
 #include <imgui/backends/imgui_impl_opengl3.h>

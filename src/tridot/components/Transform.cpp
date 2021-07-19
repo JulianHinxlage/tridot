@@ -3,7 +3,8 @@
 //
 
 #include "Transform.h"
-#include "tridot/engine/Engine.h"
+#include "tridot/core/Environment.h"
+#include "tridot/engine/engine.h"
 #include <glm/gtc/matrix_transform.hpp>
 #include <imgui/imgui.h>
 #include <imguizmo/ImGuizmo.h>
@@ -34,8 +35,8 @@ namespace tridot {
     }
 
     TRI_INIT_CALLBACK("transform"){
-        engine.onDestroy().add("transform", [](Registry *reg, EntityId id){
-            if(reg == &engine){
+        env->events->entityDestroy.addCallback("transform", [](Registry *reg, EntityId id){
+            if(reg == env->scene){
                 if(Transform::hasChildren(id)){
                     for(EntityId child : Transform::getChildren(id)){
                         reg->destroy(child);

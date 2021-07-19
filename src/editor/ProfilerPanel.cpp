@@ -5,7 +5,6 @@
 #include "ProfilerPanel.h"
 #include "tridot/util/StrUtil.h"
 #include "EditorGui.h"
-#include "tridot/engine/Engine.h"
 
 namespace tridot {
 

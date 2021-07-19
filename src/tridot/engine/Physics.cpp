@@ -3,7 +3,8 @@
 //
 
 #include "Physics.h"
-#include "Engine.h"
+#include "tridot/core/Environment.h"
+#include "tridot/engine/Time.h"
 #include <vector>
 #include <glm/detail/type_quat.hpp>
 #include <glm/gtx/euler_angles.hpp>
@@ -50,28 +51,6 @@ namespace tridot {
     glm::vec3 convQuaternion(const btQuaternion &quat){
         glm::quat quaternion(quat.getW(), quat.getX(), quat.getY(), quat.getZ());
         return glm::vec3(glm::eulerAngles(quaternion));
-    }
-
-    TRI_UPDATE("physics"){
-        TRI_PROFILE("physics");
-        {
-            TRI_PROFILE("physics/step");
-            engine.physics.step(env->time->deltaTime);
-        }
-        {
-            TRI_PROFILE("physics/update");
-            env->scene->view<Transform, RigidBody, Collider>().each([](EntityId id, Transform &t, RigidBody &rb, Collider &c){
-                engine.physics.update(rb, t, c, id);
-            });
-        }
-    }
-
-    TRI_INIT("physics"){
-        engine.onEndScene().add("physics", [](){
-            env->scene->view<RigidBody>().each([](EntityId id, RigidBody &rb){
-                engine.physics.remove(rb);
-            });
-        });
     }
 
     class Physics::Impl{
@@ -285,6 +264,8 @@ namespace tridot {
                         break;
                     }
                 }
+                delete body;
+                rigidBody.physicsReference = nullptr;
             }
         }
     }

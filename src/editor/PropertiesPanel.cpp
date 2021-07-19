@@ -5,7 +5,6 @@
 #include "PropertiesPanel.h"
 #include "Editor.h"
 #include "EditorGui.h"
-#include "tridot/engine/Engine.h"
 #include <imgui/imgui.h>
 
 using namespace tridot;

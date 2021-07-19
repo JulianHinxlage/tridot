@@ -4,7 +4,6 @@
 
 #pragma once
 
-#include "tridot/engine/Engine.h"
 #include "editor/EditorGui.h"
 #include <string>
 #include <vector>

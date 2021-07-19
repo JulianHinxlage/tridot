@@ -4,7 +4,6 @@
 
 #include "Undo.h"
 #include "Editor.h"
-#include "tridot/engine/Engine.h"
 
 namespace tridot {
 

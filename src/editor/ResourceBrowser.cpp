@@ -5,7 +5,7 @@
 #include "ResourceBrowser.h"
 #include "tridot/util/StrUtil.h"
 #include "Editor.h"
-#include "tridot/engine/Engine.h"
+#include "tridot/render/render.h"
 #include "tridot/engine/Plugin.h"
 #include <imgui.h>
 #include <filesystem>

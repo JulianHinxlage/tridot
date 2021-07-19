@@ -2,8 +2,10 @@
 // Copyright (c) 2021 Julian Hinxlage. All rights reserved.
 //
 
-#include "tridot/engine/Engine.h"
+#include "tridot/engine/Time.h"
+#include "tridot/render/Window.h"
 #include "tridot/render/Camera.h"
+#include "tridot/render/Light.h"
 #include "tridot/render/MeshFactory.h"
 #include "tridot/components/RenderComponent.h"
 #include "tridot/components/Tag.h"

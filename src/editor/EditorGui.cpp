@@ -3,7 +3,8 @@
 //
 
 #include "EditorGui.h"
-#include "tridot/render/Camera.h"
+#include "tridot/render/render.h"
+#include "tridot/engine/Physics.h"
 #include "tridot/components/Tag.h"
 #include "tridot/components/RenderComponent.h"
 #include "tridot/components/ComponentCache.h"

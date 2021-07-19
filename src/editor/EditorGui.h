@@ -4,7 +4,9 @@
 
 #pragma once
 
-#include "tridot/engine/Engine.h"
+#include "tridot/core/Environment.h"
+#include "tridot/util/Ref.h"
+#include "tridot/engine/ResourceManager.h"
 #include <functional>
 #include <string>
 #include <imgui.h>

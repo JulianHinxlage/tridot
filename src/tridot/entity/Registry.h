@@ -28,12 +28,12 @@ namespace tridot {
                 setupPool(cid);
             }
 
-            onRegisterCallbackId = ComponentRegister::onRegister().add([this](int typeId){
+            onRegisterCallbackId = env->events->componentRegister.addCallback([this](int typeId){
                 uint32_t cid = ComponentRegister::id(typeId);
                 setupPool(cid);
             }, "Registry");
 
-            onUnregisterCallbackId = ComponentRegister::onUnregister().add([this](int typeId){
+            onUnregisterCallbackId = env->events->componentUnregister.addCallback([this](int typeId){
                 uint32_t cid = ComponentRegister::id(typeId);
                 if(cid < componentPools.size()){
                     componentPools[cid] = nullptr;
@@ -42,8 +42,8 @@ namespace tridot {
         }
 
         ~Registry(){
-            ComponentRegister::onRegister().remove(onRegisterCallbackId);
-            ComponentRegister::onUnregister().remove(onUnregisterCallbackId);
+            env->events->componentRegister.removeCallback(onRegisterCallbackId);
+            env->events->componentUnregister.removeCallback(onUnregisterCallbackId);
         }
 
         EntityId createHinted(EntityId hint){

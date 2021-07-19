@@ -4,7 +4,6 @@
 
 #include "SelectionContext.h"
 #include "Editor.h"
-#include "tridot/engine/Engine.h"
 #include "tridot/components/Tag.h"
 #include "tridot/engine/Serializer.h"
 

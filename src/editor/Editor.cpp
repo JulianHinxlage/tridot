@@ -3,7 +3,8 @@
 //
 
 #include "Editor.h"
-#include "tridot/engine/Engine.h"
+#include "tridot/engine/Input.h"
+#include "tridot/render/Window.h"
 #include "tridot/components/Tag.h"
 #include <imgui.h>
 #include <fstream>
@@ -63,13 +64,13 @@ namespace tridot {
         runtimeSceneBuffer.copy(*env->scene);
         env->events->update.setActiveAll(true);
         runtime = true;
-        engine.beginScene();
+        env->events->sceneBegin.invoke();
         undo.enabled = false;
         Log::debug("runtime enabled");
     }
 
     void Editor::disableRuntime(bool restoreScene) {
-        engine.endScene();
+        env->events->sceneEnd.invoke();
         if(restoreScene){
             PerspectiveCamera cameraBuffer;
             Transform cameraTransformBuffer;

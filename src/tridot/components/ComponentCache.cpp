@@ -4,7 +4,8 @@
 
 #include "ComponentCache.h"
 #include "tridot/engine/Serializer.h"
-#include "tridot/engine/Engine.h"
+#include "tridot/core/Environment.h"
+#include "tridot/engine/Scene.h"
 
 namespace tridot {
 
@@ -52,7 +53,7 @@ namespace tridot {
     }
 
     TRI_INIT_CALLBACK("ComponentCache"){
-        engine.onUnregister().add("ComponentCache", [](int typeId){
+        env->events->componentUnregister.addCallback("ComponentCache", [](int typeId){
             env->scene->view<>().each([&](EntityId id){
                 if(typeId != env->reflection->getTypeId<ComponentCache>()) {
                     if (env->scene->has(id, typeId)) {
@@ -79,18 +80,18 @@ namespace tridot {
                 }
             });
         });
-        engine.onUnregister().order({"ComponentCache", "Registry"});
+        env->events->componentUnregister.callbackOrder({"ComponentCache", "Registry"});
 
-        engine.onRegister().add("ComponentCache", [](int typeId){
+        env->events->componentRegister.addCallback("ComponentCache", [](int typeId){
             env->scene->view<ComponentCache>().each([](EntityId id, ComponentCache &cache){
                 cache.update(id);
             });
         });
-        engine.onRegister().order({"Registry", "ComponentCache"});
+        env->events->componentRegister.callbackOrder({"Registry", "ComponentCache"});
 
-        engine.onShutdown().add("ComponentCache", [](){
-            engine.onUnregister().remove("ComponentCache");
-            engine.onRegister().remove("ComponentCache");
+        env->events->shutdown.addCallback("ComponentCache", [](){
+            env->events->componentUnregister.removeCallback("ComponentCache");
+            env->events->componentRegister.removeCallback("ComponentCache");
         });
     }
 

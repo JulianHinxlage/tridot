@@ -3,7 +3,9 @@
 //
 
 #include "EditorCamera.h"
-#include "tridot/engine/Engine.h"
+#include "tridot/core/Environment.h"
+#include "tridot/engine/Input.h"
+#include "tridot/engine/Time.h"
 #include <glm/gtc/matrix_transform.hpp>
 #include <algorithm>
 

@@ -3,8 +3,9 @@
 //
 
 #include "PostProcessingEffect.h"
-#include "tridot/engine/Engine.h"
-#include "tridot/render/Camera.h"
+#include "tridot/core/Environment.h"
+#include "tridot/engine/engine.h"
+#include "tridot/render/render.h"
 
 namespace tridot {
 
