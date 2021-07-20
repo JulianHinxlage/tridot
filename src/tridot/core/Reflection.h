@@ -119,6 +119,11 @@ namespace tridot {
             }
         }
 
+        template<typename Type>
+        void removeType(){
+            removeType(getTypeId<Type>());
+        }
+
         template<typename MemberType>
         void addMember(TypeDescriptor *descriptor, const std::string &name, int offset){
             if(descriptor){
@@ -199,23 +204,3 @@ namespace tridot {
     };
 
 }
-
-#define TRI_REGISTER_TYPE(type) TRI_REGISTER_CALLBACK(){Environment::init(); env->reflection->addType<type>(#type);}
-#define TRI_REGISTER_TYPE_NAME(type, name) TRI_REGISTER_CALLBACK(){Environment::init(); env->reflection->addType<type>(#name);}
-#define TRI_REGISTER_MEMBER(type, memberName) TRI_REGISTER_CALLBACK(){Environment::init(); env->reflection->addMember<type, decltype(type::memberName)>(#memberName, offsetof(type, memberName));}
-#define TRI_REGISTER_CONSTANT(type, name) TRI_REGISTER_CALLBACK(){Environment::init(); env->reflection->addConstant<type>(#name, (int)type::name);}
-
-#define TRI_REGISTER_MEMBER2(type, member, member2) TRI_REGISTER_MEMBER(type, member) TRI_REGISTER_MEMBER(type, member2)
-#define TRI_REGISTER_MEMBER3(type, member, member2, member3) TRI_REGISTER_MEMBER(type, member) TRI_REGISTER_MEMBER(type, member2) TRI_REGISTER_MEMBER(type, member3)
-#define TRI_REGISTER_MEMBER4(type, member, member2, member3, member4) TRI_REGISTER_MEMBER(type, member) TRI_REGISTER_MEMBER(type, member2) TRI_REGISTER_MEMBER(type, member3) TRI_REGISTER_MEMBER(type, member4)
-#define TRI_REGISTER_MEMBER5(type, member, member2, member3, member4, member5) TRI_REGISTER_MEMBER(type, member) TRI_REGISTER_MEMBER(type, member2) TRI_REGISTER_MEMBER(type, member3) TRI_REGISTER_MEMBER(type, member4) TRI_REGISTER_MEMBER(type, member5)
-#define TRI_REGISTER_MEMBER6(type, member, member2, member3, member4, member5, member6) TRI_REGISTER_MEMBER(type, member) TRI_REGISTER_MEMBER(type, member2) TRI_REGISTER_MEMBER(type, member3) TRI_REGISTER_MEMBER(type, member4) TRI_REGISTER_MEMBER(type, member5) TRI_REGISTER_MEMBER(type, member6)
-#define TRI_REGISTER_MEMBER7(type, member, member2, member3, member4, member5, member6, member7) TRI_REGISTER_MEMBER(type, member) TRI_REGISTER_MEMBER(type, member2) \
-    TRI_REGISTER_MEMBER(type, member3) TRI_REGISTER_MEMBER(type, member4) TRI_REGISTER_MEMBER(type, member5) TRI_REGISTER_MEMBER(type, member6) TRI_REGISTER_MEMBER(type, member7)
-#define TRI_REGISTER_MEMBER8(type, member, member2, member3, member4, member5, member6, member7, member8) TRI_REGISTER_MEMBER(type, member) TRI_REGISTER_MEMBER(type, member2) \
-    TRI_REGISTER_MEMBER(type, member3) TRI_REGISTER_MEMBER(type, member4) TRI_REGISTER_MEMBER(type, member5) TRI_REGISTER_MEMBER(type, member6) TRI_REGISTER_MEMBER(type, member7)  TRI_REGISTER_MEMBER(type, member8)
-#define TRI_REGISTER_MEMBER9(type, member, member2, member3, member4, member5, member6, member7, member8, member9) TRI_REGISTER_MEMBER(type, member) TRI_REGISTER_MEMBER(type, member2) \
-    TRI_REGISTER_MEMBER(type, member3) TRI_REGISTER_MEMBER(type, member4) TRI_REGISTER_MEMBER(type, member5) TRI_REGISTER_MEMBER(type, member6) TRI_REGISTER_MEMBER(type, member7)  TRI_REGISTER_MEMBER(type, member8) TRI_REGISTER_MEMBER(type, member9)
-#define TRI_REGISTER_MEMBER10(type, member, member2, member3, member4, member5, member6, member7, member8, member9, member10) TRI_REGISTER_MEMBER(type, member) TRI_REGISTER_MEMBER(type, member2) \
-    TRI_REGISTER_MEMBER(type, member3) TRI_REGISTER_MEMBER(type, member4) TRI_REGISTER_MEMBER(type, member5) TRI_REGISTER_MEMBER(type, member6) TRI_REGISTER_MEMBER(type, member7)  TRI_REGISTER_MEMBER(type, member8) TRI_REGISTER_MEMBER(type, member9) TRI_REGISTER_MEMBER(type, member10)
-

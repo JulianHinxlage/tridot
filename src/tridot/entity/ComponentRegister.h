@@ -25,7 +25,6 @@ namespace tridot {
             uint32_t cid = componentMap.id(typeId);
             if(cid < componentPools.size()){
                 env->events->componentUnregister.invoke(typeId);
-                //onUnregisterSignal.invoke(typeId);
                 componentPools[cid] = nullptr;
             }
         }
@@ -39,20 +38,10 @@ namespace tridot {
             return componentMap.id(typeId);
         }
 
-        //static auto onRegister(){
-        //    return onRegisterSignal.ref();
-        //}
-
-        //static auto onUnregister(){
-        //    return onUnregisterSignal.ref();
-        //}
-
     private:
         friend class Registry;
         static TypeMap componentMap;
         static std::vector<std::shared_ptr<Pool>> componentPools;
-        //static Signal<int> onRegisterSignal;
-        //static Signal<int> onUnregisterSignal;
 
         template<typename Component>
         static void registerPool(){
@@ -63,12 +52,24 @@ namespace tridot {
             if(componentPools[cid] == nullptr){
                 componentPools[cid] = std::make_shared<ComponentPool<Component>>();
                 env->events->componentRegister.invoke(env->reflection->getTypeId<Component>());
-                //onRegisterSignal.invoke(env->reflection->getTypeId<Component>());
             }
         }
 
     };
 
+    namespace impl {
+        template<typename T>
+        class ComponentRegisterer{
+        public:
+            ComponentRegisterer(){
+                tridot::ComponentRegister::registerComponent<T>();
+            }
+            ~ComponentRegisterer(){
+                tridot::ComponentRegister::unregisterComponent<T>();
+            }
+        };
+    }
+
 }
 
-#define TRI_REGISTER_COMPONENT(type) TRI_REGISTER_CALLBACK(){ tridot::ComponentRegister::registerComponent<type>(); }
+#define TRI_REGISTER_COMPONENT(type) tridot::impl::ComponentRegisterer<type> TRI_UNIQUE_IDENTIFIER(_tri_register_component);
