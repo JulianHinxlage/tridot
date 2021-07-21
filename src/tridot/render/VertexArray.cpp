@@ -3,7 +3,7 @@
 //
 
 #include "VertexArray.h"
-#include "tridot/core/Log.h"
+#include "tridot/core/Environment.h"
 #include <GL/glew.h>
 
 namespace tridot {
@@ -58,7 +58,7 @@ namespace tridot {
     void VertexArray::addIndexBuffer(const Ref<Buffer> &indexBuffer, Type type) {
         if(id == 0){
             glGenVertexArrays(1, &id);
-            Log::trace("created vertex array ", id);
+            env->console->trace("created vertex array ", id);
         }
         bind();
         indexBuffer->unbind();
@@ -70,7 +70,7 @@ namespace tridot {
     void VertexArray::addVertexBuffer(const Ref<Buffer> &vertexBuffer, std::vector<Attribute> layout, int divisor) {
         if(id == 0){
             glGenVertexArrays(1, &id);
-            Log::trace("created vertex array ", id);
+            env->console->trace("created vertex array ", id);
         }
         bind();
         vertexBuffer->unbind();
@@ -127,7 +127,7 @@ namespace tridot {
     void VertexArray::clear() {
         if(id != 0){
             glDeleteVertexArrays(1, &id);
-            Log::trace("deleted vertex array ", id);
+            env->console->trace("deleted vertex array ", id);
             id = 0;
         }
         nextAttribute = 0;

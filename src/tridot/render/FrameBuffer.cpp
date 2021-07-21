@@ -3,7 +3,7 @@
 //
 
 #include "FrameBuffer.h"
-#include "tridot/core/Log.h"
+#include "tridot/core/Environment.h"
 #include "RenderContext.h"
 #include "GL/glew.h"
 #include "GLFW/glfw3.h"
@@ -36,7 +36,7 @@ namespace tridot {
     FrameBuffer::~FrameBuffer() {
         if(id != 0){
             glDeleteFramebuffers(1, &id);
-            Log::trace("deleted frame buffer ", id);
+            env->console->trace("deleted frame buffer ", id);
             id = 0;
         }
     }
@@ -112,7 +112,7 @@ namespace tridot {
     Ref<Texture> FrameBuffer::setAttachment(FrameBufferAttachmentSpec spec, const Ref<Texture> &texture) {
         if(id == 0){
             glGenFramebuffers(1, &id);
-            Log::trace("created frame buffer ", id);
+            env->console->trace("created frame buffer ", id);
         }
         bindFrameBuffer(id);
         glFramebufferTexture2D(GL_FRAMEBUFFER, internalEnum(spec.type), GL_TEXTURE_2D, texture->getId(), 0);

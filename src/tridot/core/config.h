@@ -6,6 +6,7 @@
 
 #include <cassert>
 #include <cstdint>
+#include <string>
 
 #if WIN32
 #ifdef TRI_DLL_EXPORT
@@ -16,8 +17,6 @@
 #else
 #define TRI_API
 #endif
-
-#include "Log.h"
 
 #define TRI_STR(x) #x
 #define TRI_STR_MACRO(x) TRI_STR(x)
@@ -32,11 +31,18 @@
 #define TRI_RELEASE
 #endif
 
+namespace tridot::impl{
+    void assertLog(const std::string &message);
+}
 #ifdef TRI_DEBUG
-#define TRI_ASSERT(expr, msg) if(!(expr)){tridot::Log::critical(msg);} assert((expr) && (msg));
+//#define TRI_ASSERT(expr, msg) if(!(expr)){env->console->fatal(msg);} assert((expr) && (msg));
+#define TRI_ASSERT(expr, msg) if(!(expr)){tridot::impl::assertLog(msg);}assert((expr) && (msg));
 #else
 #define TRI_ASSERT(expr, msg)
 #endif
+
+//#define TRI_STATIC_ASSERT(expr, msg) static_assert((expr), (msg));
+
 
 #define TRI_UNIQUE_NAME_3(name, line, number) name##line##number
 #define TRI_UNIQUE_NAME_2(name, line, number) TRI_UNIQUE_NAME_3(name, line, number)

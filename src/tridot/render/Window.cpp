@@ -5,7 +5,7 @@
 #include "Window.h"
 #include "FrameBuffer.h"
 #include "tridot/engine/Profiler.h"
-#include "tridot/core/Log.h"
+#include "tridot/core/Environment.h"
 #include "RenderContext.h"
 #include "GL/glew.h"
 #include "GLFW/glfw3.h"
@@ -64,12 +64,12 @@ namespace tridot {
             Window *window = (Window*)glfwGetWindowUserPointer(context);
             window->size = {width, height};
             glViewport(0, 0, width, height);
-            Log::trace("window resized: width = ", width, ", height = ", height);
+            env->console->trace("window resized: width = ", width, ", height = ", height);
         });
         glfwSetWindowPosCallback(window, [](GLFWwindow* context, int x, int y){
             Window *window = (Window*)glfwGetWindowUserPointer(context);
             window->position = glm::vec2(x, y);
-            Log::trace("window moved: x = ", x, ", y = ", y);
+            env->console->trace("window moved: x = ", x, ", y = ", y);
         });
 
         //set initial size and position
@@ -111,7 +111,7 @@ namespace tridot {
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
             }
         }else{
-            Log::warning("window: update called before init or after close");
+            env->console->warning("window: update called before init or after close");
         }
     }
 
@@ -141,7 +141,7 @@ namespace tridot {
                 RenderContext::set(current);
             }
             context = nullptr;
-            Log::trace("window closed");
+            env->console->trace("window closed");
         }
     }
 

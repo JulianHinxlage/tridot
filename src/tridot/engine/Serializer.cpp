@@ -52,7 +52,7 @@ namespace tridot {
                         in.remove(type->name());
                     }
                     else {
-                        Log::warning("no component pool present for ", type->name());
+                        env->console->warning("no component pool present for ", type->name());
                     }
                 }
             }
@@ -239,7 +239,7 @@ namespace tridot {
 
     bool Serializer::save(const std::string &file, Registry &reg, ResourceManager &resources, bool binary) {
         if(binary){
-            Log::error(false, "binary serialisation is not yet implemented");
+            env->console->error(false, "binary serialisation is not yet implemented");
             return false;
         }else{
             YAML::Emitter out;

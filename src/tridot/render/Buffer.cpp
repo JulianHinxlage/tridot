@@ -2,7 +2,7 @@
 // Copyright (c) 2021 Julian Hinxlage. All rights reserved.
 //
 
-#include "tridot/core/Log.h"
+#include "tridot/core/Environment.h"
 #include "Buffer.h"
 #include <GL/glew.h>
 
@@ -20,7 +20,7 @@ namespace tridot {
     Buffer::~Buffer() {
         if(id != 0){
             glDeleteBuffers(1, &id);
-            Log::trace("deleted buffer ", id);
+            env->console->trace("deleted buffer ", id);
             id = 0;
         }
     }
@@ -63,7 +63,7 @@ namespace tridot {
         this->type = type;
         if(id == 0){
             glGenBuffers(1, &id);
-            Log::trace("created buffer ", id);
+            env->console->trace("created buffer ", id);
         }
         bind();
         glBufferData(internalEnum(type), size, data, dynamic ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW);

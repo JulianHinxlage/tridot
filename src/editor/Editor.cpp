@@ -66,7 +66,7 @@ namespace tridot {
         runtime = true;
         env->events->sceneBegin.invoke();
         undo.enabled = false;
-        Log::debug("runtime enabled");
+        env->console->debug("runtime enabled");
     }
 
     void Editor::disableRuntime(bool restoreScene) {
@@ -102,7 +102,7 @@ namespace tridot {
         env->events->update.setActiveCallback("skybox", true);
         runtime = false;
         undo.enabled = true;
-        Log::debug("runtime disabled");
+        env->console->debug("runtime disabled");
     }
 
     void Editor::init() {
@@ -261,7 +261,7 @@ namespace tridot {
                         Editor::cameraId = -1;
                         Editor::selection.unselect();
                     }else{
-                        Log::warning("file ", file, " not found");
+                        env->console->warning("file ", file, " not found");
                     }
                     ImGui::CloseCurrentPopup();
                 }

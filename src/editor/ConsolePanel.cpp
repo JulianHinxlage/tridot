@@ -8,28 +8,36 @@
 
 namespace tridot {
 
-    std::stringstream consoleLog;
-
     void ConsolePanel::init(){
-        Log::Options options;
-        options.logLevel = Log::DEBUG;
-        options.dateEnabled = false;
-        options.timeEnabled = true;
-        options.colorEnabled = false;
-        Log::addTarget(consoleLog, "console", options);
+        logLevelFilter = DEBUG;
+        env->console->addLogCallback(Console::Options(TRACE, false, true, false), [this](LogLevel level, const std::string &message){
+            messages.push_back({level, message + "\n"});
+        });
     }
 
     void ConsolePanel::update() {
-        EditorGui::window("Console", [](){
-            std::string str = consoleLog.str();
-            std::string line;
-            for (char c : str) {
-                if (c == '\n') {
-                    ImGui::Text("%s", line.c_str());
-                    line.clear();
+        EditorGui::window("Console", [this](){
+            if(ImGui::BeginCombo("level", env->console->getLogLevelName(logLevelFilter))) {
+                for(int i = TRACE; i <= FATAL; i++){
+                    if(ImGui::Selectable(env->console->getLogLevelName((LogLevel)i), logLevelFilter == (LogLevel)i)){
+                        logLevelFilter = (LogLevel)i;
+                    }
                 }
-                else {
-                    line.push_back(c);
+                ImGui::EndCombo();
+            }
+            ImGui::Separator();
+            ImGui::BeginChild("console child");
+            std::string line;
+            for(auto &message : messages) {
+                if(message.level >= logLevelFilter) {
+                    for (char c : message.message) {
+                        if (c == '\n') {
+                            ImGui::Text("%s", line.c_str());
+                            line.clear();
+                        } else {
+                            line.push_back(c);
+                        }
+                    }
                 }
             }
             if (line.size() > 0) {
@@ -39,6 +47,7 @@ namespace tridot {
             if (ImGui::GetScrollY() >= ImGui::GetScrollMaxY()) {
                 ImGui::SetScrollHereY(1.0f);
             }
+            ImGui::EndChild();
         });
     }
 

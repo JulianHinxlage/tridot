@@ -7,6 +7,7 @@
 #include "tridot/core/config.h"
 #include <glm/glm.hpp>
 #include <map>
+#include <vector>
 
 namespace tridot {
 

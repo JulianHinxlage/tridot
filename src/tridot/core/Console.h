@@ -9,6 +9,7 @@
 #include <unordered_map>
 #include <memory>
 #include <fstream>
+#include <sstream>
 
 namespace tridot {
 
@@ -37,17 +38,43 @@ namespace tridot {
         };
         Options options;
 
-        void log(LogLevel level, const std::string &format, ...);
-        void log(LogLevel level, const std::string &format, va_list args);
-        void trace(const std::string &format, ...);
-        void debug(const std::string &format, ...);
-        void info(const std::string &format, ...);
-        void warning(const std::string &format, ...);
-        void error(const std::string &format, ...);
-        void fatal(const std::string &format, ...);
+        void log(LogLevel level, const std::string &message);
+
+        template<typename... T>
+        void log(LogLevel level, const T ... t){
+            std::stringstream stream;
+            ((stream << t), ...);
+            log(level, stream.str());
+        }
+
+        template<typename... T>
+        void trace(const T ... t){
+            log(TRACE, t...);
+        }
+        template<typename... T>
+        void debug(const T ... t){
+            log(DEBUG, t...);
+        }
+        template<typename... T>
+        void info(const T ... t){
+            log(INFO, t...);
+        }
+        template<typename... T>
+        void warning(const T ... t){
+            log(WARNING, t...);
+        }
+        template<typename... T>
+        void error(const T ... t){
+            log(ERROR, t...);
+        }
+        template<typename... T>
+        void fatal(const T ... t){
+            log(FATAL, t...);
+        }
 
         void addLogFile(const std::string &file, Options options, bool append = false);
         void addLogCallback(Options options, const std::function<void(LogLevel, const std::string &)> &callback);
+        const char *getLogLevelName(LogLevel level);
 
         void addCommand(const std::string &command, const std::function<void(const std::vector<std::string> &)> &callback);
         void addCommand(const std::string &command, const std::function<void()> &callback);

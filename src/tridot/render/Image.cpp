@@ -3,7 +3,7 @@
 //
 
 #include "Image.h"
-#include "tridot/core/Log.h"
+#include "tridot/core/Environment.h"
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb/stb_image.h>
 #include <algorithm>
@@ -26,7 +26,7 @@ namespace tridot {
         this->channels = channels;
         this->bitsPerChannel = bitsPerChannel;
         if(bitsPerChannel != 8){
-            Log::error("only 8 bits per channel are supported");
+            env->console->error("only 8 bits per channel are supported");
         }
         this->data.resize(width * height * channels, 255);
         if(data != nullptr){
@@ -85,7 +85,7 @@ namespace tridot {
         stbi_uc *uc = stbi_load(file.c_str(), &x, &y, &c, 0);
 
         if(uc == nullptr){
-            Log::warning("image: no file ", file, " found");
+            env->console->warning("image: no file ", file, " found");
             return false;
         }
 
@@ -99,7 +99,7 @@ namespace tridot {
             data[i] = uc[i];
         }
         stbi_image_free(uc);
-        Log::debug("loaded image ", file);
+        env->console->debug("loaded image ", file);
         return true;
     }
 

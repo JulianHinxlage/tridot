@@ -3,7 +3,7 @@
 //
 
 #include "RenderContext.h"
-#include "tridot/core/Log.h"
+#include "tridot/core/Environment.h"
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
@@ -16,7 +16,7 @@ namespace tridot {
         static bool glfwInited = false;
         if(!glfwInited){
             if(glfwInit() != GLFW_TRUE) {
-                Log::error("failed to initialize GLFW");
+                env->console->error("failed to initialize GLFW");
                 return nullptr;
             }
             glfwInited = true;
@@ -25,7 +25,7 @@ namespace tridot {
         //create context
         GLFWwindow *context = glfwCreateWindow(1, 1, "", nullptr, (GLFWwindow*)RenderContext::context);
         if(!context){
-            Log::error("failed to create GLFW context");
+            env->console->error("failed to create GLFW context");
             return nullptr;
         }
         set(context);
@@ -34,7 +34,7 @@ namespace tridot {
         static bool glewInited = false;
         if(!glewInited){
             if(glewInit() != GLEW_OK) {
-                Log::error("failed to initialize GLEW");
+                env->console->error("failed to initialize GLEW");
                 return nullptr;
             }
             glewInited = true;

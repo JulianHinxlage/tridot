@@ -3,7 +3,7 @@
 //
 
 #include "Mesh.h"
-#include "tridot/core/Log.h"
+#include "tridot/core/Environment.h"
 #include <fstream>
 #include <map>
 #include <algorithm>
@@ -239,10 +239,10 @@ namespace tridot {
                 indexData.push_back(index);
             }
 
-            Log::debug("loaded mesh ", file);
+            env->console->debug("loaded mesh ", file);
             return true;
         }else{
-            Log::warning("mesh: file ", file, " not found");
+            env->console->warning("mesh: file ", file, " not found");
         }
         return false;
     }

@@ -3,7 +3,7 @@
 //
 
 #include "Shader.h"
-#include "tridot/core/Log.h"
+#include "tridot/core/Environment.h"
 #include "GL/glew.h"
 #include <fstream>
 
@@ -16,7 +16,7 @@ namespace tridot {
     Shader::~Shader() {
         if(id != 0){
             glDeleteProgram(id);
-            Log::trace("deleted shader ", id, " ", file);
+            env->console->trace("deleted shader ", id, " ", file);
             id = 0;
         }
     }
@@ -51,7 +51,7 @@ namespace tridot {
     bool Shader::preLoad(const std::string &file) {
         std::ifstream stream(file);
         if(!stream.is_open()){
-            Log::warning("shader: file ", file, " not found");
+            env->console->warning("shader: file ", file, " not found");
             return false;
         }
         this->file = file;
@@ -93,13 +93,13 @@ namespace tridot {
                 std::string log(logLength, '\0');
                 glGetShaderInfoLog(shaderId, logLength, &logLength, log.data());
                 if((GLenum)source.first == GL_VERTEX_SHADER){
-                    Log::warning("vertex shader compilation:\n", log);
+                    env->console->warning("vertex shader compilation:\n", log);
                 }else if((GLenum)source.first == GL_FRAGMENT_SHADER){
-                    Log::warning("fragment shader compilation:\n", log);
+                    env->console->warning("fragment shader compilation:\n", log);
                 }else if((GLenum)source.first == GL_GEOMETRY_SHADER){
-                    Log::warning("geometry shader compilation:\n", log);
+                    env->console->warning("geometry shader compilation:\n", log);
                 }else if((GLenum)source.first == GL_COMPUTE_SHADER){
-                    Log::warning("compute shader compilation:\n", log);
+                    env->console->warning("compute shader compilation:\n", log);
                 }
                 glDeleteShader(shaderId);
             }else{
@@ -128,7 +128,7 @@ namespace tridot {
             glGetProgramiv(programId, GL_INFO_LOG_LENGTH, &logLength);
             std::string log(logLength, '\0');
             glGetProgramInfoLog(programId, logLength, &logLength, log.data());
-            Log::warning("shader linking:\n", log);
+            env->console->warning("shader linking:\n", log);
 
             for(auto &shaderId : shaderIds){
                 glDetachShader(programId, shaderId);
@@ -144,8 +144,8 @@ namespace tridot {
             glDeleteShader(shaderId);
         }
         id = programId;
-        Log::trace("created shader ", id);
-        Log::debug("loaded shader ", file);
+        env->console->trace("created shader ", id);
+        env->console->debug("loaded shader ", file);
         locations.clear();
         bufferLocations.clear();
         return true;
@@ -238,7 +238,7 @@ namespace tridot {
         }else{
             uint32_t location = glGetUniformLocation(id, name.c_str());
             if(location == -1 && warn){
-                Log::warning("uniform ", name, " not found");
+                env->console->warning("uniform ", name, " not found");
             }
             locations[name] = location;
             return location;
@@ -252,7 +252,7 @@ namespace tridot {
         }else{
             uint32_t location = glGetUniformBlockIndex(id, name.c_str());
             if(location == -1){
-                Log::warning("uniform buffer ", name, " not found");
+                env->console->warning("uniform buffer ", name, " not found");
             }
             bufferLocations[name] = location;
             return location;

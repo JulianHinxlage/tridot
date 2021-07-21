@@ -3,7 +3,7 @@
 //
 
 #include "Texture.h"
-#include "tridot/core/Log.h"
+#include "tridot/core/Environment.h"
 #include <GL/glew.h>
 #include <algorithm>
 
@@ -28,7 +28,7 @@ namespace tridot {
     Texture::~Texture() {
         if(id != 0){
             glDeleteTextures(1, &id);
-            Log::trace("deleted texture ", id);
+            env->console->trace("deleted texture ", id);
             id = 0;
         }
     }
@@ -91,7 +91,7 @@ namespace tridot {
         }
         if(id == 0){
             glGenTextures(1, &id);
-            Log::trace("created texture ", id);
+            env->console->trace("created texture ", id);
         }
 
         this->width = width;
@@ -128,7 +128,7 @@ namespace tridot {
         }
 
         if(image.getBitsPerChannel() != 8){
-            Log::error("only 8 bits per channel are supported");
+            env->console->error("only 8 bits per channel are supported");
         }
 
         create(image.getWidth(), image.getHeight(), format);
@@ -243,7 +243,7 @@ namespace tridot {
             }
             if(id == 0){
                 glGenTextures(1, &id);
-                Log::trace("created texture ", id);
+                env->console->trace("created texture ", id);
             }
 
             type = TEXTURE_CUBE_MAP;

@@ -5,7 +5,6 @@
 #pragma once
 
 #include "tridot/util/Ref.h"
-#include "tridot/core/Log.h"
 #include "tridot/util/StrUtil.h"
 #include "Profiler.h"
 #include <map>
@@ -203,7 +202,7 @@ namespace tridot {
                         remove(name);
                         return setup<T>(name);
                     }else{
-                        Log::warning("resource ", name, " requested with different type");
+                        env->console->warning("resource ", name, " requested with different type");
                         static ResourceOptions<T> options;
                         return options;
                     }
@@ -236,7 +235,7 @@ namespace tridot {
                     remove(name);
                     return get<T>(name);
                 }else{
-                    Log::warning("resource ", name, " requested with different type");
+                    env->console->warning("resource ", name, " requested with different type");
                     return nullptr;
                 }
             }
@@ -414,7 +413,7 @@ namespace tridot {
                             status = LOADED;
                         }
                     }else{
-                        Log::warning("no create function for resource ", options.name);
+                        env->console->warning("no create function for resource ", options.name);
                     }
                 }
             }
@@ -427,7 +426,7 @@ namespace tridot {
                                 status = PRE_LOADED;
                             }else{
                                 status = FAILED_TO_LOAD;
-                                Log::warning("failed to load resource ", options.name);
+                                env->console->warning("failed to load resource ", options.name);
                             }
                         }else {
                             TRI_PROFILE("resources/preLoad")
@@ -448,10 +447,10 @@ namespace tridot {
                                 filePath = "";
                                 if(found){
                                     status = FAILED_TO_LOAD;
-                                    Log::warning("failed to load resource ", options.name);
+                                    env->console->warning("failed to load resource ", options.name);
                                 }else{
                                     status = FILE_NOT_FOUND;
-                                    Log::warning("file not found for resource ", options.name);
+                                    env->console->warning("file not found for resource ", options.name);
                                 }
                             }
                         }
@@ -481,7 +480,7 @@ namespace tridot {
                             status = LOADED;
                         }else{
                             status = FAILED_TO_LOAD;
-                            Log::warning("failed to load resource ", options.name);
+                            env->console->warning("failed to load resource ", options.name);
                         }
                     }else{
                         status = LOADED;
@@ -495,7 +494,7 @@ namespace tridot {
 
             virtual void release(){
                 if(resource != nullptr){
-                    Log::debug("released resource ", options.name);
+                    env->console->debug("released resource ", options.name);
                 }
                 resource = nullptr;
                 status = UNCREATED;

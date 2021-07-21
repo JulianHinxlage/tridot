@@ -12,24 +12,10 @@
 
 namespace tridot {
 
-    static const char *getLogLevelName(LogLevel level){
-        switch (level) {
-            case NONE:
-                return "NONE";
-            case TRACE:
-                return "TRACE";
-            case DEBUG:
-                return "DEBUG";
-            case INFO:
-                return "INFO";
-            case WARNING:
-                return "WARNING";
-            case ERROR:
-                return "ERROR";
-            case FATAL:
-                return "FATAL";
-            default:
-                return "NONE";
+
+    namespace impl{
+        void assertLog(const std::string &message){
+            env->console->fatal(message);
         }
     }
 
@@ -75,7 +61,32 @@ namespace tridot {
         }
     }
 
-    static void logToStream(std::ostream &stream, Console::Options &options, bool newLine, LogLevel level, const std::string &format, va_list args) {
+    const char *getLogLevelName(LogLevel level){
+        switch (level) {
+            case NONE:
+                return "NONE";
+            case TRACE:
+                return "TRACE";
+            case DEBUG:
+                return "DEBUG";
+            case INFO:
+                return "INFO";
+            case WARNING:
+                return "WARNING";
+            case ERROR:
+                return "ERROR";
+            case FATAL:
+                return "FATAL";
+            default:
+                return "NONE";
+        }
+    }
+
+    const char *Console::getLogLevelName(LogLevel level) {
+        return tridot::getLogLevelName(level);
+    }
+
+    static void logToStream(std::ostream &stream, Console::Options &options, bool newLine, LogLevel level, const std::string &message) {
         if(level >= options.level && level > NONE && level < OFF){
             char date[32] = "";
             char time[32] = "";
@@ -108,13 +119,10 @@ namespace tridot {
             }else{
                 stream << date << time << "[" << getLogLevelName(level) << "]" << getLogLevelSpacing(level);
             }
-            char buffer[1024 * 32];
-            int size = vsprintf(buffer, format.c_str(), args);
-            for(int i = 0; i < size; i++){
-                char c = buffer[i];
+            for(char c : message){
                 stream << c;
                 if(c == '\n'){
-                    for(int j = 0; j < newLineIndent; j++){
+                    for(int i = 0; i < newLineIndent; i++){
                         stream << ' ';
                     }
                 }
@@ -126,26 +134,23 @@ namespace tridot {
         }
     }
 
-    void Console::log(LogLevel level, const std::string &format, va_list args) {
-        va_list localArgs;
-        va_copy(localArgs, args);
-        logToStream(std::cout, options, true, level, format, localArgs);
+    void Console::log(LogLevel level, const std::string &message) {
+        logToStream(std::cout, options, true, level, message);
         for(auto &logFile : logFiles) {
             if (logFile.stream.is_open()) {
-                va_copy(localArgs, args);
-                logToStream(logFile.stream, logFile.options, true, level, format, localArgs);
+                logToStream(logFile.stream, logFile.options, true, level, message);
             }
         }
         for(auto &logCallback : logCallbacks) {
             if(logCallback.callback){
-                va_copy(localArgs, args);
                 std::ostringstream stream;
-                logToStream(stream, logCallback.options, false, level, format, localArgs);
+                logToStream(stream, logCallback.options, false, level, message);
                 logCallback.callback(level, stream.str());
             }
         }
     }
 
+    /*
     void Console::log(LogLevel level, const std::string &format, ...) {
         va_list args;
         va_start(args, format);
@@ -187,6 +192,7 @@ namespace tridot {
         va_start(args, format);
         log(FATAL, format, args);
     }
+     */
 
     void Console::addLogFile(const std::string &file, Console::Options options, bool append) {
         logFiles.emplace_back();

@@ -5,7 +5,6 @@
 #include "Plugin.h"
 #include "tridot/core/Environment.h"
 #include "tridot/engine/ResourceManager.h"
-#include "tridot/core/Log.h"
 #if WIN32
     #include <windows.h>
 #else
@@ -36,26 +35,26 @@ namespace tridot {
         unload();
         handle = (void*)LoadLibrary(file.c_str());
         if (handle) {
-            Log::debug("loaded plugin ", this->file);
+            env->console->debug("loaded plugin ", this->file);
             typedef void (*Function)();
             init = (Function)GetProcAddress((HINSTANCE)handle, "init");
             update = (Function)GetProcAddress((HINSTANCE)handle, "update");
             shutdown = (Function)GetProcAddress((HINSTANCE)handle, "shutdown");
             if (!update) {
-                Log::warning("no update function found in plugin ", file);
+                env->console->warning("no update function found in plugin ", file);
             }
             if (init) {
                 init();
             }
         } else {
-            Log::warning("failed to load plugin ", file, " code ", GetLastError());
+            env->console->warning("failed to load plugin ", file, " code ", GetLastError());
         }
         return handle != nullptr;
 #else
         unload();
         handle = dlopen(this->file.c_str(), RTLD_NOW | RTLD_LOCAL);
         if (handle) {
-            Log::debug("loaded plugin ", this->file);
+            env->console->debug("loaded plugin ", this->file);
             typedef void (*Function)();
             init = (Function)dlsym(handle, "init");
             update = (Function)dlsym(handle, "update");
@@ -65,7 +64,7 @@ namespace tridot {
             }
         }
         else {
-            Log::warning("failed to load plugin ", dlerror());
+            env->console->warning("failed to load plugin ", dlerror());
         }
         return handle != nullptr;
 #endif
@@ -85,7 +84,7 @@ namespace tridot {
             update = nullptr;
             shutdown = nullptr;
             handle = nullptr;
-            Log::debug("unloaded plugin ", this->file);
+            env->console->debug("unloaded plugin ", this->file);
         }
     }
 

@@ -22,9 +22,8 @@ int main(int argc, char *argv[]){
     env->console->addLogFile("log.txt", Console::Options(TRACE, true, true, false));
     env->console->addLogFile("error.txt", Console::Options(ERROR, true, true, false));
 
-    Log::options.logLevel = Log::DEBUG;
 #if WIN32
-    Log::options.colorEnabled = false;
+    env->console->opzopns.color = false;
 #endif
 
     env->events->init.invoke();

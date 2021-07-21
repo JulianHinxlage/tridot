@@ -11,7 +11,7 @@ namespace tridot {
         Serializer serializer;
         bool valid = serializer.load(file, *this, *env->resources);
         if(valid){
-            Log::debug("loaded scene ", file);
+            env->console->debug("loaded scene ", file);
         }
         return valid;
     }

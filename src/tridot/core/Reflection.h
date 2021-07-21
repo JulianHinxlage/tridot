@@ -10,8 +10,8 @@
 namespace tridot {
 
     namespace impl{
-        template<class T, class U, class> struct has_equal_impl                                                                 : std::false_type {};
-        template<class T, class U>        struct has_equal_impl<T, U, decltype(std::declval<T>() == std::declval<U>(), void())> : std::true_type {};
+        template<class T, class U, class> struct has_equal_impl : std::false_type {};
+        template<class T, class U> struct has_equal_impl<T, U, decltype((bool)(std::declval<T>() == std::declval<U>()), void())> : std::true_type {};
         template<class T, class U> struct has_equal : has_equal_impl<T, U, void> {};
     }
 
