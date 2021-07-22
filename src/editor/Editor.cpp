@@ -11,21 +11,9 @@
 
 namespace tridot {
 
-    SelectionContext Editor::selection;
-    Viewport Editor::viewport;
-    EntitiesPanel Editor::entities;
-    PropertiesPanel Editor::properties;
-    ResourcePanel Editor::resource;
-    ConsolePanel Editor::console;
-    ResourceBrowser Editor::resourceBrowser;
-    ProfilerPanel Editor::profiler;
-    Undo Editor::undo;
-
-    EntityId Editor::cameraId = -1;
-    std::map<std::string, bool> Editor::flags;
-    uint64_t Editor::propertiesWindowFlags = 0;
-    bool Editor::runtime = false;
-    Scene Editor::runtimeSceneBuffer;
+    TRI_INIT_CALLBACK("editor"){
+        env->editor = env->systems->addSystem<Editor>();
+    }
 
     bool &Editor::getFlag(const std::string &name){
         auto open = flags.find(name);
@@ -74,14 +62,14 @@ namespace tridot {
         if(restoreScene){
             PerspectiveCamera cameraBuffer;
             Transform cameraTransformBuffer;
-            if(env->scene->hasAll<PerspectiveCamera, Transform>(Editor::cameraId)){
-                cameraBuffer = env->scene->get<PerspectiveCamera>(Editor::cameraId);
-                cameraTransformBuffer = env->scene->get<Transform>(Editor::cameraId);
+            if(env->scene->hasAll<PerspectiveCamera, Transform>(env->editor->cameraId)){
+                cameraBuffer = env->scene->get<PerspectiveCamera>(env->editor->cameraId);
+                cameraTransformBuffer = env->scene->get<Transform>(env->editor->cameraId);
             }
             env->scene->copy(runtimeSceneBuffer);
-            if(env->scene->hasAll<PerspectiveCamera, Transform>(Editor::cameraId)){
-                env->scene->get<PerspectiveCamera>(Editor::cameraId) = cameraBuffer;
-                env->scene->get<Transform>(Editor::cameraId) = cameraTransformBuffer;
+            if(env->scene->hasAll<PerspectiveCamera, Transform>(env->editor->cameraId)){
+                env->scene->get<PerspectiveCamera>(env->editor->cameraId) = cameraBuffer;
+                env->scene->get<Transform>(env->editor->cameraId) = cameraTransformBuffer;
             }
         }
         runtimeSceneBuffer.clear();
@@ -139,10 +127,10 @@ namespace tridot {
         profiler.init();
 
         env->events->update.addCallback("editor", [](){
-            Editor::update();
+            env->editor->update();
         });
         env->events->update.callbackOrder({"post processing", "editor", "panels"});
-        Editor::disableRuntime(false);
+        env->editor->disableRuntime(false);
     }
 
     void Editor::update() {
@@ -226,7 +214,7 @@ namespace tridot {
 
 
             if (ImGui::BeginMenu("View")) {
-                for (auto &panel : Editor::flags) {
+                for (auto &panel : env->editor->flags) {
                     if (ImGui::MenuItem(panel.first.c_str(), nullptr, panel.second)) {
                         panel.second = !panel.second;
                     }
@@ -252,14 +240,14 @@ namespace tridot {
                     if(runtime){
                         disableRuntime();
                     }
-                    Editor::undo.clearActions();
+                    env->editor->undo.clearActions();
 
                     std::string file(buffer);
                     if(env->resources->searchFile(file) != ""){
                         file = env->resources->searchFile(file);
                         env->resources->get<Scene>(file);
-                        Editor::cameraId = -1;
-                        Editor::selection.unselect();
+                        env->editor->cameraId = -1;
+                        env->editor->selection.unselect();
                     }else{
                         env->console->warning("file ", file, " not found");
                     }

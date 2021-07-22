@@ -13,12 +13,12 @@ namespace tridot {
 
 	void PropertiesPanel::update(){
         EditorGui::window("Properties", [this](){
-            EntityId id = Editor::selection.getSingleSelection();
+            EntityId id = env->editor->selection.getSingleSelection();
             if (id != -1 && env->scene->exists(id)) {
                 //single entity
                 updateProperties(id);
             }
-            else if (Editor::selection.entities.size() > 1) {
+            else if (env->editor->selection.entities.size() > 1) {
                 //multiple entities
                 updateMultiProperties();
             }
@@ -46,7 +46,7 @@ namespace tridot {
         }
         ImGui::SameLine();
         if (ImGui::Button("remove Entity")) {
-            Editor::selection.destroyAll();
+            env->editor->selection.destroyAll();
         }
         if (ImGui::BeginPopup("add")) {
             for (auto& type : types) {
@@ -55,13 +55,13 @@ namespace tridot {
                     if (pool && !pool->has(id)) {
                         if (ImGui::Button(type->name().c_str())) {
                             pool->add(id, nullptr);
-                            Editor::undo.beginAction();
-                            Editor::undo.addCustomAction([id, rid = type->id()](){
+                            env->editor->undo.beginAction();
+                            env->editor->undo.addCustomAction([id, rid = type->id()](){
                                 env->scene->remove(id, rid);
                             }, [id, rid = type->id()](){
                                 env->scene->addByTypeId(id, rid);
                             });
-                            Editor::undo.endAction();
+                            env->editor->undo.endAction();
                             ImGui::CloseCurrentPopup();
                         }
                     }
@@ -71,8 +71,8 @@ namespace tridot {
         }
 
         ImGui::Separator();
-        ImGui::BeginChild("properties", ImVec2(0, 0), false, Editor::propertiesWindowFlags);
-        Editor::propertiesWindowFlags = 0;
+        ImGui::BeginChild("properties", ImVec2(0, 0), false, env->editor->propertiesWindowFlags);
+        env->editor->propertiesWindowFlags = 0;
 
         static Reflection::TypeDescriptor *lastChange;
 
@@ -89,24 +89,24 @@ namespace tridot {
 
                         std::vector<std::pair<int, Reflection::TypeDescriptor*>> differences;
                         if(getDifferences(type, comp, compBuffer,differences)){
-                            Editor::undo.changeComponent(id, type, compBuffer);
-                            Editor::undo.changeComponent(id, type, comp);
+                            env->editor->undo.changeComponent(id, type, compBuffer);
+                            env->editor->undo.changeComponent(id, type, comp);
                             lastChange = type;
                         }else{
                             if(type == lastChange){
                                 lastChange = nullptr;
-                                Editor::undo.endAction();
+                                env->editor->undo.endAction();
                             }
                         }
                         delete[] compBuffer;
                     }
                     if (!open) {
-                        Editor::undo.beginAction();
-                        Editor::undo.changeComponent(id, type, comp);
-                        Editor::undo.addCustomAction(nullptr, [id, rid = type->id()](){
+                        env->editor->undo.beginAction();
+                        env->editor->undo.changeComponent(id, type, comp);
+                        env->editor->undo.addCustomAction(nullptr, [id, rid = type->id()](){
                             env->scene->remove(id, rid);
                         });
-                        Editor::undo.endAction();
+                        env->editor->undo.endAction();
                         env->scene->remove(id, type->id());
                     }
                 }
@@ -123,13 +123,13 @@ namespace tridot {
         }
         ImGui::SameLine();
         if (ImGui::Button("remove Entity")) {
-            Editor::selection.destroyAll();
+            env->editor->selection.destroyAll();
         }
         if (ImGui::BeginPopup("add")) {
             for (auto& type : types) {
                 if (type) {
                     bool show = false;
-                    for (auto& sel : Editor::selection.entities) {
+                    for (auto& sel : env->editor->selection.entities) {
                         EntityId id = sel.first;
                         auto* pool = env->scene->getPool(type->id());
                         if (pool && !pool->has(id)) {
@@ -140,7 +140,7 @@ namespace tridot {
                     if (show) {
                         if (ImGui::Button(type->name().c_str())) {
 
-                            for (auto& sel : Editor::selection.entities) {
+                            for (auto& sel : env->editor->selection.entities) {
                                 EntityId id = sel.first;
                                 auto* pool = env->scene->getPool(type->id());
                                 if (pool && !pool->has(id)) {
@@ -157,8 +157,8 @@ namespace tridot {
         }
 
         ImGui::Separator();
-        ImGui::BeginChild("properties", ImVec2(0, 0), false, Editor::propertiesWindowFlags);
-        Editor::propertiesWindowFlags = 0;
+        ImGui::BeginChild("properties", ImVec2(0, 0), false, env->editor->propertiesWindowFlags);
+        env->editor->propertiesWindowFlags = 0;
 
         for (auto& type : types) {
             if (type) {
@@ -170,7 +170,7 @@ namespace tridot {
                 std::vector<std::pair<int, Reflection::TypeDescriptor*>> differences;
                 uint8_t* compBuffer = new uint8_t[type->size()];
 
-                for (auto& sel : Editor::selection.entities) {
+                for (auto& sel : env->editor->selection.entities) {
                     EntityId id = sel.first;
 
                     if (env->scene->has(id, type->id())) {
@@ -186,18 +186,18 @@ namespace tridot {
                                 remove = true;
                             }
                             if (getDifferences(type, comp, compBuffer, differences)) {
-                                Editor::undo.changeComponent(id, type, compBuffer);
+                                env->editor->undo.changeComponent(id, type, compBuffer);
                                 change = true;
                                 type->copy(comp, compBuffer);
-                                Editor::undo.changeComponent(id, type, comp);
+                                env->editor->undo.changeComponent(id, type, comp);
                             }
                         }
 
                         if (change && !first) {
                             for (auto difference : differences) {
-                                Editor::undo.changeComponent(id, type, comp);
+                                env->editor->undo.changeComponent(id, type, comp);
                                 difference.second->copy((uint8_t*)compBuffer + difference.first, (uint8_t*)comp + difference.first);
-                                Editor::undo.changeComponent(id, type, comp);
+                                env->editor->undo.changeComponent(id, type, comp);
                             }
                         }
                         if (remove) {
@@ -209,7 +209,7 @@ namespace tridot {
                 }
 
                 if(!change && lastChange == type){
-                    Editor::undo.endAction();
+                    env->editor->undo.endAction();
                     lastChange = nullptr;
                 }
                 if(change){

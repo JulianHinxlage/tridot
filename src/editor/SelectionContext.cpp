@@ -38,13 +38,13 @@ namespace tridot {
     }
 
     void SelectionContext::destroyAll() {
-        Editor::undo.beginAction();
+        env->editor->undo.beginAction();
         for(auto &id : entities){
-            Editor::undo.destroyEntity(id.first);
+            env->editor->undo.destroyEntity(id.first);
             env->scene->destroy(id.first);
         }
         entities.clear();
-        Editor::undo.endAction();
+        env->editor->undo.endAction();
     }
 
     EntityId SelectionContext::duplicate(EntityId id, bool addAction) {
@@ -60,7 +60,7 @@ namespace tridot {
         }
 
         if (addAction) {
-            Editor::undo.duplicateEntity(id, newId);
+            env->editor->undo.duplicateEntity(id, newId);
         }
         return newId;
     }
@@ -70,21 +70,21 @@ namespace tridot {
         std::map<EntityId, bool> newTmp;
         unselect();
 
-        Editor::undo.beginAction();
+        env->editor->undo.beginAction();
         for(auto &sel : tmp){
             EntityId id = duplicate(sel.first);
             newTmp[id] = true;
             select(id, false);
         }
-        Editor::undo.endAction();
+        env->editor->undo.endAction();
         /*
-        Editor::undo.addAction([newTmp]() {
+        env->editor->undo.addAction([newTmp]() {
             for (auto& sel : newTmp) {
                 env->scene->destroy(sel.first);
             }
         }, [tmp]() {
             for (auto& sel : tmp) {
-                Editor::selection.select(Editor::selection.duplicate(sel.first, false), false);
+                env->editor->selection.select(env->editor->selection.duplicate(sel.first, false), false);
             }
         });
          */

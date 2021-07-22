@@ -96,7 +96,7 @@ namespace tridot {
             addCustomAction([newId]() {
                 env->scene->destroy(newId);
             }, [id]() {
-                Editor::selection.duplicate(id, false);
+                env->editor->selection.duplicate(id, false);
             });
             if (!inAction) {
                 endAction();

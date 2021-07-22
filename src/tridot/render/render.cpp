@@ -15,6 +15,36 @@ namespace tridot{
         env->events->init.callbackOrder({"engine", "render"});
     }
 
+    void clearFrameBuffers() {
+        env->scene->view<PerspectiveCamera>().each([](PerspectiveCamera &camera) {
+            if (camera.target.get() == nullptr) {
+                camera.target = Ref<FrameBuffer>::make();
+                camera.target->init(env->window->getSize().x, env->window->getSize().y,
+                                    {{COLOR, env->window->getBackgroundColor()},
+                                     {DEPTH}});
+            }
+            if (camera.target->getSize() != env->window->getSize()) {
+                camera.target->resize(env->window->getSize().x, env->window->getSize().y);
+            }
+            camera.aspectRatio = env->window->getAspectRatio();
+            camera.target->clear();
+        });
+    }
+    void drawFrameBuffers() {
+        bool drawn = false;
+        env->scene->view<PerspectiveCamera>().each([&](PerspectiveCamera &camera){
+            if(!drawn && camera.output.get() != nullptr){
+                auto shader = env->resources->get<Shader>("shaders/mesh.glsl");
+                shader->bind();
+                shader->set("uTriPlanarMapping", false);
+                env->renderer->begin(glm::mat4(1), {0, 0, 0}, nullptr);
+                env->renderer->submit({{0, 0, 0}, {2, 2, 2}}, camera.output->getAttachment(COLOR).get());
+                env->renderer->end();
+            }
+            drawn = true;
+        });
+    }
+
     TRI_INIT_CALLBACK("render"){
         env->window = env->systems->addSystem<Window>();
         env->renderer = env->systems->addSystem<MeshRenderer>();
@@ -43,40 +73,13 @@ namespace tridot{
         imguiInit();
 
         env->events->update.callbackOrder({"imgui end", "window", "imgui begin", "resources", "clear", "skybox", "rendering", "post processing", "transform", "physics"});
-        env->events->update.callbackOrder({"clear", "rendering", "post processing", "draw"});
-    }
+        env->events->update.callbackOrder({"clear", "rendering", "post processing", "draw", "window"});
 
-    /*
-    TRI_UPDATE_CALLBACK("clear") {
-        env->scene->view<PerspectiveCamera>().each([](PerspectiveCamera &camera) {
-            if (camera.target.get() == nullptr) {
-                camera.target = Ref<FrameBuffer>::make();
-                camera.target->init(env->window->getSize().x, env->window->getSize().y,
-                                    {{COLOR, env->window->getBackgroundColor()},
-                                     {DEPTH}});
-            }
-            if (camera.target->getSize() != env->window->getSize()) {
-                camera.target->resize(env->window->getSize().x, env->window->getSize().y);
-            }
-            camera.aspectRatio = env->window->getAspectRatio();
-            camera.target->clear();
-        });
+        if(!env->editor){
+            env->events->update.addCallback("clear", &clearFrameBuffers);
+            env->events->update.addCallback("draw", &drawFrameBuffers);
+        }
     }
-    TRI_UPDATE_CALLBACK("draw"){
-        bool drawn = false;
-        env->scene->view<PerspectiveCamera>().each([&](PerspectiveCamera &camera){
-            if(!drawn && camera.output.get() != nullptr){
-                auto shader = env->resources->get<Shader>("shaders/mesh.glsl");
-                shader->bind();
-                shader->set("uTriPlanarMapping", false);
-                env->renderer->begin(glm::mat4(1), {0, 0, 0}, nullptr);
-                env->renderer->submit({{0, 0, 0}, {2, 2, 2}}, camera.output->getAttachment(COLOR).get());
-                env->renderer->end();
-            }
-            drawn = true;
-        });
-    }
-     */
 
     TRI_UPDATE_CALLBACK("window"){
         env->window->update();

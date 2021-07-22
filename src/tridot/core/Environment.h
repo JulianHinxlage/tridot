@@ -18,6 +18,7 @@ namespace tridot {
     class Profiler;
     class ResourceManager;
     class Scene;
+    class Editor;
 
     class Window;
     class MeshRenderer;
@@ -38,6 +39,7 @@ namespace tridot {
         Profiler *profiler;
         ResourceManager *resources;
         Scene *scene;
+        Editor *editor;
 
         //rendering systems
         Window *window;
@@ -81,6 +83,18 @@ namespace tridot::impl{
         }
     };
 
+    template<typename T>
+    class SystemRegisterer{
+    public:
+        SystemRegisterer(){
+            Environment::init();
+            env->systems->addSystem<T>();
+        }
+        ~SystemRegisterer(){
+            env->systems->removeSystem<T>();
+        }
+    };
+
 }
 
 
@@ -99,7 +113,7 @@ namespace tridot::impl{
 #define TRI_SHUTDOWN_CALLBACK_IMPL(callbackName, name) void TRI_CONCAT(name, _func)(); tridot::impl::EventCallbackRegisterer TRI_CONCAT(name, _var)(tridot::Environment::init()->events->shutdown, callbackName, &TRI_CONCAT(name, _func)); void TRI_CONCAT(name, _func)()
 #define TRI_SHUTDOWN_CALLBACK(callbackName) TRI_SHUTDOWN_CALLBACK_IMPL(callbackName, TRI_UNIQUE_IDENTIFIER(_tri_register_callback))
 
-
+#define TRI_REGISTER_SYSTEM(type) tridot::impl::SystemRegisterer<type> TRI_UNIQUE_IDENTIFIER(_tri_register_component);
 #define TRI_REGISTER_TYPE_NAME(type, name) tridot::impl::TypeRegisterer<type> TRI_UNIQUE_IDENTIFIER(_tri_register_component)(#name);
 #define TRI_REGISTER_TYPE(type) TRI_REGISTER_TYPE_NAME(type, type)
 #define TRI_REGISTER_MEMBER(type, memberName) TRI_REGISTER_CALLBACK(){Environment::init(); env->reflection->addMember<type, decltype(type::memberName)>(#memberName, offsetof(type, memberName));}

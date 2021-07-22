@@ -86,7 +86,7 @@ namespace tridot {
 
     void EditorGui::window(const std::string &name, const std::function<void()> &func) {
         if (ImGui::GetCurrentContext() != nullptr) {
-            bool& open = Editor::getFlag(name);
+            bool& open = env->editor->getFlag(name);
             if (open) {
                 if (ImGui::Begin(name.c_str(), &open, ImGuiWindowFlags_HorizontalScrollbar)) {
                     ImGui::SetWindowSize(ImVec2(400, 400), ImGuiCond_FirstUseEver);
@@ -284,7 +284,7 @@ TRI_INIT_CALLBACK("panels"){
                            Transform &transform = env->scene->get<Transform>(id);
                            static EditorCamera editorCamera;
                            if(ImGui::IsItemHovered()) {
-                               Editor::propertiesWindowFlags |= ImGuiWindowFlags_NoScrollWithMouse;
+                               env->editor->propertiesWindowFlags |= ImGuiWindowFlags_NoScrollWithMouse;
                            }
                            editorCamera.update(v, transform, ImGui::IsItemHovered());
                        }

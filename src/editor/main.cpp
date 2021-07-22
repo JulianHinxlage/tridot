@@ -9,7 +9,6 @@
 #include "tridot/render/MeshFactory.h"
 #include "tridot/components/RenderComponent.h"
 #include "tridot/components/Tag.h"
-#include "tridot/engine/Plugin.h"
 #include "Editor.h"
 #include <imgui.h>
 
@@ -21,13 +20,14 @@ int main(int argc, char *argv[]){
     env->console->options.level = DEBUG;
     env->console->addLogFile("log.txt", Console::Options(TRACE, true, true, false));
     env->console->addLogFile("error.txt", Console::Options(ERROR, true, true, false));
-
 #if WIN32
-    env->console->opzopns.color = false;
+    env->console->options.color = false;
 #endif
 
     env->events->init.invoke();
-    Editor::init();
+    env->events->init.setActiveAll(false);
+    env->editor->init();
+    env->console->info("Tridot version ", TRI_VERSION);
 
     env->resources->defaultOptions<Scene>().setPostLoad([](Ref<Scene> &scene){
         bool valid = scene->postLoad();
@@ -53,13 +53,13 @@ int main(int argc, char *argv[]){
     env->events->update.addCallback([&](){
         if(ImGui::GetCurrentContext() != nullptr){
             {
-                bool &open = Editor::getFlag("ImGui Demo");
+                bool &open = env->editor->getFlag("ImGui Demo");
                 if (open) {
                     ImGui::ShowDemoWindow(&open);
                 }
             }
             {
-                bool &open = Editor::getFlag("Statistics");
+                bool &open = env->editor->getFlag("Statistics");
                 static std::vector<float> frameTimes;
                 frameTimes.push_back(env->time->frameTime);
                 while(frameTimes.size() > 305){
@@ -76,10 +76,10 @@ int main(int argc, char *argv[]){
                         if(ImGui::Checkbox("VSync", &vsync)){
                             env->window->setVSync(vsync);
                         }
-                        ImGui::Text("%i entities selected", (int)Editor::selection.entities.size());
+                        ImGui::Text("%i entities selected", (int)env->editor->selection.entities.size());
                         ImGui::Text("%i entities in scene", (int)env->scene->getEntityPool().getEntities().size());
-                        if(Editor::selection.entities.size() == 1){
-                            ImGui::Text("selected entity id: %i", (int)Editor::selection.entities.begin()->first);
+                        if(env->editor->selection.entities.size() == 1){
+                            ImGui::Text("selected entity id: %i", (int)env->editor->selection.entities.begin()->first);
                         }
                     }
                     ImGui::End();
@@ -88,20 +88,22 @@ int main(int argc, char *argv[]){
         }
     }, "panels");
 
-    Editor::loadFlags();
+    env->editor->loadFlags();
     while(env->window->isOpen()){
+        env->events->init.invoke();
+        env->events->init.setActiveAll(false);
         env->events->update.invoke();
         env->events->pollEvents();
     }
-    Editor::saveFlags();
+    env->editor->saveFlags();
     env->events->shutdown.invoke();
     return 0;
 }
 
 void createDefaultScene(Scene &scene){
-    Editor::cameraId = scene.create(Tag("Camera"));
-    PerspectiveCamera &camera = scene.add<PerspectiveCamera>(Editor::cameraId);
-    Transform &transform = scene.add<Transform>(Editor::cameraId);
+    env->editor->cameraId = scene.create(Tag("Camera"));
+    PerspectiveCamera &camera = scene.add<PerspectiveCamera>(env->editor->cameraId);
+    Transform &transform = scene.add<Transform>(env->editor->cameraId);
     transform.position = glm::vec3(3, 5, 2) * 0.5f;
     transform.rotation.x = glm::radians(60.0);
     transform.rotation.z = glm::radians(160.0);
