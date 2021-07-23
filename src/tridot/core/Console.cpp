@@ -150,50 +150,6 @@ namespace tridot {
         }
     }
 
-    /*
-    void Console::log(LogLevel level, const std::string &format, ...) {
-        va_list args;
-        va_start(args, format);
-        log(level, format, args);
-    }
-
-    void Console::trace(const std::string &format, ...) {
-        va_list args;
-        va_start(args, format);
-        log(TRACE, format, args);
-    }
-
-    void Console::debug(const std::string &format, ...) {
-        va_list args;
-        va_start(args, format);
-        log(DEBUG, format, args);
-    }
-
-    void Console::info(const std::string &format, ...) {
-        va_list args;
-        va_start(args, format);
-        log(INFO, format, args);
-    }
-
-    void Console::warning(const std::string &format, ...) {
-        va_list args;
-        va_start(args, format);
-        log(WARNING, format, args);
-    }
-
-    void Console::error(const std::string &format, ...) {
-        va_list args;
-        va_start(args, format);
-        log(ERROR, format, args);
-    }
-
-    void Console::fatal(const std::string &format, ...) {
-        va_list args;
-        va_start(args, format);
-        log(FATAL, format, args);
-    }
-     */
-
     void Console::addLogFile(const std::string &file, Console::Options options, bool append) {
         logFiles.emplace_back();
         auto &logFile = logFiles.back();
@@ -245,7 +201,7 @@ namespace tridot {
                                 value = stoi(parts[index]);
                             }
                         } catch (...) {}
-                        info("%s = %i", variable.first.c_str(), value);
+                        info(variable.first.c_str(), " = ", value);
                     }
 
                     if (type == typeid(float).hash_code()) {
@@ -255,7 +211,7 @@ namespace tridot {
                                 value = stod(parts[index]);
                             }
                         } catch (...) {}
-                        info("%s = %f", variable.first.c_str(), value);
+                        info(variable.first.c_str(), " = ", value);
                     }
 
                     if (type == typeid(double).hash_code()) {
@@ -265,7 +221,7 @@ namespace tridot {
                                 value = stod(parts[index]);
                             }
                         } catch (...) {}
-                        info("%s = %f", variable.first.c_str(), value);
+                        info(variable.first.c_str(), " = ", value);
                     }
 
                     if (type == typeid(std::string).hash_code()) {
@@ -275,7 +231,7 @@ namespace tridot {
                                 value = parts[index];
                             }
                         } catch (...) {}
-                        info("%s = %s", variable.first.c_str(), value.c_str());
+                        info(variable.first.c_str(), " = ", value.c_str());
                     }
 
                     return;
@@ -284,7 +240,7 @@ namespace tridot {
             for(auto &com : commands){
                 if(com.first == parts[0]){
                     if(com.second){
-                        info("executing command: %s", command.c_str());
+                        info("executing command: ", command.c_str());
                         com.second(parts);
                         return;
                     }
@@ -292,7 +248,7 @@ namespace tridot {
             }
         }
 
-        info("command not found: %s", parts[0].c_str());
+        info("command not found: ", parts[0].c_str());
     }
 
     std::thread consoleInputThread;

@@ -29,6 +29,11 @@ int main(int argc, char *argv[]){
     env->editor->init();
     env->console->info("Tridot version ", TRI_VERSION);
 
+    bool running = true;
+    env->events->exit.addCallback([&running](){
+        running = false;
+    });
+
     env->resources->defaultOptions<Scene>().setPostLoad([](Ref<Scene> &scene){
         bool valid = scene->postLoad();
         env->scene->swap(*scene);
@@ -53,7 +58,7 @@ int main(int argc, char *argv[]){
     env->events->update.addCallback([&](){
         if(ImGui::GetCurrentContext() != nullptr){
             {
-                bool imGuiDemoEnabled = false;
+                bool imGuiDemoEnabled = true;
                 if(imGuiDemoEnabled) {
                     bool &open = env->editor->getFlag("ImGui Demo");
                     if (open) {
@@ -92,7 +97,7 @@ int main(int argc, char *argv[]){
     }, "panels");
 
     env->editor->loadFlags();
-    while(env->window->isOpen()){
+    while(running){
         env->events->init.invoke();
         env->events->init.setActiveAll(false);
         env->events->update.invoke();

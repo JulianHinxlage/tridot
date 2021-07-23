@@ -20,6 +20,7 @@ namespace tridot {
 	    };
 	    LogLevel logLevelFilter;
 	    std::vector<Message> messages;
+	    std::string inputBuffer;
 	};
 
 }

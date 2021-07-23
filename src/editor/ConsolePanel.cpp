@@ -26,7 +26,7 @@ namespace tridot {
                 ImGui::EndCombo();
             }
             ImGui::Separator();
-            ImGui::BeginChild("console child");
+            ImGui::BeginChild("console child", ImVec2(0, -(ImGui::GetStyle().ItemSpacing.y + ImGui::GetFrameHeightWithSpacing())));
             std::string line;
             for(auto &message : messages) {
                 if(message.level >= logLevelFilter) {
@@ -48,6 +48,22 @@ namespace tridot {
                 ImGui::SetScrollHereY(1.0f);
             }
             ImGui::EndChild();
+            ImGui::Separator();
+
+
+
+            if(inputBuffer.size() == 0){
+                inputBuffer.resize(256);
+            }
+            ImGui::PushID("console input");
+            ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth());
+            if (ImGui::InputTextWithHint("", "command", inputBuffer.data(), inputBuffer.size(), ImGuiInputTextFlags_EnterReturnsTrue)){
+                env->console->executeCommand(inputBuffer.c_str());
+                inputBuffer = "";
+                ImGui::SetKeyboardFocusHere(-1);
+            }
+            ImGui::PopItemWidth();
+            ImGui::PopID();
         });
     }
 
