@@ -27,6 +27,9 @@ namespace tridot {
 
     void Editor::loadFlags(){
         std::ifstream s("flags.ini");
+        if(!s.is_open()) {
+            s.open(env->resources->searchFile("default/flags.ini"));
+        }
         if(s.is_open()){
             std::string line;
             while(std::getline(s, line, '\n')){
@@ -96,6 +99,13 @@ namespace tridot {
     void Editor::init() {
         if(ImGui::GetCurrentContext()) {
             ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+
+            if(!std::filesystem::exists("editor.ini")){
+                std::string path = env->resources->searchFile("default/editor.ini");
+                if(path != ""){
+                    std::filesystem::copy(path, "editor.ini");
+                }
+            }
             ImGui::GetIO().IniFilename = "editor.ini";
 
             ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(1, 1, 1, 0.3));

@@ -53,9 +53,12 @@ int main(int argc, char *argv[]){
     env->events->update.addCallback([&](){
         if(ImGui::GetCurrentContext() != nullptr){
             {
-                bool &open = env->editor->getFlag("ImGui Demo");
-                if (open) {
-                    ImGui::ShowDemoWindow(&open);
+                bool imGuiDemoEnabled = false;
+                if(imGuiDemoEnabled) {
+                    bool &open = env->editor->getFlag("ImGui Demo");
+                    if (open) {
+                        ImGui::ShowDemoWindow(&open);
+                    }
                 }
             }
             {

@@ -27,10 +27,6 @@ int main(int argc, char *argv[]) {
         running = false;
     });
 
-    for(auto &o : env->events->update.getObservers()){
-        env->console->info("update callback: ", o.name);
-    }
-
     //load scene
     env->resources->setup<Scene>("scenes/scene.yml").setInstance(env->scene).get();
 
