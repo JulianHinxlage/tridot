@@ -22,6 +22,7 @@ namespace tridot {
         profiler = nullptr;
         resources = nullptr;
         scene = nullptr;
+        audio = nullptr;
         editor = nullptr;
 
         //rendering system

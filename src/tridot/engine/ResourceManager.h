@@ -136,6 +136,7 @@ namespace tridot {
             synchronousMode = false;
             autoReload = true;
             threadCount = 1;
+            terminated = false;
         }
 
         ~ResourceManager() {

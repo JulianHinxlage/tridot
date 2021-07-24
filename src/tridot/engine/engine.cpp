@@ -15,6 +15,7 @@ namespace tridot{
         env->scene = env->systems->addSystem<Scene>();
         env->resources = env->systems->addSystem<ResourceManager>();
         env->systems->addSystem<Imgui>();
+        env->audio = env->systems->addSystem<AudioManager>();
 
         env->time->init();
         env->physics->init();
@@ -24,6 +25,7 @@ namespace tridot{
         env->resources->autoReload = true;
         env->resources->threadCount = 8;
         env->resources->update();
+        env->audio->init();
 
         env->events->sceneEnd.addCallback("physics", [](){
             env->scene->view<RigidBody>().each([](EntityId id, RigidBody &rb){
@@ -49,6 +51,10 @@ namespace tridot{
     TRI_UPDATE_CALLBACK("resources"){
         TRI_PROFILE("resources");
         env->resources->update();
+    }
+    TRI_UPDATE_CALLBACK("audio"){
+        TRI_PROFILE("audio");
+        env->audio->update();
     }
     TRI_UPDATE_CALLBACK("physics"){
         TRI_PROFILE("physics");

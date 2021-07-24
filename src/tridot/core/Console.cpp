@@ -90,7 +90,7 @@ namespace tridot {
             char date[32] = "";
             char time[32] = "";
 
-            int newLineIndent = 10;
+            int newLineIndent = 11;
 
             if(options.date || options.time) {
                 auto now = std::chrono::system_clock::now().time_since_epoch();
@@ -114,9 +114,9 @@ namespace tridot {
             }
 
             if(options.color){
-                stream << date << time << "[\033[" << getLogLevelAnsiColor(level) << "m" << getLogLevelName(level) << "\033[0m] " << getLogLevelSpacing(level);
+                stream << date << time << "[\033[" << getLogLevelAnsiColor(level) << "m" << getLogLevelName(level) << "\033[0m] " << getLogLevelSpacing(level) << " ";
             }else{
-                stream << date << time << "[" << getLogLevelName(level) << "]" << getLogLevelSpacing(level);
+                stream << date << time << "[" << getLogLevelName(level) << "]" << getLogLevelSpacing(level) << " ";
             }
             for(char c : message){
                 stream << c;

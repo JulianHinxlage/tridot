@@ -95,6 +95,7 @@ namespace tridot {
         env->events->update.setActiveCallback("profiler", true);
         env->events->update.setActiveCallback("post processing", true);
         env->events->update.setActiveCallback("skybox", true);
+        env->events->update.setActiveCallback("audio", true);
         runtime = false;
         undo.enabled = true;
         env->console->debug("runtime disabled");

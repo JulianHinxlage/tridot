@@ -18,6 +18,7 @@ namespace tridot {
     class Profiler;
     class ResourceManager;
     class Scene;
+    class AudioManager;
     class Editor;
 
     class Window;
@@ -39,6 +40,7 @@ namespace tridot {
         Profiler *profiler;
         ResourceManager *resources;
         Scene *scene;
+        AudioManager *audio;
         Editor *editor;
 
         //rendering systems

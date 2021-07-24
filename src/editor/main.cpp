@@ -18,6 +18,7 @@ void createDefaultScene(Scene &scene);
 
 int main(int argc, char *argv[]){
     env->console->options.level = DEBUG;
+    env->console->options.date = false;
     env->console->addLogFile("log.txt", Console::Options(TRACE, true, true, false));
     env->console->addLogFile("error.txt", Console::Options(ERROR, true, true, false));
 #if WIN32
@@ -27,11 +28,7 @@ int main(int argc, char *argv[]){
     env->events->init.invoke();
     env->events->init.setActiveAll(false);
     env->editor->init();
-    env->console->info("Tridot version ", TRI_VERSION);
-
-    for(auto &o : env->events->update.getObservers()){
-        env->console->info("callback: ", o.name);
-    }
+    env->console->info("Tridot version: ", TRI_VERSION);
 
     bool running = true;
     env->events->exit.addCallback([&running](){

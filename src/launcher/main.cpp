@@ -11,6 +11,7 @@ using namespace tridot;
 int main(int argc, char *argv[]) {
     //set logging options
     env->console->options.level = DEBUG;
+    env->console->options.date = false;
     env->console->addLogFile("log.txt", Console::Options(TRACE, true, true, false));
     env->console->addLogFile("error.txt", Console::Options(ERROR, true, true, false));
 #if WIN32
@@ -20,7 +21,7 @@ int main(int argc, char *argv[]) {
     //init
     env->events->init.invoke();
     env->events->init.setActiveAll(false);
-    env->console->info("Tridot version ", TRI_VERSION);
+    env->console->info("Tridot version: ", TRI_VERSION);
 
     bool running = true;
     env->events->exit.addCallback([&running](){

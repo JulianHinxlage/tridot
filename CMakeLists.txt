@@ -56,6 +56,18 @@ add_subdirectory(extern/glm)
 target_link_libraries(${PROJECT_NAME} glfw glm yaml-cpp)
 target_include_directories(${PROJECT_NAME} PUBLIC extern/glm extern/glfw/include extern/glew/include extern/yaml-cpp/include)
 
+
+if(WIN32)
+    add_subdirectory(extern/openal)
+    target_link_libraries(${PROJECT_NAME} OpenAL alut)
+    target_include_directories(${PROJECT_NAME} PUBLIC extern/openal/include)
+else()
+    find_package(OpenAL REQUIRED)
+    target_link_libraries(${PROJECT_NAME} ${OPENAL_LIBRARY} alut)
+    target_include_directories(${PROJECT_NAME} PUBLIC ${OPENAL_INCLUDE_DIRS})
+endif()
+
+
 if(WIN32)
     target_link_libraries(${PROJECT_NAME} opengl32 glew_s imm32)
 else()
