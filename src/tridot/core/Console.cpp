@@ -5,13 +5,12 @@
 #include "Console.h"
 #include "Environment.h"
 #include "tridot/util/StrUtil.h"
-#include <cstdarg>
 #include <chrono>
 #include <thread>
 #include <iostream>
+#include <mutex>
 
 namespace tridot {
-
 
     namespace impl{
         void assertLog(const std::string &message){
@@ -135,6 +134,8 @@ namespace tridot {
     }
 
     void Console::log(LogLevel level, const std::string &message) {
+        static std::mutex mutex;
+        mutex.lock();
         logToStream(std::cout, options, true, level, message);
         for(auto &logFile : logFiles) {
             if (logFile.stream.is_open()) {
@@ -148,6 +149,7 @@ namespace tridot {
                 logCallback.callback(level, stream.str());
             }
         }
+        mutex.unlock();
     }
 
     void Console::addLogFile(const std::string &file, Console::Options options, bool append) {

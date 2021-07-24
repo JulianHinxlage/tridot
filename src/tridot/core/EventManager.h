@@ -124,9 +124,11 @@ namespace tridot {
                 dependencies[callbacks[i]].push_back(callbacks[i-1]);
             }
 
+            int iterationCount = 0;
             bool anySwaps = true;
-            while(anySwaps) {
+            while(anySwaps && iterationCount < 100) {
                 anySwaps = false;
+                iterationCount++;
                 for (auto &observer : observers) {
                     observer.swapped = false;
                 }
@@ -159,17 +161,14 @@ namespace tridot {
 
         //returns the index where an observer should be based on the defined dependencies
         int checkDependencies(const std::string &name){
-            int index = observers.size();
             for(int i = 0; i < observers.size(); i++) {
                 for(auto &dependency : dependencies[observers[i].name]) {
                     if (name == dependency) {
-                        if (i < index) {
-                            index = i;
-                        }
+                        return i;
                     }
                 }
             }
-            return index;
+            return observers.size();
         }
     };
 

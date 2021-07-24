@@ -29,6 +29,10 @@ int main(int argc, char *argv[]){
     env->editor->init();
     env->console->info("Tridot version ", TRI_VERSION);
 
+    for(auto &o : env->events->update.getObservers()){
+        env->console->info("callback: ", o.name);
+    }
+
     bool running = true;
     env->events->exit.addCallback([&running](){
         running = false;
@@ -58,7 +62,7 @@ int main(int argc, char *argv[]){
     env->events->update.addCallback([&](){
         if(ImGui::GetCurrentContext() != nullptr){
             {
-                bool imGuiDemoEnabled = true;
+                bool imGuiDemoEnabled = false;
                 if(imGuiDemoEnabled) {
                     bool &open = env->editor->getFlag("ImGui Demo");
                     if (open) {

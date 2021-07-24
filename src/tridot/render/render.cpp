@@ -6,8 +6,7 @@
 #include "tridot/engine/ResourceManager.h"
 #include "tridot/engine/Scene.h"
 #include "tridot/engine/Input.h"
-
-void imguiInit();
+#include "tridot/engine/Imgui.h"
 
 namespace tridot{
 
@@ -70,7 +69,7 @@ namespace tridot{
         env->input->init();
 
         RenderContext::setDepth(true);
-        imguiInit();
+        env->systems->getSystem<Imgui>()->init();
 
         env->events->update.callbackOrder({"imgui end", "window", "imgui begin", "resources", "clear", "skybox", "rendering", "post processing", "transform", "physics"});
         env->events->update.callbackOrder({"clear", "rendering", "post processing", "draw", "window"});

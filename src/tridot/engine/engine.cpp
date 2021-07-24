@@ -3,6 +3,7 @@
 //
 
 #include "engine.h"
+#include "Imgui.h"
 
 namespace tridot{
 
@@ -13,6 +14,7 @@ namespace tridot{
         env->physics = env->systems->addSystem<Physics>();
         env->scene = env->systems->addSystem<Scene>();
         env->resources = env->systems->addSystem<ResourceManager>();
+        env->systems->addSystem<Imgui>();
 
         env->time->init();
         env->physics->init();
@@ -67,6 +69,13 @@ namespace tridot{
                 env->physics->remove(rb);
             });
         });
+    }
+
+    TRI_UPDATE_CALLBACK("imgui begin"){
+        env->systems->getSystem<Imgui>()->begin();
+    }
+    TRI_UPDATE_CALLBACK("imgui end"){
+        env->systems->getSystem<Imgui>()->end();
     }
 
 }

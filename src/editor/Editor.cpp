@@ -11,6 +11,10 @@
 
 namespace tridot {
 
+    TRI_REGISTER_CALLBACK(){
+        env->events->init.callbackOrder({"editor", "render"});
+    }
+
     TRI_INIT_CALLBACK("editor"){
         env->editor = env->systems->addSystem<Editor>();
     }
