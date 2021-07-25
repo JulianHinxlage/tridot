@@ -38,6 +38,7 @@ namespace tridot {
         uint64_t propertiesWindowFlags;
         bool runtime;
         Scene runtimeSceneBuffer;
+        std::vector<std::string> editModeCallbackBlacklist;
 
         void init();
         void update();
@@ -45,6 +46,7 @@ namespace tridot {
 
         void enableRuntime();
         void disableRuntime(bool restoreScene = true);
+        void deactivateCallbackInEditMode(const std::string &callbackName);
 
         bool &getFlag(const std::string &name);
         void loadFlags();

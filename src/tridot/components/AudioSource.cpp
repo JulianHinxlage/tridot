@@ -51,10 +51,11 @@ namespace tridot {
 
     TRI_REGISTER_CALLBACK(){
         env->events->sceneEnd.addCallback("AudioSource", [](){
-            env->scene->view<AudioSource, Transform>().each([](AudioSource &source, Transform &transform){
+            env->scene->view<AudioSource>().each([](AudioSource &source){
                 if(source.id != 0){
                     env->audio->stop(source.id);
                     source.id = 0;
+                    source.playingAudioId = 0;
                 }
             });
         });

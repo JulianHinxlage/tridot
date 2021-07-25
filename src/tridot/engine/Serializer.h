@@ -23,5 +23,7 @@ namespace tridot {
         void deserializeType(Reflection::TypeDescriptor *type, YAML::Node &in, void *ptr, ResourceManager &resources);
     };
 
+    class NoSerial{};
+
 }
 

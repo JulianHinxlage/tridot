@@ -17,6 +17,10 @@ namespace tridot {
 
     TRI_INIT_CALLBACK("editor"){
         env->editor = env->systems->addSystem<Editor>();
+        env->editor->deactivateCallbackInEditMode("physics");
+        env->editor->deactivateCallbackInEditMode("audio");
+        env->editor->deactivateCallbackInEditMode("AudioSource");
+        env->editor->deactivateCallbackInEditMode("AudioListener");
     }
 
     bool &Editor::getFlag(const std::string &name){
@@ -80,25 +84,16 @@ namespace tridot {
             }
         }
         runtimeSceneBuffer.clear();
-        env->events->update.setActiveAll(false);
-        env->events->update.setActiveCallback("rendering", true);
-        env->events->update.setActiveCallback("panels", true);
-        env->events->update.setActiveCallback("window", true);
-        env->events->update.setActiveCallback("imgui begin", true);
-        env->events->update.setActiveCallback("imgui end", true);
-        env->events->update.setActiveCallback("input", true);
-        env->events->update.setActiveCallback("time", true);
-        env->events->update.setActiveCallback("editor", true);
-        env->events->update.setActiveCallback("clear", true);
-        env->events->update.setActiveCallback("resources", true);
-        env->events->update.setActiveCallback("transform", true);
-        env->events->update.setActiveCallback("profiler", true);
-        env->events->update.setActiveCallback("post processing", true);
-        env->events->update.setActiveCallback("skybox", true);
-        env->events->update.setActiveCallback("audio", true);
+        for(auto &callback : editModeCallbackBlacklist){
+            env->events->update.setActiveCallback(callback, false);
+        }
         runtime = false;
         undo.enabled = true;
         env->console->debug("runtime disabled");
+    }
+
+    void Editor::deactivateCallbackInEditMode(const std::string &callbackName) {
+        editModeCallbackBlacklist.push_back(callbackName);
     }
 
     void Editor::init() {

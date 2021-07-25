@@ -48,7 +48,7 @@ int main(int argc, char *argv[]){
     std::string sceneFile = "scenes/scene.yml";
     if(env->resources->searchFile(sceneFile) != ""){
         sceneFile = env->resources->searchFile(sceneFile);
-        env->resources->setup<Scene>(sceneFile).setInstance(env->scene).get();
+        env->resources->get<Scene>(sceneFile);
     }else{
         env->scene->name = sceneFile;
         env->resources->setup<Scene>("scene")

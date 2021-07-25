@@ -59,15 +59,6 @@ out vec4 oColor;
 
 uniform sampler2D uTextures[32];
 uniform vec3 uCameraPosition = vec3(0, 0, 0);
-
-uniform vec3 uAmbientColor = vec3(1, 1, 1);
-uniform float uAmbientStrenght = 0.4;
-uniform vec3 uDirectionalLightDirection = vec3(0.2, 0.4, -1);
-uniform vec3 uDirectionalLightColor = vec3(1, 1, 1);
-uniform float uDirectionalStrenght = 0.5;
-uniform vec3 uSpecularColor = vec3(1, 1, 1);
-uniform float uSpecularStrenght = 0.3;
-uniform float shininess = 4;
 uniform bool uTriPlanarMapping = true;
 
 vec4 sampleTexture(){
@@ -95,23 +86,4 @@ vec4 sampleTexture(){
 
 void main(){
     oColor = sampleTexture();
-
-    //ambient
-    vec3 ambient = uAmbientColor * uAmbientStrenght;
-
-    //diffuse
-    vec3 diffuse = vec3(0, 0, 0);
-    if(fNormal != vec3(0, 0, 0)){
-        float theta = dot(normalize(fNormal), -normalize(uDirectionalLightDirection));
-        theta = max(theta, 0.0);
-        diffuse = uDirectionalLightColor * theta * uDirectionalStrenght;
-    }
-
-    //specular
-    vec3 viewDir = normalize(uCameraPosition - fPosition);
-    vec3 reflectDir = reflect(uDirectionalLightDirection, normalize(fNormal));
-    float spec = pow(max(dot(viewDir, reflectDir), 0.0), shininess);
-    vec3 specular = uSpecularStrenght * spec * uSpecularColor * uDirectionalLightColor;
-
-    oColor.xyz = (ambient + diffuse + specular) * oColor.xyz;
 }

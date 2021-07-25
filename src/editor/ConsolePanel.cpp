@@ -26,7 +26,7 @@ namespace tridot {
                 ImGui::EndCombo();
             }
             ImGui::Separator();
-            ImGui::BeginChild("console child", ImVec2(0, -(ImGui::GetStyle().ItemSpacing.y + ImGui::GetFrameHeightWithSpacing())));
+            ImGui::BeginChild("console child", ImVec2(0, -(ImGui::GetStyle().ItemSpacing.y + ImGui::GetFrameHeightWithSpacing())), false, ImGuiWindowFlags_HorizontalScrollbar);
             std::string line;
             for(auto &message : messages) {
                 if(message.level >= logLevelFilter) {

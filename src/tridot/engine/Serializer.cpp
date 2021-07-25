@@ -262,7 +262,9 @@ namespace tridot {
                 out << YAML::Key << "Entities" << YAML::BeginSeq;
 
                 for (EntityId id : reg.getEntityPool().getEntities()) {
-                    serializeEntity(id, out, reg, resources);
+                    if(!reg.has<NoSerial>(id)){
+                        serializeEntity(id, out, reg, resources);
+                    }
                 }
 
                 out << YAML::EndSeq;

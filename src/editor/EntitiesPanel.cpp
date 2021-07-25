@@ -4,6 +4,7 @@
 
 #include "EntitiesPanel.h"
 #include "tridot/engine/Input.h"
+#include "tridot/engine/Serializer.h"
 #include "tridot/components/Tag.h"
 #include "Editor.h"
 #include <imgui.h>
@@ -201,6 +202,9 @@ namespace tridot {
             auto &pool = env->scene->getEntityPool();
             for(int i = 0; i < pool.getEntities().size(); i++){
                 EntityId id = pool.getId(i);
+                if(env->scene->has<NoSerial>(id)){
+                    continue;
+                }
                 bool root = false;
                 if(env->scene->has<Transform>(id)){
                     Transform &t = env->scene->get<Transform>(id);
