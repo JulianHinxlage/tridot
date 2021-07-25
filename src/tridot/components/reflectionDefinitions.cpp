@@ -9,6 +9,7 @@
 #include "PostProcessingEffect.h"
 #include "ComponentCache.h"
 #include "SkyBox.h"
+#include "AudioSource.h"
 #include "tridot/render/Camera.h"
 #include "tridot/render/Light.h"
 #include "tridot/engine/Physics.h"
@@ -18,7 +19,7 @@
 namespace tridot {
 
     TRI_INIT_CALLBACK("type registering"){
-        ComponentRegister::registerComponent<Tag, uuid, Transform, RenderComponent, PostProcessingEffect, PerspectiveCamera, OrthographicCamera, Light, RigidBody, Collider, ComponentCache, SkyBox>();
+        ComponentRegister::registerComponent<Tag, uuid, Transform, RenderComponent, PostProcessingEffect, PerspectiveCamera, OrthographicCamera, Light, RigidBody, Collider, ComponentCache, SkyBox, AudioListener, AudioSource>();
     }
 
     TRI_REGISTER_TYPE(float)
@@ -93,5 +94,10 @@ namespace tridot {
 
     TRI_REGISTER_TYPE(SkyBox)
     TRI_REGISTER_MEMBER4(SkyBox, texture, drawSkybox, useEnvironmentMap, intensity)
+
+    TRI_REGISTER_TYPE(AudioSource)
+    TRI_REGISTER_MEMBER(AudioSource, audio)
+
+    TRI_REGISTER_TYPE(AudioListener)
 
 }

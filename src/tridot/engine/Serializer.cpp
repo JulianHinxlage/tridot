@@ -11,6 +11,7 @@
 #include "tridot/render/Shader.h"
 #include "tridot/engine/Physics.h"
 #include "tridot/engine/Plugin.h"
+#include "tridot/engine/Audio.h"
 #include "tridot/components/ComponentCache.h"
 #include "tridot/components/Tag.h"
 #include <fstream>
@@ -127,6 +128,9 @@ namespace tridot {
         }else if(type->id() == env->reflection->getTypeId<Ref<Shader>>()){
             Ref<Shader> &v = *(Ref<Shader>*)ptr;
             out << YAML::Value << resources.getName(v);
+        }else if(type->id() == env->reflection->getTypeId<Ref<Audio>>()){
+            Ref<Audio> &v = *(Ref<Audio>*)ptr;
+            out << YAML::Value << resources.getName(v);
         }else if(type->id() == env->reflection->getTypeId<YAML::Node>()){
             YAML::Node &v = *(YAML::Node*)ptr;
             out << v;
@@ -221,6 +225,14 @@ namespace tridot {
             Ref<Shader> &v = *(Ref<Shader> *) ptr;
             if(!name.empty()) {
                 v = resources.get<Shader>(name);
+            }else{
+                v = nullptr;
+            }
+        }else if(type->id() == env->reflection->getTypeId<Ref<Audio>>()){
+            std::string name = in.as<std::string>("");
+            Ref<Audio> &v = *(Ref<Audio> *) ptr;
+            if(!name.empty()) {
+                v = resources.get<Audio>(name);
             }else{
                 v = nullptr;
             }

@@ -7,6 +7,7 @@
 #include <AL/al.h>
 #include <AL/alut.h>
 #include <AL/alc.h>
+#include <glm/ext/matrix_transform.hpp>
 
 namespace tridot {
 
@@ -15,15 +16,7 @@ namespace tridot {
     }
 
     AudioManager::~AudioManager() {
-        ALCcontext *context = alcGetCurrentContext();
-        ALCdevice *device = alcGetContextsDevice(context);
-        alcMakeContextCurrent(nullptr);
-        if(context){
-            alcDestroyContext((ALCcontext *)context);
-        }
-        if(device){
-            alcCloseDevice((ALCdevice*)device);
-        }
+        shutdown();
     }
 
     void AudioManager::init() {
@@ -51,14 +44,15 @@ namespace tridot {
     }
 
     void AudioManager::update() {
-        for(int i = 0; i < sources.size(); i++){
-            uint32_t id = sources[i];
+        for(auto i = sources.begin(); i != sources.end();){
+            uint32_t id = *i;
             int state = 0;
             alGetSourcei(id, AL_SOURCE_STATE, &state);
-            if(state == AL_STOPPED){
+            if(state == AL_STOPPED) {
                 alDeleteSources(1, &id);
-                sources.erase(sources.begin() + i);
-                i--;
+                sources.erase(i++);
+            }else{
+                ++i;
             }
         }
         for(int i = 0; i < loadingQueue.size(); i++){
@@ -71,24 +65,99 @@ namespace tridot {
         }
     }
 
-    void AudioManager::play(const std::shared_ptr<Audio> &audio) {
+    uint32_t AudioManager::play(const std::shared_ptr<Audio> &audio, bool loop) {
         if(audio->getId() == 0){
             loadingQueue.push_back(audio);
+            return 0;
         }else {
             uint32_t id = 0;
             alGenSources(1, &id);
             alSourcei(id, AL_BUFFER, audio->getId());
-            alSourcei(id, AL_LOOPING, false);
+            alSourcei(id, AL_LOOPING, loop);
             alSource3f(id, AL_POSITION, 0, 0, 0);
             alSourcePlay(id);
-            sources.push_back(id);
+            sources.insert(id);
+            return id;
         }
     }
 
     void AudioManager::setListenerPosition(const glm::vec3 &position) {
         alListener3f(AL_POSITION, position.x, position.y, position.z);
-        alListener3f(AL_VELOCITY, 0, 0, 0);
-        alListenerf(AL_GAIN, 1);
+        listenerPosition = position;
+    }
+
+    glm::vec3 AudioManager::getListenerPosition() {
+        return listenerPosition;
+    }
+
+    void AudioManager::setListenerRotation(const glm::vec3 &rotation) {
+        glm::mat4 transform(1);
+        transform = glm::rotate(transform, rotation.z, {0, 0, 1});
+        transform = glm::rotate(transform, rotation.y, {0, 1, 0});
+        transform = glm::rotate(transform, rotation.x, {1, 0, 0});
+        glm::vec3 forward = transform * glm::vec4(0, 1, 0, 0);
+        glm::vec3 up = transform * glm::vec4(0, 0, 1, 0);
+        float orientation[] = {forward.x, forward.y, forward.z, up.x, up.y, up.z};
+        alListenerfv(AL_ORIENTATION, orientation);
+    }
+
+    void AudioManager::setListenerVelocity(const glm::vec3 &velocity) {
+        alListener3f(AL_VELOCITY, velocity.x, velocity.y, velocity.z);
+    }
+
+    void AudioManager::setListenerVolume(float volume) {
+        alListenerf(AL_GAIN, volume);
+    }
+
+    void AudioManager::setListenerPitch(float pitch) {
+        alListenerf(AL_PITCH, pitch);
+    }
+
+    void AudioManager::setPosition(uint32_t id, const glm::vec3 &position) {
+        alSource3f(id, AL_POSITION, position.x, position.y, position.z);
+    }
+
+    void AudioManager::setVolume(uint32_t id, float volume) {
+        alSourcef(id, AL_GAIN, volume);
+    }
+
+    void AudioManager::setVelocity(uint32_t id, const glm::vec3 &velocity) {
+        alSource3f(id, AL_VELOCITY, velocity.x, velocity.y, velocity.z);
+    }
+
+    void AudioManager::setPitch(uint32_t id, float pitch) {
+        alSourcef(id, AL_PITCH, pitch);
+    }
+
+    void AudioManager::stop(uint32_t id) {
+        alSourceStop(id);
+        alDeleteSources(1, &id);
+        sources.erase(id);
+    }
+
+    void AudioManager::pause(uint32_t id) {
+        alSourcePause(id);
+    }
+
+    void AudioManager::resume(uint32_t id) {
+        alSourcePlay(id);
+    }
+
+    void AudioManager::shutdown() {
+        loadingQueue.clear();
+        for(auto &id : sources){
+            alDeleteSources(1, &id);
+        }
+        sources.clear();
+        ALCcontext *context = alcGetCurrentContext();
+        ALCdevice *device = alcGetContextsDevice(context);
+        alcMakeContextCurrent(nullptr);
+        if(context){
+            alcDestroyContext((ALCcontext *)context);
+        }
+        if(device){
+            alcCloseDevice((ALCdevice*)device);
+        }
     }
 
 }

@@ -65,6 +65,7 @@ namespace tridot {
             alBufferData(id, format, data, size, frequency);
         }
         free(data);
+        env->console->debug("loaded audio ", filename);
         return true;
     }
 

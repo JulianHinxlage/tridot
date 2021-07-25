@@ -56,6 +56,9 @@ namespace tridot{
         TRI_PROFILE("audio");
         env->audio->update();
     }
+    TRI_SHUTDOWN_CALLBACK("audio"){
+        env->audio->shutdown();
+    }
     TRI_UPDATE_CALLBACK("physics"){
         TRI_PROFILE("physics");
         {

@@ -40,6 +40,9 @@ int main(int argc, char *argv[]){
         env->scene->swap(*scene);
         env->resources->remove(env->resources->getName(scene));
         return valid;
+    }).setPreLoad([](Ref<Scene> &scene, const std::string &file){
+        env->console->info("loading scene ", file);
+        return scene->preLoad(file);
     });
 
     std::string sceneFile = "scenes/scene.yml";

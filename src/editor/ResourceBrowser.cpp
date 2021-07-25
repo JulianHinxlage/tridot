@@ -7,6 +7,7 @@
 #include "Editor.h"
 #include "tridot/render/render.h"
 #include "tridot/engine/Plugin.h"
+#include "tridot/engine/Audio.h"
 #include <imgui.h>
 #include <filesystem>
 #include <algorithm>
@@ -19,6 +20,7 @@ namespace tridot {
         addFileAssociation<Scene>({".yml"});
         addFileAssociation<Shader>({".glsl"});
         addFileAssociation<Plugin>({".so", ".dll"});
+        addFileAssociation<Audio>({".wav"});
     }
 
     void ResourceBrowser::update() {

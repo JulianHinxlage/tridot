@@ -5,6 +5,7 @@
 #include "EditorGui.h"
 #include "tridot/render/render.h"
 #include "tridot/engine/Physics.h"
+#include "tridot/engine/Audio.h"
 #include "tridot/components/Tag.h"
 #include "tridot/components/RenderComponent.h"
 #include "tridot/components/ComponentCache.h"
@@ -141,6 +142,9 @@ TRI_INIT_CALLBACK("panels"){
         EditorGui::drawResourceSelection(v, name);
     });
     EditorGui::addType<Ref<Shader>>(true, [](Ref<Shader> &v, const std::string &name) {
+        EditorGui::drawResourceSelection(v, name);
+    });
+    EditorGui::addType<Ref<Audio>>(true, [](Ref<Audio> &v, const std::string &name) {
         EditorGui::drawResourceSelection(v, name);
     });
 #ifndef WIN32
