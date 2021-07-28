@@ -9,7 +9,7 @@
 
 namespace tridot {
 
-    class ComponentRegister {
+    class TRI_API ComponentRegister {
     public:
         template<typename... Components>
         static void registerComponent(){

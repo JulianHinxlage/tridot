@@ -4,10 +4,13 @@
 
 #include "AudioManager.h"
 #include "tridot/core/Environment.h"
+#include <glm/ext/matrix_transform.hpp>
+
+#if TRI_ENABLE_AUDIO
+
 #include <AL/al.h>
 #include <AL/alut.h>
 #include <AL/alc.h>
-#include <glm/ext/matrix_transform.hpp>
 
 namespace tridot {
 
@@ -79,6 +82,7 @@ namespace tridot {
             sources.insert(id);
             return id;
         }
+        return 0;
     }
 
     void AudioManager::setListenerPosition(const glm::vec3 &position) {
@@ -161,3 +165,46 @@ namespace tridot {
     }
 
 }
+
+#else
+
+
+namespace tridot {
+
+    AudioManager::AudioManager() {}
+
+    AudioManager::~AudioManager() {
+        shutdown();
+    }
+
+    void AudioManager::init() {}
+    void AudioManager::update() {}
+
+    uint32_t AudioManager::play(const std::shared_ptr<Audio>& audio, bool loop) {
+        return 0;
+    }
+
+    void AudioManager::setListenerPosition(const glm::vec3& position) {
+        listenerPosition = position;
+    }
+
+    glm::vec3 AudioManager::getListenerPosition() {
+        return listenerPosition;
+    }
+
+    void AudioManager::setListenerRotation(const glm::vec3& rotation) {}
+    void AudioManager::setListenerVelocity(const glm::vec3& velocity) {}
+    void AudioManager::setListenerVolume(float volume) {}
+    void AudioManager::setListenerPitch(float pitch) {}
+    void AudioManager::setPosition(uint32_t id, const glm::vec3& position) {}
+    void AudioManager::setVolume(uint32_t id, float volume) {}
+    void AudioManager::setVelocity(uint32_t id, const glm::vec3& velocity) {}
+    void AudioManager::setPitch(uint32_t id, float pitch) {}
+    void AudioManager::stop(uint32_t id) {}
+    void AudioManager::pause(uint32_t id) {}
+    void AudioManager::resume(uint32_t id) {}
+    void AudioManager::shutdown() {}
+
+}
+
+#endif

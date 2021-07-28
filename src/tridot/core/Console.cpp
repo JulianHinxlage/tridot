@@ -97,10 +97,8 @@ namespace tridot {
                 auto sec = std::chrono::duration_cast<std::chrono::seconds>(now);
                 auto msec = std::chrono::duration_cast<std::chrono::milliseconds>(now - sec).count();
 
-                timeval timeVal;
-                timeVal.tv_sec = sec.count();
-                timeVal.tv_usec = msec * 1000;
-                struct tm *timeInfo = localtime(&timeVal.tv_sec);
+                time_t timeVal = sec.count();
+                struct tm *timeInfo = localtime(&timeVal);
 
                 if (options.time) {
                     newLineIndent += 15;

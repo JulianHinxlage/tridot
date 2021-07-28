@@ -4,6 +4,9 @@
 
 #include "Audio.h"
 #include "tridot/core/Environment.h"
+
+#if TRI_ENABLE_AUDIO
+
 #include <AL/al.h>
 #include <AL/alut.h>
 
@@ -17,7 +20,7 @@ namespace tridot {
         clear();
     }
 
-    bool Audio::preLoad(const std::string &filename) {
+    bool Audio::preLoad(const std::string& filename) {
         if(!alcGetCurrentContext()){
             env->console->warning("audio manager not initialized");
             return false;
@@ -77,11 +80,41 @@ namespace tridot {
         return id;
     }
 
-    void Audio::clear(){
-        if(id != 0){
+    void Audio::clear() {
+        if (id != 0) {
             alDeleteBuffers(1, &id);
             id = 0;
         }
     }
 
 }
+
+#else
+
+namespace tridot {
+
+    Audio::Audio() {
+        id = 0;
+    }
+
+    Audio::~Audio() {
+        clear();
+    }
+
+    bool Audio::preLoad(const std::string& filename) {
+        return false;
+    }
+
+    bool Audio::postLoad() {
+        return id != 0;
+    }
+
+    uint32_t Audio::getId() {
+        return id;
+    }
+
+    void Audio::clear() {}
+
+}
+
+#endif

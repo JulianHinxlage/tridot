@@ -46,11 +46,13 @@ namespace tridot {
             std::vector<std::string> files;
             std::vector<std::string> subDirectories;
 
-            for (auto &entry : std::filesystem::directory_iterator(directory)) {
-                if (entry.is_directory()) {
-                    subDirectories.push_back(entry.path().string());
-                } else {
-                    files.push_back(entry.path().string());
+            if(std::filesystem::exists(directory)){
+                for (auto &entry : std::filesystem::directory_iterator(directory)) {
+                    if (entry.is_directory()) {
+                        subDirectories.push_back(entry.path().string());
+                    } else {
+                        files.push_back(entry.path().string());
+                    }
                 }
             }
 
@@ -62,8 +64,8 @@ namespace tridot {
             }
 
             for(auto &file : files){
-                std::string name = std::filesystem::path(file).filename();
-                std::string extension = std::filesystem::path(file).extension();
+                std::string name = std::filesystem::path(file).filename().string();
+                std::string extension = std::filesystem::path(file).extension().string();
 
                 //relative path to baseDirectory
                 std::string path = file.substr(StrUtil::match(baseDirectory, file));

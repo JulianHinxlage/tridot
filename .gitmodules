@@ -22,3 +22,6 @@
 [submodule "extern/openal"]
 	path = extern/openal
 	url = https://github.com/kcat/openal-soft
+[submodule "extern/freealut"]
+	path = extern/freealut
+	url = https://github.com/vancegroup/freealut.git

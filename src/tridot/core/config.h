@@ -9,6 +9,15 @@
 #include <string>
 
 #if WIN32
+#include <windows.h>
+#undef ERROR
+#undef min
+#undef max
+#undef near
+#undef far
+#endif
+
+#if WIN32
 #ifdef TRI_DLL_EXPORT
 #define TRI_API __declspec(dllexport)
 #else
@@ -38,6 +47,12 @@ namespace tridot::impl{
 #define TRI_ASSERT(expr, msg) if(!(expr)){tridot::impl::assertLog(msg);}assert((expr) && (msg));
 #else
 #define TRI_ASSERT(expr, msg)
+#endif
+
+#ifdef WIN32
+#define TRI_ENABLE_AUDIO 0
+#else
+#define TRI_ENABLE_AUDIO 1
 #endif
 
 namespace tridot{
