@@ -4,4 +4,4 @@ build/
 local/
 .vs/
 out*/
-CMakeSettings.json
+install/

@@ -2,50 +2,35 @@
 // Copyright (c) 2021 Julian Hinxlage. All rights reserved.
 //
 
-#include "tridot/core/Environment.h"
-#include "tridot/engine/engine.h"
-#include "tridot/render/Window.h"
+#include "core/core.h"
+#include "util/Clock.h"
 
-using namespace tridot;
+using namespace tri;
 
-int main(int argc, char *argv[]) {
-    //set logging options
-    env->console->options.level = DEBUG;
-    env->console->options.date = false;
-    env->console->addLogFile("log.txt", Console::Options(TRACE, true, true, false));
-    env->console->addLogFile("error.txt", Console::Options(ERROR, true, true, false));
-#if WIN32
-    env->console->options.color = false;
-#endif
+int main(int argc, char* argv[]) {
+	Environment::startup();
 
-    //init
-    env->events->init.invoke();
-    env->events->init.setActiveAll(false);
-    env->console->info("Tridot version: ", TRI_VERSION);
+	env->signals->preStartup.invoke();
 
-    bool running = true;
-    env->events->exit.addCallback([&running](){
-        running = false;
-    });
+	std::string configFile = "../res/config.txt";
+	if (argc > 1) {
+		configFile = argv[1];
+	}
+	env->console->loadConfigFile(configFile);
 
-    //load scene
-    env->resources->setup<Scene>("scenes/scene.yml").setInstance(env->scene).get();
+	env->signals->startup.invoke();
+	env->signals->postStartup.invoke();
 
-    //wait for scene to load but still update window
-    while(env->resources->isLoading()){
-        env->window->update();
-        env->resources->update();
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    }
+	while (*env->console->getVariable<bool>("running")) {
+		env->signals->preUpdate.invoke();
+		env->signals->update.invoke();
+		env->signals->postUpdate.invoke();
+	}
 
-    //main loop
-    while(running){
-        env->events->init.invoke();
-        env->events->init.setActiveAll(false);
-        env->events->update.invoke();
-        env->events->pollEvents();
-    }
+	env->signals->preShutdown.invoke();
+	env->signals->shutdown.invoke();
+	env->signals->postShutdown.invoke();
 
-    //shutdown
-    env->events->shutdown.invoke();
+	Environment::shutdown();
+	return 0;
 }

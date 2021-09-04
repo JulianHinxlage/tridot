@@ -1,0 +1,2 @@
+module_load ./module1.dll
+module_load ./module2.dll
