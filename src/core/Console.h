@@ -134,7 +134,7 @@ namespace tri {
         std::unordered_map<std::string, Variable> variables;
         std::vector<LogFile> logFiles;
         std::vector<LogCallback> logCallbacks;
-        std::thread inputThread;
+        int inputThreadId;
         std::string inputLine;
         int inputCursorIndex;
         std::vector<std::string> executedCommands;

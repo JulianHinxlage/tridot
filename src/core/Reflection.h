@@ -149,7 +149,7 @@ namespace tri {
 			}
 			std::shared_ptr<TypeDescriptorT<T>> desc = std::make_shared<TypeDescriptorT<T>>();
 			desc->hashCode = hashCode;
-			desc->typeId = descriptors.size();
+			desc->typeId = (int)descriptors.size();
 			desc->size = sizeof(T);
 			desc->name = typeid(T).name();
 			descriptors.push_back(desc);

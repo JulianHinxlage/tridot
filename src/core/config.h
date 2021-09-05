@@ -47,4 +47,14 @@
 #define TRI_VERSION_PATH 0
 #define TRI_VERSION "0.1.0-dev"
 
+//assert
+namespace tri::impl {
+	void assertLog(const std::string& message);
+}
+#ifdef TRI_DEBUG
+#define TRI_ASSERT(expr, msg) if(!(expr)){tri::impl::assertLog(msg);}assert((expr) && (msg));
+#else
+#define TRI_ASSERT(expr, msg)
+#endif
+
 

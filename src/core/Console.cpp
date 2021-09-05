@@ -4,6 +4,8 @@
 
 #include "Console.h"
 #include "util/StrUtil.h"
+#include "Environment.h"
+#include "ThreadPool.h"
 #include <iostream>
 
 #if TRI_WINDOWS
@@ -31,6 +33,12 @@ static char getCharacter() {
 #endif
 
 namespace tri {
+
+    namespace impl {
+        void assertLog(const std::string& message) {
+            env->console->fatal(message);
+        }
+    }
 
     static const char *getLogLevelSpacing(LogLevel level){
         switch (level) {
@@ -149,6 +157,7 @@ namespace tri {
     Console::Console() {
         execudedCommandIndex = 0;
         inputCursorIndex = 0;
+        inputThreadId = -1;
     }
 
     void Console::log(LogLevel level, const std::string &message) {
@@ -183,7 +192,7 @@ namespace tri {
 
     void Console::startup(){
 #if !TRI_DISTRIBUTION
-        inputThread = std::thread([this]() {
+        inputThreadId = env->threads->addThread([this]() {
             while (true) {
                 char c = getCharacter();
                 if (c == 13 || c == '\n') { //enter
@@ -297,9 +306,7 @@ namespace tri {
     }
 
     void Console::shutdown() {
-        if(inputThread.native_handle()) {
-            inputThread.detach();
-        }
+        env->threads->terminateThread(inputThreadId);
     }
 
     void Console::addLogFile(const std::string &file, Console::Options options, bool append) {

@@ -4,7 +4,7 @@
 
 #pragma once
 
-namespace tri{
+namespace tri {
 	
 	class Module {
 	public:
@@ -17,4 +17,4 @@ namespace tri{
 
 }
 
-#define TRI_MODULE(ModuleClass) extern "C" tri::Module *triCreateModuleInstance(){return new ModuleClass();}
+#define TRI_REGISTER_MODULE(ModuleClass) extern "C" tri::Module *triCreateModuleInstance(){return new ModuleClass();}

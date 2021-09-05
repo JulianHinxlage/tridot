@@ -34,8 +34,13 @@ namespace tri {
 
 	void ModuleManager::shutdown(){
         while (!modules.empty()) {
-            for (auto& record : modules) {
-                unloadModule(record.second.module);
+            for (auto &record : modules) {
+                if (record.second.module) {
+                    unloadModule(record.second.module);
+                }
+                else {
+                    modules.erase(record.first);
+                }
                 break;
             }
         }
@@ -89,7 +94,10 @@ namespace tri {
                 pos2++;
             }
             std::string name = file.substr(pos2, pos1 - pos2);
-            int callbackId = env->signals->update.addCallback(name, [module]() { module->update(); });
+            int callbackId = -1;
+            if (module) {
+                callbackId = env->signals->update.addCallback(name, [module]() { module->update(); });
+            }
             if (module && startupFlag == true) {
                 module->startup();
                 modules[file] = { module, handle, true };
