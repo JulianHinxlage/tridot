@@ -58,3 +58,9 @@ namespace tri::impl {
 #endif
 
 
+namespace tri {
+
+	typedef uint64_t EntitySignatureBitmap;
+	typedef uint32_t EntityId;
+	
+}

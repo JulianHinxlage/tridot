@@ -6,6 +6,7 @@
 
 #include "pch.h"
 #include "System.h"
+#include "Reflection.h"
 
 namespace tri {
 
@@ -218,8 +219,34 @@ namespace tri {
             }
         }
 
+        template<typename Component>
+        Signal<EntityId, Scene*>& getComponentInit() {
+            return getComponentInit(env->reflection->getTypeId<Component>());
+        }
+
+        template<typename Component>
+        Signal<EntityId, Scene*>& getComponentShutdown() {
+            return getComponentShutdown(env->reflection->getTypeId<Component>());
+        }
+
+        Signal<EntityId, Scene*>& getComponentInit(int typeId) {
+            if (typeId >= componentInitSignals.size()) {
+                componentInitSignals.resize(typeId + 1);
+            }
+            return componentInitSignals[typeId];
+        }
+
+        Signal<EntityId, Scene*>& getComponentShutdown(int typeId) {
+            if (typeId >= componentShutdownSignals.size()) {
+                componentShutdownSignals.resize(typeId + 1);
+            }
+            return componentShutdownSignals[typeId];
+        }
+
     private:
         std::unordered_map<size_t, std::unordered_map<std::string, std::shared_ptr<BaseSignal>>> signals;
+        std::vector<Signal<EntityId, Scene*>> componentInitSignals;
+        std::vector<Signal<EntityId, Scene*>> componentShutdownSignals;
     };
 
 }

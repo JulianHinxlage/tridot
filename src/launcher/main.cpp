@@ -3,7 +3,11 @@
 //
 
 #include "core/core.h"
-#include "util/Clock.h"
+#include "entity/Scene.h"
+#include "core/util/Clock.h"
+#include "render/Window.h"
+#include "render/Renderer.h"
+#include "engine/Time.h"
 
 using namespace tri;
 
@@ -11,6 +15,7 @@ int main(int argc, char* argv[]) {
 	Environment::startup();
 
 	env->signals->preStartup.invoke();
+	env->console->setVariable<bool>("vsync", true);
 
 	std::string configFile = "../res/config.txt";
 	if (argc > 1) {
@@ -18,13 +23,22 @@ int main(int argc, char* argv[]) {
 	}
 	env->console->loadConfigFile(configFile);
 
+	env->window->init(1080, 720, "Tridot Launcher");
+	env->window->setBackgroundColor(Color(130, 130, 130));
+
 	env->signals->startup.invoke();
 	env->signals->postStartup.invoke();
 
-	while (*env->console->getVariable<bool>("running")) {
+
+	while (env->window->isOpen()) {
 		env->signals->preUpdate.invoke();
 		env->signals->update.invoke();
 		env->signals->postUpdate.invoke();
+
+		if (env->time->frameTicks(0.5)) {
+			env->console->info("fps: ", env->time->framesPerSecond);
+		}
+		env->window->setVSync(*env->console->getVariable<bool>("vsync"));
 	}
 
 	env->signals->preShutdown.invoke();

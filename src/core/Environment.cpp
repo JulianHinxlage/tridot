@@ -34,6 +34,10 @@ namespace tri {
         profiler = nullptr;
         signals = nullptr;
         threads = nullptr;
+        scene = nullptr;
+        input = nullptr;
+        time = nullptr;
+        window = nullptr;
     }
 
 	Environment* Environment::startup() {
@@ -43,9 +47,10 @@ namespace tri {
             env = getInstance();
             env->systems = new SystemManager();
             env->signals = new SignalManager();
+            env->console = new Console();
             env->systems->setSystem("SignalManager", env->signals);
+            env->systems->setSystem("Console", env->console);
             env->reflection = env->systems->addSystem<Reflection>("Reflection");
-            env->console = env->systems->addSystem<Console>("Console");
             env->modules = env->systems->addSystem<ModuleManager>("ModuleManager");
             env->profiler = env->systems->addSystem<Profiler>("Profiler");
             env->threads = env->systems->addSystem<ThreadPool>("ThreadPool");
@@ -67,6 +72,7 @@ namespace tri {
         env = getInstance();
         if (env != nullptr) {
             delete env->signals;
+            delete env->console;
             delete env->systems;
             delete env;
             getInstance() = nullptr;

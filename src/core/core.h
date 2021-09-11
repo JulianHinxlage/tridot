@@ -31,13 +31,24 @@ namespace tri::impl {
     template<typename T>
     class SystemRegisterer {
     public:
-        SystemRegisterer(const std::string& name) {
+        T** instance;
+
+        SystemRegisterer(const std::string& name, T **instance = nullptr) {
             Environment::startup();
-            env->systems->addSystem<T>(name);
+            this->instance = instance;
+            if (instance) {
+                *instance = env->systems->addSystem<T>(name);
+            }
+            else {
+                env->systems->addSystem<T>(name);
+            }
         }
         ~SystemRegisterer() {
             if (env && env->systems) {
                 env->systems->removeSystem<T>();
+                if (instance) {
+                    *instance = nullptr;
+                }
             }
         }
     };
@@ -74,6 +85,8 @@ namespace tri::impl {
 #define TRI_SHUTDOWN_CALLBACK(callbackName) TRI_SHUTDOWN_CALLBACK_IMPL(callbackName, TRI_UNIQUE_IDENTIFIER(_tri_register_callback))
 
 #define TRI_REGISTER_SYSTEM(type) tri::impl::SystemRegisterer<type> TRI_UNIQUE_IDENTIFIER(_tri_register_component)(#type);
+#define TRI_REGISTER_SYSTEM_INSTANCE(type, instance) TRI_REGISTER_CALLBACK(){tri::Environment::startup();} tri::impl::SystemRegisterer<type> TRI_UNIQUE_IDENTIFIER(_tri_register_component)(#type, &instance);
+
 #define TRI_REGISTER_TYPE_NAME(type, name) tri::impl::TypeRegisterer<type> TRI_UNIQUE_IDENTIFIER(_tri_register_component)(#name);
 #define TRI_REGISTER_TYPE(type) TRI_REGISTER_TYPE_NAME(type, type)
 #define TRI_REGISTER_MEMBER(type, memberName) TRI_REGISTER_CALLBACK(){tri::Environment::startup(); env->reflection->registerMember<type, decltype(type::memberName)>(#memberName, offsetof(type, memberName));}

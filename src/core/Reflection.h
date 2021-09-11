@@ -13,6 +13,24 @@ namespace tri {
 		template<class T, class U, class> struct has_equal_impl : std::false_type {};
 		template<class T, class U> struct has_equal_impl<T, U, decltype((bool)(std::declval<T>() == std::declval<U>()), void())> : std::true_type {};
 		template<class T, class U> struct has_equal : has_equal_impl<T, U, void> {};
+
+#define define_has_member(name)													   \
+        template <typename T>                                                      \
+        class has_member_##name													   \
+        {                                                                          \
+            typedef char yes_type;                                                 \
+            typedef long no_type;                                                  \
+            template <typename U> static yes_type test(decltype(&U::name));        \
+            template <typename U> static no_type  test(...);                       \
+        public:                                                                    \
+            static constexpr bool value = sizeof(test<T>(0)) == sizeof(yes_type);  \
+        };
+#define has_member(type, name)  tridot::impl::has_member_##name<type>::value
+
+		define_has_member(update);
+		define_has_member(startup);
+		define_has_member(shutdown);
+		define_has_member(init);
 	}
 
 	class Reflection : public System {

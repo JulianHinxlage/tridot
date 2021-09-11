@@ -14,6 +14,11 @@ namespace tri {
 	class Profiler;
 	class SignalManager;
 	class ThreadPool;
+	class Scene;
+	class Input;
+	class Time;
+	class Window;
+	class Renderer;
 
 	class TRI_API Environment {
 	public:
@@ -26,6 +31,11 @@ namespace tri {
 		Profiler* profiler;
 		SignalManager* signals;
 		ThreadPool *threads;
+		Scene* scene;
+		Input* input;
+		Time* time;
+		Window* window;
+		Renderer* renderer;
 
 		static Environment* startup();
 		static void shutdown();

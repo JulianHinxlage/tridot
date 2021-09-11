@@ -3,6 +3,7 @@
 //
 
 #include "core/core.h"
+#include "render/Window.h"
 
 void printDescriptor(const tri::Reflection::TypeDescriptor* desc) {
 	if (desc) {
@@ -38,9 +39,11 @@ TRI_REGISTER_CALLBACK() {
 	env->console->setVariable<bool>("running", true);
 	env->console->addCommand("exit", []() {
 		env->console->setVariable<bool>("running", false);
+		env->window->close();
 	});
 	env->console->addCommand("quit", []() {
 		env->console->setVariable<bool>("running", false);
+		env->window->close();
 	});
 
 	env->console->addCommand("print_types", []() {

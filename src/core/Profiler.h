@@ -54,7 +54,7 @@ namespace tri {
 }
 
 #ifdef TRI_DEBUG
-#define TRI_PROFILE(name) tridot::impl::ProfileScope profileScope(name);
+#define TRI_PROFILE(name) tri::impl::ProfileScope profileScope(name);
 #else
 #define TRI_PROFILE(name)
 #endif

@@ -6,9 +6,12 @@
 
 namespace tri {
 
+    TRI_REGISTER_SYSTEM_INSTANCE(Scene, env->scene);
+
     Scene::Scene() {
         entityPool = ComponentPool(env->reflection->getTypeId<EntitySignatureBitmap>(), sizeof(EntitySignatureBitmap));
         pendingOperationsEnabled = true;
+        addPendingOperations = true;
     }
 
     Scene::Scene(const Scene& scene) {
@@ -69,16 +72,17 @@ namespace tri {
     }
 
     void* Scene::addComponent(int typeId, EntityId id) {
-        if (pendingOperationsEnabled && !hasComponent(typeId, id)) {
-            pendingOperations.emplace_back(id, typeId, true);
-            pendingOperations.back().data.resize(env->reflection->getType(typeId)->size);
-            return (void*)pendingOperations.back().data.data();
+        if (addPendingOperations) {
+            bool pending = pendingOperationsEnabled && !hasComponent(typeId, id);
+            pendingOperations.emplace_back(id, typeId, true, pending);
+            if (pending) {
+                pendingOperations.back().data.resize(env->reflection->getType(typeId)->size);
+                return (void*)pendingOperations.back().data.data();
+            }
         }
-        else {
-            auto* pool = getComponentPool(typeId);
-            getSignature(id) |= ((EntitySignatureBitmap)1 << typeId);
-            return pool->add(id);
-        }
+        auto* pool = getComponentPool(typeId);
+        getSignature(id) |= ((EntitySignatureBitmap)1 << typeId);
+        return pool->add(id);
     }
 
     void* Scene::getComponent(int typeId, EntityId id) {
@@ -97,14 +101,14 @@ namespace tri {
 
     bool Scene::removeComponent(int typeId, EntityId id) {
         if (pools.size() > typeId && pools[typeId] != nullptr) {
-            if (pendingOperationsEnabled) {
-                pendingOperations.emplace_back(id, typeId, false);
-                return pools[typeId]->has(id);
+            if (addPendingOperations) {
+                pendingOperations.emplace_back(id, typeId, true, pendingOperationsEnabled);
+                if (pendingOperationsEnabled) {
+                    return pools[typeId]->has(id);
+                }
             }
-            else {
-                getSignature(id) &= ~((EntitySignatureBitmap)1 << typeId);
-                return pools[typeId]->remove(id);
-            }
+            getSignature(id) &= ~((EntitySignatureBitmap)1 << typeId);
+            return pools[typeId]->remove(id);
         }
         else {
             return false;
@@ -133,6 +137,7 @@ namespace tri {
         pools.clear();
         entityPool.clear();
         freeList.clear();
+        pendingOperations.clear();
     }
 
     void Scene::operator=(const Scene& scene) {
@@ -147,23 +152,39 @@ namespace tri {
     }
 
     void Scene::update() {
-        if (pendingOperationsEnabled) {
-            pendingOperationsEnabled = false;
-            for (auto& op : pendingOperations) {
-                if (op.isAddOperation) {
-                    if (entityPool.has(op.id)) {
-                        uint8_t* data = (uint8_t*)addComponent(op.typeId, op.id);
-                        for (int i = 0; i < op.data.size(); i++) {
-                            data[i] = op.data[i];
-                        }
-                    }
-                }
-                else {
-                    removeComponent(op.typeId, op.id);
+        if (pendingOperations.size() > 0) {
+            std::vector<PendingOperation> ops;
+            ops.swap(pendingOperations);
+
+            for (auto& op : ops) {
+                if (!op.isAddOperation) {
+                    env->signals->getComponentShutdown(op.typeId).invoke(op.id, this);
                 }
             }
-            pendingOperations.clear();
-            pendingOperationsEnabled = true;
+
+            addPendingOperations = false;
+            for (auto& op : ops) {
+                if (op.isPending) {
+                    if (op.isAddOperation) {
+                        if (entityPool.has(op.id)) {
+                            uint8_t* data = (uint8_t*)addComponent(op.typeId, op.id);
+                            for (int i = 0; i < op.data.size(); i++) {
+                                data[i] = op.data[i];
+                            }
+                        }
+                    }
+                    else {
+                        removeComponent(op.typeId, op.id);
+                    }
+                }
+            }
+            addPendingOperations = true;
+
+            for (auto& op : ops) {
+                if (op.isAddOperation) {
+                    env->signals->getComponentInit(op.typeId).invoke(op.id, this);
+                }
+            }
         }
     }
 

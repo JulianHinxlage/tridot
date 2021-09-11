@@ -8,8 +8,6 @@
 
 namespace tri {
 
-	typedef uint32_t EntityId;
-
 	class ComponentPool {
 	public:
 		static const uint32_t pageSizeBits = 8;

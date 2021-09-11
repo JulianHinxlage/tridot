@@ -9,8 +9,6 @@
 
 namespace tri {
 
-	typedef uint64_t EntitySignatureBitmap;
-
 	template<typename... Components>
 	class EntityView;
 
@@ -115,9 +113,11 @@ namespace tri {
 			EntityId id;
 			int typeId;
 			bool isAddOperation;
+			bool isPending;
 			std::vector<uint8_t> data;
 		};
 		bool pendingOperationsEnabled;
+		bool addPendingOperations;
 		std::vector<PendingOperation> pendingOperations;
 	};
 
