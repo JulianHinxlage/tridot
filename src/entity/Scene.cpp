@@ -74,7 +74,7 @@ namespace tri {
     void* Scene::addComponent(int typeId, EntityId id) {
         if (addPendingOperations) {
             bool pending = pendingOperationsEnabled && !hasComponent(typeId, id);
-            pendingOperations.emplace_back(id, typeId, true, pending);
+            pendingOperations.push_back({id, typeId, true, pending});
             if (pending) {
                 pendingOperations.back().data.resize(env->reflection->getType(typeId)->size);
                 return (void*)pendingOperations.back().data.data();
@@ -102,7 +102,7 @@ namespace tri {
     bool Scene::removeComponent(int typeId, EntityId id) {
         if (pools.size() > typeId && pools[typeId] != nullptr) {
             if (addPendingOperations) {
-                pendingOperations.emplace_back(id, typeId, true, pendingOperationsEnabled);
+                pendingOperations.push_back({id, typeId, true, pendingOperationsEnabled});
                 if (pendingOperationsEnabled) {
                     return pools[typeId]->has(id);
                 }

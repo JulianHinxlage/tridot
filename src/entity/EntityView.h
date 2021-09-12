@@ -22,9 +22,9 @@ namespace tri {
 			blacklist = 0;
 		}
 
-		template<typename... Components>
+		template<typename... Comps>
 		EntityView &except() {
-			blacklist |= scene->createSignature<Components...>();
+			blacklist |= scene->createSignature<Comps...>();
 			return *this;
 		}
 

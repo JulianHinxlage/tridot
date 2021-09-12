@@ -2,8 +2,6 @@
 // Copyright (c) 2021 Julian Hinxlage. All rights reserved.
 //
 
-#pragma once
-
 #include "Camera.h"
 #include "core/core.h"
 #include "entity/Scene.h"

@@ -127,7 +127,7 @@ namespace tri {
 				key.v1 |= (getMeshIndex(mesh) & 0xffff) << 24;
 			}
 			
-			calls.emplace_back(transform, color, material, mesh, id);
+			calls.push_back({transform, color, material, mesh, id});
 			drawList.push_back({ key, (uint32_t)calls.size() - 1 });
 		}
 

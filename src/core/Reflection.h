@@ -111,7 +111,7 @@ namespace tri {
 						return;
 					}
 				}
-				desc->member.emplace_back(name, offset, memberDesc);
+				desc->member.push_back({name, offset, memberDesc});
 			}
 		}
 
@@ -128,7 +128,7 @@ namespace tri {
 						return;
 					}
 				}
-				desc->constants.emplace_back(name, value);
+				desc->constants.push_back({name, value});
 			}
 		}
 

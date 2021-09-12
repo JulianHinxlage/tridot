@@ -14,7 +14,7 @@ static char getCharacter() {
     return _getch();
 }
 #else
-#include <terminos.h>
+#include <termios.h>
 #include <unistd.h>
 static char getCharacter() {
     int ch;
@@ -121,7 +121,11 @@ namespace tri {
 
                 time_t timeVal = sec.count();
                 struct tm timeInfo;
+#if TRI_WINDOWS
                 localtime_s(&timeInfo, &timeVal);
+#else
+                timeInfo = *localtime(&timeVal);
+#endif
 
                 if (options.time) {
                     newLineIndent += 15;

@@ -20,7 +20,7 @@ namespace tri {
 				}
 			}
 		}
-		passes.emplace_back(pass, name);
+		passes.push_back({pass, name});
 	}
 
 	void RenderPipeline::removeRenderPass(const std::string& name) {

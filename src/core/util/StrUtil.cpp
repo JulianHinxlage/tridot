@@ -49,7 +49,7 @@ namespace tri {
         int delimiterIndex = 0;
         for(char c : string){
             if((int)delimiter.size() == 0){
-                parts.emplace_back(c, 1);
+                parts.push_back({c, 1});
             }else if(c == delimiter[delimiterIndex]){
                 delimiterIndex++;
                 if(delimiterIndex == delimiter.size()){

@@ -8,6 +8,10 @@
 #include "Console.h"
 #include "SignalManager.h"
 
+#if !TRI_WINDOWS
+#include <dlfcn.h>
+#endif
+
 namespace tri {
 
     ModuleManager::ModuleManager(){
