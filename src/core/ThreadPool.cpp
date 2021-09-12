@@ -1,9 +1,7 @@
-#include "ThreadPool.h"
 //
 // Copyright (c) 2021 Julian Hinxlage. All rights reserved.
 //
 
-#pragma once
 #include "ThreadPool.h"
 #include "util/Clock.h"
 

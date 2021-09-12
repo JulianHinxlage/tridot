@@ -5,15 +5,18 @@
 #pragma once
 
 #include "core/core.h"
+#include "SelectionContext.h"
+#include "Gui.h"
 
 namespace tri {
 
 	class EditorWindow {
 	public:
-		std::string name;
+        std::string name;
 		bool isOpen = false;
-		bool isDebugWindow = false;
-		bool isWindow = true;
+        bool isDebugWindow = false;
+        bool isWindow = true;
+        std::string profileName;
 
 		virtual void startup() {}
 		virtual void update() {}
@@ -23,13 +26,15 @@ namespace tri {
 	class Editor : public System {
 	public:
 		bool runtimeMode;
+		SelectionContext selectionContext;
+		Gui gui;
 
 		void startup() override;
 		void update() override;
 		void shutdown() override;
 		void addWindow(EditorWindow* window);
 
-		void updateMenueBar();
+		void updateMenuBar();
 
 	private:
 		std::vector<EditorWindow*> windows;

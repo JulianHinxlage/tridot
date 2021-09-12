@@ -189,6 +189,7 @@ namespace tri {
         Signal<> preShutdown;
         Signal<> shutdown;
         Signal<> postShutdown;
+        Signal<Scene*> sceneLoad;
 
         SignalManager(){
             setSignal(&preStartup, "preStartup");
@@ -200,6 +201,7 @@ namespace tri {
             setSignal(&preShutdown, "preShutdown");
             setSignal(&shutdown, "shutdown");
             setSignal(&postShutdown, "postShutdown");
+            setSignal(&sceneLoad, "sceneLoad");
         }
 
         template<typename... Args>

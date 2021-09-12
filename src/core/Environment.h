@@ -19,6 +19,7 @@ namespace tri {
 	class Time;
 	class Window;
 	class Renderer;
+	class Serializer;
 
 	class TRI_API Environment {
 	public:
@@ -36,6 +37,7 @@ namespace tri {
 		Time* time;
 		Window* window;
 		Renderer* renderer;
+		Serializer *serializer;
 
 		static Environment* startup();
 		static void shutdown();

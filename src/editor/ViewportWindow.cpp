@@ -9,6 +9,7 @@
 #include "engine/MeshComponent.h"
 #include "entity/Scene.h"
 #include "render/Window.h"
+#include "engine/Serializer.h"
 #include <imgui/imgui.h>
 
 float randf() {
@@ -19,6 +20,9 @@ glm::vec3 randf3() {
 	return { randf(), randf(), randf(), };
 }
 
+class EditorOnly{};
+TRI_REGISTER_TYPE(EditorOnly);
+
 namespace tri {
 
 	class ViewportWindow : public EditorWindow {
@@ -28,20 +32,49 @@ namespace tri {
 		void startup() {
 			name = "Viewport";
 			isWindow = false;
-			editorCameraId = env->scene->addEntity();
-			Transform& t = env->scene->addComponent<Transform>(editorCameraId);
-			t.position = { 0.5, 0.5, 2 };
-			Camera& cam = env->scene->addComponent<Camera>(editorCameraId);
-			cam.output = cam.output.make();
-			cam.output->setAttachment({ COLOR, env->window->getBackgroundColor() });
-			cam.output->setAttachment({ DEPTH });
+            editorCameraId = -1;
 
-			for (int i = 0; i < 1000; i++) {
-				env->scene->addEntity(Transform(randf3(), (randf3() * 0.1f) + glm::vec3(0.01, 0.01, 0.01), glm::vec3(0, 0, randf() * 6)), MeshComponent(nullptr, nullptr, Color(glm::vec4(randf3(), 1))));
-			}
+            env->signals->sceneLoad.addCallback([&](Scene *scene){
+                editorCameraId = -1;
+            });
 		}
 
+        void setupCamera(){
+            //search for camera in scene
+            editorCameraId = -1;
+            env->scene->view<Camera, EditorOnly>().each([&](EntityId id, Camera &cam, EditorOnly &){
+                if(editorCameraId == -1){
+                    editorCameraId = id;
+                }
+            });
+
+            if(editorCameraId != -1) {
+                //setup frame buffer
+                Camera &cam = env->scene->getComponent<Camera>(editorCameraId);
+                cam.output = cam.output.make();
+                cam.output->setAttachment({COLOR, env->window->getBackgroundColor()});
+                cam.output->setAttachment({DEPTH});
+            }else{
+                //create camera
+                editorCameraId = env->scene->addEntity(EditorOnly());
+                Transform& t = env->scene->addComponent<Transform>(editorCameraId);
+                t.position = { 0.5, 0.5, 2 };
+                Camera& cam = env->scene->addComponent<Camera>(editorCameraId);
+                cam.isPrimary = false;
+                cam.active = true;
+
+                //setup frame buffer
+                cam.output = cam.output.make();
+                cam.output->setAttachment({ COLOR, env->window->getBackgroundColor() });
+                cam.output->setAttachment({ DEPTH });
+            }
+        }
+
 		void update() override {
+		    if(editorCameraId == -1){
+		        setupCamera();
+		    }
+
 			ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
 			ImGui::PushStyleVar(ImGuiStyleVar_ChildBorderSize, 0);
 			if (ImGui::Begin(name.c_str(), &isOpen)) {
@@ -57,16 +90,18 @@ namespace tri {
 					else {
 						if (id == editorCameraId) {
 							output = camera.output;
-							if (camera.output->getSize() != glm::vec2(viewportSize.x, viewportSize.y)) {
-								camera.output->resize(viewportSize.x, viewportSize.y);
-								camera.aspectRatio = viewportSize.x / viewportSize.y;
-							}
+							if(output) {
+                                if (output->getSize() != glm::vec2(viewportSize.x, viewportSize.y)) {
+                                    output->resize(viewportSize.x, viewportSize.y);
+                                    camera.aspectRatio = viewportSize.x / viewportSize.y;
+                                }
+                            }
 						}
 					}
 				});
 
-				if (output != nullptr) {
-					ImGui::Image((ImTextureID)output->getAttachment(TextureAttachment::COLOR)->getId(), viewportSize);
+				if (output) {
+					ImGui::Image((ImTextureID)(size_t)output->getAttachment(TextureAttachment::COLOR)->getId(), viewportSize, ImVec2(0, 1), ImVec2(1, 0));
 				}
 			}
 			ImGui::End();

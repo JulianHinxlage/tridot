@@ -4,6 +4,7 @@
 
 
 #include "Transform.h"
+#include "core/core.h"
 #include <glm/gtc/matrix_transform.hpp>
 #include <imgui/imgui.h>
 #include <imguizmo/ImGuizmo.h>
@@ -30,5 +31,10 @@ namespace tri {
         ImGuizmo::DecomposeMatrixToComponents((float*)&matrix, (float*)&position, (float*)&rotation, (float*)&scale);
         rotation = glm::radians(rotation);
     }
+
+    TRI_REGISTER_TYPE(Transform);
+    TRI_REGISTER_MEMBER(Transform, position);
+    TRI_REGISTER_MEMBER(Transform, scale);
+    TRI_REGISTER_MEMBER(Transform, rotation);
 
 }

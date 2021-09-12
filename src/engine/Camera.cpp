@@ -18,7 +18,9 @@ namespace tri {
 	TRI_REGISTER_MEMBER(Camera, projection);
 	TRI_REGISTER_MEMBER(Camera, target);
 	TRI_REGISTER_MEMBER(Camera, output);
-	TRI_REGISTER_MEMBER(Camera, pipeline);
+    TRI_REGISTER_MEMBER(Camera, pipeline);
+    TRI_REGISTER_MEMBER(Camera, isPrimary);
+    TRI_REGISTER_MEMBER(Camera, active);
 	TRI_REGISTER_MEMBER(Camera, type);
 	TRI_REGISTER_MEMBER(Camera, near);
 	TRI_REGISTER_MEMBER(Camera, far);

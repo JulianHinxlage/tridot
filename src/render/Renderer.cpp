@@ -114,17 +114,17 @@ namespace tri {
 
 			SortKey key;
 			key.v1 = 0;
-			key.v1 |= (layer && 0x3f) << 58;
-			key.v1 |= opaque << 57;
+			key.v1 |= ((uint64_t)layer && 0x3f) << 58;
+			key.v1 |= (uint64_t)opaque << 57;
 			if (opaque) {
-				key.v1 |= (getMaterialIndex(material) & 0xffff) << 40;
-				key.v1 |= (getMeshIndex(mesh) & 0xffff) << 24;
-				key.v1 |= (depth & 0xffffff) << 0;
+				key.v1 |= ((uint64_t)getMaterialIndex(material) & 0xffff) << 40;
+				key.v1 |= ((uint64_t)getMeshIndex(mesh) & 0xffff) << 24;
+				key.v1 |= ((uint64_t)depth & 0xffffff) << 0;
 			}
 			else {
-				key.v1 |= (-depth & 0xffffff) << 0;
-				key.v1 |= (getMaterialIndex(material) & 0xffff) << 40;
-				key.v1 |= (getMeshIndex(mesh) & 0xffff) << 24;
+				key.v1 |= (-(uint64_t)depth & 0xffffff) << 0;
+				key.v1 |= ((uint64_t)getMaterialIndex(material) & 0xffff) << 40;
+				key.v1 |= ((uint64_t)getMeshIndex(mesh) & 0xffff) << 24;
 			}
 			
 			calls.push_back({transform, color, material, mesh, id});
@@ -132,7 +132,7 @@ namespace tri {
 		}
 
 		void sort() {
-			TRI_PROFILE_FUNC();
+			TRI_PROFILE("render/sort");
 			std::sort(drawList.begin(), drawList.end());
 		}
 
@@ -161,7 +161,7 @@ namespace tri {
 		}
 
 		void draw() {
-			TRI_PROFILE_FUNC();
+			TRI_PROFILE("render/draw");
 			Mesh* mesh = nullptr;
 			Material* material = nullptr;
 			BatchBuffer* instances;
@@ -221,8 +221,7 @@ namespace tri {
 	}
 
 	void Renderer::drawScene(Ref<FrameBuffer> frameBuffer, Ref<RenderPipeline> pipeline) {
-		TRI_PROFILE_FUNC();
-		if (pipeline == nullptr) {
+        if (pipeline == nullptr) {
 			pipeline = defaultPipeline;
 		}
 		if (pipeline->input) {

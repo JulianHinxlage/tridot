@@ -38,6 +38,8 @@ namespace tri {
         input = nullptr;
         time = nullptr;
         window = nullptr;
+        renderer = nullptr;
+        serializer = nullptr;
     }
 
 	Environment* Environment::startup() {

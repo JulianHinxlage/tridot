@@ -47,6 +47,10 @@ namespace tri {
                 freeList.erase(hint);
             }
         }
+        //todo: keep track of free ids if entities are created with a hint
+        while(entityPool.has(hint)){
+            hint++;
+        }
         entityPool.add(hint);
         getSignature(hint) = 0;
         return hint;

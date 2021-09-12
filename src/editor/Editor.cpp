@@ -6,6 +6,9 @@
 #include "Editor.h"
 #include "render/Window.h"
 #include "core/util/StrUtil.h"
+#include "engine/Serializer.h"
+#include "engine/Transform.h"
+#include "engine/MeshComponent.h"
 #include <imgui/imgui.h>
 #include <imgui/imgui_internal.h>
 
@@ -15,7 +18,9 @@ namespace tri {
 
 	TRI_REGISTER_SYSTEM(Editor);
 
-	void Editor::startup(){
+    void createTestScene();
+
+    void Editor::startup(){
 		editor = this;
 		updated = false;
 		runtimeMode = false;
@@ -88,10 +93,11 @@ namespace tri {
 		if (!updated && ImGui::GetCurrentContext() && ImGui::GetCurrentContext()->WithinFrameScope) {
 			updated = true;
 			ImGui::DockSpaceOverViewport();
-			updateMenueBar();
+			updateMenuBar();
 			for (auto* window : windows) {
 				if (window) {
 					if (window->isOpen) {
+					    TRI_PROFILE(window->profileName.c_str());
 						if (window->isWindow) {
 							if (ImGui::Begin(window->name.c_str(), &window->isOpen)) {
 								window->update();
@@ -108,6 +114,8 @@ namespace tri {
 	}
 
 	void Editor::shutdown(){
+	    std::filesystem::copy("autosave.scene", "autosave2.scene", std::filesystem::copy_options::overwrite_existing);
+        env->serializer->serializeScene("autosave.scene", *env->scene);
 		for (auto* window : windows) {
 			window->shutdown();
 		}
@@ -117,25 +125,35 @@ namespace tri {
 		if (window) {
 			windows.push_back(window);
 			window->startup();
-		}
+            window->profileName = "editor/" + window->name;
+        }
 	}
 
-	void Editor::updateMenueBar() {
+	void Editor::updateMenuBar() {
 		if (ImGui::BeginMainMenuBar()) {
 
 			if (ImGui::BeginMenu("File")) {
 				if (ImGui::MenuItem("Open")) {
-					//TODO
+				    env->scene->clear();
+                    env->serializer->deserializeScene("autosave.scene", *env->scene);
+                    env->scene->update();
+                    env->signals->sceneLoad.invoke(env->scene);
 				}
 				if (ImGui::MenuItem("Save")) {
-					//TODO
-				}
+                    env->serializer->serializeScene("autosave.scene", *env->scene);
+                }
 				if (ImGui::MenuItem("Close")) {
-					//TODO
+				    env->scene->clear();
 				}
-				if (ImGui::MenuItem("Exit")) {
-					env->window->close();
-				}
+				if (ImGui::MenuItem("Create Test Scene")) {
+                    env->scene->clear();
+                    createTestScene();
+                    env->scene->update();
+                    env->signals->sceneLoad.invoke(env->scene);
+                }
+                if (ImGui::MenuItem("Exit")) {
+                    env->window->close();
+                }
 				ImGui::EndMenu();
 			}
 
@@ -160,6 +178,18 @@ namespace tri {
 			ImGui::EndMainMenuBar();
 		}
 	}
+
+    float randf() {
+        return (float)std::rand() / RAND_MAX;
+    }
+    glm::vec3 randf3() {
+        return { randf(), randf(), randf(), };
+    }
+	void createTestScene(){
+        for (int i = 0; i < 100; i++) {
+            env->scene->addEntity(Transform(randf3(), (randf3() * 0.1f) + glm::vec3(0.01, 0.01, 0.01), glm::vec3(0, 0, randf() * 6)), MeshComponent(nullptr, nullptr, Color(glm::vec4(randf3(), 1))));
+        }
+    }
 
 	class ImguiDemo : public EditorWindow {
 	public:
