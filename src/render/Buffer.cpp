@@ -2,7 +2,7 @@
 // Copyright (c) 2021 Julian Hinxlage. All rights reserved.
 //
 
-#include "core/Environment.h"
+#include "core/core.h"
 #include "Buffer.h"
 #include <GL/glew.h>
 

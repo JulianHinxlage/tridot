@@ -77,11 +77,11 @@ namespace tri::impl {
 
 #define TRI_REGISTER_CALLBACK_IMPL(name) void TRI_CONCAT(name, _func)(); bool TRI_CONCAT(name, _var) = [](){ TRI_CONCAT(name, _func)(); return true;}(); void TRI_CONCAT(name, _func)()
 #define TRI_REGISTER_CALLBACK() TRI_REGISTER_CALLBACK_IMPL(TRI_UNIQUE_IDENTIFIER(_tri_register_callback))
-#define TRI_STARTUP_CALLBACK_IMPL(callbackName, name) void TRI_CONCAT(name, _func)(); tri::impl::SignalCallbackRegisterer TRI_CONCAT(name, _var)(tridot::Environment::startup()->signals->startup, callbackName, &TRI_CONCAT(name, _func)); void TRI_CONCAT(name, _func)()
+#define TRI_STARTUP_CALLBACK_IMPL(callbackName, name) void TRI_CONCAT(name, _func)(); tri::impl::SignalCallbackRegisterer TRI_CONCAT(name, _var)(tri::Environment::startup()->signals->startup, callbackName, &TRI_CONCAT(name, _func)); void TRI_CONCAT(name, _func)()
 #define TRI_STARTUP_CALLBACK(callbackName) TRI_STARTUP_CALLBACK_IMPL(callbackName, TRI_UNIQUE_IDENTIFIER(_tri_register_callback))
-#define TRI_UPDATE_CALLBACK_IMPL(callbackName, name) void TRI_CONCAT(name, _func)(); tri::impl::SignalCallbackRegisterer TRI_CONCAT(name, _var)(tridot::Environment::startup()->signals->update, callbackName, &TRI_CONCAT(name, _func)); void TRI_CONCAT(name, _func)()
+#define TRI_UPDATE_CALLBACK_IMPL(callbackName, name) void TRI_CONCAT(name, _func)(); tri::impl::SignalCallbackRegisterer TRI_CONCAT(name, _var)(tri::Environment::startup()->signals->update, callbackName, &TRI_CONCAT(name, _func)); void TRI_CONCAT(name, _func)()
 #define TRI_UPDATE_CALLBACK(callbackName) TRI_UPDATE_CALLBACK_IMPL(callbackName, TRI_UNIQUE_IDENTIFIER(_tri_register_callback))
-#define TRI_SHUTDOWN_CALLBACK_IMPL(callbackName, name) void TRI_CONCAT(name, _func)(); tri::impl::SignalCallbackRegisterer TRI_CONCAT(name, _var)(tridot::Environment::startup()->signals->shutdown, callbackName, &TRI_CONCAT(name, _func)); void TRI_CONCAT(name, _func)()
+#define TRI_SHUTDOWN_CALLBACK_IMPL(callbackName, name) void TRI_CONCAT(name, _func)(); tri::impl::SignalCallbackRegisterer TRI_CONCAT(name, _var)(tri::Environment::startup()->signals->shutdown, callbackName, &TRI_CONCAT(name, _func)); void TRI_CONCAT(name, _func)()
 #define TRI_SHUTDOWN_CALLBACK(callbackName) TRI_SHUTDOWN_CALLBACK_IMPL(callbackName, TRI_UNIQUE_IDENTIFIER(_tri_register_callback))
 
 #define TRI_REGISTER_SYSTEM(type) tri::impl::SystemRegisterer<type> TRI_UNIQUE_IDENTIFIER(_tri_register_component)(#type);

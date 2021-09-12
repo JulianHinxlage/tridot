@@ -5,6 +5,8 @@
 #include "config.h"
 #include "ModuleManager.h"
 #include "Environment.h"
+#include "Console.h"
+#include "SignalManager.h"
 
 namespace tri {
 

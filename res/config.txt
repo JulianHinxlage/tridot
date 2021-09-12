@@ -1,1 +1,1 @@
-vsync 0
+vsync 1

@@ -5,6 +5,7 @@
 #pragma once
 
 #include "pch.h"
+#include "System.h"
 #include "util/Clock.h"
 
 namespace tri {

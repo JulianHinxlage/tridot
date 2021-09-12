@@ -11,6 +11,15 @@
 
 using namespace tri;
 
+TRI_REGISTER_CALLBACK() {
+	env->signals->preStartup.addCallback("version", []() {
+#if TRI_WINDOWS
+		env->console->options.color = false;
+#endif
+		env->console->info("Tridot version ", TRI_VERSION);
+	});
+}
+
 int main(int argc, char* argv[]) {
 	Environment::startup();
 
@@ -23,8 +32,8 @@ int main(int argc, char* argv[]) {
 	}
 	env->console->loadConfigFile(configFile);
 
-	env->window->init(1080, 720, "Tridot Launcher");
-	env->window->setBackgroundColor(Color(130, 130, 130));
+	env->window->init(1080, 720, "Tridot Editor");
+	env->window->setBackgroundColor(Color(50, 50, 50));
 
 	env->signals->startup.invoke();
 	env->signals->postStartup.invoke();
@@ -35,9 +44,6 @@ int main(int argc, char* argv[]) {
 		env->signals->update.invoke();
 		env->signals->postUpdate.invoke();
 
-		if (env->time->frameTicks(0.5)) {
-			//env->console->info("fps: ", env->time->framesPerSecond);
-		}
 		env->window->setVSync(*env->console->getVariable<bool>("vsync"));
 	}
 

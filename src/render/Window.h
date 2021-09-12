@@ -5,6 +5,7 @@
 #pragma once
 
 #include "Color.h"
+#include "core/core.h"
 #include "glm/glm.hpp"
 #include <string>
 

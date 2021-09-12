@@ -74,25 +74,7 @@ namespace tri {
             }
         }
 
-        void update() {
-            for (auto sys : systems) {
-                if (sys.second.system) {
-                    sys.second.system->update();
-                }
-            }
-        }
-
         void shutdown(){
-            /*
-            while (systems.size() > 0) {
-                auto& sys = systems[0];
-                if (sys.system) {
-                    sys.system->shutdown();
-                    env->signals->update.removeCallback(sys.updateCallbackId);
-                    sys.system = nullptr;
-                }
-                systems.erase(systems.begin());
-            }*/
             for (auto sys : systems) {
                 if (sys.second.system) {
                     sys.second.system->shutdown();

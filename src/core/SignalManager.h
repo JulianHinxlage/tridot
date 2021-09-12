@@ -150,6 +150,14 @@ namespace tri {
             return observers;
         }
 
+        void swapObserverPositions(int index1, int index2) {
+            if (index1 >= 0 && index1 < observers.size()) {
+                if (index2 >= 0 && index2 < observers.size()) {
+                    std::swap(observers[index1], observers[index2]);
+                }
+            }
+        }
+
     private:
         std::vector<Observer> observers;
         std::vector<std::function<void()>> eventBuffer;

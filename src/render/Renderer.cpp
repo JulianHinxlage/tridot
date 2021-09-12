@@ -3,8 +3,10 @@
 //
 
 #include "pch.h"
+#include "core/core.h"
 #include "Renderer.h"
 #include "BatchBuffer.h"
+#include "render/RenderContext.h"
 
 namespace tri {
 
@@ -106,7 +108,7 @@ namespace tri {
 
 		void add(const glm::mat4 &transform, const glm::vec3& position, Mesh* mesh, Material* material, Color color, uint32_t id, uint32_t layer = 0) {
 			
-			bool opaque = material->isOpaque() && color.a == 1.0;
+			bool opaque = material->isOpaque() && color.a == 255;
 			uint32_t depth = glm::length(eyePosition - position) / 0.0001;
 			depth = std::min(depth, (uint32_t)(1 << 24) - 1);
 
@@ -227,7 +229,12 @@ namespace tri {
 			pipeline->input->bind();
 		}
 		else {
-			FrameBuffer::unbind();
+			if (frameBuffer) {
+				frameBuffer->bind();
+			}
+			else {
+				FrameBuffer::unbind();
+			}
 		}
 		drawList->sort();
 		drawList->draw();

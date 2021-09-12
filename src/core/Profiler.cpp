@@ -51,6 +51,9 @@ namespace tri {
             entry.second.counts.clear();
         }
         node.update();
+        if (node.name == "") {
+            node.name = "total";
+        }
     }
 
     Profiler::Node *Profiler::Node::get(const std::string &name){

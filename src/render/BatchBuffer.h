@@ -6,7 +6,6 @@
 
 #include "Buffer.h"
 #include "core/util/Ref.h"
-#include <vector>
 
 namespace tri {
 
