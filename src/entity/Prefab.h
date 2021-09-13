@@ -18,7 +18,7 @@ namespace tri {
 		}
 
 		template<typename... Components>
-		Prefab(const Components&... &comps) {
+		Prefab(const Components&... comps) {
 			addComponents(comps...);
 		}
 
@@ -28,7 +28,7 @@ namespace tri {
 		}
 
 		template<typename Component, typename... Args>
-		Component& addComponent(const ARgs&... args) {
+		Component& addComponent(const Args&... args) {
 			Component *comp = (Component*)addComponent(env->reflection->getTypeId<Component>());
 			new (comp) Component(args...);
 			return *comp;
@@ -50,8 +50,8 @@ namespace tri {
 		}
 
 		void *addComponent(int typeId) {
-			if (void* comp = getComponent()) {
-				return comp;
+			if (void* data = getComponent(typeId)) {
+				return data;
 			}
 			else {
 				comps.push_back({ typeId });
@@ -94,20 +94,36 @@ namespace tri {
 			EntityId id = scene->addEntity();
 			for (int i = 0; i < comps.size(); i++) {
 				Comp& comp = comps[i];
-				void *ptr = scene->addComponent(comp.typeId);
-				for (int j = 0; j < comp.data.size(); i++) {
+				void *ptr = scene->addComponent(comp.typeId, id);
+				for (int j = 0; j < comp.data.size(); j++) {
 					*((uint8_t*)ptr + j) = comp.data[j];
 				}
 			}
+			//todo: childs
 			return id;
+		}
+
+		void copyEntity(EntityId id, Scene *scene){
+            clear();
+            for(auto &desc : env->reflection->getDescriptors()){
+                if(scene->hasComponent(desc->typeId, id)){
+                    desc->copy(scene->getComponent(desc->typeId, id), addComponent(desc->typeId));
+                }
+            }
+            //todo: childs
 		}
 
 		void operator=(const Prefab& prefab) {
 			comps = prefab.comps;
-			childs.resize(prefabs.size());
+			childs.resize(prefab.childs.size());
 			for (int i = 0; i < childs.size(); i++) {
 				childs[i] = std::make_shared<Prefab>(*prefab.childs[i]);
 			}
+		}
+
+		void clear(){
+		    comps.clear();
+		    childs.clear();
 		}
 
 	private:

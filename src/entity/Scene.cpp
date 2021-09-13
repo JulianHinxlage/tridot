@@ -106,7 +106,7 @@ namespace tri {
     bool Scene::removeComponent(int typeId, EntityId id) {
         if (pools.size() > typeId && pools[typeId] != nullptr) {
             if (addPendingOperations) {
-                pendingOperations.push_back({id, typeId, true, pendingOperationsEnabled});
+                pendingOperations.push_back({id, typeId, false, pendingOperationsEnabled});
                 if (pendingOperationsEnabled) {
                     return pools[typeId]->has(id);
                 }

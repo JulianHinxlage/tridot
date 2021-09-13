@@ -9,6 +9,7 @@
 #include "engine/Serializer.h"
 #include "engine/Transform.h"
 #include "engine/MeshComponent.h"
+#include "engine/Input.h"
 #include <imgui/imgui.h>
 #include <imgui/imgui_internal.h>
 
@@ -114,7 +115,9 @@ namespace tri {
 	}
 
 	void Editor::shutdown(){
-	    std::filesystem::copy("autosave.scene", "autosave2.scene", std::filesystem::copy_options::overwrite_existing);
+        if(std::filesystem::exists("autosave.scene")){
+            std::filesystem::copy("autosave.scene", "autosave2.scene", std::filesystem::copy_options::overwrite_existing);
+        }
         env->serializer->serializeScene("autosave.scene", *env->scene);
 		for (auto* window : windows) {
 			window->shutdown();
@@ -130,16 +133,15 @@ namespace tri {
 	}
 
 	void Editor::updateMenuBar() {
-		if (ImGui::BeginMainMenuBar()) {
-
+        if (ImGui::BeginMainMenuBar()) {
 			if (ImGui::BeginMenu("File")) {
-				if (ImGui::MenuItem("Open")) {
+				if (ImGui::MenuItem("Open", "Ctrl+O")) {
 				    env->scene->clear();
                     env->serializer->deserializeScene("autosave.scene", *env->scene);
                     env->scene->update();
                     env->signals->sceneLoad.invoke(env->scene);
 				}
-				if (ImGui::MenuItem("Save")) {
+				if (ImGui::MenuItem("Save", "Ctrl+S")) {
                     env->serializer->serializeScene("autosave.scene", *env->scene);
                 }
 				if (ImGui::MenuItem("Close")) {
@@ -177,7 +179,18 @@ namespace tri {
 
 			ImGui::EndMainMenuBar();
 		}
-	}
+
+        bool control = env->input->down(Input::KEY_LEFT_CONTROL) || env->input->down(Input::KEY_RIGHT_CONTROL);
+        if (control && env->input->pressed("O")) {
+            env->scene->clear();
+            env->serializer->deserializeScene("autosave.scene", *env->scene);
+            env->scene->update();
+            env->signals->sceneLoad.invoke(env->scene);
+        }
+        if (control && env->input->pressed("S")) {
+            env->serializer->serializeScene("autosave.scene", *env->scene);
+        }
+    }
 
     float randf() {
         return (float)std::rand() / RAND_MAX;

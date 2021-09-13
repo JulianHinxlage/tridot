@@ -7,6 +7,7 @@
 #include "core/core.h"
 #include "SelectionContext.h"
 #include "Gui.h"
+#include "EntityOperations.h"
 
 namespace tri {
 
@@ -28,6 +29,7 @@ namespace tri {
 		bool runtimeMode;
 		SelectionContext selectionContext;
 		Gui gui;
+		EntityOperations entityOperations;
 
 		void startup() override;
 		void update() override;
