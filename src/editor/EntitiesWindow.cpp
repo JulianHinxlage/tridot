@@ -99,8 +99,8 @@ namespace tri {
                     }
                 }
                 if(env->input->pressed("V")){
-                    EntityId copy = editor->entityOperations.pastEntity();
-                    if(copy != -1){
+                    if(editor->entityOperations.wasEntityCopied()) {
+                        EntityId copy = editor->entityOperations.pastEntity();
                         editor->selectionContext.unselectAll();
                         editor->selectionContext.select(copy);
                     }

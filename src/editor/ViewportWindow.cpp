@@ -10,6 +10,7 @@
 #include "entity/Scene.h"
 #include "render/Window.h"
 #include "engine/Serializer.h"
+#include "engine/Input.h"
 #include <imgui/imgui.h>
 
 float randf() {
@@ -54,6 +55,7 @@ namespace tri {
                 cam.output = cam.output.make();
                 cam.output->setAttachment({COLOR, env->window->getBackgroundColor()});
                 cam.output->setAttachment({DEPTH});
+                cam.output->setAttachment({ (TextureAttachment)(COLOR + 1), Color(-1) });
             }else{
                 //create camera
                 editorCameraId = env->scene->addEntity(EditorOnly());
@@ -67,6 +69,7 @@ namespace tri {
                 cam.output = cam.output.make();
                 cam.output->setAttachment({ COLOR, env->window->getBackgroundColor() });
                 cam.output->setAttachment({ DEPTH });
+                cam.output->setAttachment({ (TextureAttachment)(COLOR + 1), Color(-1) });
             }
         }
 
@@ -102,10 +105,40 @@ namespace tri {
 
 				if (output) {
 					ImGui::Image((ImTextureID)(size_t)output->getAttachment(TextureAttachment::COLOR)->getId(), viewportSize, ImVec2(0, 1), ImVec2(1, 0));
-				}
+                    updateMousePicking(output->getAttachment((TextureAttachment)(COLOR + 1)));
+                }
+
 			}
 			ImGui::End();
 			ImGui::PopStyleVar(2);
+		}
+
+		void updateMousePicking(Ref<Texture> texture){
+		    if(texture){
+		        if(ImGui::IsItemHovered()){
+                    glm::vec2 pos = {0, 0};
+                    pos.x = ImGui::GetMousePos().x - ImGui::GetItemRectMin().x;
+                    pos.y = ImGui::GetMousePos().y - ImGui::GetItemRectMin().y;
+                    pos.y = texture->getHeight() - pos.y;
+
+                    if(env->input->pressed(Input::MOUSE_BUTTON_LEFT)){
+                        Color color = texture->getPixel(pos.x, pos.y);
+                        EntityId id = color.value;
+
+                        bool control = env->input->down(Input::KEY_LEFT_CONTROL) || env->input->down(Input::KEY_RIGHT_CONTROL);
+                        if(!control){
+                            editor->selectionContext.unselectAll();
+                        }
+                        if(id != -1) {
+                            if(control && editor->selectionContext.isSelected(id)){
+                                editor->selectionContext.unselect(id);
+                            }else{
+                                editor->selectionContext.select(id);
+                            }
+                        }
+                    }
+		        }
+            }
 		}
 	};
 	TRI_STARTUP_CALLBACK("") {

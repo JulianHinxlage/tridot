@@ -35,13 +35,12 @@ in vec4 fColor;
 in vec4 fId;
 
 out vec4 oColor;
-//out vec4 oId;
+out vec4 oId;
 
 uniform sampler2D uTextures[32];
 uniform vec3 uEyePosition = vec3(0, 0, 0);
 
-
 void main(){
     oColor = fColor;
-    //oId = fId;
+    oId = fId;
 }
