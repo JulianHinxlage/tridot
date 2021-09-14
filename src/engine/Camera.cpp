@@ -32,9 +32,9 @@ namespace tri {
     TRI_REGISTER_CONSTANT(Camera::Type, ORTHOGRAPHIC);
 
     Camera::Camera(Type type, bool isPrimary) {
-        forward = { 1, 0, 0 };
-        up = { 0, 0, 1 };
-        right = { 0, 1, 0 };
+        forward = { 0, 0, -1 };
+        up = { 0, 1, 0 };
+        right = { 1, 0, 0 };
         projection = glm::mat4(1);
         target = nullptr;
         output = nullptr;
@@ -51,13 +51,13 @@ namespace tri {
     TRI_UPDATE_CALLBACK("Camera") {
         env->scene->view<Camera, Transform>().each([](Camera& camera, Transform &transform) {
             glm::mat4 t = transform.calculateMatrix();
-            camera.forward = t * glm::vec4(0, 0, 1, 0);
+            camera.forward = t * glm::vec4(0, 0, -1, 0);
             camera.right = t * glm::vec4(1, 0, 0, 0);
             camera.up = t * glm::vec4(0, 1, 0, 0);
             if (camera.type == Camera::PERSPECTIVE) {
                 camera.projection = glm::perspective(glm::radians(camera.fieldOfView), camera.aspectRatio, camera.near, camera.far) * glm::inverse(t);
             }else if (camera.type == Camera::ORTHOGRAPHIC) {
-                camera.projection = glm::ortho(-transform.scale.x * camera.aspectRatio, transform.scale.x * camera.aspectRatio, -transform.scale.y, transform.scale.y) * glm::inverse(t);
+                camera.projection = glm::ortho(-transform.scale.x * camera.aspectRatio, transform.scale.x * camera.aspectRatio, -transform.scale.y, transform.scale.y, camera.near, camera.far) * glm::inverse(t);
             }
         });
     }

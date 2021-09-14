@@ -27,14 +27,14 @@ namespace tri {
     }
 
     bool Gizmos::update(const Transform &cameraTransform, const Camera &camera) {
-        if(env->input->pressed("E")){
+        if(env->input->pressed("R")){
             switch (operation) {
                 case TRANSLATE : operation = SCALE; break;
                 case SCALE : operation = ROTATE; break;
                 case ROTATE : operation = TRANSLATE; break;
             }
         }
-        if(env->input->pressed("R")){
+        if(env->input->pressed("F")){
             switch (mode) {
                 case LOCAL : mode = WORLD; break;
                 case WORLD : mode = LOCAL; break;
@@ -50,7 +50,11 @@ namespace tri {
         int entityCount = editor->selectionContext.getSelected().size();
         if(entityCount > 0) {
             ImGuizmo::Enable(true);
-            ImGuizmo::SetOrthographic(false);
+            if(camera.type == Camera::PERSPECTIVE){
+                ImGuizmo::SetOrthographic(false);
+            }else{
+                ImGuizmo::SetOrthographic(true);
+            }
             ImGuizmo::SetDrawlist();
             ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, ImGui::GetWindowWidth(), ImGui::GetWindowHeight());
 

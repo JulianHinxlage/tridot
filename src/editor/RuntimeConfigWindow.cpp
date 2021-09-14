@@ -10,13 +10,13 @@ namespace tri {
 
     class RuntimeConfigWindow : public EditorWindow {
     public:
-        std::set<std::string> allwaysOn;
+        std::set<std::string> alwaysOn;
         bool doNotChangeState = false;
 
         void startup() {
             name = "Runtime Config";
             isDebugWindow = true;
-            allwaysOn = {
+            alwaysOn = {
                 "Editor",
                 "Window",
                 "Imgui.begin",
@@ -31,7 +31,7 @@ namespace tri {
                 auto& observer = observers[i];
 
                 bool active = observer.active;
-                bool canChange = !allwaysOn.contains(observer.name);
+                bool canChange = !alwaysOn.contains(observer.name);
                 if (!canChange) {
                     ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetStyleColorVec4(ImGuiCol_TextDisabled));
                 }

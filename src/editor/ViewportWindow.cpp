@@ -4,6 +4,7 @@
 
 #include "pch.h"
 #include "Editor.h"
+#include "EditorCamera.h"
 #include "engine/Camera.h"
 #include "engine/Transform.h"
 #include "engine/MeshComponent.h"
@@ -29,6 +30,7 @@ namespace tri {
     class ViewportWindow : public EditorWindow {
     public:
         EntityId editorCameraId;
+        EditorCamera editorCamera;
 
         void startup() {
             name = "Viewport";
@@ -124,6 +126,12 @@ namespace tri {
                     }
                 }
 
+                if(cam && camTransform) {
+                    if(ImGui::IsWindowHovered()){
+                        editorCamera.update(*cam, *camTransform);
+                    }
+                }
+
             }
             ImGui::End();
             ImGui::PopStyleVar(2);
@@ -139,6 +147,7 @@ namespace tri {
 
                     if(env->input->pressed(Input::MOUSE_BUTTON_LEFT)){
                         Color color = texture->getPixel(pos.x, pos.y);
+                        color.a = 0;
                         EntityId id = color.value;
 
                         bool control = env->input->down(Input::KEY_LEFT_CONTROL) || env->input->down(Input::KEY_RIGHT_CONTROL);

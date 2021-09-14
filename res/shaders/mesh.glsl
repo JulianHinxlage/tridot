@@ -42,5 +42,5 @@ uniform vec3 uEyePosition = vec3(0, 0, 0);
 
 void main(){
     oColor = fColor;
-    oId = fId;
+    oId = vec4(fId.xyz, 1.0);
 }
