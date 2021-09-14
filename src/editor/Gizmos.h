@@ -32,7 +32,7 @@ namespace tri {
         Pivots pivots;
 
         void startup();
-        bool update(const Transform &cameraTransform, const Camera &camera);
+        bool update(const Transform &cameraTransform, const Camera &camera, const glm::vec2 &viewportPosition, const glm::vec2 &viewportSize);
     };
 
 }

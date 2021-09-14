@@ -10,24 +10,29 @@
 namespace tri {
 
     void EditorCamera::update(Camera &camera, Transform &transform) {
+        bool shift = env->input->down(Input::KEY_LEFT_SHIFT) || env->input->down(Input::KEY_RIGHT_SHIFT);
+        bool control = env->input->down(Input::KEY_LEFT_CONTROL) || env->input->down(Input::KEY_RIGHT_CONTROL);
+
         glm::vec3 move = {0, 0, 0};
-        if(env->input->down("W")){
-            move.z -= 1;
-        }
-        if(env->input->down("A")){
-            move.x -= 1;
-        }
-        if(env->input->down("S")){
-            move.z += 1;
-        }
-        if(env->input->down("D")){
-            move.x += 1;
-        }
-        if(env->input->down("Q")){
-            move.y -= 1;
-        }
-        if(env->input->down("E")){
-            move.y += 1;
+        if(!control) {
+            if (env->input->down("W")) {
+                move.z -= 1;
+            }
+            if (env->input->down("A")) {
+                move.x -= 1;
+            }
+            if (env->input->down("S")) {
+                move.z += 1;
+            }
+            if (env->input->down("D")) {
+                move.x += 1;
+            }
+            if (env->input->down("Q")) {
+                move.y -= 1;
+            }
+            if (env->input->down("E")) {
+                move.y += 1;
+            }
         }
 
         //WASD EQ
@@ -47,7 +52,7 @@ namespace tri {
 
         //mouse wheel
         float wheelDelta = env->input->getMouseWheelDelta();
-        if(env->input->down(Input::KEY_LEFT_SHIFT) || env->input->down(Input::KEY_RIGHT_SHIFT)){
+        if(shift){
             speed *= std::pow(1.1, wheelDelta);
         }else{
             if(camera.type == Camera::PERSPECTIVE) {

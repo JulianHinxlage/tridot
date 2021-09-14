@@ -26,7 +26,7 @@ namespace tri {
         pivots = CENTER;
     }
 
-    bool Gizmos::update(const Transform &cameraTransform, const Camera &camera) {
+    bool Gizmos::update(const Transform &cameraTransform, const Camera &camera, const glm::vec2 &viewportPosition, const glm::vec2 &viewportSize) {
         if(env->input->pressed("R")){
             switch (operation) {
                 case TRANSLATE : operation = SCALE; break;
@@ -56,13 +56,16 @@ namespace tri {
                 ImGuizmo::SetOrthographic(true);
             }
             ImGuizmo::SetDrawlist();
-            ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, ImGui::GetWindowWidth(), ImGui::GetWindowHeight());
+            ImGuizmo::SetRect(ImGui::GetWindowPos().x + viewportPosition.x, ImGui::GetWindowPos().y + viewportPosition.y, viewportSize.x, viewportSize.y);
 
             int count = 0;
             for (auto &id : editor->selectionContext.getSelected()){
                 if(env->scene->hasComponent<Transform>(id)){
                     count++;
                 }
+            }
+            if(count == 0){
+                return false;
             }
 
             Transform avg;

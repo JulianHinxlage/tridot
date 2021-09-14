@@ -58,8 +58,8 @@ namespace tri {
                 Camera &cam = env->scene->getComponent<Camera>(editorCameraId);
                 cam.output = cam.output.make();
                 cam.output->setAttachment({COLOR, env->window->getBackgroundColor()});
-                cam.output->setAttachment({DEPTH});
-                cam.output->setAttachment({ (TextureAttachment)(COLOR + 1), Color(-1) });
+                cam.output->setAttachment({DEPTH, Color(0)});
+                cam.output->setAttachment({ (TextureAttachment)(COLOR + 1), Color(-1)});
             }else{
                 //create camera
                 editorCameraId = env->scene->addEntity(EditorOnly());
@@ -88,6 +88,7 @@ namespace tri {
 
                 Ref<FrameBuffer> output = nullptr;
                 ImVec2 viewportSize = ImGui::GetContentRegionAvail();
+                ImVec2 viewportPosition = ImGui::GetCursorPos();
                 Camera *cam = nullptr;
                 Transform *camTransform = nullptr;
                 env->scene->view<Camera, Transform>().each([&](EntityId id, Camera& camera, Transform &transform) {
@@ -117,12 +118,12 @@ namespace tri {
                     ImGui::Image((ImTextureID)(size_t)output->getAttachment(TextureAttachment::COLOR)->getId(), viewportSize, ImVec2(0, 1), ImVec2(1, 0));
                     bool pickingAllowed = true;
                     if(cam && camTransform){
-                        if(editor->gizmos.update(*camTransform, *cam)){
+                        if(editor->gizmos.update(*camTransform, *cam, {viewportPosition.x, viewportPosition.y}, {viewportSize.x, viewportSize.y})){
                             pickingAllowed = false;
                         }
                     }
                     if(pickingAllowed){
-                        updateMousePicking(output->getAttachment((TextureAttachment)(COLOR + 1)));
+                        updateMousePicking(output->getAttachment((TextureAttachment)(COLOR + 1)), {viewportSize.x, viewportSize.y});
                     }
                 }
 
@@ -137,15 +138,19 @@ namespace tri {
             ImGui::PopStyleVar(2);
         }
 
-        void updateMousePicking(Ref<Texture> texture){
+        void updateMousePicking(Ref<Texture> texture, glm::vec2 viewportSize){
             if(texture){
                 if(ImGui::IsItemHovered()){
-                    glm::vec2 pos = {0, 0};
-                    pos.x = ImGui::GetMousePos().x - ImGui::GetItemRectMin().x;
-                    pos.y = ImGui::GetMousePos().y - ImGui::GetItemRectMin().y;
-                    pos.y = texture->getHeight() - pos.y;
-
                     if(env->input->pressed(Input::MOUSE_BUTTON_LEFT)){
+
+                        glm::vec2 pos = {0, 0};
+                        pos.x = ImGui::GetMousePos().x - ImGui::GetItemRectMin().x;
+                        pos.y = ImGui::GetMousePos().y - ImGui::GetItemRectMin().y;
+                        pos /= viewportSize;
+                        pos *= glm::vec2(texture->getWidth(), texture->getHeight());
+                        pos.y = texture->getHeight() - pos.y;
+
+
                         Color color = texture->getPixel(pos.x, pos.y);
                         color.a = 0;
                         EntityId id = color.value;
@@ -161,6 +166,7 @@ namespace tri {
                                 editor->selectionContext.select(id);
                             }
                         }
+
                     }
                 }
             }
