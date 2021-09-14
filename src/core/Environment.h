@@ -7,41 +7,41 @@
 
 namespace tri {
 
-	class SystemManager;
-	class Console;
-	class ModuleManager;
-	class Reflection;
-	class Profiler;
-	class SignalManager;
-	class ThreadPool;
-	class Scene;
-	class Input;
-	class Time;
-	class Window;
-	class Renderer;
-	class Serializer;
+    class SystemManager;
+    class Console;
+    class ModuleManager;
+    class Reflection;
+    class Profiler;
+    class SignalManager;
+    class ThreadPool;
+    class Scene;
+    class Input;
+    class Time;
+    class Window;
+    class Renderer;
+    class Serializer;
 
-	class TRI_API Environment {
-	public:
-		Environment();
+    class TRI_API Environment {
+    public:
+        Environment();
 
-		SystemManager* systems;
-		Console* console;
-		ModuleManager* modules;
-		Reflection* reflection;
-		Profiler* profiler;
-		SignalManager* signals;
-		ThreadPool *threads;
-		Scene* scene;
-		Input* input;
-		Time* time;
-		Window* window;
-		Renderer* renderer;
-		Serializer *serializer;
+        SystemManager* systems;
+        Console* console;
+        ModuleManager* modules;
+        Reflection* reflection;
+        Profiler* profiler;
+        SignalManager* signals;
+        ThreadPool *threads;
+        Scene* scene;
+        Input* input;
+        Time* time;
+        Window* window;
+        Renderer* renderer;
+        Serializer *serializer;
 
-		static Environment* startup();
-		static void shutdown();
-	};
+        static Environment* startup();
+        static void shutdown();
+    };
 
 }
 

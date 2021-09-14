@@ -12,39 +12,39 @@
 
 namespace tri {
 
-	class EditorWindow {
-	public:
+    class EditorWindow {
+    public:
         std::string name;
-		bool isOpen = false;
+        bool isOpen = false;
         bool isDebugWindow = false;
         bool isWindow = true;
         std::string profileName;
 
-		virtual void startup() {}
-		virtual void update() {}
-		virtual void shutdown() {}
-	};
+        virtual void startup() {}
+        virtual void update() {}
+        virtual void shutdown() {}
+    };
 
-	class Editor : public System {
-	public:
-		bool runtimeMode;
-		SelectionContext selectionContext;
-		Gui gui;
-		EntityOperations entityOperations;
-		Gizmos gizmos;
+    class Editor : public System {
+    public:
+        bool runtimeMode;
+        SelectionContext selectionContext;
+        Gui gui;
+        EntityOperations entityOperations;
+        Gizmos gizmos;
 
-		void startup() override;
-		void update() override;
-		void shutdown() override;
-		void addWindow(EditorWindow* window);
-		void updateMenuBar();
+        void startup() override;
+        void update() override;
+        void shutdown() override;
+        void addWindow(EditorWindow* window);
+        void updateMenuBar();
 
-	private:
-		std::vector<EditorWindow*> windows;
-		bool updated;
-	};
+    private:
+        std::vector<EditorWindow*> windows;
+        bool updated;
+    };
 
-	extern Editor* editor;
+    extern Editor* editor;
 
 }
 

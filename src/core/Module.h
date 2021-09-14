@@ -5,15 +5,15 @@
 #pragma once
 
 namespace tri {
-	
-	class Module {
-	public:
-		Module() {}
-		virtual ~Module() {}
-		virtual void startup() {};
-		virtual void update() {};
-		virtual void shutdown() {};
-	};
+
+    class Module {
+    public:
+        Module() {}
+        virtual ~Module() {}
+        virtual void startup() {};
+        virtual void update() {};
+        virtual void shutdown() {};
+    };
 
 }
 

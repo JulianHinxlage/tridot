@@ -17,74 +17,74 @@
 
 namespace tri {
 
-	class Imgui : public System {
-	public:
-		bool inFrame;
+    class Imgui : public System {
+    public:
+        bool inFrame;
 
-		void startup() override {
-			IMGUI_CHECKVERSION();
-			ImGui::CreateContext();
-			ImGuiIO& io = ImGui::GetIO();
-			//io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
+        void startup() override {
+            IMGUI_CHECKVERSION();
+            ImGui::CreateContext();
+            ImGuiIO& io = ImGui::GetIO();
+            //io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 
-			ImGui::StyleColorsDark();
-			ImGui_ImplGlfw_InitForOpenGL((GLFWwindow*)RenderContext::get(), true);
-			ImGui_ImplOpenGL3_Init("#version 330");
-			inFrame = false;
+            ImGui::StyleColorsDark();
+            ImGui_ImplGlfw_InitForOpenGL((GLFWwindow*)RenderContext::get(), true);
+            ImGui_ImplOpenGL3_Init("#version 330");
+            inFrame = false;
 
 
-			env->signals->update.addCallback("Imgui.begin", [this]() {
-				begin();
-			});
+            env->signals->update.addCallback("Imgui.begin", [this]() {
+                begin();
+            });
 
-			env->signals->update.addCallback("Imgui.end", [this]() {
-				end();
-			});
+            env->signals->update.addCallback("Imgui.end", [this]() {
+                end();
+            });
 
-			env->signals->update.callbackOrder({ "Imgui.end", "Window", "Imgui.begin" });
-		}
+            env->signals->update.callbackOrder({ "Imgui.end", "Window", "Imgui.begin" });
+        }
 
-		void begin() {
-			TRI_PROFILE("imgui/begin");
-			if (env->window->isOpen()) {
-				ImGuiIO& io = ImGui::GetIO();
-				io.MouseWheel += (float)env->input->getMouseWheelDelta();
+        void begin() {
+            TRI_PROFILE("imgui/begin");
+            if (env->window->isOpen()) {
+                ImGuiIO& io = ImGui::GetIO();
+                io.MouseWheel += (float)env->input->getMouseWheelDelta();
 
-				ImGui_ImplOpenGL3_NewFrame();
-				ImGui_ImplGlfw_NewFrame();
-				ImGui::NewFrame();
-				inFrame = true;
-			}
-		}
+                ImGui_ImplOpenGL3_NewFrame();
+                ImGui_ImplGlfw_NewFrame();
+                ImGui::NewFrame();
+                inFrame = true;
+            }
+        }
 
-		void end() {
-			TRI_PROFILE("imgui/end");
-			if (inFrame && env->window->isOpen()) {
-				FrameBuffer::unbind();
-				ImGui::Render();
+        void end() {
+            TRI_PROFILE("imgui/end");
+            if (inFrame && env->window->isOpen()) {
+                FrameBuffer::unbind();
+                ImGui::Render();
 
-				auto* data = ImGui::GetDrawData();
-				if (data) {
-					ImGui_ImplOpenGL3_RenderDrawData(data);
-				}
-				if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
-					ImGui::UpdatePlatformWindows();
-					ImGui::RenderPlatformWindowsDefault();
-				}
-				inFrame = false;
-			}
-		}
+                auto* data = ImGui::GetDrawData();
+                if (data) {
+                    ImGui_ImplOpenGL3_RenderDrawData(data);
+                }
+                if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
+                    ImGui::UpdatePlatformWindows();
+                    ImGui::RenderPlatformWindowsDefault();
+                }
+                inFrame = false;
+            }
+        }
 
-		void shutdown() override {
-			env->signals->update.removeCallback("Imgui.begin");
-			env->signals->update.removeCallback("Imgui.end");
+        void shutdown() override {
+            env->signals->update.removeCallback("Imgui.begin");
+            env->signals->update.removeCallback("Imgui.end");
 
-			ImGui_ImplOpenGL3_Shutdown();
-			ImGui_ImplGlfw_Shutdown();
-			ImGui::DestroyContext();
-		}
-	};
+            ImGui_ImplOpenGL3_Shutdown();
+            ImGui_ImplGlfw_Shutdown();
+            ImGui::DestroyContext();
+        }
+    };
 
-	TRI_REGISTER_SYSTEM(Imgui);
+    TRI_REGISTER_SYSTEM(Imgui);
 
 }

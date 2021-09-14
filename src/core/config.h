@@ -4,15 +4,15 @@
 
 //platform
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__)
-	#define TRI_WINDOWS 1
+    #define TRI_WINDOWS 1
 #elif __APPLE__
-	#define TRI_MACOS 1
+    #define TRI_MACOS 1
 #elif __linux__
-	#define TRI_LINUX 1
+    #define TRI_LINUX 1
 #elif __unix__
-	#define TRI_UNIX 1
+    #define TRI_UNIX 1
 #elif defined(_POSIX_VERSION)
-	#define TRI_POSIX 1
+    #define TRI_POSIX 1
 #endif
 
 //build mode
@@ -22,23 +22,23 @@
 
 //tri api
 #if TRI_WINDOWS
-	#ifdef TRI_DLL_EXPORT
-		#define TRI_API __declspec(dllexport)
-	#else
-		#define TRI_API __declspec(dllimport)
-	#endif
+    #ifdef TRI_DLL_EXPORT
+        #define TRI_API __declspec(dllexport)
+    #else
+        #define TRI_API __declspec(dllimport)
+    #endif
 #else
-	#define TRI_API
+    #define TRI_API
 #endif
 
 //windows header
 #if TRI_WINDOWS
-	#include <windows.h>
-	#undef ERROR
-	#undef min
-	#undef max
-	#undef near
-	#undef far
+    #include <windows.h>
+    #undef ERROR
+    #undef min
+    #undef max
+    #undef near
+    #undef far
 #endif
 
 //version
@@ -49,7 +49,7 @@
 
 //assert
 namespace tri::impl {
-	void assertLog(const std::string& message);
+    void assertLog(const std::string& message);
 }
 #ifdef TRI_DEBUG
 #define TRI_ASSERT(expr, msg) if(!(expr)){tri::impl::assertLog(msg);}assert((expr) && (msg));
@@ -60,7 +60,7 @@ namespace tri::impl {
 
 namespace tri {
 
-	typedef uint64_t EntitySignatureBitmap;
-	typedef uint32_t EntityId;
-	
+    typedef uint64_t EntitySignatureBitmap;
+    typedef uint32_t EntityId;
+
 }

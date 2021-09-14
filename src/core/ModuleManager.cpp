@@ -38,7 +38,7 @@ namespace tri {
         }
     }
 
-	void ModuleManager::shutdown(){
+    void ModuleManager::shutdown(){
         while (!modules.empty()) {
             for (auto &record : modules) {
                 if (record.second.module) {
@@ -50,9 +50,9 @@ namespace tri {
                 break;
             }
         }
-	}
+    }
 
-	Module* ModuleManager::loadModule(const std::string& file){
+    Module* ModuleManager::loadModule(const std::string& file){
         if (modules.find(file) != modules.end()) {
             env->console->warning("module ", file, " already loaded");
             return modules[file].module;
@@ -122,18 +122,18 @@ namespace tri {
 #endif
             return nullptr;
         }
-	}
+    }
 
-	Module* ModuleManager::getModule(const std::string& file){
+    Module* ModuleManager::getModule(const std::string& file){
         if (modules.contains(file)) {
             return modules[file].module;
         }
         else {
             return nullptr;
         }
-	}
+    }
 
-	void ModuleManager::unloadModule(Module* module){
+    void ModuleManager::unloadModule(Module* module){
         if (module) {
             for (auto it = modules.begin(); it != modules.end();) {
                 if (it->second.module == module) {
@@ -153,6 +153,6 @@ namespace tri {
                 }
             }
         }
-	}
+    }
 
 }

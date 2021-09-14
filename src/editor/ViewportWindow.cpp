@@ -14,11 +14,11 @@
 #include <imgui/imgui.h>
 
 float randf() {
-	return (float)std::rand() / RAND_MAX;
+    return (float)std::rand() / RAND_MAX;
 }
 
 glm::vec3 randf3() {
-	return { randf(), randf(), randf(), };
+    return { randf(), randf(), randf(), };
 }
 
 class EditorOnly{};
@@ -26,13 +26,13 @@ TRI_REGISTER_TYPE(EditorOnly);
 
 namespace tri {
 
-	class ViewportWindow : public EditorWindow {
-	public:
-		EntityId editorCameraId;
+    class ViewportWindow : public EditorWindow {
+    public:
+        EntityId editorCameraId;
 
-		void startup() {
-			name = "Viewport";
-			isWindow = false;
+        void startup() {
+            name = "Viewport";
+            isWindow = false;
             editorCameraId = -1;
 
             env->signals->sceneLoad.addCallback([&](Scene *scene){
@@ -40,7 +40,7 @@ namespace tri {
             });
 
             editor->gizmos.startup();
-		}
+        }
 
         void setupCamera(){
             //search for camera in scene
@@ -75,30 +75,30 @@ namespace tri {
             }
         }
 
-		void update() override {
-		    if(editorCameraId == -1){
-		        setupCamera();
-		    }
+        void update() override {
+            if(editorCameraId == -1){
+                setupCamera();
+            }
 
-			ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
-			ImGui::PushStyleVar(ImGuiStyleVar_ChildBorderSize, 0);
-			if (ImGui::Begin(name.c_str(), &isOpen)) {
+            ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
+            ImGui::PushStyleVar(ImGuiStyleVar_ChildBorderSize, 0);
+            if (ImGui::Begin(name.c_str(), &isOpen)) {
 
-				Ref<FrameBuffer> output = nullptr;
-				ImVec2 viewportSize = ImGui::GetContentRegionAvail();
-				Camera *cam = nullptr;
-				Transform *camTransform = nullptr;
-				env->scene->view<Camera, Transform>().each([&](EntityId id, Camera& camera, Transform &transform) {
-					if (editor->runtimeMode) {
-						if (camera.isPrimary) {
-							output = camera.output;
-							cam = &camera;
-							camTransform = &transform;
-						}
-					}
-					else {
-						if (id == editorCameraId) {
-							output = camera.output;
+                Ref<FrameBuffer> output = nullptr;
+                ImVec2 viewportSize = ImGui::GetContentRegionAvail();
+                Camera *cam = nullptr;
+                Transform *camTransform = nullptr;
+                env->scene->view<Camera, Transform>().each([&](EntityId id, Camera& camera, Transform &transform) {
+                    if (editor->runtimeMode) {
+                        if (camera.isPrimary) {
+                            output = camera.output;
+                            cam = &camera;
+                            camTransform = &transform;
+                        }
+                    }
+                    else {
+                        if (id == editorCameraId) {
+                            output = camera.output;
                             cam = &camera;
                             camTransform = &transform;
                             if(output) {
@@ -107,31 +107,31 @@ namespace tri {
                                     camera.aspectRatio = viewportSize.x / viewportSize.y;
                                 }
                             }
-						}
-					}
-				});
+                        }
+                    }
+                });
 
-				if (output) {
-					ImGui::Image((ImTextureID)(size_t)output->getAttachment(TextureAttachment::COLOR)->getId(), viewportSize, ImVec2(0, 1), ImVec2(1, 0));
+                if (output) {
+                    ImGui::Image((ImTextureID)(size_t)output->getAttachment(TextureAttachment::COLOR)->getId(), viewportSize, ImVec2(0, 1), ImVec2(1, 0));
                     bool pickingAllowed = true;
-					if(cam && camTransform){
+                    if(cam && camTransform){
                         if(editor->gizmos.update(*camTransform, *cam)){
                             pickingAllowed = false;
                         }
                     }
-					if(pickingAllowed){
+                    if(pickingAllowed){
                         updateMousePicking(output->getAttachment((TextureAttachment)(COLOR + 1)));
                     }
                 }
 
-			}
-			ImGui::End();
-			ImGui::PopStyleVar(2);
-		}
+            }
+            ImGui::End();
+            ImGui::PopStyleVar(2);
+        }
 
-		void updateMousePicking(Ref<Texture> texture){
-		    if(texture){
-		        if(ImGui::IsItemHovered()){
+        void updateMousePicking(Ref<Texture> texture){
+            if(texture){
+                if(ImGui::IsItemHovered()){
                     glm::vec2 pos = {0, 0};
                     pos.x = ImGui::GetMousePos().x - ImGui::GetItemRectMin().x;
                     pos.y = ImGui::GetMousePos().y - ImGui::GetItemRectMin().y;
@@ -153,12 +153,12 @@ namespace tri {
                             }
                         }
                     }
-		        }
+                }
             }
-		}
-	};
-	TRI_STARTUP_CALLBACK("") {
-		editor->addWindow(new ViewportWindow);
-	}
+        }
+    };
+    TRI_STARTUP_CALLBACK("") {
+        editor->addWindow(new ViewportWindow);
+    }
 
 }

@@ -42,7 +42,7 @@ namespace tri {
         serializer = nullptr;
     }
 
-	Environment* Environment::startup() {
+    Environment* Environment::startup() {
         if (!getInitFlag()) {
             getInitFlag() = true;
             getInstance() = new Environment();
@@ -68,9 +68,9 @@ namespace tri {
             env = getInstance();
         }
         return getInstance();
-	}
+    }
 
-	void Environment::shutdown() {
+    void Environment::shutdown() {
         env = getInstance();
         if (env != nullptr) {
             delete env->signals;
@@ -81,6 +81,6 @@ namespace tri {
         }
         env = nullptr;
         getInitFlag() = false;
-	}
+    }
 
 }

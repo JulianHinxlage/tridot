@@ -6,13 +6,13 @@
 
 namespace tri {
 
-	class TRI_API System {
-	public:
-		System() {}
-		virtual ~System() {}
-		virtual void startup() {};
-		virtual void update() {};
-		virtual void shutdown() {};
-	};
+    class TRI_API System {
+    public:
+        System() {}
+        virtual ~System() {}
+        virtual void startup() {};
+        virtual void update() {};
+        virtual void shutdown() {};
+    };
 
 }

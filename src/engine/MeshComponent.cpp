@@ -12,31 +12,31 @@
 
 namespace tri {
 
-	TRI_REGISTER_TYPE(MeshComponent);
-	TRI_REGISTER_MEMBER(MeshComponent, mesh);
-	TRI_REGISTER_MEMBER(MeshComponent, material);
-	TRI_REGISTER_MEMBER(MeshComponent, color);
+    TRI_REGISTER_TYPE(MeshComponent);
+    TRI_REGISTER_MEMBER(MeshComponent, mesh);
+    TRI_REGISTER_MEMBER(MeshComponent, material);
+    TRI_REGISTER_MEMBER(MeshComponent, color);
 
     TRI_REGISTER_TYPE(Color);
 
-	TRI_UPDATE_CALLBACK("MeshComponent") {
-		env->scene->view<Camera, Transform>().each([](Camera& camera, Transform &cameraTransform) {
-			if (camera.active) {
+    TRI_UPDATE_CALLBACK("MeshComponent") {
+        env->scene->view<Camera, Transform>().each([](Camera& camera, Transform &cameraTransform) {
+            if (camera.active) {
                 if (camera.output) {
-					if (camera.isPrimary) {
-						if (camera.output->getSize() != env->window->getSize()) {
-							camera.output->resize(env->window->getSize().x, env->window->getSize().y);
-							camera.aspectRatio = env->window->getAspectRatio();
-						}
-					}
-					camera.output->clear();
-				}
-				else {
-					if (camera.isPrimary) {
-						camera.aspectRatio = env->window->getAspectRatio();
-					}
-				}
-				env->renderer->beginScene(camera.projection, cameraTransform.position);
+                    if (camera.isPrimary) {
+                        if (camera.output->getSize() != env->window->getSize()) {
+                            camera.output->resize(env->window->getSize().x, env->window->getSize().y);
+                            camera.aspectRatio = env->window->getAspectRatio();
+                        }
+                    }
+                    camera.output->clear();
+                }
+                else {
+                    if (camera.isPrimary) {
+                        camera.aspectRatio = env->window->getAspectRatio();
+                    }
+                }
+                env->renderer->beginScene(camera.projection, cameraTransform.position);
 
                 {
                     TRI_PROFILE("render/submit");
@@ -45,10 +45,10 @@ namespace tri {
                     });
                 }
 
-				env->renderer->drawScene(camera.output, camera.pipeline);
-				env->renderer->resetScene();
-			}
-		});
-	}
+                env->renderer->drawScene(camera.output, camera.pipeline);
+                env->renderer->resetScene();
+            }
+        });
+    }
 
 }

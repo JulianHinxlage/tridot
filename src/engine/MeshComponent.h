@@ -9,14 +9,14 @@
 
 namespace tri {
 
-	class MeshComponent {
-	public:
-		Ref<Mesh> mesh;
-		Ref<Material> material;
-		Color color;
+    class MeshComponent {
+    public:
+        Ref<Mesh> mesh;
+        Ref<Material> material;
+        Color color;
 
-		MeshComponent(Ref<Mesh> mesh = nullptr, Ref<Material> material = nullptr, Color color = Color::white)
-			: mesh(mesh), material(material), color(color) {}
-	};
+        MeshComponent(Ref<Mesh> mesh = nullptr, Ref<Material> material = nullptr, Color color = Color::white)
+            : mesh(mesh), material(material), color(color) {}
+    };
 
 }

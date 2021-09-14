@@ -9,29 +9,29 @@
 
 namespace tri {
 
-	class ModuleManager : public System {
-	public:
-		ModuleManager();
+    class ModuleManager : public System {
+    public:
+        ModuleManager();
 
-		virtual void startup() override;
-		virtual void update() override;
-		virtual void shutdown() override;
+        virtual void startup() override;
+        virtual void update() override;
+        virtual void shutdown() override;
 
-		Module* loadModule(const std::string& file);
-		Module* getModule(const std::string& file);
-		void unloadModule(Module* module);
+        Module* loadModule(const std::string& file);
+        Module* getModule(const std::string& file);
+        void unloadModule(Module* module);
 
-	private:
-		class ModuleRecord {
-		public:
-			Module* module;
-			void* handle;
-			bool startupFlag;
-			int updateCallbackId;
-		};
-		std::unordered_map<std::string, ModuleRecord> modules;
-		bool startupFlag;
-		
-	};
+    private:
+        class ModuleRecord {
+        public:
+            Module* module;
+            void* handle;
+            bool startupFlag;
+            int updateCallbackId;
+        };
+        std::unordered_map<std::string, ModuleRecord> modules;
+        bool startupFlag;
+
+    };
 
 }
