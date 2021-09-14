@@ -8,6 +8,7 @@
 #include "SelectionContext.h"
 #include "Gui.h"
 #include "EntityOperations.h"
+#include "Gizmos.h"
 
 namespace tri {
 
@@ -30,12 +31,12 @@ namespace tri {
 		SelectionContext selectionContext;
 		Gui gui;
 		EntityOperations entityOperations;
+		Gizmos gizmos;
 
 		void startup() override;
 		void update() override;
 		void shutdown() override;
 		void addWindow(EditorWindow* window);
-
 		void updateMenuBar();
 
 	private:

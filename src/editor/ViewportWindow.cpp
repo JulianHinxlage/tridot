@@ -38,6 +38,8 @@ namespace tri {
             env->signals->sceneLoad.addCallback([&](Scene *scene){
                 editorCameraId = -1;
             });
+
+            editor->gizmos.startup();
 		}
 
         void setupCamera(){
@@ -84,16 +86,22 @@ namespace tri {
 
 				Ref<FrameBuffer> output = nullptr;
 				ImVec2 viewportSize = ImGui::GetContentRegionAvail();
-				env->scene->view<Camera>().each([&](EntityId id, Camera& camera) {
+				Camera *cam = nullptr;
+				Transform *camTransform = nullptr;
+				env->scene->view<Camera, Transform>().each([&](EntityId id, Camera& camera, Transform &transform) {
 					if (editor->runtimeMode) {
 						if (camera.isPrimary) {
 							output = camera.output;
+							cam = &camera;
+							camTransform = &transform;
 						}
 					}
 					else {
 						if (id == editorCameraId) {
 							output = camera.output;
-							if(output) {
+                            cam = &camera;
+                            camTransform = &transform;
+                            if(output) {
                                 if (output->getSize() != glm::vec2(viewportSize.x, viewportSize.y)) {
                                     output->resize(viewportSize.x, viewportSize.y);
                                     camera.aspectRatio = viewportSize.x / viewportSize.y;
@@ -105,7 +113,15 @@ namespace tri {
 
 				if (output) {
 					ImGui::Image((ImTextureID)(size_t)output->getAttachment(TextureAttachment::COLOR)->getId(), viewportSize, ImVec2(0, 1), ImVec2(1, 0));
-                    updateMousePicking(output->getAttachment((TextureAttachment)(COLOR + 1)));
+                    bool pickingAllowed = true;
+					if(cam && camTransform){
+                        if(editor->gizmos.update(*camTransform, *cam)){
+                            pickingAllowed = false;
+                        }
+                    }
+					if(pickingAllowed){
+                        updateMousePicking(output->getAttachment((TextureAttachment)(COLOR + 1)));
+                    }
                 }
 
 			}

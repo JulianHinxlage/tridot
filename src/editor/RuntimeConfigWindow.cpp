@@ -21,6 +21,7 @@ namespace tri {
 				"Window",
 				"Imgui.begin",
 				"Imgui.end",
+                "Gizmos.begin",
 			};
 		}
 
