@@ -24,11 +24,6 @@ namespace tri {
         bool wasEntityCopied();
         bool wasComponentCopied();
     private:
-        class ComponentBuffer{
-        public:
-            std::vector<uint8_t> data;
-            int typeId = -1;
-        };
         ComponentBuffer componentBuffer;
         Prefab entityBuffer;
         bool isEntityBufferFilled = false;

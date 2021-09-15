@@ -67,12 +67,9 @@ namespace tri {
         if(scene == nullptr){
             scene = env->scene;
         }
-        componentBuffer.typeId = -1;
+        componentBuffer.clear();
         if(scene->hasComponent(typeId, id)){
-            auto *decs = env->reflection->getType(typeId);
-            componentBuffer.typeId = typeId;
-            componentBuffer.data.resize(decs->size);
-            decs->copy(scene->getComponent(typeId, id), componentBuffer.data.data());
+            componentBuffer.set(typeId, scene->getComponent(typeId, id));
         }
     }
 
@@ -80,9 +77,8 @@ namespace tri {
         if(scene == nullptr){
             scene = env->scene;
         }
-        if(componentBuffer.typeId != -1){
-            auto *decs = env->reflection->getType(componentBuffer.typeId);
-            decs->copy(componentBuffer.data.data(), scene->addComponent(componentBuffer.typeId, id));
+        if(componentBuffer.isSet()){
+            componentBuffer.get(scene->addComponent(componentBuffer.getTypeId(), id));
         }
     }
 
@@ -91,7 +87,7 @@ namespace tri {
     }
 
     bool EntityOperations::wasComponentCopied() {
-        return componentBuffer.typeId != -1;
+        return componentBuffer.isSet();
     }
 
 }

@@ -6,6 +6,7 @@
 #include "pch.h"
 #include "core/core.h"
 #include "ComponentPool.h"
+#include "ComponentBuffer.h"
 
 namespace tri {
 
@@ -114,7 +115,7 @@ namespace tri {
             int typeId;
             bool isAddOperation;
             bool isPending;
-            std::vector<uint8_t> data;
+            ComponentBuffer component;
         };
         bool pendingOperationsEnabled;
         bool addPendingOperations;

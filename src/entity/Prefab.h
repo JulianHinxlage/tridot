@@ -54,17 +54,16 @@ namespace tri {
                 return data;
             }
             else {
-                comps.push_back({ typeId });
-                Comp& comp = comps.back();
-                comp.data.resize(env->reflection->getType(typeId)->size);
-                return comp.data.data();
+                comps.push_back({typeId});
+                ComponentBuffer& comp = comps.back();
+                return comp.get();
             }
         }
 
         void *getComponent(int typeId) {
             for (int i = 0; i < comps.size(); i++) {
-                if (comps[i].typeId == typeId) {
-                    return comps[i].data.data();
+                if (comps[i].getTypeId() == typeId) {
+                    return comps[i].get();
                 }
             }
             return nullptr;
@@ -76,7 +75,7 @@ namespace tri {
 
         bool removeComponent(int typeId) {
             for (int i = 0; i < comps.size(); i++) {
-                if (comps[i].typeId == typeId) {
+                if (comps[i].getTypeId() == typeId) {
                     comps.erase(comps.begin() + i);
                     return true;
                 }
@@ -93,11 +92,9 @@ namespace tri {
         EntityId createEntity(Scene* scene) {
             EntityId id = scene->addEntity();
             for (int i = 0; i < comps.size(); i++) {
-                Comp& comp = comps[i];
-                void *ptr = scene->addComponent(comp.typeId, id);
-                for (int j = 0; j < comp.data.size(); j++) {
-                    *((uint8_t*)ptr + j) = comp.data[j];
-                }
+                ComponentBuffer& comp = comps[i];
+                void *ptr = scene->addComponent(comp.getTypeId(), id);
+                comp.get(ptr);
             }
             //todo: childs
             return id;
@@ -127,12 +124,7 @@ namespace tri {
         }
 
     private:
-        class Comp {
-        public:
-            int typeId;
-            std::vector<uint8_t> data;
-        };
-        std::vector<Comp> comps;
+        std::vector<ComponentBuffer> comps;
         std::vector<std::shared_ptr<Prefab>> childs;
     };
 

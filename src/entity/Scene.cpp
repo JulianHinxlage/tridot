@@ -80,8 +80,8 @@ namespace tri {
             bool pending = pendingOperationsEnabled && !hasComponent(typeId, id);
             pendingOperations.push_back({id, typeId, true, pending});
             if (pending) {
-                pendingOperations.back().data.resize(env->reflection->getType(typeId)->size);
-                return (void*)pendingOperations.back().data.data();
+                pendingOperations.back().component.set(typeId);
+                return (void*)pendingOperations.back().component.get();
             }
         }
         auto* pool = getComponentPool(typeId);
@@ -172,9 +172,7 @@ namespace tri {
                     if (op.isAddOperation) {
                         if (entityPool.has(op.id)) {
                             uint8_t* data = (uint8_t*)addComponent(op.typeId, op.id);
-                            for (int i = 0; i < op.data.size(); i++) {
-                                data[i] = op.data[i];
-                            }
+                            op.component.get(data);
                         }
                     }
                     else {
