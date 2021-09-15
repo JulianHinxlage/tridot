@@ -6,6 +6,7 @@
 #include "util/StrUtil.h"
 #include "Environment.h"
 #include "ThreadPool.h"
+#include "SignalManager.h"
 #include <iostream>
 
 #if TRI_WINDOWS
@@ -159,9 +160,10 @@ namespace tri {
     }
 
     Console::Console() {
-        execudedCommandIndex = 0;
+        executedCommandIndex = 0;
         inputCursorIndex = 0;
         inputThreadId = -1;
+        isPostStartup = false;
     }
 
     void Console::log(LogLevel level, const std::string &message) {
@@ -195,6 +197,14 @@ namespace tri {
     }
 
     void Console::startup(){
+        env->signals->postStartup.addCallback("Console", [&](){
+            isPostStartup = true;
+            for(auto &command : delayedCommands){
+                executeCommand(command);
+            }
+            delayedCommands.clear();
+        });
+
 #if !TRI_DISTRIBUTION
         inputThreadId = env->threads->addThread([this]() {
             while (true) {
@@ -209,7 +219,7 @@ namespace tri {
                     if (executedCommands.size() == 0 || command != executedCommands[executedCommands.size() - 1]) {
                         executedCommands.push_back(command);
                     }
-                    execudedCommandIndex = (int)executedCommands.size();
+                    executedCommandIndex = (int)executedCommands.size();
                 }
                 else if (c == 127 || c == '\b') { //backspace
                     if (!inputLine.empty() && inputCursorIndex > 0) {
@@ -220,7 +230,7 @@ namespace tri {
                     }
                 }
                 else if (c == '\t') { //tab
-                    
+
                     std::vector<std::string> candidates;
 
                     for (auto& c : commands) {
@@ -258,26 +268,26 @@ namespace tri {
                     c = getCharacter();
 
                     if (c == 72) { //arrow up
-                        execudedCommandIndex--;
-                        if (execudedCommandIndex < 0) {
-                            execudedCommandIndex = 0;
+                        executedCommandIndex--;
+                        if (executedCommandIndex < 0) {
+                            executedCommandIndex = 0;
                         }
-                        if (execudedCommandIndex >= 0 && execudedCommandIndex < executedCommands.size()) {
-                            inputCursorIndex = executedCommands[execudedCommandIndex].size();
-                            changeInputLine(executedCommands[execudedCommandIndex]);
+                        if (executedCommandIndex >= 0 && executedCommandIndex < executedCommands.size()) {
+                            inputCursorIndex = executedCommands[executedCommandIndex].size();
+                            changeInputLine(executedCommands[executedCommandIndex]);
                         }
                         else {
                             inputCursorIndex = 0;
                             changeInputLine("");
                         }
                     }else if (c == 80) { //arrow down
-                        execudedCommandIndex++;
-                        if (execudedCommandIndex > executedCommands.size()) {
-                            execudedCommandIndex = (int)executedCommands.size();
+                        executedCommandIndex++;
+                        if (executedCommandIndex > executedCommands.size()) {
+                            executedCommandIndex = (int)executedCommands.size();
                         }
-                        if (execudedCommandIndex >= 0 && execudedCommandIndex < executedCommands.size()) {
-                            inputCursorIndex = executedCommands[execudedCommandIndex].size();
-                            changeInputLine(executedCommands[execudedCommandIndex]);
+                        if (executedCommandIndex >= 0 && executedCommandIndex < executedCommands.size()) {
+                            inputCursorIndex = executedCommands[executedCommandIndex].size();
+                            changeInputLine(executedCommands[executedCommandIndex]);
                         }
                         else {
                             inputCursorIndex = 0;
@@ -311,6 +321,7 @@ namespace tri {
 
     void Console::shutdown() {
         env->threads->terminateThread(inputThreadId);
+        env->signals->postStartup.removeCallback("Console");
     }
 
     void Console::addLogFile(const std::string &file, Console::Options options, bool append) {
@@ -327,16 +338,16 @@ namespace tri {
         logCallback.callback = callback;
     }
 
-    void Console::addCommand(const std::string &command, const std::function<void(const std::vector<std::string> &)> &callback) {
-        commands[command] = callback;
+    void Console::addCommand(const std::string &command, const std::function<void(const std::vector<std::string> &)> &callback, bool postStartupCommand) {
+        commands[command] = {callback, postStartupCommand};
     }
 
-    void Console::addCommand(const std::string &command, const std::function<void()> &callback) {
+    void Console::addCommand(const std::string &command, const std::function<void()> &callback, bool postStartupCommand) {
         addCommand(command, [callback](const std::vector<std::string> &args){
             if(callback){
                 callback();
             }
-        });
+        }, postStartupCommand);
     }
 
     void Console::removeCommand(const std::string &command) {
@@ -357,7 +368,7 @@ namespace tri {
             }
             i++;
         }
-        
+
         if(parts.size() > 0){
             for(auto &variable : variables){
                 if(variable.first == parts[0]){
@@ -426,14 +437,19 @@ namespace tri {
             }
             for(auto &com : commands){
                 if(com.first == parts[0]){
-                    if(com.second){
-                        trace("executing command: ", command.c_str());
-                        com.second(parts);
-                        return;
+                    if(com.second.callback){
+                        if(com.second.postStartupCommand && !isPostStartup){
+                            delayedCommands.push_back(command);
+                            return;
+                        }else{
+                            trace("executing command: ", command.c_str());
+                            com.second.callback(parts);
+                            return;
+                        }
                     }
                 }
             }
-            
+
             info("command not found: ", parts[0].c_str());
         }
     }

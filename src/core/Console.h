@@ -75,8 +75,8 @@ namespace tri {
         void addLogCallback(Options options, const std::function<void(LogLevel, const std::string &)> &callback);
         const char *getLogLevelName(LogLevel level);
 
-        void addCommand(const std::string &command, const std::function<void(const std::vector<std::string> &)> &callback);
-        void addCommand(const std::string &command, const std::function<void()> &callback);
+        void addCommand(const std::string &command, const std::function<void(const std::vector<std::string> &)> &callback, bool postStartupCommand = false);
+        void addCommand(const std::string &command, const std::function<void()> &callback, bool postStartupCommand = false);
         void removeCommand(const std::string &command);
         void executeCommand(const std::string &command);
 
@@ -128,17 +128,25 @@ namespace tri {
             Options options;
         };
 
+        class Command{
+        public:
+            std::function<void(const std::vector<std::string> &)> callback;
+            bool postStartupCommand;
+        };
+
         void changeInputLine(const std::string& newInput);
 
-        std::unordered_map<std::string, std::function<void(const std::vector<std::string> &)>> commands;
+        std::unordered_map<std::string, Command> commands;
         std::unordered_map<std::string, Variable> variables;
         std::vector<LogFile> logFiles;
         std::vector<LogCallback> logCallbacks;
+        std::vector<std::string> delayedCommands;
+        bool isPostStartup;
         int inputThreadId;
         std::string inputLine;
         int inputCursorIndex;
         std::vector<std::string> executedCommands;
-        int execudedCommandIndex;
+        int executedCommandIndex;
     };
 
 }

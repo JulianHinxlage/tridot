@@ -41,14 +41,16 @@ namespace tri {
         return id;
     }
 
+    /*
     bool Shader::load(const std::string &file) {
         if(!preLoad(file)){
             return false;
         }
         return postLoad();
     }
+     */
 
-    bool Shader::preLoad(const std::string &file) {
+    bool Shader::load(const std::string &file) {
         std::ifstream stream(file);
         if(!stream.is_open()){
             env->console->warning("shader: file ", file, " not found");
@@ -76,7 +78,7 @@ namespace tri {
         return sources.size() > 0;
     }
 
-    bool Shader::postLoad() {
+    bool Shader::loadActivate() {
         std::vector<GLuint> shaderIds;
         shaderIds.reserve(sources.size());
         for(auto &source : sources){

@@ -5,6 +5,7 @@
 #pragma once
 
 #include "Buffer.h"
+#include "engine/Asset.h"
 #include <cstdint>
 #include <string>
 #include <vector>
@@ -13,7 +14,7 @@
 
 namespace tri {
 
-    class Shader {
+    class Shader : public Asset {
     public:
         Shader();
         ~Shader();
@@ -22,9 +23,12 @@ namespace tri {
         static void unbind();
         uint32_t getId();
 
-        bool load(const std::string &file);
-        bool preLoad(const std::string &file);
-        bool postLoad();
+        //bool load(const std::string &file);
+        //bool preLoad(const std::string &file);
+        //bool postLoad();
+
+        bool load(const std::string &file) override;
+        bool loadActivate() override;
 
         bool has(const std::string &uniform);
         void set(const std::string &uniform, int value);

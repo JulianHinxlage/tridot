@@ -40,6 +40,7 @@ namespace tri {
         window = nullptr;
         renderer = nullptr;
         serializer = nullptr;
+        assets = nullptr;
     }
 
     Environment* Environment::startup() {

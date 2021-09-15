@@ -200,7 +200,7 @@ namespace tri {
     }
     void createTestScene(){
         for (int i = 0; i < 100; i++) {
-            env->scene->addEntity(Transform(randf3(), (randf3() * 0.1f) + glm::vec3(0.01, 0.01, 0.01), glm::vec3(0, 0, randf() * 6)), MeshComponent(nullptr, nullptr, Color(glm::vec4(randf3(), 1))));
+            env->scene->addEntity(Transform(randf3(), (randf3() * 0.1f) + glm::vec3(0.01, 0.01, 0.01), randf3() * 6.0f), MeshComponent(nullptr, nullptr, Color(glm::vec4(randf3(), 1))));
         }
     }
 

@@ -20,6 +20,7 @@ namespace tri {
     class Window;
     class Renderer;
     class Serializer;
+    class AssetManager;
 
     class TRI_API Environment {
     public:
@@ -38,6 +39,7 @@ namespace tri {
         Window* window;
         Renderer* renderer;
         Serializer *serializer;
+        AssetManager *assets;
 
         static Environment* startup();
         static void shutdown();

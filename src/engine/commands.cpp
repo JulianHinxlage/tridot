@@ -5,9 +5,9 @@
 #include "core/core.h"
 #include "render/Window.h"
 #include "engine/Serializer.h"
+#include "engine/AssetManager.h"
 
 namespace tri{
-
 
 
     TRI_REGISTER_CALLBACK() {
@@ -18,7 +18,7 @@ namespace tri{
             else {
                 env->console->info("usage: module_load <module>");
             }
-        });
+        }, true);
         env->console->addCommand("module_unload", [](const std::vector<std::string>& args) {
             if (args.size() > 1) {
                 env->modules->unloadModule(env->modules->getModule(args[1]));
@@ -26,7 +26,7 @@ namespace tri{
             else {
                 env->console->info("usage: module_unload <module>");
             }
-        });
+        }, true);
 
         env->console->addCommand("exit", []() {
             env->window->close();
@@ -89,11 +89,13 @@ namespace tri{
 
         env->console->addCommand("scene_load", [](const std::vector<std::string>& args) {
             if (args.size() > 1) {
-                //todo: use search directory lookup
-                if(std::filesystem::exists(args[1]) && std::filesystem::is_regular_file(args[1])){
-                    env->serializer->deserializeScene(args[1], *env->scene);
+                std::string fullPath = env->assets->searchFile(args[1]);
+                if(fullPath != ""){
+                    Clock clock;
+                    env->serializer->deserializeScene(fullPath, *env->scene);
                     env->scene->update();
                     env->signals->sceneLoad.invoke(env->scene);
+                    env->console->info("loaded scene ", args[1], " in ", clock.elapsed(), "s");
                 }else{
                     env->console->warning("scene file not found: ", args[1]);
                 }
@@ -101,15 +103,31 @@ namespace tri{
             else {
                 env->console->info("usage: scene_load <scene>");
             }
-        });
+        }, true);
         env->console->addCommand("scene_save", [](const std::vector<std::string>& args) {
             if (args.size() > 1) {
-                //todo: use search directory lookup
-                env->serializer->serializeScene(args[1], *env->scene);
+                std::string fullPath = env->assets->searchFile(args[1]);
+                if(fullPath == ""){
+                    fullPath = args[1];
+                }
+                env->serializer->serializeScene(fullPath, *env->scene);
             }
             else {
                 env->console->info("usage: scene_save <scene>");
             }
+        });
+
+        env->console->addCommand("asset_directory", [](const std::vector<std::string>& args) {
+            if (args.size() > 1) {
+                env->assets->addSearchDirectory(args[1]);
+            }
+            else {
+                env->console->info("usage: asset_directory <directory>");
+            }
+        });
+
+        env->console->addCommand("asset_unload_unused", [](const std::vector<std::string>& args) {
+            env->assets->unloadAllUnused();
         });
     }
 

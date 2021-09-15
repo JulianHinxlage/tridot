@@ -44,7 +44,7 @@ namespace tri {
             TypeDescriptor* type;
         };
 
-        class ConstanDescriptor {
+        class ConstantDescriptor {
         public:
             std::string name;
             int value;
@@ -55,7 +55,7 @@ namespace tri {
             std::string name;
             int size;
             std::vector<MemberDescriptor> member;
-            std::vector<ConstanDescriptor> constants;
+            std::vector<ConstantDescriptor> constants;
             int typeId;
 
             template<typename T>

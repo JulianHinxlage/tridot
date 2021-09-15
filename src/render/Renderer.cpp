@@ -5,11 +5,11 @@
 #include "pch.h"
 #include "core/core.h"
 #include "Renderer.h"
+#include "engine/AssetManager.h"
 #include "BatchBuffer.h"
 #include "render/RenderContext.h"
 
 namespace tri {
-
 
     TRI_REGISTER_SYSTEM_INSTANCE(Renderer, env->renderer);
 
@@ -221,7 +221,7 @@ namespace tri {
     }
 
     void Renderer::drawScene(Ref<FrameBuffer> frameBuffer, Ref<RenderPipeline> pipeline) {
-        if (pipeline == nullptr) {
+        if (pipeline.get() == nullptr) {
             pipeline = defaultPipeline;
         }
         if (pipeline->input) {
@@ -269,9 +269,7 @@ namespace tri {
         defaultTexture = defaultTexture.make();
         defaultTexture->load(image);
 
-        defaultShader = defaultShader.make();
-        //todo: using asset manager
-        defaultShader->load("../res/shaders/mesh.glsl");
+        defaultShader = env->assets->get<Shader>("shaders/mesh.glsl");
 
         defaultMaterial = defaultMaterial.make();
         defaultMaterial->texture = defaultTexture;
