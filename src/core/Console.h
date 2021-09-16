@@ -33,6 +33,12 @@ namespace tri {
         };
         Options options;
 
+        class Message{
+        public:
+            LogLevel level;
+            std::string message;
+        };
+
         Console();
         virtual void startup() override;
         virtual void shutdown() override;
@@ -79,6 +85,7 @@ namespace tri {
         void addCommand(const std::string &command, const std::function<void()> &callback, bool postStartupCommand = false);
         void removeCommand(const std::string &command);
         void executeCommand(const std::string &command);
+        std::string autoCompleteCommand(const std::string &command);
 
         void loadConfigFile(const std::string& file);
 
@@ -107,6 +114,10 @@ namespace tri {
             }else{
                 return nullptr;
             }
+        }
+
+        const std::vector<Message> &getMessages(){
+            return messages;
         }
 
     private:
@@ -141,6 +152,7 @@ namespace tri {
         std::vector<LogFile> logFiles;
         std::vector<LogCallback> logCallbacks;
         std::vector<std::string> delayedCommands;
+        std::vector<Message> messages;
         bool isPostStartup;
         int inputThreadId;
         std::string inputLine;

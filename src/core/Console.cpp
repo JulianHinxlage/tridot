@@ -188,11 +188,21 @@ namespace tri {
         }
         for(auto &logCallback : logCallbacks) {
             if(logCallback.callback){
-                std::ostringstream stream;
+                std::stringstream stream;
                 logToStream(stream, logCallback.options, "", level, message);
                 logCallback.callback(level, stream.str());
             }
         }
+
+        {
+            std::stringstream stream;
+            Options o = options;
+            o.color = false;
+            o.level = TRACE;
+            logToStream(stream, o, "", level, message);
+            messages.push_back({level, stream.str()});
+        }
+
         mutex.unlock();
     }
 
@@ -230,39 +240,7 @@ namespace tri {
                     }
                 }
                 else if (c == '\t') { //tab
-
-                    std::vector<std::string> candidates;
-
-                    for (auto& c : commands) {
-                        if (StrUtil::isSubstring(c.first, inputLine) == 2) {
-                            candidates.push_back(c.first);
-                        }
-                    }
-                    for (auto& v : variables) {
-                        if (StrUtil::isSubstring(v.first, inputLine) == 2) {
-                            candidates.push_back(v.first);
-                        }
-                    }
-
-                    if (candidates.size() > 0) {
-                        if (candidates.size() == 1) {
-                            inputCursorIndex = (int)candidates[0].size();
-                            changeInputLine(candidates[0]);
-                        }
-                        else {
-                            std::sort(candidates.begin(), candidates.end());
-                            std::string last = candidates[0];
-                            int match = last.size();
-                            for (auto& c : candidates) {
-                                match = std::min(match, StrUtil::match(c, last));
-                                last = c;
-                            }
-                            info("commands: ", StrUtil::join(candidates, ", "));
-                            inputCursorIndex = match;
-                            changeInputLine(last.substr(0, match));
-                        }
-                    }
-
+                    changeInputLine(autoCompleteCommand(inputLine));
                 }
                 else if ((int)c == -32) { //escape character
                     c = getCharacter();
@@ -452,6 +430,39 @@ namespace tri {
 
             info("command not found: ", parts[0].c_str());
         }
+    }
+
+    std::string Console::autoCompleteCommand(const std::string &command) {
+        std::vector<std::string> candidates;
+
+        for (auto& c : commands) {
+            if (StrUtil::isSubstring(c.first, command) == 2) {
+                candidates.push_back(c.first);
+            }
+        }
+        for (auto& v : variables) {
+            if (StrUtil::isSubstring(v.first, command) == 2) {
+                candidates.push_back(v.first);
+            }
+        }
+
+        if (candidates.size() > 0) {
+            if (candidates.size() == 1) {
+                return candidates[0];
+            }
+            else {
+                std::sort(candidates.begin(), candidates.end());
+                std::string last = candidates[0];
+                int match = last.size();
+                for (auto& c : candidates) {
+                    match = std::min(match, StrUtil::match(c, last));
+                    last = c;
+                }
+                info("commands: ", StrUtil::join(candidates, ", "));
+                return last.substr(0, match);
+            }
+        }
+        return command;
     }
 
     void Console::loadConfigFile(const std::string& file){
