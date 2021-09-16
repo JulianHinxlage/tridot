@@ -56,9 +56,9 @@ namespace tri::impl {
     template<typename T>
     class TypeRegisterer {
     public:
-        TypeRegisterer(const std::string& name) {
+        TypeRegisterer(const std::string& name, bool isComponent = false) {
             Environment::startup();
-            env->reflection->registerType<T>(name);
+            env->reflection->registerType<T>(name, isComponent);
         }
         ~TypeRegisterer() {
             if (env && env->reflection) {
@@ -89,6 +89,11 @@ namespace tri::impl {
 
 #define TRI_REGISTER_TYPE_NAME(type, name) tri::impl::TypeRegisterer<type> TRI_UNIQUE_IDENTIFIER(_tri_register_component)(#name);
 #define TRI_REGISTER_TYPE(type) TRI_REGISTER_TYPE_NAME(type, type)
+
+#define TRI_REGISTER_COMPONENT_NAME(type, name) tri::impl::TypeRegisterer<type> TRI_UNIQUE_IDENTIFIER(_tri_register_component)(#name, true);
+#define TRI_REGISTER_COMPONENT(type) TRI_REGISTER_COMPONENT_NAME(type, type)
+
 #define TRI_REGISTER_MEMBER(type, memberName) TRI_REGISTER_CALLBACK(){tri::Environment::startup(); env->reflection->registerMember<type, decltype(type::memberName)>(#memberName, offsetof(type, memberName));}
+#define TRI_REGISTER_MEMBER_RANGE(type, memberName, min, max) TRI_REGISTER_CALLBACK(){tri::Environment::startup(); env->reflection->registerMember<type, decltype(type::memberName)>(#memberName, offsetof(type, memberName), min, max);}
 #define TRI_REGISTER_CONSTANT(type, name) TRI_REGISTER_CALLBACK(){tri::Environment::startup(); env->reflection->registerConstant<type>(#name, (int)type::name);}
 

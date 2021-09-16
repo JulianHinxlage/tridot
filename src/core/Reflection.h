@@ -14,9 +14,9 @@ namespace tri {
         template<class T, class U> struct has_equal_impl<T, U, decltype((bool)(std::declval<T>() == std::declval<U>()), void())> : std::true_type {};
         template<class T, class U> struct has_equal : has_equal_impl<T, U, void> {};
 
-#define define_has_member(name)                                                       \
+#define define_has_member(name)                                                    \
         template <typename T>                                                      \
-        class has_member_##name                                                       \
+        class has_member_##name                                                    \
         {                                                                          \
             typedef char yes_type;                                                 \
             typedef long no_type;                                                  \
@@ -42,6 +42,8 @@ namespace tri {
             std::string name;
             int offset;
             TypeDescriptor* type;
+            void *minValue;
+            void *maxValue;
         };
 
         class ConstantDescriptor {
@@ -57,6 +59,7 @@ namespace tri {
             std::vector<MemberDescriptor> member;
             std::vector<ConstantDescriptor> constants;
             int typeId;
+            bool isComponent;
 
             template<typename T>
             bool isType() const {
@@ -95,14 +98,15 @@ namespace tri {
         }
 
         template<typename T>
-        int registerType(const std::string &name) {
+        int registerType(const std::string &name, bool isComponent = false) {
             TypeDescriptor* desc = descriptors[getTypeId<T>()].get();
             desc->name = name;
+            desc->isComponent = isComponent;
             return desc->typeId;
         }
 
         template<typename T>
-        void registerMember(int typeId, const std::string& name, int offset) {
+        void registerMember(int typeId, const std::string& name, int offset, T min = T(), T max = T()) {
             if (typeId >= 0 && typeId < descriptors.size()) {
                 TypeDescriptor* desc = descriptors[typeId].get();
                 TypeDescriptor* memberDesc = descriptors[getTypeId<T>()].get();
@@ -111,13 +115,17 @@ namespace tri {
                         return;
                     }
                 }
-                desc->member.push_back({name, offset, memberDesc});
+                if(min != T() && max != T()) {
+                    desc->member.push_back({name, offset, memberDesc, new T(min), new T(max)});
+                }else {
+                    desc->member.push_back({name, offset, memberDesc, nullptr, nullptr});
+                }
             }
         }
 
         template<typename T, typename MemberType>
-        void registerMember(const std::string& name, int offset) {
-            registerMember<MemberType>(getTypeId<T>(), name, offset);
+        void registerMember(const std::string& name, int offset, MemberType min = MemberType(), MemberType max = MemberType()) {
+            registerMember<MemberType>(getTypeId<T>(), name, offset, min, max);
         }
 
         void registerConstant(int typeId, const std::string& name, int value) {

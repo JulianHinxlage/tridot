@@ -4,6 +4,7 @@
 
 #include "core/core.h"
 #include "render/Window.h"
+#include "engine/AssetManager.h"
 
 using namespace tri;
 
@@ -12,11 +13,12 @@ int main(int argc, char* argv[]) {
 
     env->signals->preStartup.invoke();
 
+    env->assets->hotReloadEnabled = false;
+    env->console->setVariable<bool>("hot_reloading", &env->assets->hotReloadEnabled);
+    env->console->setVariable<int>("resolution_x", 1920);
+    env->console->setVariable<int>("resolution_y", 1080);
     env->console->setVariable<bool>("vsync", true);
-    env->window->init(1080, 720, "Tridot Launcher");
-    env->window->setBackgroundColor(Color(50, 50, 50));
 
-    env->signals->startup.invoke();
 
     std::string configFile = "../res/config.txt";
     if (argc > 1) {
@@ -24,8 +26,14 @@ int main(int argc, char* argv[]) {
     }
     env->console->loadConfigFile(configFile);
 
-    env->signals->postStartup.invoke();
+    env->window->init(
+        *env->console->getVariable<int>("resolution_x"),
+        *env->console->getVariable<int>("resolution_y"),
+        "Tridot Launcher");
+    env->window->setBackgroundColor(Color(50, 50, 50));
 
+    env->signals->startup.invoke();
+    env->signals->postStartup.invoke();
 
     while (env->window->isOpen()) {
         env->signals->preUpdate.invoke();

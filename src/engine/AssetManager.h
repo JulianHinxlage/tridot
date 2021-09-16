@@ -7,6 +7,7 @@
 #include "core/util/Ref.h"
 #include "core/System.h"
 #include "Asset.h"
+#include <atomic>
 
 namespace tri {
 
@@ -75,6 +76,7 @@ namespace tri {
             uint64_t previousTimeStamp;
             std::function<bool()> preLoad;
             std::function<bool()> postLoad;
+            std::atomic_bool locked;
         };
 
         std::vector<std::string> searchDirectories;

@@ -12,7 +12,7 @@
 
 namespace tri {
 
-    TRI_REGISTER_TYPE(MeshComponent);
+    TRI_REGISTER_COMPONENT(MeshComponent);
     TRI_REGISTER_MEMBER(MeshComponent, mesh);
     TRI_REGISTER_MEMBER(MeshComponent, material);
     TRI_REGISTER_MEMBER(MeshComponent, color);

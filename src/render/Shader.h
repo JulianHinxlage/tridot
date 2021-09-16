@@ -23,10 +23,6 @@ namespace tri {
         static void unbind();
         uint32_t getId();
 
-        //bool load(const std::string &file);
-        //bool preLoad(const std::string &file);
-        //bool postLoad();
-
         bool load(const std::string &file) override;
         bool loadActivate() override;
 

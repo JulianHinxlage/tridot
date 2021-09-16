@@ -41,15 +41,6 @@ namespace tri {
         return id;
     }
 
-    /*
-    bool Shader::load(const std::string &file) {
-        if(!preLoad(file)){
-            return false;
-        }
-        return postLoad();
-    }
-     */
-
     bool Shader::load(const std::string &file) {
         std::ifstream stream(file);
         if(!stream.is_open()){

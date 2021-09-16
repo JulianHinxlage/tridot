@@ -32,7 +32,7 @@ namespace tri {
         rotation = glm::radians(rotation);
     }
 
-    TRI_REGISTER_TYPE(Transform);
+    TRI_REGISTER_COMPONENT(Transform);
     TRI_REGISTER_MEMBER(Transform, position);
     TRI_REGISTER_MEMBER(Transform, scale);
     TRI_REGISTER_MEMBER(Transform, rotation);

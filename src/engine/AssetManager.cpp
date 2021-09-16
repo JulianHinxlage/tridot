@@ -139,26 +139,29 @@ namespace tri {
 
     void AssetManager::startup() {
         running = true;
-        for(int i = 0; i < 16; i++){
-            threadIds.push_back(env->threads->addThread([&](){
-                bool processed = false;
-                while(running){
-                    if(!processed){
-                        std::unique_lock<std::mutex> lock(mutex);
-                        wakeCondition.wait(lock);
+        for (int i = 0; i < 16; i++) {
+            threadIds.push_back(env->threads->addThread([&]() {
+                while (running) {
+                    bool processed = false;
+                    for (auto &iter : assets) {
+                        auto &record = iter.second;
+                        if(!record.locked.exchange(true)) {
+                            if (load(record)) {
+                                processed = true;
+                                record.locked.store(false);
+                                break;
+                            }
+                            record.locked.store(false);
+                        }
                     }
 
-                    if(!running){
+                    if (!running) {
                         break;
                     }
 
-                    processed = false;
-                    for(auto &iter : assets) {
-                        auto &record = iter.second;
-                        if(load(record)){
-                            processed = true;
-                            break;
-                        }
+                    if (!processed) {
+                        std::unique_lock<std::mutex> lock(mutex);
+                        wakeCondition.wait(lock);
                     }
                 }
             }));

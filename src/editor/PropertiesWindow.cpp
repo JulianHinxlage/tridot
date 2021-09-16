@@ -43,11 +43,13 @@ namespace tri {
             }
             if(ImGui::BeginPopup("add")){
                 for(auto &desc : env->reflection->getDescriptors()){
-                    if(!env->scene->hasComponent(desc->typeId, id)){
-                        if(ImGui::MenuItem(desc->name.c_str())){
-                            void *comp = editor->entityOperations.addComponent(desc->typeId, id);
-                            desc->construct(comp);
-                            ImGui::CloseCurrentPopup();
+                    if(desc->isComponent) {
+                        if (!env->scene->hasComponent(desc->typeId, id)) {
+                            if (ImGui::MenuItem(desc->name.c_str())) {
+                                void *comp = editor->entityOperations.addComponent(desc->typeId, id);
+                                desc->construct(comp);
+                                ImGui::CloseCurrentPopup();
+                            }
                         }
                     }
                 }
@@ -60,7 +62,7 @@ namespace tri {
                 if(env->scene->hasComponent(desc->typeId, id)) {
                     if (ImGui::CollapsingHeader(desc->name.c_str())) {
                         updateComponentMenu(id, desc->typeId);
-                        editor->gui.drawTypeGui(desc->typeId, env->scene->getComponent(desc->typeId, id));
+                        editor->gui.drawType(desc->typeId, env->scene->getComponent(desc->typeId, id));
                     }else{
                         updateComponentMenu(id, desc->typeId);
                     }

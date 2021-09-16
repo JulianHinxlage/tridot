@@ -13,9 +13,8 @@ int main(int argc, char* argv[]) {
 
     env->signals->preStartup.invoke();
 
-#if !TRI_DISTRIBUTION
     env->assets->hotReloadEnabled = true;
-#endif
+    env->console->setVariable<bool>("hot_reloading", &env->assets->hotReloadEnabled);
     env->console->setVariable<int>("resolution_x", 1920);
     env->console->setVariable<int>("resolution_y", 1080);
     env->console->setVariable<bool>("vsync", true);

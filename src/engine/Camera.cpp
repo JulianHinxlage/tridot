@@ -11,7 +11,7 @@
 
 namespace tri {
 
-    TRI_REGISTER_TYPE(Camera);
+    TRI_REGISTER_COMPONENT(Camera);
     TRI_REGISTER_MEMBER(Camera, forward);
     TRI_REGISTER_MEMBER(Camera, up);
     TRI_REGISTER_MEMBER(Camera, right);
@@ -24,7 +24,7 @@ namespace tri {
     TRI_REGISTER_MEMBER(Camera, type);
     TRI_REGISTER_MEMBER(Camera, near);
     TRI_REGISTER_MEMBER(Camera, far);
-    TRI_REGISTER_MEMBER(Camera, fieldOfView);
+    TRI_REGISTER_MEMBER_RANGE(Camera, fieldOfView, 30, 90);
     TRI_REGISTER_MEMBER(Camera, aspectRatio);
 
     TRI_REGISTER_TYPE(Camera::Type);

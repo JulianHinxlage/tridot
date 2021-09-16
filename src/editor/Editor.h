@@ -6,7 +6,7 @@
 
 #include "core/core.h"
 #include "SelectionContext.h"
-#include "Gui.h"
+#include "EditorGui.h"
 #include "EntityOperations.h"
 #include "Gizmos.h"
 
@@ -29,7 +29,7 @@ namespace tri {
     public:
         bool runtimeMode;
         SelectionContext selectionContext;
-        Gui gui;
+        EditorGui gui;
         EntityOperations entityOperations;
         Gizmos gizmos;
 
