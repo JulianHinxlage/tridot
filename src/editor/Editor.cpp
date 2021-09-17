@@ -10,6 +10,7 @@
 #include "engine/Transform.h"
 #include "engine/MeshComponent.h"
 #include "engine/Input.h"
+#include "engine/AssetManager.h"
 #include <imgui/imgui.h>
 #include <imgui/imgui_internal.h>
 
@@ -111,6 +112,7 @@ namespace tri {
                     }
                 }
             }
+            gui.update();
         }
     }
 
@@ -118,7 +120,7 @@ namespace tri {
         if(std::filesystem::exists("autosave.scene")){
             std::filesystem::copy("autosave.scene", "autosave2.scene", std::filesystem::copy_options::overwrite_existing);
         }
-        env->serializer->serializeScene("autosave.scene", *env->scene);
+        env->scene->save("autosave.scene");
         for (auto* window : windows) {
             window->shutdown();
         }
@@ -136,13 +138,17 @@ namespace tri {
         if (ImGui::BeginMainMenuBar()) {
             if (ImGui::BeginMenu("File")) {
                 if (ImGui::MenuItem("Open", "Ctrl+O")) {
-                    env->scene->clear();
-                    env->serializer->deserializeScene("autosave.scene", *env->scene);
-                    env->scene->update();
-                    env->signals->sceneLoad.invoke(env->scene);
+                    editor->gui.openBrowseFile("Open", [](const std::string &file){
+                        Scene::loadMainScene(file);
+                    });
                 }
                 if (ImGui::MenuItem("Save", "Ctrl+S")) {
-                    env->serializer->serializeScene("autosave.scene", *env->scene);
+                    env->scene->save(env->scene->file);
+                }
+                if (ImGui::MenuItem("Save As", "Ctrl+Shift+S")) {
+                    editor->gui.openBrowseFile("Save", [](const std::string &file){
+                        env->scene->save(file);
+                    });
                 }
                 if (ImGui::MenuItem("Close")) {
                     env->scene->clear();
@@ -181,14 +187,20 @@ namespace tri {
         }
 
         bool control = env->input->down(Input::KEY_LEFT_CONTROL) || env->input->down(Input::KEY_RIGHT_CONTROL);
-        if (control && env->input->pressed("O")) {
-            env->scene->clear();
-            env->serializer->deserializeScene("autosave.scene", *env->scene);
-            env->scene->update();
-            env->signals->sceneLoad.invoke(env->scene);
-        }
+        bool shift = env->input->down(Input::KEY_LEFT_SHIFT) || env->input->down(Input::KEY_RIGHT_SHIFT);
         if (control && env->input->pressed("S")) {
-            env->serializer->serializeScene("autosave.scene", *env->scene);
+            if(shift){
+                editor->gui.openBrowseFile("Save", [](const std::string &file){
+                    env->scene->save(file);
+                });
+            }else{
+                env->scene->save(env->scene->file);
+            }
+        }
+        if (control && env->input->pressed("O")) {
+            editor->gui.openBrowseFile("Open", [](const std::string &file){
+                Scene::loadMainScene(file);
+            });
         }
     }
 

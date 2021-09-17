@@ -7,14 +7,17 @@
 #include "core/core.h"
 #include "ComponentPool.h"
 #include "ComponentBuffer.h"
+#include "engine/Asset.h"
 
 namespace tri {
 
     template<typename... Components>
     class EntityView;
 
-    class Scene : public System {
+    class Scene : public Asset, public System {
     public:
+        std::string file;
+
         Scene();
         Scene(const Scene &scene);
         ~Scene();
@@ -71,7 +74,8 @@ namespace tri {
         ComponentPool* getComponentPool(int typeId);
         ComponentPool* getEntityPool();
         void clear();
-        void operator=(const Scene& scene);
+        void copy(const Scene &from);
+        void swap(Scene &scene);
         void update() override;
         void enablePendingOperations(bool enable);
 
@@ -103,6 +107,10 @@ namespace tri {
         EntityView<Components...> view() {
             return EntityView<Components...>(this);
         }
+
+        bool load(const std::string &file) override;
+        bool save(const std::string &file) override;
+        static void loadMainScene(const std::string &file);
 
     private:
         std::vector<std::shared_ptr<ComponentPool>> pools;

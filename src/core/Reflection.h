@@ -115,10 +115,10 @@ namespace tri {
                         return;
                     }
                 }
-                if(min != T() && max != T()) {
-                    desc->member.push_back({name, offset, memberDesc, new T(min), new T(max)});
-                }else {
+                if(min == T() && max == T()) {
                     desc->member.push_back({name, offset, memberDesc, nullptr, nullptr});
+                }else {
+                    desc->member.push_back({name, offset, memberDesc, new T(min), new T(max)});
                 }
             }
         }

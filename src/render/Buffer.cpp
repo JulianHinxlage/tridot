@@ -20,7 +20,6 @@ namespace tri {
     Buffer::~Buffer() {
         if(id != 0){
             glDeleteBuffers(1, &id);
-            env->console->trace("deleted buffer ", id);
             id = 0;
         }
     }
@@ -63,7 +62,6 @@ namespace tri {
         this->type = type;
         if(id == 0){
             glGenBuffers(1, &id);
-            env->console->trace("created buffer ", id);
         }
         bind();
         glBufferData(internalEnum(type), size, data, dynamic ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW);

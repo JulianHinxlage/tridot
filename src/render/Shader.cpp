@@ -16,7 +16,6 @@ namespace tri {
     Shader::~Shader() {
         if(id != 0){
             glDeleteProgram(id);
-            env->console->trace("deleted shader ", id, " ", file);
             id = 0;
         }
     }
@@ -137,7 +136,6 @@ namespace tri {
             glDeleteShader(shaderId);
         }
         id = programId;
-        env->console->trace("created shader ", id);
         env->console->debug("loaded shader ", file);
         locations.clear();
         bufferLocations.clear();

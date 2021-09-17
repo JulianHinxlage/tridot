@@ -5,18 +5,18 @@
 #pragma once
 
 #include "VertexArray.h"
+#include "engine/Asset.h"
 #include <glm/glm.hpp>
 #include <string>
 
 namespace tri {
 
-    class Mesh {
+    class Mesh : public Asset {
     public:
         Mesh();
 
-        bool load(const std::string &file);
-        bool preLoad(const std::string &file);
-        bool postLoad();
+        bool load(const std::string &file) override;
+        bool loadActivate() override;
         void create(float *vertices, int vertexCount, int *indices, int indexCount, std::vector<Attribute> layout = {{FLOAT, 3}, {FLOAT, 3}, {FLOAT, 2}});
 
         VertexArray vertexArray;

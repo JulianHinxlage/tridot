@@ -7,6 +7,8 @@
 #include "Editor.h"
 #include "render/Color.h"
 #include "engine/Transform.h"
+#include "engine/AssetManager.h"
+#include "render/Material.h"
 #include <glm/glm.hpp>
 #include <imgui.h>
 
@@ -15,6 +17,26 @@ namespace tri {
     void EditorGui::drawType(int typeId, void *data) {
         auto *desc = env->reflection->getType(typeId);
         drawMember(typeId, data, desc->name.c_str(), nullptr, nullptr, false);
+    }
+
+    void EditorGui::dragDropSource(int typeId, const std::string &file) {
+        if(ImGui::BeginDragDropSource()){
+            ImGui::SetDragDropPayload(env->reflection->getType(typeId)->name.c_str(), file.data(), file.size());
+            ImGui::Text("%s", file.c_str());
+            ImGui::EndDragDropSource();
+        }
+    }
+
+    std::string EditorGui::dragDropTarget(int typeId) {
+        if(ImGui::BeginDragDropTarget()){
+            if(ImGui::AcceptDragDropPayload(env->reflection->getType(typeId)->name.c_str())){
+                auto *payload = ImGui::GetDragDropPayload();
+                ImGui::EndDragDropTarget();
+                return std::string((char*)payload->Data, payload->DataSize);
+            }
+            ImGui::EndDragDropTarget();
+        }
+        return "";
     }
 
     void EditorGui::setTypeFunction(int typeId, const std::function<void(const char *, void *, void *, void *)> &func) {
@@ -32,11 +54,10 @@ namespace tri {
             }
         }
         auto *desc = env->reflection->getType(typeId);
-        ImGuiTreeNodeFlags flags = 0;
         if(desc->member.size() == 0){
-            flags |= ImGuiTreeNodeFlags_Bullet;
+            return;
         }
-        if(!drawHeader || ImGui::TreeNodeEx(desc->name.c_str(), flags)) {
+        if(!drawHeader || ImGui::TreeNodeEx(desc->name.c_str())) {
             for(auto &m : desc->member){
                 void *ptr = (uint8_t*)data + m.offset;
                 if(m.type->constants.size() > 0){
@@ -68,6 +89,82 @@ namespace tri {
             }
             ImGui::EndCombo();
         }
+    }
+
+    void EditorGui::openBrowseFile(const std::string &name, const std::function<void(const std::string &)> &callback) {
+        browseFileCallback = callback;
+        browseFileOpenFlag = true;
+        browseFileName = name;
+    }
+
+    void EditorGui::updateDirectory(const std::string &directory, const std::string &searchDirectory){
+        for(auto &entry : std::filesystem::directory_iterator(directory)){
+            if(entry.is_directory()){
+                if(ImGui::TreeNode(entry.path().filename().c_str())){
+                    updateDirectory(entry.path(), searchDirectory);
+                    ImGui::TreePop();
+                }
+            }
+        }for(auto &entry : std::filesystem::directory_iterator(directory)){
+            if(entry.is_regular_file()){
+                if(ImGui::Selectable(entry.path().filename().c_str(), browseFileFile == entry.path(), ImGuiSelectableFlags_DontClosePopups)){
+                    browseFileFile = entry.path();
+                }
+            }
+        }
+    }
+
+    void EditorGui::update() {
+        if(browseFileOpenFlag){
+            ImGui::OpenPopup("Browse File");
+            browseFileFile = "";
+            browseFileOpenFlag = false;
+        }
+        if(ImGui::BeginPopupModal("Browse File")){
+            for(auto &dir : env->assets->getSearchDirectories()){
+                std::string name = std::filesystem::path(dir).parent_path().filename();
+                if(ImGui::TreeNode(name.c_str())){
+                    updateDirectory(dir, dir);
+                    ImGui::TreePop();
+                }
+            }
+            if(ImGui::Button("Close")){
+                ImGui::CloseCurrentPopup();
+            }
+            ImGui::SameLine();
+            if(ImGui::Button(browseFileName.c_str())){
+                if(browseFileCallback){
+                    browseFileCallback(browseFileFile);
+                }
+                ImGui::CloseCurrentPopup();
+            }
+            ImGui::EndPopup();
+        }
+    }
+
+    template<typename T>
+    void addAssetTypeFunction(){
+        editor->gui.setTypeFunction<Ref<T>>([](const char *label, Ref<T> &v, Ref<T> *min, Ref<T> *max){
+            std::string name = "<none>";
+            if(v.get() != nullptr){
+                name = env->assets->getFile(v);
+            }
+            if(ImGui::BeginCombo(label, name.c_str())){
+                if(ImGui::Selectable("<none", name == "<none>")){
+                    v = nullptr;
+                }
+                for(auto &file : env->assets->getAssetList(env->reflection->getTypeId<T>())){
+                    if(ImGui::Selectable(file.c_str(), name == file)){
+                        v = env->assets->get<T>(file);
+                    }
+                }
+                ImGui::EndCombo();
+            }
+            std::string file = editor->gui.dragDropTarget(env->reflection->getTypeId<T>());
+            if(file != ""){
+                v = env->assets->get<T>(file);
+            }
+        });
     }
 
     TRI_STARTUP_CALLBACK("EditorGui"){
@@ -120,6 +217,11 @@ namespace tri {
             ImGui::DragFloat3("rotation", (float*)&rot, 0.1);
             v.rotation = glm::radians(rot);
         });
+
+        addAssetTypeFunction<Mesh>();
+        addAssetTypeFunction<Material>();
+        addAssetTypeFunction<Shader>();
+        addAssetTypeFunction<Texture>();
     }
 
 }

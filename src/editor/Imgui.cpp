@@ -8,9 +8,6 @@
 #include "render/Window.h"
 #include "render/FrameBuffer.h"
 #include "engine/Input.h"
-//#include <GL/glew.h>
-//#include <GL/gl.h>
-//#include <GLFW/glfw3.h>
 #include <imgui/imgui.h>
 #include <imgui/backends/imgui_impl_glfw.h>
 #include <imgui/backends/imgui_impl_opengl3.h>

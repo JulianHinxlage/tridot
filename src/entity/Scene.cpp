@@ -3,19 +3,25 @@
 //
 
 #include "Scene.h"
+#include "engine/Serializer.h"
+#include "engine/AssetManager.h"
 
 namespace tri {
 
     TRI_REGISTER_SYSTEM_INSTANCE(Scene, env->scene);
 
     Scene::Scene() {
+        file = "";
         entityPool = ComponentPool(env->reflection->getTypeId<EntitySignatureBitmap>(), sizeof(EntitySignatureBitmap));
         pendingOperationsEnabled = true;
         addPendingOperations = true;
     }
 
     Scene::Scene(const Scene& scene) {
-        operator=(scene);
+        file = "";
+        pendingOperationsEnabled = true;
+        addPendingOperations = true;
+        copy(scene);
     }
 
     Scene::~Scene() {
@@ -144,15 +150,22 @@ namespace tri {
         pendingOperations.clear();
     }
 
-    void Scene::operator=(const Scene& scene) {
-        freeList = scene.freeList;
-        entityPool = scene.entityPool;
-        pools.resize(scene.pools.size());
+    void Scene::copy(const Scene &from) {
+        freeList = from.freeList;
+        entityPool = from.entityPool;
+        pools.resize(from.pools.size());
         for (int i = 0; i < pools.size(); i++) {
-            if (scene.pools[i]) {
-                pools[i] = std::make_shared<ComponentPool>(*scene.pools[i]);
+            if (from.pools[i]) {
+                pools[i] = std::make_shared<ComponentPool>(*from.pools[i]);
             }
         }
+    }
+
+    void Scene::swap(Scene &scene) {
+        freeList.swap(scene.freeList);
+        pools.swap(scene.pools);
+        entityPool.swap(scene.entityPool);
+        std::swap(file, scene.file);
     }
 
     void Scene::update() {
@@ -192,6 +205,37 @@ namespace tri {
 
     void Scene::enablePendingOperations(bool enable){
         pendingOperationsEnabled = enable;
+    }
+
+    bool Scene::load(const std::string &file) {
+        Clock clock;
+        clear();
+        if(!env->serializer->deserializeScene(file, *this)){
+            return false;
+        }
+        this->file = file;
+        update();
+        env->signals->sceneLoad.invoke(this);
+        env->console->info("loaded scene ", file, " in ", clock.elapsed(), "s");
+        return true;
+    }
+
+    bool Scene::save(const std::string &file) {
+        Clock clock;
+        if(!env->serializer->serializeScene(file, *this)){
+            return false;
+        }
+        env->console->info("saved scene ", file, " in ", clock.elapsed(), "s");
+        return true;
+    }
+
+    void Scene::loadMainScene(const std::string &file) {
+        env->assets->unload(file);
+        env->assets->get<Scene>(file, false, nullptr, [](Ref<Asset> asset){
+            env->scene->swap(*(Scene*)asset.get());
+            env->signals->sceneLoad.invoke(env->scene);
+            return true;
+        });
     }
 
 }

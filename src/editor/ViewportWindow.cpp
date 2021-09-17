@@ -152,7 +152,9 @@ namespace tri {
 
 
                         Color color = texture->getPixel(pos.x, pos.y);
-                        color.a = 0;
+                        if(color.value != -1){
+                            color.a = 0;
+                        }
                         EntityId id = color.value;
 
                         bool control = env->input->down(Input::KEY_LEFT_CONTROL) || env->input->down(Input::KEY_RIGHT_CONTROL);

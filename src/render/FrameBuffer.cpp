@@ -36,7 +36,6 @@ namespace tri {
     FrameBuffer::~FrameBuffer() {
         if(id != 0){
             glDeleteFramebuffers(1, &id);
-            env->console->trace("deleted frame buffer ", id);
             id = 0;
         }
     }
@@ -112,7 +111,6 @@ namespace tri {
     Ref<Texture> FrameBuffer::setAttachment(FrameBufferAttachmentSpec spec, const Ref<Texture> &texture) {
         if(id == 0){
             glGenFramebuffers(1, &id);
-            env->console->trace("created frame buffer ", id);
         }
         bindFrameBuffer(id);
         glFramebufferTexture2D(GL_FRAMEBUFFER, internalEnum(spec.type), GL_TEXTURE_2D, texture->getId(), 0);

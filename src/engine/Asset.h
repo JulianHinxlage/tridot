@@ -12,6 +12,7 @@ namespace tri {
         virtual ~Asset(){}
         virtual bool load(const std::string &file){return true;}
         virtual bool loadActivate(){return true;}
+        virtual bool save(const std::string &file){return false;}
     };
 
 }

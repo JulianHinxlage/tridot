@@ -75,22 +75,22 @@ namespace tri::impl {
 #define TRI_UNIQUE_IDENTIFIER_IMPL(base, counter, line) TRI_UNIQUE_IDENTIFIER_IMPL_2(base, counter, line)
 #define TRI_UNIQUE_IDENTIFIER(base) TRI_UNIQUE_IDENTIFIER_IMPL(base, __COUNTER__, __LINE__)
 
-#define TRI_REGISTER_CALLBACK_IMPL(name) void TRI_CONCAT(name, _func)(); bool TRI_CONCAT(name, _var) = [](){ TRI_CONCAT(name, _func)(); return true;}(); void TRI_CONCAT(name, _func)()
+#define TRI_REGISTER_CALLBACK_IMPL(name) void TRI_CONCAT(name, _func)(); namespace{ static bool TRI_CONCAT(name, _var) = [](){ TRI_CONCAT(name, _func)(); return true;}();} void TRI_CONCAT(name, _func)()
 #define TRI_REGISTER_CALLBACK() TRI_REGISTER_CALLBACK_IMPL(TRI_UNIQUE_IDENTIFIER(_tri_register_callback))
-#define TRI_STARTUP_CALLBACK_IMPL(callbackName, name) void TRI_CONCAT(name, _func)(); tri::impl::SignalCallbackRegisterer TRI_CONCAT(name, _var)(tri::Environment::startup()->signals->startup, callbackName, &TRI_CONCAT(name, _func)); void TRI_CONCAT(name, _func)()
+#define TRI_STARTUP_CALLBACK_IMPL(callbackName, name) void TRI_CONCAT(name, _func)(); namespace{ static tri::impl::SignalCallbackRegisterer TRI_CONCAT(name, _var)(tri::Environment::startup()->signals->startup, callbackName, &TRI_CONCAT(name, _func));} void TRI_CONCAT(name, _func)()
 #define TRI_STARTUP_CALLBACK(callbackName) TRI_STARTUP_CALLBACK_IMPL(callbackName, TRI_UNIQUE_IDENTIFIER(_tri_register_callback))
-#define TRI_UPDATE_CALLBACK_IMPL(callbackName, name) void TRI_CONCAT(name, _func)(); tri::impl::SignalCallbackRegisterer TRI_CONCAT(name, _var)(tri::Environment::startup()->signals->update, callbackName, &TRI_CONCAT(name, _func)); void TRI_CONCAT(name, _func)()
+#define TRI_UPDATE_CALLBACK_IMPL(callbackName, name) void TRI_CONCAT(name, _func)(); namespace{ static tri::impl::SignalCallbackRegisterer TRI_CONCAT(name, _var)(tri::Environment::startup()->signals->update, callbackName, &TRI_CONCAT(name, _func));} void TRI_CONCAT(name, _func)()
 #define TRI_UPDATE_CALLBACK(callbackName) TRI_UPDATE_CALLBACK_IMPL(callbackName, TRI_UNIQUE_IDENTIFIER(_tri_register_callback))
-#define TRI_SHUTDOWN_CALLBACK_IMPL(callbackName, name) void TRI_CONCAT(name, _func)(); tri::impl::SignalCallbackRegisterer TRI_CONCAT(name, _var)(tri::Environment::startup()->signals->shutdown, callbackName, &TRI_CONCAT(name, _func)); void TRI_CONCAT(name, _func)()
+#define TRI_SHUTDOWN_CALLBACK_IMPL(callbackName, name) void TRI_CONCAT(name, _func)(); namespace{ static tri::impl::SignalCallbackRegisterer TRI_CONCAT(name, _var)(tri::Environment::startup()->signals->shutdown, callbackName, &TRI_CONCAT(name, _func));} void TRI_CONCAT(name, _func)()
 #define TRI_SHUTDOWN_CALLBACK(callbackName) TRI_SHUTDOWN_CALLBACK_IMPL(callbackName, TRI_UNIQUE_IDENTIFIER(_tri_register_callback))
 
-#define TRI_REGISTER_SYSTEM(type) tri::impl::SystemRegisterer<type> TRI_UNIQUE_IDENTIFIER(_tri_register_component)(#type);
-#define TRI_REGISTER_SYSTEM_INSTANCE(type, instance) TRI_REGISTER_CALLBACK(){tri::Environment::startup();} tri::impl::SystemRegisterer<type> TRI_UNIQUE_IDENTIFIER(_tri_register_component)(#type, &instance);
+#define TRI_REGISTER_SYSTEM(type) namespace{ static tri::impl::SystemRegisterer<type> TRI_UNIQUE_IDENTIFIER(_tri_register_component)(#type);}
+#define TRI_REGISTER_SYSTEM_INSTANCE(type, instance) namespace{TRI_REGISTER_CALLBACK(){tri::Environment::startup();} static tri::impl::SystemRegisterer<type> TRI_UNIQUE_IDENTIFIER(_tri_register_component)(#type, &instance);}
 
-#define TRI_REGISTER_TYPE_NAME(type, name) tri::impl::TypeRegisterer<type> TRI_UNIQUE_IDENTIFIER(_tri_register_component)(#name);
+#define TRI_REGISTER_TYPE_NAME(type, name) namespace{ static tri::impl::TypeRegisterer<type> TRI_UNIQUE_IDENTIFIER(_tri_register_component)(#name);}
 #define TRI_REGISTER_TYPE(type) TRI_REGISTER_TYPE_NAME(type, type)
 
-#define TRI_REGISTER_COMPONENT_NAME(type, name) tri::impl::TypeRegisterer<type> TRI_UNIQUE_IDENTIFIER(_tri_register_component)(#name, true);
+#define TRI_REGISTER_COMPONENT_NAME(type, name) namespace{ static tri::impl::TypeRegisterer<type> TRI_UNIQUE_IDENTIFIER(_tri_register_component)(#name, true);}
 #define TRI_REGISTER_COMPONENT(type) TRI_REGISTER_COMPONENT_NAME(type, type)
 
 #define TRI_REGISTER_MEMBER(type, memberName) TRI_REGISTER_CALLBACK(){tri::Environment::startup(); env->reflection->registerMember<type, decltype(type::memberName)>(#memberName, offsetof(type, memberName));}

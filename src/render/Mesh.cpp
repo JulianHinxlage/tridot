@@ -15,14 +15,7 @@ namespace tri {
         boundingMax = {+0.5, +0.5, +0.5};
     }
 
-    bool Mesh::load(const std::string &file) {
-        if(!preLoad(file)){
-            return false;
-        }
-        return postLoad();
-    }
-
-    bool Mesh::postLoad() {
+    bool Mesh::loadActivate() {
         create(vertexData.data(), vertexData.size(), indexData.data(), indexData.size(), {{FLOAT, 3}, {FLOAT, 3}, {FLOAT, 2}});
         return true;
     }
@@ -64,7 +57,7 @@ namespace tri {
         return result;
     }
 
-    bool Mesh::preLoad(const std::string &file) {
+    bool Mesh::load(const std::string &file) {
         std::ifstream stream;
         stream.open(file);
 

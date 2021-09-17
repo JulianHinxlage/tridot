@@ -58,7 +58,6 @@ namespace tri {
     void VertexArray::addIndexBuffer(const Ref<Buffer> &indexBuffer, Type type) {
         if(id == 0){
             glGenVertexArrays(1, &id);
-            env->console->trace("created vertex array ", id);
         }
         bind();
         indexBuffer->unbind();
@@ -70,7 +69,6 @@ namespace tri {
     void VertexArray::addVertexBuffer(const Ref<Buffer> &vertexBuffer, std::vector<Attribute> layout, int divisor) {
         if(id == 0){
             glGenVertexArrays(1, &id);
-            env->console->trace("created vertex array ", id);
         }
         bind();
         vertexBuffer->unbind();
@@ -127,7 +125,6 @@ namespace tri {
     void VertexArray::clear() {
         if(id != 0){
             glDeleteVertexArrays(1, &id);
-            env->console->trace("deleted vertex array ", id);
             id = 0;
         }
         nextAttribute = 0;

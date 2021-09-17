@@ -9,7 +9,6 @@
 
 namespace tri{
 
-
     TRI_REGISTER_CALLBACK() {
         env->console->addCommand("module_load", [](const std::vector<std::string>& args) {
             if (args.size() > 1) {
@@ -91,11 +90,7 @@ namespace tri{
             if (args.size() > 1) {
                 std::string fullPath = env->assets->searchFile(args[1]);
                 if(fullPath != ""){
-                    Clock clock;
-                    env->serializer->deserializeScene(fullPath, *env->scene);
-                    env->scene->update();
-                    env->signals->sceneLoad.invoke(env->scene);
-                    env->console->info("loaded scene ", args[1], " in ", clock.elapsed(), "s");
+                    Scene::loadMainScene(fullPath);
                 }else{
                     env->console->warning("scene file not found: ", args[1]);
                 }
@@ -110,7 +105,7 @@ namespace tri{
                 if(fullPath == ""){
                     fullPath = args[1];
                 }
-                env->serializer->serializeScene(fullPath, *env->scene);
+                env->scene->save(fullPath);
             }
             else {
                 env->console->info("usage: scene_save <scene>");

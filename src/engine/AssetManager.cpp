@@ -8,11 +8,6 @@
 
 namespace tri {
 
-
-
-
-
-
     TRI_REGISTER_SYSTEM_INSTANCE(AssetManager, env->assets);
 
     uint64_t getTimeStamp(const std::string &file){
@@ -50,14 +45,16 @@ namespace tri {
     std::string AssetManager::searchFile(const std::string &file) {
         for(auto &dir : searchDirectories){
             if(std::filesystem::exists(dir + file)){
-                return dir + file;
+                if(std::filesystem::is_regular_file(dir + file)){
+                    return dir + file;
+                }
             }
         }
         return "";
     }
 
     Ref<Asset> AssetManager::get(int typeId, const std::string &file, bool synchronous,
-        const std::function<bool()> &preLoad, const std::function<bool()> &postLoad) {
+        const std::function<bool(Ref<Asset>)> &preLoad, const std::function<bool(Ref<Asset>)> &postLoad) {
         auto x = assets.find(file);
         if(x != assets.end()){
             if(x->second.typeId == typeId){
@@ -92,30 +89,31 @@ namespace tri {
         return record.asset;
     }
 
-    AssetManager::Status AssetManager::getStatus(Ref<Asset> asset) {
+    std::string AssetManager::getFile(Ref<Asset> asset) {
         for (auto &iter : assets) {
             auto &record = iter.second;
             if(record.asset == asset){
-                return record.status;
+                return record.file;
             }
+        }
+        return "";
+    }
+
+    AssetManager::Status AssetManager::getStatus(const std::string &file) {
+        auto x = assets.find(file);
+        if(x != assets.end()){
+            return x->second.status;
         }
         return UNLOADED;
     }
 
-    void AssetManager::unload(Ref<Asset> asset) {
+    void AssetManager::unload(const std::string &file) {
         for (auto &iter : assets) {
             auto &record = iter.second;
-            if(record.asset == asset){
-                record.status = (Status) (record.status | SHOULD_NOT_LOAD);
-            }
-        }
-    }
-
-    void AssetManager::load(Ref<Asset> asset) {
-        for (auto &iter : assets) {
-            auto &record = iter.second;
-            if(record.asset == asset){
-                record.status = (Status) (record.status & ~(int)SHOULD_NOT_LOAD);
+            if(record.file == file){
+                assets.erase(record.file);
+                env->console->debug("unloaded asset: ", file);
+                break;
             }
         }
     }
@@ -128,7 +126,9 @@ namespace tri {
                 auto &record = iter.second;
                 if (record.status & LOADED) {
                     if (record.asset.use_count() <= 1) {
+                        std::string file = iter.first;
                         assets.erase(iter.first);
+                        env->console->debug("unloaded asset: ", file);
                         change = true;
                         break;
                     }
@@ -226,7 +226,7 @@ namespace tri {
                 if(!(record.status & SHOULD_NOT_LOAD)) {
 
                     if (!(record.status & STATE_PRE_LOADED)) {
-                        if (record.preLoad == nullptr || record.preLoad()) {
+                        if (record.preLoad == nullptr || record.preLoad(record.asset)) {
                             record.status = (Status) (record.status | STATE_PRE_LOADED);
                         } else {
                             record.status = (Status) (record.status | FAILED_TO_LOAD);
@@ -277,7 +277,7 @@ namespace tri {
                     }
 
                     if ((record.status & STATE_ACTIVATED) && !(record.status & STATE_POST_LOADED)) {
-                        if (record.postLoad == nullptr || record.postLoad()) {
+                        if (record.postLoad == nullptr || record.postLoad(record.asset)) {
                             record.status = (Status) (record.status | STATE_POST_LOADED);
                             record.status = (Status) (record.status | LOADED);
                             record.status = (Status) (record.status & ~(int) UNLOADED);
@@ -297,6 +297,17 @@ namespace tri {
             }
         }
         return processed;
+    }
+
+    std::vector<std::string> AssetManager::getAssetList(int typeId) {
+        std::vector<std::string> list;
+        for(auto &iter : assets){
+            auto &record = iter.second;
+            if(record.typeId == typeId){
+                list.push_back(record.file);
+            }
+        }
+        return list;
     }
 
 }

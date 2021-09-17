@@ -31,7 +31,8 @@ namespace tri {
         EntityId* idData();
         void clear();
         void swap(EntityId index1, EntityId index2);
-        void operator=(const ComponentPool& pool);
+        void copy(const ComponentPool& from);
+        void swap(ComponentPool &pool);
 
     private:
         int elementSize;

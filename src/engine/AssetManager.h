@@ -32,29 +32,32 @@ namespace tri {
         void addSearchDirectory(const std::string &directory);
         void removeSearchDirectory(const std::string &directory);
         std::string searchFile(const std::string &file);
+        const std::vector<std::string> &getSearchDirectories(){
+            return searchDirectories;
+        }
 
         //get an asset by file name
         //the asset is loaded asynchronous if not specified otherwise
         template<typename T>
         Ref<T> get(const std::string &file, bool synchronous = false,
-            const std::function<bool()> &preLoad = nullptr, const std::function<bool()> &postLoad = nullptr){
+            const std::function<bool(Ref<Asset>)> &preLoad = nullptr, const std::function<bool(Ref<Asset>)> &postLoad = nullptr){
             return std::static_pointer_cast<T>(get(env->reflection->getTypeId<T>(), file, synchronous, preLoad, postLoad));
         }
 
         //get an asset by file name
         //the asset is loaded asynchronous if not specified otherwise
         Ref<Asset> get(int typeId, const std::string &file, bool synchronous = false,
-            const std::function<bool()> &preLoad = nullptr, const std::function<bool()> &postLoad = nullptr);
+            const std::function<bool(Ref<Asset>)> &preLoad = nullptr, const std::function<bool(Ref<Asset>)> &postLoad = nullptr);
 
+        template<typename T>
+        std::string getFile(Ref<T> asset){
+            return getFile(std::static_pointer_cast<Asset>(asset));
+        }
 
-        Status getStatus(Ref<Asset> asset);
-
-        //mark an loaded asset to be unloaded
-        void unload(Ref<Asset> asset);
-
-        //make an unloaded asset to be loaded
-        //for normal loading use the get function
-        void load(Ref<Asset> asset);
+        std::string getFile(Ref<Asset> asset);
+        Status getStatus(const std::string &file);
+        void unload(const std::string &file);
+        std::vector<std::string> getAssetList(int typeId);
 
         //unload all assets that are not in use
         //if they get used again, they get loaded again
@@ -74,8 +77,8 @@ namespace tri {
             int typeId;
             uint64_t timeStamp;
             uint64_t previousTimeStamp;
-            std::function<bool()> preLoad;
-            std::function<bool()> postLoad;
+            std::function<bool(Ref<Asset>)> preLoad;
+            std::function<bool(Ref<Asset>)> postLoad;
             std::atomic_bool locked;
         };
 

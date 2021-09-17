@@ -14,7 +14,7 @@ namespace tri {
     }
 
     ComponentPool::ComponentPool(const ComponentPool& pool){
-        operator=(pool);
+        copy(pool);
     }
 
     ComponentPool::~ComponentPool(){
@@ -153,18 +153,18 @@ namespace tri {
         }
     }
 
-    void ComponentPool::operator=(const ComponentPool& pool){
-        elementSize = pool.elementSize;
-        typeId = pool.typeId;
-        elements = pool.elements;
-        dense = pool.dense;
-        sparse.resize(pool.sparse.size());
+    void ComponentPool::copy(const ComponentPool &from) {
+        elementSize = from.elementSize;
+        typeId = from.typeId;
+        elements = from.elements;
+        dense = from.dense;
+        sparse.resize(from.sparse.size());
         for (int i = 0; i < sparse.size(); i++) {
-            if (pool.sparse[i].data) {
+            if (from.sparse[i].data) {
                 sparse[i].data.reset(new EntityId[1u << pageSizeBits]);
-                sparse[i].entryCount = pool.sparse[i].entryCount;
+                sparse[i].entryCount = from.sparse[i].entryCount;
                 for (int j = 0; j < (1u << pageSizeBits); j++) {
-                    sparse[i].data[j] = pool.sparse[i].data[j];
+                    sparse[i].data[j] = from.sparse[i].data[j];
                 }
             }
             else {
@@ -172,6 +172,14 @@ namespace tri {
                 sparse[i].entryCount = 0;
             }
         }
+    }
+
+    void ComponentPool::swap(ComponentPool &pool) {
+        std::swap(elementSize, pool.elementSize);
+        std::swap(typeId, pool.typeId);
+        elements.swap(pool.elements);
+        dense.swap(pool.dense);
+        sparse.swap(pool.sparse);
     }
 
 }

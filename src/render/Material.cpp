@@ -3,6 +3,8 @@
 //
 
 #include "Material.h"
+#include "core/core.h"
+#include "engine/Serializer.h"
 
 namespace tri {
 
@@ -36,5 +38,38 @@ namespace tri {
     bool Material::isOpaque() {
         return color.a == 255;
     }
+
+    bool Material::load(const std::string &file) {
+        return env->serializer->serializeType(file, env->reflection->getTypeId<Material>(), this);
+    }
+
+    bool Material::save(const std::string &file) {
+        return env->serializer->deserializeType(file, env->reflection->getTypeId<Material>(), this);
+    }
+
+    TRI_REGISTER_TYPE(Material::Mapping);
+    TRI_REGISTER_CONSTANT(Material::Mapping, UV);
+    TRI_REGISTER_CONSTANT(Material::Mapping, TRI_PLANAR);
+    TRI_REGISTER_CONSTANT(Material::Mapping, SCALE_TRI_PLANAR);
+
+    TRI_REGISTER_COMPONENT(Material);
+    TRI_REGISTER_MEMBER(Material, color);
+    TRI_REGISTER_MEMBER(Material, mapping);
+    TRI_REGISTER_MEMBER_RANGE(Material, roughness, 0, 1);
+    TRI_REGISTER_MEMBER_RANGE(Material, metallic, 0, 1);
+    TRI_REGISTER_MEMBER_RANGE(Material, normalMapFactor, 0, 1);
+    TRI_REGISTER_MEMBER(Material, texture);
+    TRI_REGISTER_MEMBER(Material, normalMap);
+    TRI_REGISTER_MEMBER(Material, roughnessMap);
+    TRI_REGISTER_MEMBER(Material, metallicMap);
+    TRI_REGISTER_MEMBER(Material, shader);
+    TRI_REGISTER_MEMBER(Material, textureOffset);
+    TRI_REGISTER_MEMBER(Material, textureScale);
+    TRI_REGISTER_MEMBER(Material, normalMapOffset);
+    TRI_REGISTER_MEMBER(Material, normalMapScale);
+    TRI_REGISTER_MEMBER(Material, roughnessMapOffset);
+    TRI_REGISTER_MEMBER(Material, roughnessMapScale);
+    TRI_REGISTER_MEMBER(Material, metallicMapOffset);
+    TRI_REGISTER_MEMBER(Material, metallicMapScale);
 
 }

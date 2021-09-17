@@ -6,11 +6,12 @@
 
 #include "Image.h"
 #include "enum.h"
+#include "engine/Asset.h"
 #include <cstdint>
 
 namespace tri {
 
-    class Texture {
+    class Texture : public Asset {
     public:
         Texture();
         ~Texture();
@@ -22,8 +23,7 @@ namespace tri {
         void create(uint32_t width, uint32_t height, TextureFormat formal = RGBA8, bool enableMipMapping = true);
         bool load(const Image &image);
         bool load(const std::string &file);
-        bool preLoad(const std::string &file);
-        bool postLoad();
+        bool loadActivate();
 
         void setMagMin(bool magNearest, bool minNearest);
         void setWrap(bool sRepeat, bool tRepeat);

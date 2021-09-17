@@ -18,8 +18,11 @@ namespace tri {
         void serializeScene(YAML::Emitter &out, Scene &scene);
         void deserializeScene(YAML::Node &in, Scene &scene);
 
-        void serializeScene(const std::string &filename, Scene &scene);
-        void deserializeScene(const std::string &filename, Scene &scene);
+
+        bool serializeType(const std::string &filename, int typeId, void *data);
+        bool deserializeType(const std::string &filename, int typeId, void *data);
+        bool serializeScene(const std::string &filename, Scene &scene);
+        bool deserializeScene(const std::string &filename, Scene &scene);
 
         template<typename T>
         void setSerializationFunction(const std::function<void(YAML::Emitter &, T&)> &func){

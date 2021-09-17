@@ -107,6 +107,9 @@ namespace tri {
         void init() {}
 
         void add(const glm::mat4 &transform, const glm::vec3& position, Mesh* mesh, Material* material, Color color, uint32_t id, uint32_t layer = 0) {
+            if(mesh->vertexArray.getId() == 0){
+                return;
+            }
 
             bool opaque = material->isOpaque() && color.a == 255;
             uint32_t depth = glm::length(eyePosition - position) / 0.0001;

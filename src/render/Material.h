@@ -7,11 +7,12 @@
 #include "Color.h"
 #include "Texture.h"
 #include "Shader.h"
+#include "engine/Asset.h"
 #include "core/util/Ref.h"
 
 namespace tri {
 
-    class Material {
+    class Material : public Asset {
     public:
         enum Mapping{
             UV = 0,
@@ -47,6 +48,9 @@ namespace tri {
         Material(Color color = Color::white, const Ref<Texture> &texture = nullptr, Mapping mapping = UV);
 
         bool isOpaque();
+
+        bool load(const std::string &file) override;
+        bool save(const std::string &file) override;
     };
 
 }

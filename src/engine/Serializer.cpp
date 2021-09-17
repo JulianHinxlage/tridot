@@ -4,9 +4,14 @@
 
 #include "Serializer.h"
 #include "render/Color.h"
+#include "render/Mesh.h"
+#include "AssetManager.h"
+#include "render/Material.h"
 #include <glm/glm.hpp>
 
 namespace tri {
+
+    TRI_REGISTER_SYSTEM_INSTANCE(Serializer, env->serializer);
 
     void Serializer::serializeType(YAML::Emitter &out, int typeId, void *data) {
         if(serializationFunctions.size() > typeId){
@@ -100,20 +105,44 @@ namespace tri {
         }
     }
 
-    void Serializer::serializeScene(const std::string &filename, Scene &scene) {
+    bool Serializer::serializeType(const std::string &filename, int typeId, void *data) {
+        std::ofstream stream(filename);
+        if(stream.is_open()){
+            YAML::Emitter out(stream);
+            serializeType(out, typeId, data);
+            return true;
+        }
+        return false;
+    }
+
+    bool Serializer::deserializeType(const std::string &filename, int typeId, void *data) {
+        std::ifstream stream(filename);
+        if(stream.is_open()){
+            YAML::Node in = YAML::Load(stream);
+            deserializeType(in, typeId, data);
+            return true;
+        }
+        return false;
+    }
+
+    bool Serializer::serializeScene(const std::string &filename, Scene &scene) {
         std::ofstream stream(filename);
         if(stream.is_open()){
             YAML::Emitter out(stream);
             serializeScene(out, scene);
+            return true;
         }
+        return false;
     }
 
-    void Serializer::deserializeScene(const std::string &filename, Scene &scene) {
+    bool Serializer::deserializeScene(const std::string &filename, Scene &scene) {
         std::ifstream stream(filename);
         if(stream.is_open()){
             YAML::Node in = YAML::Load(stream);
             deserializeScene(in, scene);
+            return true;
         }
+        return false;
     }
 
     void Serializer::setSerializationFunction(int typeId, const std::function<void(YAML::Emitter &, void *)> &func) {
@@ -130,9 +159,25 @@ namespace tri {
         deserializationFunctions[typeId] = func;
     }
 
+    template<typename T>
+    void defineAssetFunctions(Serializer &serializer){
+        serializer.setSerializationFunction<Ref<T>>([](YAML::Emitter &out, Ref<T> &v){
+            std::string file = env->assets->getFile(v);
+            if(file == ""){
+                out << YAML::Null;
+            }else{
+                out << file;
+            }
+        });
+        serializer.setDeserializationFunction<Ref<T>>([](YAML::Node &in, Ref<T> &v){
+            if(!in.IsNull()){
+                v = env->assets->get<T>(in.as<std::string>(""));
+            }
+        });
+    }
+
 #define S_VALUE(type) setSerializationFunction<type>([](YAML::Emitter &out, type &v){out << v;});
 #define S_FLOW(type, seq) setSerializationFunction<type>([](YAML::Emitter &out, type &v){out << YAML::Flow << YAML::BeginSeq << seq << YAML::EndSeq;});
-
 #define D_VALUE(type) setDeserializationFunction<type>([](YAML::Node &in, type &v){v = in.as<type>(type());});
 
     void Serializer::startup() {
@@ -176,13 +221,15 @@ namespace tri {
             v.a = in[3].as<int>(255);
         });
 
+        defineAssetFunctions<Mesh>(*this);
+        defineAssetFunctions<Texture>(*this);
+        defineAssetFunctions<Material>(*this);
+        defineAssetFunctions<Shader>(*this);
+
     }
 
 #undef S_FLOW
 #undef S_VALUE
-
 #undef D_VALUE
-
-    TRI_REGISTER_SYSTEM_INSTANCE(Serializer, env->serializer);
 
 }

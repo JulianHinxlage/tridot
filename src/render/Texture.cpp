@@ -28,7 +28,6 @@ namespace tri {
     Texture::~Texture() {
         if(id != 0){
             glDeleteTextures(1, &id);
-            env->console->trace("deleted texture ", id);
             id = 0;
         }
     }
@@ -91,7 +90,6 @@ namespace tri {
         }
         if(id == 0){
             glGenTextures(1, &id);
-            env->console->trace("created texture ", id);
         }
 
         this->width = width;
@@ -140,17 +138,10 @@ namespace tri {
     }
 
     bool Texture::load(const std::string &file) {
-        if(!preLoad(file)){
-            return false;
-        }
-        return postLoad();
-    }
-
-    bool Texture::preLoad(const std::string &file) {
         return image.load(file);
     }
 
-    bool Texture::postLoad() {
+    bool Texture::loadActivate() {
         if(load(image)){
             image.clear();
             return true;
@@ -243,7 +234,6 @@ namespace tri {
             }
             if(id == 0){
                 glGenTextures(1, &id);
-                env->console->trace("created texture ", id);
             }
 
             type = TEXTURE_CUBE_MAP;
