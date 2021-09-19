@@ -117,7 +117,7 @@ namespace tri {
 
             SortKey key;
             key.v1 = 0;
-            key.v1 |= ((uint64_t)layer && 0x3f) << 58;
+            key.v1 |= ((uint64_t)layer & 0x3f) << 58;
             key.v1 |= (uint64_t)!opaque << 57;
             if (opaque) {
                 key.v1 |= ((uint64_t)getMaterialIndex(material) & 0xffff) << 40;

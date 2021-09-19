@@ -5,6 +5,7 @@
 #include "AssetManager.h"
 #include "core/ThreadPool.h"
 #include "engine/Time.h"
+#include "core/util/StrUtil.h"
 
 namespace tri {
 
@@ -44,18 +45,33 @@ namespace tri {
 
     std::string AssetManager::searchFile(const std::string &file) {
         for(auto &dir : searchDirectories){
-            if(std::filesystem::exists(dir + file)){
-                if(std::filesystem::is_regular_file(dir + file)){
-                    return dir + file;
+            std::string path = dir + file.substr(StrUtil::match(file, dir));
+            if(std::filesystem::exists(path)){
+                if(std::filesystem::is_regular_file(path)){
+                    return path;
                 }
             }
         }
         return "";
     }
 
+    std::string AssetManager::minimalFilePath(const std::string &file) {
+        std::string minimalPath = file;
+        int maxMatch = 0;
+        for(auto &dir : searchDirectories){
+            int match = StrUtil::match(file, dir);
+            if(match > maxMatch){
+                maxMatch = match;
+                minimalPath = file.substr(match);
+            }
+        }
+        return minimalPath;
+    }
+
     Ref<Asset> AssetManager::get(int typeId, const std::string &file, bool synchronous,
         const std::function<bool(Ref<Asset>)> &preLoad, const std::function<bool(Ref<Asset>)> &postLoad) {
-        auto x = assets.find(file);
+        std::string minimalPath = minimalFilePath(file);
+        auto x = assets.find(minimalPath);
         if(x != assets.end()){
             if(x->second.typeId == typeId){
                 return x->second.asset;
@@ -68,12 +84,12 @@ namespace tri {
         auto *desc = env->reflection->getType(typeId);
         Ref<Asset> asset = std::shared_ptr<Asset>((Asset*)desc->alloc(), [desc](Asset *ptr){ desc->free(ptr);});
 
-        AssetRecord &record = assets[file];
+        AssetRecord &record = assets[minimalPath];
         record.asset = asset;
         record.typeId = typeId;
-        record.file = file;
+        record.file = minimalPath;
         record.status = UNLOADED;
-        record.fullPath = "";
+        record.path = "";
         record.timeStamp = 0;
         record.previousTimeStamp = 0;
         record.preLoad = preLoad;
@@ -100,7 +116,7 @@ namespace tri {
     }
 
     AssetManager::Status AssetManager::getStatus(const std::string &file) {
-        auto x = assets.find(file);
+        auto x = assets.find(minimalFilePath(file));
         if(x != assets.end()){
             return x->second.status;
         }
@@ -108,11 +124,12 @@ namespace tri {
     }
 
     void AssetManager::unload(const std::string &file) {
+        std::string minimalPath = minimalFilePath(file);
         for (auto &iter : assets) {
             auto &record = iter.second;
-            if(record.file == file){
+            if(record.file == minimalPath){
                 assets.erase(record.file);
-                env->console->debug("unloaded asset: ", file);
+                env->console->debug("unloaded asset: ", minimalPath);
                 break;
             }
         }
@@ -186,8 +203,8 @@ namespace tri {
                     if((record.status & LOADED) && !(record.status & FAILED_TO_LOAD)) {
                         if(!(record.status & SHOULD_NOT_LOAD)) {
                             if (record.timeStamp != 0) {
-                                if (record.fullPath != "") {
-                                    uint64_t currentTimeStamp = getTimeStamp(record.fullPath);
+                                if (record.path != "") {
+                                    uint64_t currentTimeStamp = getTimeStamp(record.path);
                                     if (currentTimeStamp != 0) {
                                         if (currentTimeStamp != record.timeStamp) {
                                             record.status = UNLOADED;
@@ -236,15 +253,15 @@ namespace tri {
                     }
 
                     if ((record.status & STATE_PRE_LOADED) && !(record.status & STATE_LOADED)) {
-                        record.fullPath = searchFile(record.file);
-                        if (record.fullPath == "") {
+                        record.path = searchFile(record.file);
+                        if (record.path == "") {
                             record.status = (Status) (record.status | FAILED_TO_LOAD);
                             record.status = (Status) (record.status | FILE_NOT_FOUND);
                             env->console->warning("asset file not found: ", record.file);
                         } else {
                             record.previousTimeStamp = record.timeStamp;
-                            record.timeStamp = getTimeStamp(record.fullPath);
-                            if (record.asset->load(record.fullPath)) {
+                            record.timeStamp = getTimeStamp(record.path);
+                            if (record.asset->load(record.path)) {
                                 record.status = (Status) (record.status | STATE_LOADED);
                             } else {
                                 record.status = (Status) (record.status | FAILED_TO_LOAD);

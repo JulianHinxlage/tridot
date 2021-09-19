@@ -32,6 +32,7 @@ namespace tri {
         void addSearchDirectory(const std::string &directory);
         void removeSearchDirectory(const std::string &directory);
         std::string searchFile(const std::string &file);
+        std::string minimalFilePath(const std::string &file);
         const std::vector<std::string> &getSearchDirectories(){
             return searchDirectories;
         }
@@ -72,7 +73,7 @@ namespace tri {
         public:
             Ref<Asset> asset;
             std::string file;
-            std::string fullPath;
+            std::string path;
             Status status;
             int typeId;
             uint64_t timeStamp;

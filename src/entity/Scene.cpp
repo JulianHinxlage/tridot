@@ -234,6 +234,7 @@ namespace tri {
         env->assets->get<Scene>(file, false, nullptr, [](Ref<Asset> asset){
             env->scene->swap(*(Scene*)asset.get());
             env->signals->sceneLoad.invoke(env->scene);
+            //env->assets->unload(env->scene->file);
             return true;
         });
     }

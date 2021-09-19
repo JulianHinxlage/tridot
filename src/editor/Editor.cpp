@@ -89,6 +89,8 @@ namespace tri {
         env->signals->postUpdate.addCallback([this](){
             updated = false;
         });
+
+        gui.startup();
     }
 
     void Editor::update() {
@@ -138,7 +140,7 @@ namespace tri {
         if (ImGui::BeginMainMenuBar()) {
             if (ImGui::BeginMenu("File")) {
                 if (ImGui::MenuItem("Open", "Ctrl+O")) {
-                    editor->gui.openBrowseFile("Open", [](const std::string &file){
+                    editor->gui.file.openBrowseWindow("Open", "Open Scene", env->reflection->getTypeId<Scene>(), [](const std::string &file){
                         Scene::loadMainScene(file);
                     });
                 }
@@ -146,7 +148,7 @@ namespace tri {
                     env->scene->save(env->scene->file);
                 }
                 if (ImGui::MenuItem("Save As", "Ctrl+Shift+S")) {
-                    editor->gui.openBrowseFile("Save", [](const std::string &file){
+                    editor->gui.file.openBrowseWindow("Save", "Save Scene As", env->reflection->getTypeId<Scene>(), [](const std::string &file){
                         env->scene->save(file);
                     });
                 }
@@ -190,7 +192,7 @@ namespace tri {
         bool shift = env->input->down(Input::KEY_LEFT_SHIFT) || env->input->down(Input::KEY_RIGHT_SHIFT);
         if (control && env->input->pressed("S")) {
             if(shift){
-                editor->gui.openBrowseFile("Save", [](const std::string &file){
+                editor->gui.file.openBrowseWindow("Save", "Save Scene", env->reflection->getTypeId<Scene>(), [](const std::string &file){
                     env->scene->save(file);
                 });
             }else{
@@ -198,7 +200,7 @@ namespace tri {
             }
         }
         if (control && env->input->pressed("O")) {
-            editor->gui.openBrowseFile("Open", [](const std::string &file){
+            editor->gui.file.openBrowseWindow("Open", "Open Scene", env->reflection->getTypeId<Scene>(), [](const std::string &file){
                 Scene::loadMainScene(file);
             });
         }

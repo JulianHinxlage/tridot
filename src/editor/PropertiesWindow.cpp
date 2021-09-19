@@ -62,7 +62,7 @@ namespace tri {
                 if(env->scene->hasComponent(desc->typeId, id)) {
                     if (ImGui::CollapsingHeader(desc->name.c_str())) {
                         updateComponentMenu(id, desc->typeId);
-                        editor->gui.drawType(desc->typeId, env->scene->getComponent(desc->typeId, id));
+                        editor->gui.type.drawType(desc->typeId, env->scene->getComponent(desc->typeId, id));
                     }else{
                         updateComponentMenu(id, desc->typeId);
                     }
