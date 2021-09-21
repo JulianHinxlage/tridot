@@ -72,6 +72,7 @@ namespace tri {
             virtual void free(void* ptr) const = 0;
             virtual void copy(void* from, void* to) const = 0;
             virtual bool equals(void* v1, void* v2) const = 0;
+            virtual void swap(void* v1, void* v2) const = 0;
         private:
             friend class Reflection;
             int hashCode;
@@ -102,6 +103,7 @@ namespace tri {
             TypeDescriptor* desc = descriptors[getTypeId<T>()].get();
             desc->name = name;
             desc->isComponent = isComponent;
+            desc->hashCode = typeid(T).hash_code();
             return desc->typeId;
         }
 
@@ -213,6 +215,9 @@ namespace tri {
                 else {
                     return false;
                 }
+            }
+            virtual void swap(void* v1, void* v2) const override {
+                std::swap(*(T*)v1, *(T*)v2);
             }
         };
 

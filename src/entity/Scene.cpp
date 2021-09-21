@@ -14,13 +14,13 @@ namespace tri {
         file = "";
         entityPool = ComponentPool(env->reflection->getTypeId<EntitySignatureBitmap>(), sizeof(EntitySignatureBitmap));
         pendingOperationsEnabled = true;
-        addPendingOperations = true;
+        addPendingOperations = false;
     }
 
     Scene::Scene(const Scene& scene) {
         file = "";
         pendingOperationsEnabled = true;
-        addPendingOperations = true;
+        addPendingOperations = false;
         copy(scene);
     }
 
@@ -92,7 +92,9 @@ namespace tri {
         }
         auto* pool = getComponentPool(typeId);
         getSignature(id) |= ((EntitySignatureBitmap)1 << typeId);
-        return pool->add(id);
+        void *comp = pool->add(id);
+        //env->reflection->getType(typeId)->construct(comp);
+        return comp;
     }
 
     void* Scene::getComponent(int typeId, EntityId id) {

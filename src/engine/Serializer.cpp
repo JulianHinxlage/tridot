@@ -186,6 +186,7 @@ namespace tri {
         S_VALUE(int)
         S_VALUE(uint32_t)
         S_VALUE(bool)
+        S_VALUE(std::string)
 
         S_FLOW(glm::vec2, v.x << v.y);
         S_FLOW(glm::vec3, v.x << v.y << v.z);
@@ -198,6 +199,7 @@ namespace tri {
         D_VALUE(int)
         D_VALUE(uint32_t)
         D_VALUE(bool)
+        D_VALUE(std::string)
 
         setDeserializationFunction<glm::vec2>([](YAML::Node &in, glm::vec2 &v){
             v.x = in[0].as<float>(0);

@@ -12,6 +12,7 @@
 #include "render/Window.h"
 #include "engine/Serializer.h"
 #include "engine/Input.h"
+#include "engine/EntityInfo.h"
 #include <imgui/imgui.h>
 
 float randf() {
@@ -62,7 +63,7 @@ namespace tri {
                 cam.output->setAttachment({ (TextureAttachment)(COLOR + 1), Color(-1)});
             }else{
                 //create camera
-                editorCameraId = env->scene->addEntity(EditorOnly());
+                editorCameraId = env->scene->addEntity(EditorOnly(), EntityInfo());
                 Transform& t = env->scene->addComponent<Transform>(editorCameraId);
                 t.position = { 0.5, 0.5, 2 };
                 Camera& cam = env->scene->addComponent<Camera>(editorCameraId);

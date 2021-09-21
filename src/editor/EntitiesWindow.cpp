@@ -5,6 +5,7 @@
 #include "Editor.h"
 #include "entity/Scene.h"
 #include "engine/Input.h"
+#include "engine/EntityInfo.h"
 #include <imgui.h>
 
 namespace tri {
@@ -49,7 +50,13 @@ namespace tri {
 
             hovered = -1;
             env->scene->view<>().each([&](EntityId id){
-                std::string label = "[" + std::to_string(id) + "]";
+                std::string label = "";
+                if(env->scene->hasComponent<EntityInfo>(id)){
+                    label = env->scene->getComponent<EntityInfo>(id).name;
+                }
+                if(label.empty()){
+                    label = "[" + std::to_string(id) + "]";
+                }
                 bool selected = editor->selectionContext.isSelected(id);
                 if(ImGui::Selectable(label.c_str(), &selected)){
                     if(!blockStateChange){
@@ -72,6 +79,7 @@ namespace tri {
         void updateHeader(){
             if(ImGui::Button("Add Entity")){
                 EntityId id = editor->entityOperations.addEntity();
+                env->scene->addComponent<EntityInfo>(id);
                 editor->selectionContext.unselectAll();
                 editor->selectionContext.select(id);
             }

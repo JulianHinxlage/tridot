@@ -17,9 +17,13 @@ namespace tri {
 
         void dragDropSource(int typeId, const std::string &file);
         std::string dragDropTarget(int typeId);
+        void textInput(const std::string &label, std::string &text, const std::string &hint = "");
 
         void update();
         void startup();
+
+    private:
+        std::string inputBuffer;
     };
 
 }

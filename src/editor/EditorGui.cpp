@@ -33,6 +33,15 @@ namespace tri {
         return "";
     }
 
+    void EditorGui::textInput(const std::string &label, std::string &text, const std::string &hint) {
+        if(inputBuffer.size() == 0){
+            inputBuffer.resize(1024);
+        }
+        strcpy(inputBuffer.data(), text.c_str());
+        ImGui::InputTextWithHint(label.c_str(), hint.c_str(), inputBuffer.data(), inputBuffer.capacity() - 1);
+        text = inputBuffer.c_str();
+    }
+
     void EditorGui::update() {
         file.update();
     }

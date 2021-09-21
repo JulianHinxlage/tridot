@@ -35,9 +35,23 @@ namespace tri {
         void swap(ComponentPool &pool);
 
     private:
-        int elementSize;
-        int typeId;
-        std::vector<uint8_t> elements;
+        class Storage{
+        public:
+            int typeId;
+            int elementSize;
+            int size;
+            int capacity;
+            uint8_t *data;
+
+            Storage();
+            void clear();
+            void *operator[](int index) const;
+            void swap(Storage &storage);
+            void swap(int index1, int index2);
+            void copy(const Storage &from);
+            void resize(int newSize);
+        };
+        Storage elements;
         std::vector<EntityId> dense;
 
         class Page {

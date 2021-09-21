@@ -5,6 +5,7 @@
 #include "pch.h"
 #include "Editor.h"
 #include "entity/Scene.h"
+#include "engine/EntityInfo.h"
 #include <imgui/imgui.h>
 
 namespace tri {
@@ -58,16 +59,24 @@ namespace tri {
         }
 
         void updateEntity(EntityId id){
+            ImGui::PushID(id);
+            if(env->scene->hasComponent<EntityInfo>(id)){
+                EntityInfo &info = env->scene->getComponent<EntityInfo>(id);
+                editor->gui.textInput("name", info.name);
+            }
             for(auto &desc : env->reflection->getDescriptors()){
                 if(env->scene->hasComponent(desc->typeId, id)) {
-                    if (ImGui::CollapsingHeader(desc->name.c_str())) {
-                        updateComponentMenu(id, desc->typeId);
-                        editor->gui.type.drawType(desc->typeId, env->scene->getComponent(desc->typeId, id));
-                    }else{
-                        updateComponentMenu(id, desc->typeId);
+                    if(desc->typeId != env->reflection->getTypeId<EntityInfo>()) {
+                        if (ImGui::CollapsingHeader(desc->name.c_str())) {
+                            updateComponentMenu(id, desc->typeId);
+                            editor->gui.type.drawType(desc->typeId, env->scene->getComponent(desc->typeId, id));
+                        } else {
+                            updateComponentMenu(id, desc->typeId);
+                        }
                     }
                 }
             }
+            ImGui::PopID();
         }
 
         void updateComponentMenu(EntityId id, int typeId){

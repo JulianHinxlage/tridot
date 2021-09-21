@@ -1,5 +1,3 @@
-#include "ComponentPool.h"
-#include "ComponentPool.h"
 //
 // Copyright (c) 2021 Julian Hinxlage. All rights reserved.
 //
@@ -9,8 +7,8 @@
 namespace tri {
 
     ComponentPool::ComponentPool(int typeId, int elementSize){
-        this->elementSize = elementSize;
-        this->typeId = typeId;
+        elements.elementSize = elementSize;
+        elements.typeId = typeId;
     }
 
     ComponentPool::ComponentPool(const ComponentPool& pool){
@@ -26,8 +24,8 @@ namespace tri {
     }
 
     void* ComponentPool::getElementByIndex(EntityId index) {
-        TRI_ASSERT(index < elements.size() / elementSize, "index out of bounds");
-        return (void*)(elements.data() + index * elementSize);
+        TRI_ASSERT(index < elements.size, "index out of bounds");
+        return (void*)elements[index];
     }
 
     EntityId ComponentPool::getIndexById(EntityId id) const {
@@ -65,8 +63,8 @@ namespace tri {
         page.data[elementIndex] = index;
         page.entryCount++;
         dense.push_back(id);
-        elements.resize(elements.size() + elementSize);
-        return elements.data() + index * (size_t)elementSize;
+        elements.resize(elements.size + 1);
+        return elements[index];
     }
 
     bool ComponentPool::has(EntityId id) const {
@@ -108,12 +106,9 @@ namespace tri {
         }
 
         std::swap(dense[index], dense.back());
-        for (int i = 0; i < elementSize; i++) {
-            std::swap(elements[index * (size_t)elementSize + i], elements[elements.size() - elementSize + i]);
-        }
-
+        elements.swap(index, dense.size() - 1);
         dense.pop_back();
-        elements.resize(elements.size() - elementSize);
+        elements.resize(elements.size - 1);
         return true;
     }
 
@@ -122,7 +117,7 @@ namespace tri {
     }
 
     void* ComponentPool::elementData() {
-        return elements.data();
+        return elements.data;
     }
 
     EntityId* ComponentPool::idData() {
@@ -146,17 +141,12 @@ namespace tri {
         EntityId pageIndex2 = id2 >> pageSizeBits;
         EntityId elementIndex2 = id2 & ((1u << pageSizeBits) - 1);
         std::swap(sparse[pageIndex1].data[elementIndex1], sparse[pageIndex2].data[elementIndex2]);
-
         std::swap(dense[index1], dense[index2]);
-        for (int i = 0; i < elementSize; i++) {
-            std::swap(elements[index1 * (size_t)elementSize + i], elements[index2 * (size_t)elementSize + i]);
-        }
+        elements.swap(index1, index2);
     }
 
     void ComponentPool::copy(const ComponentPool &from) {
-        elementSize = from.elementSize;
-        typeId = from.typeId;
-        elements = from.elements;
+        elements.copy(from.elements);
         dense = from.dense;
         sparse.resize(from.sparse.size());
         for (int i = 0; i < sparse.size(); i++) {
@@ -175,11 +165,112 @@ namespace tri {
     }
 
     void ComponentPool::swap(ComponentPool &pool) {
-        std::swap(elementSize, pool.elementSize);
-        std::swap(typeId, pool.typeId);
         elements.swap(pool.elements);
         dense.swap(pool.dense);
         sparse.swap(pool.sparse);
+    }
+
+    ///////////////
+    /// Storage ///
+    ///////////////
+
+    ComponentPool::Storage::Storage(){
+        data = nullptr;
+        size = 0;
+        capacity = 0;
+        elementSize = 0;
+        typeId = 0;
+    }
+
+    void ComponentPool::Storage::clear(){
+        auto *desc = env->reflection->getType(typeId);
+        for(int i = 0; i < capacity; i++){
+            //todo: check destructor crash
+            //desc->destruct(data + i * elementSize);
+        }
+        delete[] data;
+        data = nullptr;
+        size = 0;
+        capacity = 0;
+    }
+
+    void *ComponentPool::Storage::operator[](int index) const {
+        return data + index * elementSize;
+    }
+
+    void ComponentPool::Storage::swap(Storage &storage){
+        std::swap(elementSize, storage.elementSize);
+        std::swap(size, storage.size);
+        std::swap(data, storage.data);
+    }
+
+    void ComponentPool::Storage::swap(int index1, int index2){
+        auto *desc = env->reflection->getType(typeId);
+        desc->swap(data + index1 * elementSize, data + index2 * elementSize);
+    }
+
+    void ComponentPool::Storage::copy(const Storage &from){
+        auto *desc = env->reflection->getType(typeId);
+        for(int i = 0; i < capacity; i++){
+            desc->destruct(data + i * elementSize);
+        }
+        delete[] data;
+        data = new uint8_t[from.size * elementSize];
+        elementSize = from.elementSize;
+        typeId = from.typeId;
+        size = from.size;
+        capacity = from.capacity;
+        for(int i = 0; i < from.size; i++){
+            desc->copy(from.data + i * elementSize ,  data + i * elementSize);
+        }
+    }
+
+    void ComponentPool::Storage::resize(int newSize){
+        if(newSize > capacity){
+            int newCapacity = capacity << 1;
+            if(newCapacity == 0){
+                newCapacity = 1;
+            }
+            uint8_t *newData = new uint8_t[newCapacity * elementSize];
+
+            auto *desc = env->reflection->getType(typeId);
+            for(int i = 0; i < capacity; i++){
+                desc->copy(data + i * elementSize, newData + i * elementSize);
+            }
+            for(int i = capacity; i < newCapacity; i++){
+                desc->construct(newData + i * elementSize);
+            }
+            for(int i = 0; i < capacity; i++){
+                desc->destruct(data + i * elementSize);
+            }
+            delete[] data;
+            data = newData;
+            size = newSize;
+            capacity = newCapacity;
+        }else if(newSize < capacity / 2) {
+            int newCapacity = capacity >> 2;
+            if(newCapacity == 0){
+                newCapacity = 1;
+            }
+            uint8_t *newData = new uint8_t[newCapacity * elementSize];
+
+            auto *desc = env->reflection->getType(typeId);
+            for(int i = 0; i < capacity; i++){
+                desc->copy(data + i * elementSize, newData + i * elementSize);
+            }
+            for(int i = capacity; i < newCapacity; i++){
+                desc->construct(newData + i * elementSize);
+            }
+            for(int i = 0; i < capacity; i++){
+                desc->destruct(data + i * elementSize);
+            }
+            delete[] data;
+            data = newData;
+            size = newSize;
+            capacity = newCapacity;
+        }else{
+            size = newSize;
+        }
     }
 
 }

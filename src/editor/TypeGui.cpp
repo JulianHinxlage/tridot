@@ -128,6 +128,9 @@ namespace tri {
         editor->gui.type.setTypeFunction<bool>([](const char *label, bool &v, bool *min, bool *max){
             ImGui::Checkbox(label, &v);
         });
+        editor->gui.type.setTypeFunction<std::string>([](const char *label, std::string &v, std::string *min, std::string *max){
+            editor->gui.textInput(label, v);
+        });
 
         editor->gui.type.setTypeFunction<glm::vec2>([](const char *label, glm::vec2 &v, glm::vec2 *min, glm::vec2 *max){
             ImGui::DragFloat2(label, (float*)&v, 0.01);

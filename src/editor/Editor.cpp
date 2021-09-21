@@ -11,6 +11,7 @@
 #include "engine/MeshComponent.h"
 #include "engine/Input.h"
 #include "engine/AssetManager.h"
+#include "engine/EntityInfo.h"
 #include <imgui/imgui.h>
 #include <imgui/imgui_internal.h>
 
@@ -214,7 +215,10 @@ namespace tri {
     }
     void createTestScene(){
         for (int i = 0; i < 100; i++) {
-            env->scene->addEntity(Transform(randf3(), (randf3() * 0.1f) + glm::vec3(0.01, 0.01, 0.01), randf3() * 6.0f), MeshComponent(nullptr, nullptr, Color(glm::vec4(randf3(), 1))));
+            env->scene->addEntity(
+                    Transform(randf3(), (randf3() * 0.1f) + glm::vec3(0.01, 0.01, 0.01), randf3() * 6.0f),
+                    MeshComponent(nullptr, nullptr, Color(glm::vec4(randf3(), 1))),
+                    EntityInfo());
         }
     }
 
