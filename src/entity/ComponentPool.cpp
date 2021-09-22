@@ -184,10 +184,7 @@ namespace tri {
 
     void ComponentPool::Storage::clear(){
         auto *desc = env->reflection->getType(typeId);
-        for(int i = 0; i < capacity; i++){
-            //todo: check destructor crash
-            //desc->destruct(data + i * elementSize);
-        }
+        desc->destruct(data, capacity);
         delete[] data;
         data = nullptr;
         size = 0;
@@ -202,6 +199,8 @@ namespace tri {
         std::swap(elementSize, storage.elementSize);
         std::swap(size, storage.size);
         std::swap(data, storage.data);
+        std::swap(capacity, storage.capacity);
+        std::swap(typeId, storage.typeId);
     }
 
     void ComponentPool::Storage::swap(int index1, int index2){
@@ -211,18 +210,14 @@ namespace tri {
 
     void ComponentPool::Storage::copy(const Storage &from){
         auto *desc = env->reflection->getType(typeId);
-        for(int i = 0; i < capacity; i++){
-            desc->destruct(data + i * elementSize);
-        }
+        desc->destruct(data, capacity);
         delete[] data;
-        data = new uint8_t[from.size * elementSize];
+        data = new uint8_t[from.capacity * elementSize];
         elementSize = from.elementSize;
         typeId = from.typeId;
         size = from.size;
         capacity = from.capacity;
-        for(int i = 0; i < from.size; i++){
-            desc->copy(from.data + i * elementSize ,  data + i * elementSize);
-        }
+        desc->copy(from.data, data, from.capacity);
     }
 
     void ComponentPool::Storage::resize(int newSize){
@@ -232,42 +227,31 @@ namespace tri {
                 newCapacity = 1;
             }
             uint8_t *newData = new uint8_t[newCapacity * elementSize];
-
             auto *desc = env->reflection->getType(typeId);
-            for(int i = 0; i < capacity; i++){
-                desc->copy(data + i * elementSize, newData + i * elementSize);
-            }
-            for(int i = capacity; i < newCapacity; i++){
-                desc->construct(newData + i * elementSize);
-            }
-            for(int i = 0; i < capacity; i++){
-                desc->destruct(data + i * elementSize);
-            }
+            desc->move(data, newData, capacity);
+            desc->destruct(data, capacity);
+            desc->construct(newData + capacity * elementSize, newCapacity - capacity);
             delete[] data;
             data = newData;
             size = newSize;
             capacity = newCapacity;
-        }else if(newSize < capacity / 2) {
-            int newCapacity = capacity >> 2;
-            if(newCapacity == 0){
-                newCapacity = 1;
-            }
+        }else if(newSize < (capacity >> 1)) {
+            int newCapacity = capacity >> 1;
             uint8_t *newData = new uint8_t[newCapacity * elementSize];
-
             auto *desc = env->reflection->getType(typeId);
-            for(int i = 0; i < capacity; i++){
-                desc->copy(data + i * elementSize, newData + i * elementSize);
-            }
-            for(int i = capacity; i < newCapacity; i++){
-                desc->construct(newData + i * elementSize);
-            }
-            for(int i = 0; i < capacity; i++){
-                desc->destruct(data + i * elementSize);
-            }
+            desc->move(data, newData, newCapacity);
+            desc->destruct(data, capacity);
             delete[] data;
             data = newData;
             size = newSize;
             capacity = newCapacity;
+        }else if(newSize == 0){
+            auto *desc = env->reflection->getType(typeId);
+            desc->destruct(data, capacity);
+            delete[] data;
+            data = nullptr;
+            size = newSize;
+            capacity = 0;
         }else{
             size = newSize;
         }

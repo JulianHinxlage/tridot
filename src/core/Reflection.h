@@ -73,6 +73,11 @@ namespace tri {
             virtual void copy(void* from, void* to) const = 0;
             virtual bool equals(void* v1, void* v2) const = 0;
             virtual void swap(void* v1, void* v2) const = 0;
+            virtual void move(void* from, void* to, int count) const = 0;
+            virtual void construct(void* ptr, int count) const = 0;
+            virtual void destruct(void* ptr, int count) const = 0;
+            virtual void copy(void* from, void* to, int count) const = 0;
+
         private:
             friend class Reflection;
             int hashCode;
@@ -197,10 +202,10 @@ namespace tri {
                     ((T*)ptr)->~T();
                 }
             }
-            virtual void* alloc() const override {
+            void* alloc() const override {
                 return new T();
             }
-            virtual void free(void* ptr) const override {
+            void free(void* ptr) const override {
                 delete (T*)ptr;
             }
             void copy(void* from, void* to) const override {
@@ -208,7 +213,7 @@ namespace tri {
                     new ((T*)to) T(*(T*)from);
                 }
             }
-            virtual bool equals(void* v1, void* v2) const override {
+            bool equals(void* v1, void* v2) const override {
                 if constexpr (impl::has_equal<T, T>()) {
                     return *(T*)v1 == *(T*)v2;
                 }
@@ -216,8 +221,50 @@ namespace tri {
                     return false;
                 }
             }
-            virtual void swap(void* v1, void* v2) const override {
+            void swap(void* v1, void* v2) const override {
                 std::swap(*(T*)v1, *(T*)v2);
+            }
+            void move(void* from, void* to, int count) const override {
+                if constexpr (std::is_move_constructible<T>::value) {
+                    T *f = (T*)from;
+                    T *t = (T*)to;
+                    for(int i = 0; i < count; i++) {
+                        new (t) T(std::move(*f));
+                        ++f;
+                        ++t;
+                    }
+                }else {
+                    copy(from, to, count);
+                }
+            }
+            void construct(void* ptr, int count) const override {
+                if constexpr (std::is_constructible<T>::value) {
+                    T *p = (T*)ptr;
+                    for(int i = 0; i < count; i++) {
+                        new (p) T();
+                        p++;
+                    }
+                }
+            }
+            void destruct(void* ptr, int count) const override {
+                if constexpr (std::is_destructible<T>::value) {
+                    T *p = (T*)ptr;
+                    for(int i = 0; i < count; i++) {
+                        p->~T();
+                        p++;
+                    }
+                }
+            }
+            void copy(void* from, void* to, int count) const override {
+                if constexpr (std::is_copy_constructible<T>::value) {
+                    T *f = (T*)from;
+                    T *t = (T*)to;
+                    for(int i = 0; i < count; i++) {
+                        new (t) T(*f);
+                        ++f;
+                        ++t;
+                    }
+                }
             }
         };
 

@@ -14,13 +14,13 @@ namespace tri {
         file = "";
         entityPool = ComponentPool(env->reflection->getTypeId<EntitySignatureBitmap>(), sizeof(EntitySignatureBitmap));
         pendingOperationsEnabled = true;
-        addPendingOperations = false;
+        addPendingOperations = true;
     }
 
     Scene::Scene(const Scene& scene) {
         file = "";
         pendingOperationsEnabled = true;
-        addPendingOperations = false;
+        addPendingOperations = true;
         copy(scene);
     }
 

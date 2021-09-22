@@ -49,11 +49,12 @@ namespace tri {
             getInstance() = new Environment();
             env = getInstance();
             env->systems = new SystemManager();
+            env->reflection = new Reflection();
             env->signals = new SignalManager();
             env->console = new Console();
             env->systems->setSystem("SignalManager", env->signals);
             env->systems->setSystem("Console", env->console);
-            env->reflection = env->systems->addSystem<Reflection>("Reflection");
+            env->systems->setSystem("Reflection", env->reflection);
             env->modules = env->systems->addSystem<ModuleManager>("ModuleManager");
             env->profiler = env->systems->addSystem<Profiler>("Profiler");
             env->threads = env->systems->addSystem<ThreadPool>("ThreadPool");
@@ -75,6 +76,7 @@ namespace tri {
         env = getInstance();
         if (env != nullptr) {
             delete env->signals;
+            delete env->reflection;
             delete env->console;
             delete env->systems;
             delete env;

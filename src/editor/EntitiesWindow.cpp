@@ -50,6 +50,7 @@ namespace tri {
 
             hovered = -1;
             env->scene->view<>().each([&](EntityId id){
+                ImGui::PushID(id);
                 std::string label = "";
                 if(env->scene->hasComponent<EntityInfo>(id)){
                     label = env->scene->getComponent<EntityInfo>(id).name;
@@ -67,6 +68,7 @@ namespace tri {
                     hovered = id;
                 }
                 updateEntityMenu(id);
+                ImGui::PopID();
             });
 
             updateEntityDragging();
