@@ -42,7 +42,7 @@ namespace tri {
                 editorCameraId = -1;
             });
 
-            editor->gizmos.startup();
+            env->editor->gizmos.startup();
         }
 
         void setupCamera(){
@@ -93,7 +93,7 @@ namespace tri {
                 Camera *cam = nullptr;
                 Transform *camTransform = nullptr;
                 env->scene->view<Camera, Transform>().each([&](EntityId id, Camera& camera, Transform &transform) {
-                    if (editor->runtimeMode) {
+                    if (env->editor->runtimeMode) {
                         if (camera.isPrimary) {
                             output = camera.output;
                             cam = &camera;
@@ -119,7 +119,7 @@ namespace tri {
                     ImGui::Image((ImTextureID)(size_t)output->getAttachment(TextureAttachment::COLOR)->getId(), viewportSize, ImVec2(0, 1), ImVec2(1, 0));
                     bool pickingAllowed = true;
                     if(cam && camTransform){
-                        if(editor->gizmos.update(*camTransform, *cam, {viewportPosition.x, viewportPosition.y}, {viewportSize.x, viewportSize.y})){
+                        if(env->editor->gizmos.update(*camTransform, *cam, {viewportPosition.x, viewportPosition.y}, {viewportSize.x, viewportSize.y})){
                             pickingAllowed = false;
                         }
                     }
@@ -160,13 +160,13 @@ namespace tri {
 
                         bool control = env->input->down(Input::KEY_LEFT_CONTROL) || env->input->down(Input::KEY_RIGHT_CONTROL);
                         if(!control){
-                            editor->selectionContext.unselectAll();
+                            env->editor->selectionContext.unselectAll();
                         }
                         if(id != -1) {
-                            if(control && editor->selectionContext.isSelected(id)){
-                                editor->selectionContext.unselect(id);
+                            if(control && env->editor->selectionContext.isSelected(id)){
+                                env->editor->selectionContext.unselect(id);
                             }else{
-                                editor->selectionContext.select(id);
+                                env->editor->selectionContext.select(id);
                             }
                         }
 
@@ -176,7 +176,7 @@ namespace tri {
         }
     };
     TRI_STARTUP_CALLBACK("") {
-        editor->addWindow(new ViewportWindow);
+        env->editor->addWindow(new ViewportWindow);
     }
 
 }

@@ -73,7 +73,7 @@ namespace tri {
 
     template<typename T>
     void addAssetTypeFunction(){
-        editor->gui.type.setTypeFunction<Ref<T>>([](const char *label, Ref<T> &v, Ref<T> *min, Ref<T> *max){
+        env->editor->gui.type.setTypeFunction<Ref<T>>([](const char *label, Ref<T> &v, Ref<T> *min, Ref<T> *max){
             std::string name = "<none>";
             if(v.get() != nullptr){
                 name = env->assets->getFile(v);
@@ -88,13 +88,13 @@ namespace tri {
                     }
                 }
                 if(ImGui::Selectable("...", false)){
-                    editor->gui.file.openBrowseWindow("Open", std::string("Open ") + env->reflection->getType<T>()->name, env->reflection->getTypeId<T>(), [&](const std::string &file){
+                    env->editor->gui.file.openBrowseWindow("Open", std::string("Open ") + env->reflection->getType<T>()->name, env->reflection->getTypeId<T>(), [&](const std::string &file){
                         v = env->assets->get<T>(file);
                     });
                 }
                 ImGui::EndCombo();
             }
-            std::string file = editor->gui.dragDropTarget(env->reflection->getTypeId<T>());
+            std::string file = env->editor->gui.dragDropTarget(env->reflection->getTypeId<T>());
             if(file != ""){
                 v = env->assets->get<T>(file);
             }
@@ -102,14 +102,14 @@ namespace tri {
     }
 
     TRI_STARTUP_CALLBACK("TypeGui"){
-        editor->gui.type.setTypeFunction<float>([](const char *label, float &v, float *min, float *max){
+        env->editor->gui.type.setTypeFunction<float>([](const char *label, float &v, float *min, float *max){
             if(min != nullptr && max != nullptr){
                 ImGui::SliderFloat(label, &v, *min, *max);
             }else{
                 ImGui::DragFloat(label, &v, 0.01, min ? *min : 0.0f, max ? *max : 0.0f);
             }
         });
-        editor->gui.type.setTypeFunction<double>([](const char *label, double &v, double *min, double *max){
+        env->editor->gui.type.setTypeFunction<double>([](const char *label, double &v, double *min, double *max){
             float f = v;
             if(min != nullptr && max != nullptr){
                 ImGui::SliderFloat(label, &f, *min, *max);
@@ -118,36 +118,36 @@ namespace tri {
             }
             v = f;
         });
-        editor->gui.type.setTypeFunction<int>([](const char *label, int &v, int *min, int *max){
+        env->editor->gui.type.setTypeFunction<int>([](const char *label, int &v, int *min, int *max){
             if(min != nullptr && max != nullptr){
                 ImGui::SliderInt(label, &v, *min, *max);
             }else{
                 ImGui::DragInt(label, &v, 1.0f, min ? *min : 0.0f, max ? *max : 0.0f);
             }
         });
-        editor->gui.type.setTypeFunction<bool>([](const char *label, bool &v, bool *min, bool *max){
+        env->editor->gui.type.setTypeFunction<bool>([](const char *label, bool &v, bool *min, bool *max){
             ImGui::Checkbox(label, &v);
         });
-        editor->gui.type.setTypeFunction<std::string>([](const char *label, std::string &v, std::string *min, std::string *max){
-            editor->gui.textInput(label, v);
+        env->editor->gui.type.setTypeFunction<std::string>([](const char *label, std::string &v, std::string *min, std::string *max){
+            env->editor->gui.textInput(label, v);
         });
 
-        editor->gui.type.setTypeFunction<glm::vec2>([](const char *label, glm::vec2 &v, glm::vec2 *min, glm::vec2 *max){
+        env->editor->gui.type.setTypeFunction<glm::vec2>([](const char *label, glm::vec2 &v, glm::vec2 *min, glm::vec2 *max){
             ImGui::DragFloat2(label, (float*)&v, 0.01);
         });
-        editor->gui.type.setTypeFunction<glm::vec3>([](const char *label, glm::vec3 &v, glm::vec3 *min, glm::vec3 *max){
+        env->editor->gui.type.setTypeFunction<glm::vec3>([](const char *label, glm::vec3 &v, glm::vec3 *min, glm::vec3 *max){
             ImGui::DragFloat3(label, (float*)&v, 0.01);
         });
-        editor->gui.type.setTypeFunction<glm::vec4>([](const char *label, glm::vec4 &v, glm::vec4 *min, glm::vec4 *max){
+        env->editor->gui.type.setTypeFunction<glm::vec4>([](const char *label, glm::vec4 &v, glm::vec4 *min, glm::vec4 *max){
             ImGui::DragFloat4(label, (float*)&v, 0.01);
         });
 
-        editor->gui.type.setTypeFunction<Color>([](const char *label, Color &v, Color *min, Color *max){
+        env->editor->gui.type.setTypeFunction<Color>([](const char *label, Color &v, Color *min, Color *max){
             glm::vec4 c = v.vec();
             ImGui::ColorEdit4(label, (float*)&c);
             v = Color(c);
         });
-        editor->gui.type.setTypeFunction<Transform>([](const char *label, Transform &v, Transform *min, Transform *max){
+        env->editor->gui.type.setTypeFunction<Transform>([](const char *label, Transform &v, Transform *min, Transform *max){
             ImGui::DragFloat3("position", (float*)&v.position, 0.01);
             ImGui::DragFloat3("scale", (float*)&v.scale, 0.01);
             glm::vec3 rot = glm::degrees(v.rotation);

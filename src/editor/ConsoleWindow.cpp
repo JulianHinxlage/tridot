@@ -112,7 +112,7 @@ namespace tri {
     };
 
     TRI_STARTUP_CALLBACK("") {
-        editor->addWindow(new ConsoleWindow);
+        env->editor->addWindow(new ConsoleWindow);
     }
 
 }

@@ -17,9 +17,9 @@ namespace tri {
         }
 
         void update() override {
-            if(editor->selectionContext.getSelected().size() == 1){
+            if(env->editor->selectionContext.getSelected().size() == 1){
                 EntityId id = -1;
-                for(EntityId id2 : editor->selectionContext.getSelected()){
+                for(EntityId id2 : env->editor->selectionContext.getSelected()){
                     id = id2;
                     break;
                 }
@@ -33,7 +33,7 @@ namespace tri {
                 updateMenu(id);
 
                 ImGui::EndChild();
-            }else if(editor->selectionContext.getSelected().size() > 1){
+            }else if(env->editor->selectionContext.getSelected().size() > 1){
                 //todo: multi selection properties
             }
         }
@@ -47,7 +47,7 @@ namespace tri {
                     if(desc->isComponent) {
                         if (!env->scene->hasComponent(desc->typeId, id)) {
                             if (ImGui::MenuItem(desc->name.c_str())) {
-                                void *comp = editor->entityOperations.addComponent(desc->typeId, id);
+                                void *comp = env->editor->entityOperations.addComponent(desc->typeId, id);
                                 desc->construct(comp);
                                 ImGui::CloseCurrentPopup();
                             }
@@ -62,14 +62,14 @@ namespace tri {
             ImGui::PushID(id);
             if(env->scene->hasComponent<EntityInfo>(id)){
                 EntityInfo &info = env->scene->getComponent<EntityInfo>(id);
-                editor->gui.textInput("name", info.name);
+                env->editor->gui.textInput("name", info.name);
             }
             for(auto &desc : env->reflection->getDescriptors()){
                 if(env->scene->hasComponent(desc->typeId, id)) {
                     if(desc->typeId != env->reflection->getTypeId<EntityInfo>()) {
                         if (ImGui::CollapsingHeader(desc->name.c_str())) {
                             updateComponentMenu(id, desc->typeId);
-                            editor->gui.type.drawType(desc->typeId, env->scene->getComponent(desc->typeId, id));
+                            env->editor->gui.type.drawType(desc->typeId, env->scene->getComponent(desc->typeId, id));
                         } else {
                             updateComponentMenu(id, desc->typeId);
                         }
@@ -82,13 +82,13 @@ namespace tri {
         void updateComponentMenu(EntityId id, int typeId){
             if (ImGui::BeginPopupContextItem()) {
                 if (ImGui::MenuItem("Delete")) {
-                    editor->entityOperations.removeComponent(typeId, id);
+                    env->editor->entityOperations.removeComponent(typeId, id);
                 }
                 if (ImGui::MenuItem("Copy")) {
-                    editor->entityOperations.copyComponent(typeId, id);
+                    env->editor->entityOperations.copyComponent(typeId, id);
                 }
-                if (ImGui::MenuItem("Past", nullptr, false, editor->entityOperations.wasComponentCopied())) {
-                    editor->entityOperations.pastComponent(id);
+                if (ImGui::MenuItem("Past", nullptr, false, env->editor->entityOperations.wasComponentCopied())) {
+                    env->editor->entityOperations.pastComponent(id);
                 }
                 ImGui::EndPopup();
             }
@@ -96,8 +96,8 @@ namespace tri {
 
         void updateMenu(EntityId id){
             if (ImGui::BeginPopupContextWindow("component", ImGuiMouseButton_Right, false)) {
-                if (ImGui::MenuItem("Past", nullptr, false, editor->entityOperations.wasComponentCopied())) {
-                    editor->entityOperations.pastComponent(id);
+                if (ImGui::MenuItem("Past", nullptr, false, env->editor->entityOperations.wasComponentCopied())) {
+                    env->editor->entityOperations.pastComponent(id);
                 }
                 ImGui::EndPopup();
             }
@@ -105,7 +105,7 @@ namespace tri {
     };
 
     TRI_STARTUP_CALLBACK("") {
-        editor->addWindow(new PropertiesWindow);
+        env->editor->addWindow(new PropertiesWindow);
     }
 
 }

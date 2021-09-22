@@ -17,14 +17,11 @@
 
 namespace tri {
 
-    Editor* editor = nullptr;
-
-    TRI_REGISTER_SYSTEM(Editor);
+    TRI_REGISTER_SYSTEM_INSTANCE(Editor, env->editor);
 
     void createTestScene();
 
     void Editor::startup(){
-        editor = this;
         updated = false;
         runtimeMode = false;
         env->signals->update.callbackOrder({ "Imgui.begin", "Editor", "MeshComponent"});
@@ -67,7 +64,7 @@ namespace tri {
             handler.ReadLineFn = [](ImGuiContext* ctx, ImGuiSettingsHandler* handler, void* entry, const char* line) {
                 auto parts = StrUtil::split(line, "=");
                 if (parts.size() >= 2) {
-                    for (auto* window : editor->windows) {
+                    for (auto* window : env->editor->windows) {
                         if (window) {
                             if (window->name == parts[0]) {
                                 try {
@@ -81,7 +78,7 @@ namespace tri {
             };
             handler.WriteAllFn = [](ImGuiContext* ctx, ImGuiSettingsHandler* handler, ImGuiTextBuffer* buf) {
                 buf->append("[UserData][OpenFlags]\n");
-                for (auto* window : editor->windows) {
+                for (auto* window : env->editor->windows) {
                     buf->appendf("%s=%i\n", window->name.c_str(), (int)window->isOpen);
                 }
             };
@@ -141,7 +138,7 @@ namespace tri {
         if (ImGui::BeginMainMenuBar()) {
             if (ImGui::BeginMenu("File")) {
                 if (ImGui::MenuItem("Open", "Ctrl+O")) {
-                    editor->gui.file.openBrowseWindow("Open", "Open Scene", env->reflection->getTypeId<Scene>(), [](const std::string &file){
+                    env->editor->gui.file.openBrowseWindow("Open", "Open Scene", env->reflection->getTypeId<Scene>(), [](const std::string &file){
                         Scene::loadMainScene(file);
                     });
                 }
@@ -149,7 +146,7 @@ namespace tri {
                     env->scene->save(env->scene->file);
                 }
                 if (ImGui::MenuItem("Save As", "Ctrl+Shift+S")) {
-                    editor->gui.file.openBrowseWindow("Save", "Save Scene As", env->reflection->getTypeId<Scene>(), [](const std::string &file){
+                    env->editor->gui.file.openBrowseWindow("Save", "Save Scene As", env->reflection->getTypeId<Scene>(), [](const std::string &file){
                         env->scene->save(file);
                     });
                 }
@@ -193,7 +190,7 @@ namespace tri {
         bool shift = env->input->down(Input::KEY_LEFT_SHIFT) || env->input->down(Input::KEY_RIGHT_SHIFT);
         if (control && env->input->pressed("S")) {
             if(shift){
-                editor->gui.file.openBrowseWindow("Save", "Save Scene", env->reflection->getTypeId<Scene>(), [](const std::string &file){
+                env->editor->gui.file.openBrowseWindow("Save", "Save Scene", env->reflection->getTypeId<Scene>(), [](const std::string &file){
                     env->scene->save(file);
                 });
             }else{
@@ -201,7 +198,7 @@ namespace tri {
             }
         }
         if (control && env->input->pressed("O")) {
-            editor->gui.file.openBrowseWindow("Open", "Open Scene", env->reflection->getTypeId<Scene>(), [](const std::string &file){
+            env->editor->gui.file.openBrowseWindow("Open", "Open Scene", env->reflection->getTypeId<Scene>(), [](const std::string &file){
                 Scene::loadMainScene(file);
             });
         }
@@ -234,7 +231,7 @@ namespace tri {
         }
     };
     TRI_STARTUP_CALLBACK("") {
-        editor->addWindow(new ImguiDemo);
+        env->editor->addWindow(new ImguiDemo);
     }
 
 }

@@ -58,7 +58,7 @@ namespace tri {
 
     };
     TRI_STARTUP_CALLBACK("") {
-        editor->addWindow(new RuntimeConfigWindow);
+        env->editor->addWindow(new RuntimeConfigWindow);
     }
 
 }

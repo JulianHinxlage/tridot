@@ -47,7 +47,7 @@ namespace tri {
             }
         }
 
-        int entityCount = editor->selectionContext.getSelected().size();
+        int entityCount = env->editor->selectionContext.getSelected().size();
         if(entityCount > 0) {
             ImGuizmo::Enable(true);
             if(camera.type == Camera::PERSPECTIVE){
@@ -59,7 +59,7 @@ namespace tri {
             ImGuizmo::SetRect(ImGui::GetWindowPos().x + viewportPosition.x, ImGui::GetWindowPos().y + viewportPosition.y, viewportSize.x, viewportSize.y);
 
             int count = 0;
-            for (auto &id : editor->selectionContext.getSelected()){
+            for (auto &id : env->editor->selectionContext.getSelected()){
                 if(env->scene->hasComponent<Transform>(id)){
                     count++;
                 }
@@ -70,7 +70,7 @@ namespace tri {
 
             Transform avg;
             avg.scale = {0, 0, 0};
-            for (auto &id : editor->selectionContext.getSelected()){
+            for (auto &id : env->editor->selectionContext.getSelected()){
                 if(env->scene->hasComponent<Transform>(id)){
                     Transform &t = env->scene->getComponent<Transform>(id);
                     avg.position += t.position / (float)count;
@@ -100,7 +100,7 @@ namespace tri {
             }
 
             if(ImGuizmo::Manipulate((float *) &view, (float *) &projection, op, mo, (float *) &transform)) {
-                for (auto &id : editor->selectionContext.getSelected()) {
+                for (auto &id : env->editor->selectionContext.getSelected()) {
                     if (env->scene->hasComponent<Transform>(id)) {
                         Transform &t = env->scene->getComponent<Transform>(id);
                         if(entityCount > 1 && operation == SCALE){

@@ -17,10 +17,10 @@ namespace tri {
         }
 
         void update() override {
-            editor->gui.file.browse([&](const std::string &file, int typeId){
+            env->editor->gui.file.browse([&](const std::string &file, int typeId){
                 if(typeId != -1) {
                     std::string path = env->assets->minimalFilePath(file);
-                    editor->gui.dragDropSource(typeId, file);
+                    env->editor->gui.dragDropSource(typeId, file);
                     if (typeId == env->reflection->getTypeId<Scene>()) {
                         updateSceneMenu(file);
                     } else {
@@ -58,7 +58,7 @@ namespace tri {
 
     };
     TRI_STARTUP_CALLBACK("") {
-        editor->addWindow(new AssetBrowserWindow);
+        env->editor->addWindow(new AssetBrowserWindow);
     }
 
 }

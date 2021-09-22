@@ -58,7 +58,7 @@ namespace tri {
                 if(label.empty()){
                     label = "[" + std::to_string(id) + "]";
                 }
-                bool selected = editor->selectionContext.isSelected(id);
+                bool selected = env->editor->selectionContext.isSelected(id);
                 if(ImGui::Selectable(label.c_str(), &selected)){
                     if(!blockStateChange){
                         clicked(id);
@@ -80,10 +80,10 @@ namespace tri {
 
         void updateHeader(){
             if(ImGui::Button("Add Entity")){
-                EntityId id = editor->entityOperations.addEntity();
+                EntityId id = env->editor->entityOperations.addEntity();
                 env->scene->addComponent<EntityInfo>(id);
-                editor->selectionContext.unselectAll();
-                editor->selectionContext.select(id);
+                env->editor->selectionContext.unselectAll();
+                env->editor->selectionContext.select(id);
             }
         }
 
@@ -91,77 +91,77 @@ namespace tri {
             if(control){
                 if(env->input->pressed("D")){
                     std::vector<EntityId> ids;
-                    for(auto &id : editor->selectionContext.getSelected()){
-                        ids.push_back(editor->entityOperations.duplicateEntity(id));
+                    for(auto &id : env->editor->selectionContext.getSelected()){
+                        ids.push_back(env->editor->entityOperations.duplicateEntity(id));
                     }
-                    editor->selectionContext.unselectAll();
+                    env->editor->selectionContext.unselectAll();
                     for(auto &id : ids){
-                        editor->selectionContext.select(id);
+                        env->editor->selectionContext.select(id);
                     }
                 }
                 if(env->input->pressed("C")){
-                    if(editor->selectionContext.getSelected().size() == 1) {
-                        for (auto &id : editor->selectionContext.getSelected()) {
-                            editor->entityOperations.copyEntity(id);
+                    if(env->editor->selectionContext.getSelected().size() == 1) {
+                        for (auto &id : env->editor->selectionContext.getSelected()) {
+                            env->editor->entityOperations.copyEntity(id);
                         }
                     }else{
                         env->console->warning("cannot copy multiple entities");
                     }
                 }
                 if(env->input->pressed("V")){
-                    if(editor->entityOperations.wasEntityCopied()) {
-                        EntityId copy = editor->entityOperations.pastEntity();
-                        editor->selectionContext.unselectAll();
-                        editor->selectionContext.select(copy);
+                    if(env->editor->entityOperations.wasEntityCopied()) {
+                        EntityId copy = env->editor->entityOperations.pastEntity();
+                        env->editor->selectionContext.unselectAll();
+                        env->editor->selectionContext.select(copy);
                     }
                 }
             }
             if(env->input->pressed(Input::KEY_DELETE)){
-                for(auto &id : editor->selectionContext.getSelected()){
-                    editor->entityOperations.removeEntity(id);
+                for(auto &id : env->editor->selectionContext.getSelected()){
+                    env->editor->entityOperations.removeEntity(id);
                 }
-                editor->selectionContext.unselectAll();
+                env->editor->selectionContext.unselectAll();
             }
         }
 
         void updateEntityMenu(EntityId id){
             if(ImGui::BeginPopupContextItem()){
                 if(ImGui::MenuItem("Delete", "Delete")){
-                    if(editor->selectionContext.isSelected(id)){
-                        for(auto &id2 : editor->selectionContext.getSelected()){
-                            editor->entityOperations.removeEntity(id2);
-                            editor->selectionContext.unselect(id2);
+                    if(env->editor->selectionContext.isSelected(id)){
+                        for(auto &id2 : env->editor->selectionContext.getSelected()){
+                            env->editor->entityOperations.removeEntity(id2);
+                            env->editor->selectionContext.unselect(id2);
                         }
                     }else{
-                        editor->entityOperations.removeEntity(id);
-                        editor->selectionContext.unselect(id);
+                        env->editor->entityOperations.removeEntity(id);
+                        env->editor->selectionContext.unselect(id);
                     }
                 }
                 if(ImGui::MenuItem("Duplicate", "Ctrl+D")){
-                    if(editor->selectionContext.isSelected(id)){
-                        for(auto &id2 : editor->selectionContext.getSelected()){
+                    if(env->editor->selectionContext.isSelected(id)){
+                        for(auto &id2 : env->editor->selectionContext.getSelected()){
                             std::vector<EntityId> ids;
-                            for(auto &id2 : editor->selectionContext.getSelected()){
-                                ids.push_back(editor->entityOperations.duplicateEntity(id2));
+                            for(auto &id2 : env->editor->selectionContext.getSelected()){
+                                ids.push_back(env->editor->entityOperations.duplicateEntity(id2));
                             }
-                            editor->selectionContext.unselectAll();
+                            env->editor->selectionContext.unselectAll();
                             for(auto &id2 : ids){
-                                editor->selectionContext.select(id2);
+                                env->editor->selectionContext.select(id2);
                             }
                         }
                     }else{
-                        EntityId copy = editor->entityOperations.duplicateEntity(id);
-                        editor->selectionContext.unselectAll();
-                        editor->selectionContext.select(copy);
+                        EntityId copy = env->editor->entityOperations.duplicateEntity(id);
+                        env->editor->selectionContext.unselectAll();
+                        env->editor->selectionContext.select(copy);
                     }
                 }
                 if(ImGui::MenuItem("Copy", "Ctrl+C")){
-                    editor->entityOperations.copyEntity(id);
+                    env->editor->entityOperations.copyEntity(id);
                 }
-                if(ImGui::MenuItem("Past", "Ctrl+V", false, editor->entityOperations.wasEntityCopied())){
-                    EntityId copy = editor->entityOperations.pastEntity();
-                    editor->selectionContext.unselectAll();
-                    editor->selectionContext.select(copy);
+                if(ImGui::MenuItem("Past", "Ctrl+V", false, env->editor->entityOperations.wasEntityCopied())){
+                    EntityId copy = env->editor->entityOperations.pastEntity();
+                    env->editor->selectionContext.unselectAll();
+                    env->editor->selectionContext.select(copy);
                 }
                 ImGui::EndPopup();
             }
@@ -169,10 +169,10 @@ namespace tri {
 
         void updateMenu(){
             if (ImGui::BeginPopupContextWindow("entity", ImGuiMouseButton_Right, false)) {
-                if (ImGui::MenuItem("Past", "Ctrl+V", false, editor->entityOperations.wasEntityCopied())) {
-                    EntityId copy = editor->entityOperations.pastEntity();
-                    editor->selectionContext.unselectAll();
-                    editor->selectionContext.select(copy);
+                if (ImGui::MenuItem("Past", "Ctrl+V", false, env->editor->entityOperations.wasEntityCopied())) {
+                    EntityId copy = env->editor->entityOperations.pastEntity();
+                    env->editor->selectionContext.unselectAll();
+                    env->editor->selectionContext.select(copy);
                 }
                 ImGui::EndPopup();
             }
@@ -213,21 +213,21 @@ namespace tri {
         }
 
         void clicked(EntityId id){
-            bool selected = editor->selectionContext.isSelected(id);
+            bool selected = env->editor->selectionContext.isSelected(id);
             if(!shift || lastClicked == -1) {
                 if (!selected) {
                     if (!control) {
-                        editor->selectionContext.unselectAll();
+                        env->editor->selectionContext.unselectAll();
                     }
-                    editor->selectionContext.select(id);
+                    env->editor->selectionContext.select(id);
                     lastClickedWasSelected = true;
                 } else {
-                    if (!control && editor->selectionContext.getSelected().size() > 1) {
-                        editor->selectionContext.unselectAll();
-                        editor->selectionContext.select(id);
+                    if (!control && env->editor->selectionContext.getSelected().size() > 1) {
+                        env->editor->selectionContext.unselectAll();
+                        env->editor->selectionContext.select(id);
                         lastClickedWasSelected = true;
                     } else {
-                        editor->selectionContext.unselect(id);
+                        env->editor->selectionContext.unselect(id);
                         lastClickedWasSelected = false;
                     }
                 }
@@ -250,9 +250,9 @@ namespace tri {
                 }
                 if (inRange) {
                     if (select) {
-                        editor->selectionContext.select(id);
+                        env->editor->selectionContext.select(id);
                     } else {
-                        editor->selectionContext.unselect(id);
+                        env->editor->selectionContext.unselect(id);
                     }
                 }
                 if (id == id1 || id == id2) {
@@ -265,7 +265,7 @@ namespace tri {
 
     };
     TRI_STARTUP_CALLBACK("") {
-        editor->addWindow(new EntitiesWindow);
+        env->editor->addWindow(new EntitiesWindow);
     }
 
 }

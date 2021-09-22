@@ -44,8 +44,6 @@ namespace tri {
         bool updated;
     };
 
-    extern Editor* editor;
-
 }
 
 

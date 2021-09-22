@@ -37,7 +37,7 @@ namespace tri {
 
     };
     TRI_STARTUP_CALLBACK("") {
-        editor->addWindow(new ProfilerWindow);
+        env->editor->addWindow(new ProfilerWindow);
     }
 
 }
