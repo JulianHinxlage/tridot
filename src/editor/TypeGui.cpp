@@ -14,9 +14,9 @@
 
 namespace tri {
 
-    void TypeGui::drawType(int typeId, void *data) {
+    void TypeGui::drawType(int typeId, void *data, bool topLevelLabel) {
         auto *desc = env->reflection->getType(typeId);
-        drawMember(typeId, data, desc->name.c_str(), nullptr, nullptr, false);
+        drawMember(typeId, data, topLevelLabel ? desc->name.c_str() : " ", nullptr, nullptr, false);
     }
 
     void TypeGui::setTypeFunction(int typeId, const std::function<void(const char *, void *, void *, void *)> &func) {
@@ -74,29 +74,42 @@ namespace tri {
     template<typename T>
     void addAssetTypeFunction(){
         env->editor->gui.type.setTypeFunction<Ref<T>>([](const char *label, Ref<T> &v, Ref<T> *min, Ref<T> *max){
+            bool hasFile = false;
             std::string name = "<none>";
-            if(v.get() != nullptr){
+            if(v){
                 name = env->assets->getFile(v);
+                if(name == ""){
+                    name = "<unknown>";
+                }else{
+                    hasFile = true;
+                }
             }
+
+            int typeId = env->reflection->getTypeId<T>();
             if(ImGui::BeginCombo(label, name.c_str())){
                 if(ImGui::Selectable("<none>", name == "<none>")){
                     v = nullptr;
                 }
-                for(auto &file : env->assets->getAssetList(env->reflection->getTypeId<T>())){
+                for(auto &file : env->assets->getAssetList(typeId)){
                     if(ImGui::Selectable(file.c_str(), name == file)){
                         v = env->assets->get<T>(file);
                     }
                 }
                 if(ImGui::Selectable("...", false)){
-                    env->editor->gui.file.openBrowseWindow("Open", std::string("Open ") + env->reflection->getType<T>()->name, env->reflection->getTypeId<T>(), [&](const std::string &file){
+                    env->editor->gui.file.openBrowseWindow("Open", std::string("Open ") + env->reflection->getType<T>()->name, typeId, [&](const std::string &file){
                         v = env->assets->get<T>(file);
                     });
                 }
                 ImGui::EndCombo();
             }
-            std::string file = env->editor->gui.dragDropTarget(env->reflection->getTypeId<T>());
+
+            //drag/drop
+            std::string file = env->editor->gui.dragDropTarget(typeId);
             if(file != ""){
                 v = env->assets->get<T>(file);
+            }
+            if(hasFile){
+                env->editor->gui.dragDropSource(typeId, name);
             }
         });
     }

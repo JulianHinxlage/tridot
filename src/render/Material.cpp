@@ -40,11 +40,11 @@ namespace tri {
     }
 
     bool Material::load(const std::string &file) {
-        return env->serializer->serializeType(file, env->reflection->getTypeId<Material>(), this);
+        return env->serializer->deserializeType(file, env->reflection->getTypeId<Material>(), this);
     }
 
     bool Material::save(const std::string &file) {
-        return env->serializer->deserializeType(file, env->reflection->getTypeId<Material>(), this);
+        return env->serializer->serializeType(file, env->reflection->getTypeId<Material>(), this);
     }
 
     TRI_REGISTER_TYPE(Material::Mapping);

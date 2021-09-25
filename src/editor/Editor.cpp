@@ -24,7 +24,7 @@ namespace tri {
     void Editor::startup(){
         updated = false;
         runtimeMode = false;
-        env->signals->update.callbackOrder({ "Imgui.begin", "Editor", "MeshComponent"});
+        env->signals->update.callbackOrder({"MeshComponent", "Imgui.begin", "Editor"});
         env->signals->postStartup.addCallback([](){
             ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 

@@ -7,13 +7,15 @@ layout (location=2) in vec2 vTexCoords;
 
 layout (location=3) in mat4 iTransform;
 layout (location=7) in vec4 iColor;
-layout (location=8) in float iMaterialIndex;
+layout (location=8) in float iTextureIndex;
 layout (location=9) in vec4 iId;
 
 out vec3 fPosition;
 out vec3 fNormal;
 out vec4 fColor;
+out vec2 fTexCoords;
 out vec4 fId;
+flat out float fTextureIndex;
 
 uniform mat4 uProjection = mat4(1);
 
@@ -24,6 +26,8 @@ void main(){
     fNormal = (iTransform * vec4(vNormal, 0.0)).xyz;
     fColor = iColor;
     fId = iId;
+    fTexCoords = vTexCoords;
+    fTextureIndex = iTextureIndex;
 }
 
 #type fragment
@@ -32,15 +36,28 @@ void main(){
 in vec3 fPosition;
 in vec3 fNormal;
 in vec4 fColor;
+in vec2 fTexCoords;
 in vec4 fId;
+flat in float fTextureIndex;
 
 out vec4 oColor;
 out vec4 oId;
 
 uniform sampler2D uTextures[32];
-uniform vec3 uEyePosition = vec3(0, 0, 0);
+
+vec4 sampleTextureIndexed(int textureIndex, vec2 textureCoords){
+    if(textureIndex == -1){
+        return vec4(1, 1, 1, 1);
+    }
+    for(int i = 0; i < 32; i++){
+        if(i == textureIndex){
+            return texture(uTextures[i], textureCoords);
+        }
+    }
+    return vec4(0, 0, 0, 1);
+}
 
 void main(){
-    oColor = fColor;
+    oColor = sampleTextureIndexed(int(fTextureIndex), fTexCoords) * fColor;
     oId = vec4(fId.xyz, 1.0);
 }

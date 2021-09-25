@@ -200,8 +200,8 @@ namespace tri {
             if(env->time->frameTicks(1.0)) {
                 for (auto &iter : assets) {
                     auto &record = iter.second;
-                    if((record.status & LOADED) && !(record.status & FAILED_TO_LOAD)) {
-                        if(!(record.status & SHOULD_NOT_LOAD)) {
+                    if((record.status & LOADED) || (record.status & FAILED_TO_LOAD)) {
+                        if(!(record.status & SHOULD_NOT_LOAD) && !(record.status & FILE_NOT_FOUND)) {
                             if (record.timeStamp != 0) {
                                 if (record.path != "") {
                                     uint64_t currentTimeStamp = getTimeStamp(record.path);

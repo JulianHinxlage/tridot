@@ -20,6 +20,16 @@ namespace tri {
     TRI_REGISTER_TYPE(Color);
 
     TRI_UPDATE_CALLBACK("MeshComponent") {
+        env->scene->view<Light, Transform>().each([](Light &light, Transform &transform){
+            if(light.type == DIRECTIONAL_LIGHT){
+                Transform t;
+                t.rotation = transform.rotation;
+                env->renderer->submit(t.calculateMatrix() * glm::vec4(0, 0, -1, 0), light);
+            }else{
+                env->renderer->submit(transform.position, light);
+            }
+        });
+
         env->scene->view<Camera, Transform>().each([](Camera& camera, Transform &cameraTransform) {
             if (camera.active) {
                 if (camera.output) {

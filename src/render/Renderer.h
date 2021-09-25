@@ -10,6 +10,7 @@
 #include "Texture.h"
 #include "Material.h"
 #include "RenderPipeline.h"
+#include "Light.h"
 
 namespace tri {
 
@@ -17,6 +18,7 @@ namespace tri {
     public:
         void beginScene(glm::mat4 projectionMatrix, glm::vec3 eyePosition);
         void submit(const glm::mat4& transform, const glm::vec3& position, Mesh* mesh = nullptr, Material* material = nullptr, Color color = Color::white, uint32_t id = -1);
+        void submit(const glm::vec3 &positionOrDirection, const Light &light);
         void drawScene(Ref<FrameBuffer> frameBuffer = nullptr, Ref<RenderPipeline> pipeline = nullptr);
         void resetScene();
 

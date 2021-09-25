@@ -59,8 +59,12 @@ namespace tri {
         for(auto &dir : env->assets->getSearchDirectories()){
             std::string name = std::filesystem::path(dir).parent_path().filename();
             if(ImGui::TreeNode(name.c_str())){
+                directoryMenu(dir);
+                newFileBox(dir);
                 directory(dir, dir);
                 ImGui::TreePop();
+            }else{
+                directoryMenu(dir);
             }
         }
     }
@@ -118,29 +122,7 @@ namespace tri {
             if(entry.is_directory()){
                 if(ImGui::TreeNode(entry.path().filename().c_str())){
                     directoryMenu(entry.path());
-
-                    //new file/directory
-                    if(newFileDirectory != "" && newFileDirectory == entry.path().string()){
-                        if(inputBuffer.size() == 0){
-                            inputBuffer.resize(256);
-                        }
-                        ImGui::PushID("input");
-                        if(ImGui::InputText("", inputBuffer.data(), inputBuffer.size(), ImGuiInputTextFlags_EnterReturnsTrue)){
-                            std::string input = inputBuffer.c_str();
-                            if(input.size() != 0) {
-                                if(newFileIsDirectory){
-                                    std::string path = entry.path().string() + "/" + input;
-                                    std::filesystem::create_directory(path);
-                                }else{
-                                    std::string file = entry.path().string() + "/" + input;
-                                    std::ofstream stream(file);
-                                }
-                            }
-                            newFileDirectory = "";
-                        }
-                        ImGui::PopID();
-                    }
-
+                    newFileBox(entry.path());
                     this->directory(entry.path(), searchDirectory);
                     ImGui::TreePop();
                 }
@@ -183,6 +165,29 @@ namespace tri {
                 newFileIsDirectory = true;
             }
             ImGui::EndPopup();
+        }
+    }
+
+    void FileBrowser::newFileBox(const std::string &directory) {
+        if(newFileDirectory != "" && newFileDirectory == directory){
+            if(inputBuffer.size() == 0){
+                inputBuffer.resize(256);
+            }
+            ImGui::PushID("input");
+            if(ImGui::InputText("", inputBuffer.data(), inputBuffer.size(), ImGuiInputTextFlags_EnterReturnsTrue)){
+                std::string input = inputBuffer.c_str();
+                if(input.size() != 0) {
+                    if(newFileIsDirectory){
+                        std::string path = directory + "/" + input;
+                        std::filesystem::create_directory(path);
+                    }else{
+                        std::string file = directory + "/" + input;
+                        std::ofstream stream(file);
+                    }
+                }
+                newFileDirectory = "";
+            }
+            ImGui::PopID();
         }
     }
 

@@ -16,6 +16,7 @@ namespace tri {
         enum Mode{
             GIMBALED,
             FREE,
+            ORBIT,
         };
         Mode mode = GIMBALED;
 

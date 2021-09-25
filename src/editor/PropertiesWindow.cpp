@@ -67,12 +67,14 @@ namespace tri {
             for(auto &desc : env->reflection->getDescriptors()){
                 if(env->scene->hasComponent(desc->typeId, id)) {
                     if(desc->typeId != env->reflection->getTypeId<EntityInfo>()) {
-                        if (ImGui::CollapsingHeader(desc->name.c_str())) {
+                        ImGui::PushID(desc->name.c_str());
+                        if (ImGui::CollapsingHeader(desc->name.c_str(), ImGuiTreeNodeFlags_DefaultOpen)) {
                             updateComponentMenu(id, desc->typeId);
                             env->editor->gui.type.drawType(desc->typeId, env->scene->getComponent(desc->typeId, id));
                         } else {
                             updateComponentMenu(id, desc->typeId);
                         }
+                        ImGui::PopID();
                     }
                 }
             }

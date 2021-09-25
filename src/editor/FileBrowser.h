@@ -20,6 +20,7 @@ namespace tri {
     private:
         void directory(const std::string &directory, const std::string &searchDirectory);
         void directoryMenu(const std::string &directory);
+        void newFileBox(const std::string &directory);
 
         std::unordered_map<std::string , int> associations;
         std::string buttonName;

@@ -64,6 +64,7 @@ namespace tri {
         std::vector<float> vs;
         std::vector<float> ns;
         std::vector<float> ts;
+        bool faceWarning = false;
 
         struct Index{
             int v = -1;
@@ -154,6 +155,12 @@ namespace tri {
                             }
                             else {
                                 is.back().n = is.back().v;
+                            }
+                        }
+                        if(parts.size() - 1 >= 4){
+                            if(!faceWarning){
+                                env->console->warning("mesh ", file, ": only triangle faces are supported");
+                                faceWarning = true;
                             }
                         }
                     }

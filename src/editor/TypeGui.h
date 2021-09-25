@@ -17,7 +17,7 @@ namespace tri {
             });
         }
 
-        void drawType(int typeId, void *data);
+        void drawType(int typeId, void *data, bool topLevelLabel = true);
 
     private:
         void setTypeFunction(int typeId, const std::function<void(const char *, void*, void*, void*)> &func);

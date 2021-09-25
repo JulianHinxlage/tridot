@@ -56,7 +56,7 @@ namespace tri {
                     label = env->scene->getComponent<EntityInfo>(id).name;
                 }
                 if(label.empty()){
-                    label = "[" + std::to_string(id) + "]";
+                    label = "<entity " + std::to_string(id) + ">";
                 }
                 bool selected = env->editor->selectionContext.isSelected(id);
                 if(ImGui::Selectable(label.c_str(), &selected)){
@@ -139,15 +139,13 @@ namespace tri {
                 }
                 if(ImGui::MenuItem("Duplicate", "Ctrl+D")){
                     if(env->editor->selectionContext.isSelected(id)){
-                        for(auto &id2 : env->editor->selectionContext.getSelected()){
-                            std::vector<EntityId> ids;
-                            for(auto &id2 : env->editor->selectionContext.getSelected()){
-                                ids.push_back(env->editor->entityOperations.duplicateEntity(id2));
-                            }
-                            env->editor->selectionContext.unselectAll();
-                            for(auto &id2 : ids){
-                                env->editor->selectionContext.select(id2);
-                            }
+                        std::vector<EntityId> ids;
+                        for (auto &id2 : env->editor->selectionContext.getSelected()) {
+                            ids.push_back(env->editor->entityOperations.duplicateEntity(id2));
+                        }
+                        env->editor->selectionContext.unselectAll();
+                        for (auto &id2 : ids) {
+                            env->editor->selectionContext.select(id2);
                         }
                     }else{
                         EntityId copy = env->editor->entityOperations.duplicateEntity(id);
@@ -185,14 +183,18 @@ namespace tri {
                     while(true){
                         int index = pool->getIndexById(active);
                         int targetIndex = pool->getIndexById(hovered);
-                        if(targetIndex > index){
-                            pool->swap(index, index+1);
-                            if(targetIndex == index+1){
-                                break;
-                            }
-                        }else if(targetIndex < index){
-                            pool->swap(index, index-1);
-                            if(targetIndex == index-1){
+                        if(index != -1 && targetIndex != -1) {
+                            if (targetIndex > index) {
+                                pool->swap(index, index + 1);
+                                if (targetIndex == index + 1) {
+                                    break;
+                                }
+                            } else if (targetIndex < index) {
+                                pool->swap(index, index - 1);
+                                if (targetIndex == index - 1) {
+                                    break;
+                                }
+                            } else {
                                 break;
                             }
                         }else{
