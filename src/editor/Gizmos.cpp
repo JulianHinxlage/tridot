@@ -33,6 +33,7 @@ namespace tri {
     }
 
     bool Gizmos::updateGizmo(const Transform &cameraTransform, const Camera &camera, const glm::vec2 &viewportPosition, const glm::vec2 &viewportSize) {
+        //input control
         snappingInvert = env->input->down(Input::KEY_LEFT_CONTROL) || env->input->down(Input::KEY_RIGHT_CONTROL);
         if(env->input->pressed("R")){
             switch (operation) {
@@ -65,6 +66,7 @@ namespace tri {
             ImGuizmo::SetDrawlist();
             ImGuizmo::SetRect(ImGui::GetWindowPos().x + viewportPosition.x, ImGui::GetWindowPos().y + viewportPosition.y, viewportSize.x, viewportSize.y);
 
+            //count selected
             int count = 0;
             for (auto &id : env->editor->selectionContext.getSelected()){
                 if(env->scene->hasComponent<Transform>(id)){
@@ -75,6 +77,7 @@ namespace tri {
                 return false;
             }
 
+            //average transform of selected
             Transform avg;
             avg.scale = {0, 0, 0};
             for (auto &id : env->editor->selectionContext.getSelected()){
@@ -86,11 +89,13 @@ namespace tri {
                 }
             }
 
+            //matrices
             glm::mat4 view = glm::inverse(cameraTransform.calculateMatrix());
             glm::mat4 projection = camera.projection * cameraTransform.calculateMatrix();
             glm::mat4 transform = avg.calculateMatrix();
             glm::mat4 inverseTransform = glm::inverse(transform);
 
+            //manipulate parameter
             ImGuizmo::OPERATION op;
             switch (operation) {
                 case TRANSLATE : op = ImGuizmo::TRANSLATE; break;
@@ -105,7 +110,6 @@ namespace tri {
             if(operation == SCALE){
                 mo = ImGuizmo::LOCAL;
             }
-
             float *snap = nullptr;
             if((snapping && !snappingInvert) || (!snapping && snappingInvert)){
                 switch (operation) {
@@ -114,7 +118,26 @@ namespace tri {
                     case ROTATE : snap = (float*)&rotateSnapValues; break;
                 }
             }
+
+            bool gizmoChange = false;
             if(ImGuizmo::Manipulate((float *) &view, (float *) &projection, op, mo, (float *) &transform, nullptr, snap)) {
+                gizmoChange = true;
+            }
+
+            //detect changes
+            if(ImGuizmo::IsUsing() && !lastFrameUsing){
+                preModifyMatrix = avg.calculateMatrix();
+                preModifyValues.clear();
+                for (auto &id : env->editor->selectionContext.getSelected()){
+                    if(env->scene->hasComponent<Transform>(id)){
+                        Transform &t = env->scene->getComponent<Transform>(id);
+                        preModifyValues.push_back({id, t});
+                    }
+                }
+            }
+
+            if(gizmoChange) {
+                //apply transformation to selected
                 for (auto &id : env->editor->selectionContext.getSelected()) {
                     if (env->scene->hasComponent<Transform>(id)) {
                         Transform &t = env->scene->getComponent<Transform>(id);
@@ -138,8 +161,25 @@ namespace tri {
                     }
                 }
             }
+
+            //detect changes
+            if(!ImGuizmo::IsUsing() && lastFrameUsing){
+                if(transform != preModifyMatrix){
+                    env->editor->undo.beginAction();
+                    for(auto &i : preModifyValues){
+                        env->editor->undo.componentChanged(env->reflection->getTypeId<Transform>(), i.first, &i.second);
+                    }
+                    env->editor->undo.endAction();
+                }
+                preModifyMatrix = glm::mat4(1);
+                preModifyValues.clear();
+            }
+
             if(ImGuizmo::IsUsing()){
+                lastFrameUsing = true;
                 return true;
+            }else{
+                lastFrameUsing = false;
             }
 
         }

@@ -91,9 +91,11 @@ namespace tri {
             if(control){
                 if(env->input->pressed("D")){
                     std::vector<EntityId> ids;
+                    env->editor->undo.beginAction();
                     for(auto &id : env->editor->selectionContext.getSelected()){
                         ids.push_back(env->editor->entityOperations.duplicateEntity(id));
                     }
+                    env->editor->undo.endAction();
                     env->editor->selectionContext.unselectAll();
                     for(auto &id : ids){
                         env->editor->selectionContext.select(id);
@@ -117,9 +119,11 @@ namespace tri {
                 }
             }
             if(env->input->pressed(Input::KEY_DELETE)){
+                env->editor->undo.beginAction();
                 for(auto &id : env->editor->selectionContext.getSelected()){
                     env->editor->entityOperations.removeEntity(id);
                 }
+                env->editor->undo.endAction();
                 env->editor->selectionContext.unselectAll();
             }
         }
@@ -128,10 +132,12 @@ namespace tri {
             if(ImGui::BeginPopupContextItem()){
                 if(ImGui::MenuItem("Delete", "Delete")){
                     if(env->editor->selectionContext.isSelected(id)){
+                        env->editor->undo.beginAction();
                         for(auto &id2 : env->editor->selectionContext.getSelected()){
                             env->editor->entityOperations.removeEntity(id2);
                             env->editor->selectionContext.unselect(id2);
                         }
+                        env->editor->undo.endAction();
                     }else{
                         env->editor->entityOperations.removeEntity(id);
                         env->editor->selectionContext.unselect(id);
@@ -140,9 +146,11 @@ namespace tri {
                 if(ImGui::MenuItem("Duplicate", "Ctrl+D")){
                     if(env->editor->selectionContext.isSelected(id)){
                         std::vector<EntityId> ids;
+                        env->editor->undo.beginAction();
                         for (auto &id2 : env->editor->selectionContext.getSelected()) {
                             ids.push_back(env->editor->entityOperations.duplicateEntity(id2));
                         }
+                        env->editor->undo.endAction();
                         env->editor->selectionContext.unselectAll();
                         for (auto &id2 : ids) {
                             env->editor->selectionContext.select(id2);

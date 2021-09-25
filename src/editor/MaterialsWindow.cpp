@@ -12,10 +12,15 @@ namespace tri {
     class MaterialsWindow : public EditorWindow {
     public:
         Ref<Material> material;
+        bool lastFrameAnyActiveItem;
+        ComponentBuffer changeBuffer;
+        bool inChange;
 
         void startup() {
             name = "Materials";
             material = nullptr;
+            lastFrameAnyActiveItem = false;
+            inChange = false;
         }
 
         void update() override{
@@ -78,11 +83,38 @@ namespace tri {
 
             //material editing
             if(material){
+                //detect changes
+                ComponentBuffer preEditValue;
+                preEditValue.set(typeId, material.get());
+
+                //draw gui
                 env->editor->gui.type.drawType(typeId, material.get(), false);
+
+                //detect changes
+                if (env->editor->gui.type.anyTypeChange(typeId, material.get(), preEditValue.get())) {
+                    if(lastFrameAnyActiveItem || ImGui::IsAnyItemActive()) {
+                        if(!inChange){
+                            changeBuffer.set(typeId, preEditValue.get());
+                            inChange = true;
+                        }
+                    }
+                }else{
+                    if(!lastFrameAnyActiveItem && !ImGui::IsAnyItemActive()) {
+                        if(inChange){
+                            env->editor->undo.valueChanged(typeId, material.get(), changeBuffer.get());
+                            inChange = false;
+                        }
+                    }
+                }
+            }
+
+            if(ImGui::IsAnyItemActive()){
+                lastFrameAnyActiveItem = true;
+            }else{
+                lastFrameAnyActiveItem = false;
             }
 
             ImGui::EndChild();
-
         }
 
     };

@@ -96,6 +96,8 @@ namespace tri {
             updated = true;
             ImGui::DockSpaceOverViewport();
             updateMenuBar();
+
+            //windows
             for (auto* window : windows) {
                 if (window) {
                     if (window->isOpen) {
@@ -112,6 +114,18 @@ namespace tri {
                     }
                 }
             }
+
+            //undo/redo
+            bool control = env->input->down(Input::KEY_LEFT_CONTROL) || env->input->down(Input::KEY_RIGHT_CONTROL);
+            if(control && env->input->pressed("Y")){
+                bool shift = env->input->down(Input::KEY_LEFT_SHIFT) || env->input->down(Input::KEY_RIGHT_SHIFT);
+                if(shift){
+                    undo.redo();
+                }else{
+                    undo.undo();
+                }
+            }
+
             gui.update();
         }
     }

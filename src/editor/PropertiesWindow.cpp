@@ -12,8 +12,14 @@ namespace tri {
 
     class PropertiesWindow : public EditorWindow {
     public:
+        ComponentBuffer componentChangeBuffer;
+        int lastFrameChangeTypeId;
+        bool lastFrameAnyActiveItem;
+
         void startup() {
             name = "Properties";
+            lastFrameChangeTypeId = -1;
+            lastFrameAnyActiveItem = false;
         }
 
         void update() override {
@@ -69,19 +75,55 @@ namespace tri {
                     if(desc->typeId != env->reflection->getTypeId<EntityInfo>()) {
                         ImGui::PushID(desc->name.c_str());
                         if (ImGui::CollapsingHeader(desc->name.c_str(), ImGuiTreeNodeFlags_DefaultOpen)) {
-                            updateComponentMenu(id, desc->typeId);
-                            env->editor->gui.type.drawType(desc->typeId, env->scene->getComponent(desc->typeId, id));
+                            updateComponentMenu(desc->typeId, id);
+                            updateComponent(desc->typeId, id);
                         } else {
-                            updateComponentMenu(id, desc->typeId);
+                            updateComponentMenu(desc->typeId, id);
                         }
                         ImGui::PopID();
                     }
                 }
             }
+
+            if(ImGui::IsAnyItemActive()){
+                lastFrameAnyActiveItem = true;
+            }else{
+                lastFrameAnyActiveItem = false;
+            }
+
             ImGui::PopID();
         }
 
-        void updateComponentMenu(EntityId id, int typeId){
+        void updateComponent(int typeId, EntityId id){
+            auto *desc = env->reflection->getType(typeId);
+
+            //detect changes
+            void *comp = env->scene->getComponent(desc->typeId, id);
+            ComponentBuffer preEditValue;
+            preEditValue.set(desc->typeId, comp);
+
+            //draw gui
+            env->editor->gui.type.drawType(desc->typeId, comp);
+
+            //detect changes
+            if (env->editor->gui.type.anyTypeChange(desc->typeId, comp, preEditValue.get())) {
+                if(lastFrameAnyActiveItem || ImGui::IsAnyItemActive()) {
+                    if (lastFrameChangeTypeId == -1) {
+                        componentChangeBuffer.set(desc->typeId, preEditValue.get());
+                    }
+                    lastFrameChangeTypeId = desc->typeId;
+                }
+            }else{
+                if(!lastFrameAnyActiveItem && !ImGui::IsAnyItemActive()) {
+                    if (lastFrameChangeTypeId == desc->typeId) {
+                        lastFrameChangeTypeId = -1;
+                        env->editor->undo.componentChanged(desc->typeId, id, componentChangeBuffer.get());
+                    }
+                }
+            }
+        }
+
+        void updateComponentMenu(int typeId, EntityId id){
             if (ImGui::BeginPopupContextItem()) {
                 if (ImGui::MenuItem("Delete")) {
                     env->editor->entityOperations.removeComponent(typeId, id);

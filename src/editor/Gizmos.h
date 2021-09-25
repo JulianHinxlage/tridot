@@ -41,6 +41,11 @@ namespace tri {
         void startup();
         bool updateGizmo(const Transform &cameraTransform, const Camera &camera, const glm::vec2 &viewportPosition, const glm::vec2 &viewportSize);
         virtual void update();
+
+    private:
+        std::vector<std::pair<EntityId,Transform>> preModifyValues;
+        glm::mat4 preModifyMatrix;
+        bool lastFrameUsing = false;
     };
 
 }

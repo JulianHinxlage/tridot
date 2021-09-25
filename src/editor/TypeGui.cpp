@@ -19,6 +19,19 @@ namespace tri {
         drawMember(typeId, data, topLevelLabel ? desc->name.c_str() : " ", nullptr, nullptr, false);
     }
 
+    bool TypeGui::anyTypeChange(int typeId, void *v1, void *v2){
+        auto *desc = env->reflection->getType(typeId);
+        if(desc->hasEquals()){
+            return !desc->equals(v1, v2);
+        }
+        for(auto &m : desc->member){
+            if(anyTypeChange(m.type->typeId, (uint8_t*)v1 + m.offset, (uint8_t*)v2 + m.offset)){
+                return true;
+            }
+        }
+        return false;
+    }
+
     void TypeGui::setTypeFunction(int typeId, const std::function<void(const char *, void *, void *, void *)> &func) {
         if(typeFunctions.size() <= typeId){
             typeFunctions.resize(typeId + 1);

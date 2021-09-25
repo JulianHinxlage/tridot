@@ -10,6 +10,7 @@
 #include "EditorGui.h"
 #include "EntityOperations.h"
 #include "Gizmos.h"
+#include "UndoSystem.h"
 
 namespace tri {
 
@@ -20,6 +21,7 @@ namespace tri {
         EditorGui gui;
         EntityOperations entityOperations;
         Gizmos gizmos;
+        UndoSystem undo;
 
         void startup() override;
         void update() override;

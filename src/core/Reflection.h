@@ -72,6 +72,7 @@ namespace tri {
             virtual void free(void* ptr) const = 0;
             virtual void copy(void* from, void* to) const = 0;
             virtual bool equals(void* v1, void* v2) const = 0;
+            virtual bool hasEquals() const = 0;
             virtual void swap(void* v1, void* v2) const = 0;
             virtual void move(void* from, void* to, int count) const = 0;
             virtual void construct(void* ptr, int count) const = 0;
@@ -216,6 +217,14 @@ namespace tri {
             bool equals(void* v1, void* v2) const override {
                 if constexpr (impl::has_equal<T, T>()) {
                     return *(T*)v1 == *(T*)v2;
+                }
+                else {
+                    return false;
+                }
+            }
+            bool hasEquals() const override {
+                if constexpr (impl::has_equal<T, T>()) {
+                    return true;
                 }
                 else {
                     return false;

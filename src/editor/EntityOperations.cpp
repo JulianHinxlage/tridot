@@ -4,6 +4,7 @@
 
 #include "EntityOperations.h"
 #include "core/core.h"
+#include "Editor.h"
 
 namespace tri {
 
@@ -11,13 +12,16 @@ namespace tri {
         if(scene == nullptr){
             scene = env->scene;
         }
-        return scene->addEntity();
+        EntityId id = scene->addEntity();
+        env->editor->undo.entityAdded(id);
+        return id;
     }
 
     void EntityOperations::removeEntity(EntityId id, Scene *scene) {
         if(scene == nullptr){
             scene = env->scene;
         }
+        env->editor->undo.entityRemoved(id);
         scene->removeEntity(id);
     }
 
@@ -25,13 +29,16 @@ namespace tri {
         if(scene == nullptr){
             scene = env->scene;
         }
-        return scene->addComponent(typeId, id);
+        void *comp = scene->addComponent(typeId, id);
+        env->editor->undo.componentAdded(typeId, id);
+        return comp;
     }
 
     void EntityOperations::removeComponent(int typeId, EntityId id, Scene *scene) {
         if(scene == nullptr){
             scene = env->scene;
         }
+        env->editor->undo.componentRemoved(typeId, id);
         scene->removeComponent(typeId, id);
     }
 
@@ -45,6 +52,7 @@ namespace tri {
                 desc->copy(scene->getComponent(desc->typeId, id), scene->addComponent(desc->typeId, copy));
             }
         }
+        env->editor->undo.entityAdded(copy);
         return copy;
     }
 
@@ -60,7 +68,9 @@ namespace tri {
         if(scene == nullptr){
             scene = env->scene;
         }
-        return entityBuffer.createEntity(scene);
+        EntityId id = entityBuffer.createEntity(scene);
+        env->editor->undo.entityAdded(id);
+        return id;
     }
 
     void EntityOperations::copyComponent(int typeId, EntityId id, Scene *scene) {
@@ -79,6 +89,7 @@ namespace tri {
         }
         if(componentBuffer.isSet()){
             componentBuffer.get(scene->addComponent(componentBuffer.getTypeId(), id));
+            env->editor->undo.componentAdded(componentBuffer.getTypeId(), id);
         }
     }
 
