@@ -5,25 +5,13 @@
 #pragma once
 
 #include "core/core.h"
+#include "EditorWindow.h"
 #include "SelectionContext.h"
 #include "EditorGui.h"
 #include "EntityOperations.h"
 #include "Gizmos.h"
 
 namespace tri {
-
-    class EditorWindow {
-    public:
-        std::string name;
-        bool isOpen = false;
-        bool isDebugWindow = false;
-        bool isWindow = true;
-        std::string profileName;
-
-        virtual void startup() {}
-        virtual void update() {}
-        virtual void shutdown() {}
-    };
 
     class Editor : public System {
     public:

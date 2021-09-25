@@ -60,7 +60,10 @@ namespace tri {
                 cam.output = cam.output.make();
                 cam.output->setAttachment({COLOR, env->window->getBackgroundColor()});
                 cam.output->setAttachment({DEPTH, Color(0)});
-                cam.output->setAttachment({ (TextureAttachment)(COLOR + 1), Color(-1)});
+
+                Ref<Texture> idTexture = Ref<Texture>::make();
+                idTexture->create(0, 0, TextureFormat::RGB8, false);
+                cam.output->setAttachment({ (TextureAttachment)(COLOR + 1), Color::white}, idTexture);
             }else{
                 //create camera
                 editorCameraId = env->scene->addEntity(EditorOnly(), EntityInfo());
@@ -74,7 +77,11 @@ namespace tri {
                 cam.output = cam.output.make();
                 cam.output->setAttachment({ COLOR, env->window->getBackgroundColor() });
                 cam.output->setAttachment({ DEPTH });
-                cam.output->setAttachment({ (TextureAttachment)(COLOR + 1), Color(-1) });
+                //cam.output->setAttachment({ (TextureAttachment)(COLOR + 1), Color(-1) });
+
+                Ref<Texture> idTexture = Ref<Texture>::make();
+                idTexture->create(0, 0, TextureFormat::RGB8, false);
+                cam.output->setAttachment({ (TextureAttachment)(COLOR + 1), Color::white}, idTexture);
             }
         }
 
@@ -87,6 +94,11 @@ namespace tri {
             ImGui::PushStyleVar(ImGuiStyleVar_ChildBorderSize, 0);
             if (ImGui::Begin(name.c_str(), &isOpen)) {
 
+                //ImGui::Begin("Gizmos");
+                //env->editor->gizmos.updateToolBar();
+                //ImGui::End();
+
+                //get camera
                 Ref<FrameBuffer> output = nullptr;
                 ImVec2 viewportSize = ImGui::GetContentRegionAvail();
                 ImVec2 viewportPosition = ImGui::GetCursorPos();
@@ -116,18 +128,22 @@ namespace tri {
                 });
 
                 if (output) {
+                    //draw image
                     ImGui::Image((ImTextureID)(size_t)output->getAttachment(TextureAttachment::COLOR)->getId(), viewportSize, ImVec2(0, 1), ImVec2(1, 0));
                     bool pickingAllowed = true;
+                    //gizmos
                     if(cam && camTransform){
-                        if(env->editor->gizmos.update(*camTransform, *cam, {viewportPosition.x, viewportPosition.y}, {viewportSize.x, viewportSize.y})){
+                        if(env->editor->gizmos.updateGizmo(*camTransform, *cam, {viewportPosition.x, viewportPosition.y}, {viewportSize.x, viewportSize.y})){
                             pickingAllowed = false;
                         }
                     }
+                    //mouse picking
                     if(pickingAllowed){
                         updateMousePicking(output->getAttachment((TextureAttachment)(COLOR + 1)), {viewportSize.x, viewportSize.y});
                     }
                 }
 
+                //editor camera
                 if(cam && camTransform) {
                     if(ImGui::IsWindowHovered()){
                         editorCamera.update(*cam, *camTransform);

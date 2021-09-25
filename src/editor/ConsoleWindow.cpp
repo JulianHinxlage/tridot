@@ -27,7 +27,7 @@ namespace tri {
         }
 
         void update() override {
-            if(ImGui::BeginCombo("Level", env->console->getLogLevelName(level))){
+            if(ImGui::BeginCombo(" ", env->console->getLogLevelName(level))){
                 for(int i = LogLevel::TRACE; i < LogLevel::OFF; i++){
                     if(ImGui::Selectable(env->console->getLogLevelName((LogLevel)i), i == (int)level)){
                         level = (LogLevel)i;

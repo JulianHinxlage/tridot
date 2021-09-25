@@ -3,13 +3,14 @@
 //
 
 #pragma once
+#include "EditorWindow.h"
 #include "engine/Transform.h"
 #include "engine/Camera.h"
 #include <glm/glm.hpp>
 
 namespace tri {
 
-    class Gizmos {
+    class Gizmos : public EditorWindow {
     public:
         enum Operation{
             TRANSLATE,
@@ -31,8 +32,15 @@ namespace tri {
         Mode mode;
         Pivots pivots;
 
+        bool snapping = false;
+        bool snappingInvert = false;
+        glm::vec3 translateSnapValues = {1, 1, 1};
+        glm::vec3 scaleSnapValues = {0.25, 0.25, 0.25};
+        glm::vec3 rotateSnapValues = {45, 45, 45};
+
         void startup();
-        bool update(const Transform &cameraTransform, const Camera &camera, const glm::vec2 &viewportPosition, const glm::vec2 &viewportSize);
+        bool updateGizmo(const Transform &cameraTransform, const Camera &camera, const glm::vec2 &viewportPosition, const glm::vec2 &viewportSize);
+        virtual void update();
     };
 
 }

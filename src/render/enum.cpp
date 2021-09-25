@@ -70,6 +70,12 @@ namespace tri {
                 return GL_RG8;
             case RED8:
                 return GL_R8;
+            case RED16:
+                return GL_R16F;
+            case RED32:
+                return GL_R32F;
+            case RED32INT:
+                return GL_R32I;
             case ALPHA8:
                 return GL_ALPHA8;
             case ALPHA16:
@@ -159,6 +165,12 @@ namespace tri {
                 return 16;
             case RED8:
                 return 8;
+            case RED16:
+                return 16;
+            case RED32:
+                return 32;
+            case RED32INT:
+                return 32;
             case ALPHA8:
                 return 8;
             case ALPHA16:

@@ -13,7 +13,13 @@
 
 namespace tri {
 
+    TRI_STARTUP_CALLBACK("") {
+        env->editor->addWindow(&env->editor->gizmos);
+    }
+
     void Gizmos::startup() {
+        name = "Gizmo";
+
         env->signals->update.addCallback("Gizmos.begin", [](){
             if(env->window->isOpen()){
                 ImGuizmo::BeginFrame();
@@ -26,7 +32,8 @@ namespace tri {
         pivots = CENTER;
     }
 
-    bool Gizmos::update(const Transform &cameraTransform, const Camera &camera, const glm::vec2 &viewportPosition, const glm::vec2 &viewportSize) {
+    bool Gizmos::updateGizmo(const Transform &cameraTransform, const Camera &camera, const glm::vec2 &viewportPosition, const glm::vec2 &viewportSize) {
+        snappingInvert = env->input->down(Input::KEY_LEFT_CONTROL) || env->input->down(Input::KEY_RIGHT_CONTROL);
         if(env->input->pressed("R")){
             switch (operation) {
                 case TRANSLATE : operation = SCALE; break;
@@ -99,7 +106,15 @@ namespace tri {
                 mo = ImGuizmo::LOCAL;
             }
 
-            if(ImGuizmo::Manipulate((float *) &view, (float *) &projection, op, mo, (float *) &transform)) {
+            float *snap = nullptr;
+            if((snapping && !snappingInvert) || (!snapping && snappingInvert)){
+                switch (operation) {
+                    case TRANSLATE : snap = (float*)&translateSnapValues; break;
+                    case SCALE : snap = (float*)&scaleSnapValues; break;
+                    case ROTATE : snap = (float*)&rotateSnapValues; break;
+                }
+            }
+            if(ImGuizmo::Manipulate((float *) &view, (float *) &projection, op, mo, (float *) &transform, nullptr, snap)) {
                 for (auto &id : env->editor->selectionContext.getSelected()) {
                     if (env->scene->hasComponent<Transform>(id)) {
                         Transform &t = env->scene->getComponent<Transform>(id);
@@ -129,6 +144,67 @@ namespace tri {
 
         }
         return false;
+    }
+
+    void Gizmos::update() {
+        ImGui::PushID("gizmos");
+
+        bool snap = snapping ^ snappingInvert;
+        ImGui::Checkbox("", &snap);
+        snapping = snap ^ snappingInvert;
+
+        ImGui::SameLine();
+        switch (operation) {
+            case TRANSLATE : {
+                float value = translateSnapValues[0];
+                ImGui::DragFloat("snap", &value, 0.01);
+                translateSnapValues = glm::vec3(value, value, value);
+                break;
+            }
+            case SCALE : {
+                float value = scaleSnapValues[0];
+                ImGui::DragFloat("snap", &value, 0.01);
+                scaleSnapValues = glm::vec3(value, value, value);
+                break;
+            }
+            case ROTATE : {
+                float value = rotateSnapValues[0];
+                ImGui::DragFloat("snap", &value, 0.5);
+                rotateSnapValues = glm::vec3(value, value, value);
+                break;
+            }
+        }
+
+        if(ImGui::RadioButton("translate", operation == TRANSLATE)){
+            operation = TRANSLATE;
+        }
+        ImGui::SameLine();
+        if(ImGui::RadioButton("scale ", operation == SCALE)){
+            operation = SCALE;
+        }
+        ImGui::SameLine();
+        if(ImGui::RadioButton("rotate", operation == ROTATE)){
+            operation = ROTATE;
+        }
+
+
+        if(ImGui::RadioButton("local    ", mode == LOCAL)){
+            mode = LOCAL;
+        }
+        ImGui::SameLine();
+        if(ImGui::RadioButton("world", mode == WORLD)){
+            mode = WORLD;
+        }
+
+        if(ImGui::RadioButton("center   ", pivots == CENTER)){
+            pivots = CENTER;
+        }
+        ImGui::SameLine();
+        if(ImGui::RadioButton("objects", pivots == OBJECTS)){
+            pivots = OBJECTS;
+        }
+
+        ImGui::PopID();
     }
 
 }
