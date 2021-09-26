@@ -146,7 +146,7 @@ namespace tri {
         if(id == 0){
             return false;
         }else{
-            return getLocation(uniform, false) != -1;
+            return getLocation(uniform, false) != -1 || getBufferLocation(uniform, false) != -1;
         }
     }
 
@@ -236,13 +236,13 @@ namespace tri {
         }
     }
 
-    uint32_t Shader::getBufferLocation(const std::string &name) {
+    uint32_t Shader::getBufferLocation(const std::string &name, bool warn) {
         auto entry = bufferLocations.find(name);
         if(entry != bufferLocations.end()){
             return entry->second;
         }else{
             uint32_t location = glGetUniformBlockIndex(id, name.c_str());
-            if(location == -1){
+            if(location == -1 && warn){
                 env->console->warning("uniform buffer ", name, " not found");
             }
             bufferLocations[name] = location;

@@ -88,7 +88,8 @@ namespace tri {
 
         void invoke(Args... args){
             handledFlag = false;
-            for(auto &observer : observers){
+            for(int i = 0; i < observers.size(); i++){
+                auto &observer = observers[i];
                 if(observer.callback){
                     if(observer.active){
                         observer.callback(args...);

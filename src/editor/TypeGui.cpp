@@ -9,6 +9,7 @@
 #include "engine/Transform.h"
 #include "engine/AssetManager.h"
 #include "render/Material.h"
+#include "EditorCamera.h"
 #include <glm/glm.hpp>
 #include <imgui.h>
 
@@ -39,8 +40,8 @@ namespace tri {
         typeFunctions[typeId] = func;
     }
 
-    void TypeGui::drawMember(int typeId, void *data, const char *label, void *min, void *max, bool drawHeader) {
-        if(typeFunctions.size() > typeId){
+    void TypeGui::drawMember(int typeId, void *data, const char *label, void *min, void *max, bool drawHeader, bool useFunction) {
+        if(useFunction && typeFunctions.size() > typeId){
             if(typeFunctions[typeId]){
                 typeFunctions[typeId](label, data, min, max);
                 return;
@@ -185,6 +186,82 @@ namespace tri {
         addAssetTypeFunction<Material>();
         addAssetTypeFunction<Shader>();
         addAssetTypeFunction<Texture>();
+
+
+        env->editor->gui.type.setTypeFunction<Ref<FrameBuffer>>([](const char *label, Ref<FrameBuffer> &v, Ref<FrameBuffer> *min, Ref<FrameBuffer> *max) {
+            if(v){
+                if(ImGui::TreeNode("FrameBuffer")) {
+                    ImGui::Text("size: %i, %i", (int)v->getSize().x, (int)v->getSize().y);
+
+                    std::vector<TextureAttachment> attachments;
+                    for(int i = 0; i < 16; i++){
+                        attachments.push_back(TextureAttachment(COLOR + i));
+                    }
+                    attachments.push_back(DEPTH);
+                    attachments.push_back(STENCIL);
+
+                    for (TextureAttachment attachment : attachments) {
+                        auto texture = v->getAttachment(attachment);
+                        if (texture) {
+                            float aspect = 1;
+                            if (texture->getHeight() != 0) {
+                                aspect = (float) texture->getWidth() / (float) texture->getHeight();
+                            }
+                            ImGui::Image((void *) (size_t) texture->getId(), ImVec2(200 * aspect, 200), ImVec2(0, 1), ImVec2(1, 0));
+
+                            if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID)) {
+                                ImGui::SetDragDropPayload(env->reflection->getType<Texture>()->name.c_str(), &texture, sizeof(texture));
+                                ImGui::Text("Texture");
+                                ImGui::EndDragDropSource();
+                            }
+
+                            ImGui::SameLine();
+                            if(attachment == DEPTH){
+                                ImGui::Text("depth");
+                            }else if(attachment == STENCIL){
+                                ImGui::Text("stencil");
+                            }else if(attachment == COLOR){
+                                ImGui::Text("color");
+                            }else{
+                                ImGui::Text("color %i", (int)attachment - COLOR);
+                            }
+                        }
+                    }
+                    ImGui::TreePop();
+                }
+            }
+        });
+
+        env->editor->gui.type.setTypeFunction<Camera>([](const char *label, Camera &v, Camera *min, Camera *max) {
+            env->editor->gui.type.drawMember(env->reflection->getTypeId<Camera>(), &v, label, min, max, false, false);
+            if(v.output) {
+                if(ImGui::TreeNode("View")) {
+                    v.active = true;
+                    auto texture = v.output->getAttachment(COLOR);
+                    if (texture) {
+                        float aspect = 1;
+                        if (texture->getHeight() != 0) {
+                            aspect = (float) texture->getWidth() / (float) texture->getHeight();
+                        }
+                        ImGui::Image((void *) (size_t) texture->getId(), ImVec2(200 * aspect, 200), ImVec2(0, 1),
+                                     ImVec2(1, 0));
+
+                        EntityId id = env->scene->getEntityIdByComponent(v);
+                        if(id != -1){
+                            if(env->scene->hasComponent<Transform>(id)){
+                                Transform &transform = env->scene->getComponent<Transform>(id);
+                                if(ImGui::IsItemHovered()) {
+                                    env->editor->properties.noContextMenu = true;
+                                    env->editor->properties.noWindowScroll = true;
+                                    env->editor->viewport.editorCamera.update(v, transform);
+                                }
+                            }
+                        }
+                    }
+                    ImGui::TreePop();
+                }
+            }
+        });
     }
 
 }

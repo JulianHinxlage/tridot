@@ -87,14 +87,14 @@ namespace tri {
         template<typename... Components>
         EntitySignatureBitmap createSignature() {
             EntitySignatureBitmap signature = 0;
-            ((signature |= (1 << env->reflection->getTypeId<Components>())) , ...);
+            ((signature |= ((EntitySignatureBitmap)1 << env->reflection->getTypeId<Components>())) , ...);
             return signature;
         }
 
         template<typename Component>
         EntityId getEntityIdByComponent(const Component &comp) {
             auto* pool = getComponentPool<Component>();
-            EntityId index = &comp - (Component*)pool->data();
+            EntityId index = &comp - (Component*)pool->elementData();
             if (index < pool->size()) {
                 return pool->getIdByIndex(index);
             }

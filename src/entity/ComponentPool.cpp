@@ -209,15 +209,19 @@ namespace tri {
     }
 
     void ComponentPool::Storage::copy(const Storage &from){
-        auto *desc = env->reflection->getType(typeId);
-        desc->destruct(data, capacity);
-        delete[] data;
-        data = new uint8_t[from.capacity * elementSize];
+        if(capacity > 0){
+            auto *desc = env->reflection->getType(typeId);
+            desc->destruct(data, capacity);
+            delete[] data;
+        }
         elementSize = from.elementSize;
         typeId = from.typeId;
         size = from.size;
         capacity = from.capacity;
-        desc->copy(from.data, data, from.capacity);
+        data = new uint8_t[capacity * elementSize];
+        auto *desc = env->reflection->getType(typeId);
+        desc->construct(data, capacity);
+        desc->copy(from.data, data, capacity);
     }
 
     void ComponentPool::Storage::resize(int newSize){

@@ -30,6 +30,11 @@ namespace tri {
         Ref<Texture> normalMap;
         Ref<Texture> roughnessMap;
         Ref<Texture> metallicMap;
+        Ref<Texture> ambientOcclusionMap;
+        Ref<Texture> displacementMap;
+
+        glm::vec2 offset;
+        glm::vec2 scale;
 
         glm::vec2 textureOffset;
         glm::vec2 textureScale;
@@ -42,6 +47,12 @@ namespace tri {
 
         glm::vec2 metallicMapOffset;
         glm::vec2 metallicMapScale;
+
+        glm::vec2 ambientOcclusionMapOffset;
+        glm::vec2 ambientOcclusionMapScale;
+
+        glm::vec2 displacementMapOffset;
+        glm::vec2 displacementMapScale;
 
         Ref<Shader> shader;
 

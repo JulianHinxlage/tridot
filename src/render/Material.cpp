@@ -19,6 +19,11 @@ namespace tri {
         normalMap = nullptr;
         roughnessMap = nullptr;
         metallicMap = nullptr;
+        ambientOcclusionMap = nullptr;
+        displacementMap = nullptr;
+
+        offset = {0, 0};
+        scale = {1, 1};
 
         textureOffset = {0, 0};
         textureScale = {1, 1};
@@ -31,6 +36,12 @@ namespace tri {
 
         metallicMapOffset = {0, 0};
         metallicMapScale = {1, 1};
+
+        ambientOcclusionMapOffset = {0, 0};
+        ambientOcclusionMapScale = {1, 1};
+
+        displacementMapOffset = {0, 0};
+        displacementMapScale = {1, 1};
 
         shader = nullptr;
     }
@@ -62,7 +73,11 @@ namespace tri {
     TRI_REGISTER_MEMBER(Material, normalMap);
     TRI_REGISTER_MEMBER(Material, roughnessMap);
     TRI_REGISTER_MEMBER(Material, metallicMap);
+    TRI_REGISTER_MEMBER(Material, ambientOcclusionMap);
+    TRI_REGISTER_MEMBER(Material, displacementMap);
     TRI_REGISTER_MEMBER(Material, shader);
+    TRI_REGISTER_MEMBER(Material, offset);
+    TRI_REGISTER_MEMBER(Material, scale);
     TRI_REGISTER_MEMBER(Material, textureOffset);
     TRI_REGISTER_MEMBER(Material, textureScale);
     TRI_REGISTER_MEMBER(Material, normalMapOffset);
@@ -71,5 +86,9 @@ namespace tri {
     TRI_REGISTER_MEMBER(Material, roughnessMapScale);
     TRI_REGISTER_MEMBER(Material, metallicMapOffset);
     TRI_REGISTER_MEMBER(Material, metallicMapScale);
+    TRI_REGISTER_MEMBER(Material, ambientOcclusionMapOffset);
+    TRI_REGISTER_MEMBER(Material, ambientOcclusionMapScale);
+    TRI_REGISTER_MEMBER(Material, displacementMapOffset);
+    TRI_REGISTER_MEMBER(Material, displacementMapScale);
 
 }

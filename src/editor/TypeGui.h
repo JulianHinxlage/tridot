@@ -18,11 +18,10 @@ namespace tri {
         }
 
         void drawType(int typeId, void *data, bool topLevelLabel = true);
+        void drawMember(int typeId, void *data, const char *label, void *min, void *max, bool drawHeader, bool useFunction = true);
         bool anyTypeChange(int typeId, void *v1, void *v2);
-
     private:
         void setTypeFunction(int typeId, const std::function<void(const char *, void*, void*, void*)> &func);
-        void drawMember(int typeId, void *data, const char *label, void *min, void *max , bool drawHeader);
         void drawConstants(int typeId, void *data, const char *label);
 
         std::vector<std::function<void(const char *, void*, void*, void*)>> typeFunctions;

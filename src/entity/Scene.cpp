@@ -93,7 +93,6 @@ namespace tri {
         auto* pool = getComponentPool(typeId);
         getSignature(id) |= ((EntitySignatureBitmap)1 << typeId);
         void *comp = pool->add(id);
-        //env->reflection->getType(typeId)->construct(comp);
         return comp;
     }
 
@@ -154,7 +153,7 @@ namespace tri {
 
     void Scene::copy(const Scene &from) {
         freeList = from.freeList;
-        entityPool = from.entityPool;
+        entityPool.copy(from.entityPool);
         pools.resize(from.pools.size());
         for (int i = 0; i < pools.size(); i++) {
             if (from.pools[i]) {

@@ -46,7 +46,7 @@ namespace tri {
         void set(const std::string &uniform, Buffer *buffer);
 
         uint32_t getLocation(const std::string &name, bool warn = true);
-        uint32_t getBufferLocation(const std::string &name);
+        uint32_t getBufferLocation(const std::string &name, bool warn = true);
         
     private:
         uint32_t id;

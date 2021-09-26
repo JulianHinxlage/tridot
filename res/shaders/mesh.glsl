@@ -17,12 +17,20 @@ out vec2 fTexCoords;
 out vec4 fId;
 flat out float fTextureIndex;
 
-uniform mat4 uProjection = mat4(1);
+layout(std140) uniform uEnvironment {
+    mat4 projection;
+    vec3 cameraPosition;
+    int align1;
+    int lightCount;
+    float environmentMapIntensity;
+    int environmentMapIndex;
+    int irradianceMapIndex;
+};
 
 void main(){
     vec4 pos = iTransform * vec4(vPosition, 1.0);
     fPosition = vec3(pos);
-    gl_Position = uProjection * pos;
+    gl_Position = projection * pos;
     fNormal = (iTransform * vec4(vNormal, 0.0)).xyz;
     fColor = iColor;
     fId = iId;

@@ -3,6 +3,7 @@
 //
 
 #include "pch.h"
+#include "ViewportWindow.h"
 #include "Editor.h"
 #include "EditorCamera.h"
 #include "engine/Camera.h"
@@ -28,171 +29,163 @@ TRI_REGISTER_TYPE(EditorOnly);
 
 namespace tri {
 
-    class ViewportWindow : public EditorWindow {
-    public:
-        EntityId editorCameraId;
-        EditorCamera editorCamera;
+    void ViewportWindow::startup() {
+        name = "Viewport";
+        isWindow = false;
+        editorCameraId = -1;
 
-        void startup() {
-            name = "Viewport";
-            isWindow = false;
+        env->signals->sceneLoad.addCallback([&](Scene *scene){
             editorCameraId = -1;
+        });
 
-            env->signals->sceneLoad.addCallback([&](Scene *scene){
-                editorCameraId = -1;
-            });
+        env->editor->gizmos.startup();
+        sceneBuffer = Ref<Scene>::make();
+    }
 
-            env->editor->gizmos.startup();
+    void ViewportWindow::setupFrameBuffer(Camera &cam, bool idBuffer){
+        if(!cam.output) {
+            cam.output = cam.output.make();
+            cam.output->setAttachment({COLOR, env->window->getBackgroundColor()});
+            cam.output->setAttachment({DEPTH, Color(0)});
+
         }
-
-        void setupCamera(){
-            //search for camera in scene
-            editorCameraId = -1;
-            env->scene->view<Camera, EditorOnly>().each([&](EntityId id, Camera &cam, EditorOnly &){
-                if(editorCameraId == -1){
-                    editorCameraId = id;
-                }
-            });
-
-            if(editorCameraId != -1) {
-                //setup frame buffer
-                Camera &cam = env->scene->getComponent<Camera>(editorCameraId);
-                cam.output = cam.output.make();
-                cam.output->setAttachment({COLOR, env->window->getBackgroundColor()});
-                cam.output->setAttachment({DEPTH, Color(0)});
-
+        if(idBuffer){
+            if(cam.output->getAttachment((TextureAttachment) (COLOR + 1)).get() == nullptr) {
                 Ref<Texture> idTexture = Ref<Texture>::make();
                 idTexture->create(0, 0, TextureFormat::RGB8, false);
-                cam.output->setAttachment({ (TextureAttachment)(COLOR + 1), Color::white}, idTexture);
-            }else{
-                //create camera
-                editorCameraId = env->scene->addEntity(EditorOnly(), EntityInfo());
-                Transform& t = env->scene->addComponent<Transform>(editorCameraId);
-                t.position = { 0.5, 0.5, 2 };
-                Camera& cam = env->scene->addComponent<Camera>(editorCameraId);
-                cam.isPrimary = false;
-                cam.active = true;
-
-                //setup frame buffer
-                cam.output = cam.output.make();
-                cam.output->setAttachment({ COLOR, env->window->getBackgroundColor() });
-                cam.output->setAttachment({ DEPTH });
-                //cam.output->setAttachment({ (TextureAttachment)(COLOR + 1), Color(-1) });
-
-                Ref<Texture> idTexture = Ref<Texture>::make();
-                idTexture->create(0, 0, TextureFormat::RGB8, false);
-                cam.output->setAttachment({ (TextureAttachment)(COLOR + 1), Color::white}, idTexture);
+                cam.output->setAttachment({(TextureAttachment) (COLOR + 1), Color::white}, idTexture);
             }
         }
+    }
 
-        void update() override {
+    void ViewportWindow::setupCamera(){
+        //search for camera in scene
+        editorCameraId = -1;
+        env->scene->view<Camera, EditorOnly>().each([&](EntityId id, Camera &cam, EditorOnly &){
             if(editorCameraId == -1){
-                setupCamera();
+                editorCameraId = id;
             }
+        });
 
-            ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
-            ImGui::PushStyleVar(ImGuiStyleVar_ChildBorderSize, 0);
-            if (ImGui::Begin(name.c_str(), &isOpen)) {
+        if(editorCameraId == -1){
+            editorCameraId = env->scene->addEntity(EditorOnly(), EntityInfo());
+            Transform& t = env->scene->addComponent<Transform>(editorCameraId);
+            t.position = { 0.5, 0.5, 2 };
+            Camera& cam = env->scene->addComponent<Camera>(editorCameraId);
+            cam.isPrimary = false;
+            cam.active = true;
+        }
+    }
 
-                //ImGui::Begin("Gizmos");
-                //env->editor->gizmos.updateToolBar();
-                //ImGui::End();
-
-                //get camera
-                Ref<FrameBuffer> output = nullptr;
-                ImVec2 viewportSize = ImGui::GetContentRegionAvail();
-                ImVec2 viewportPosition = ImGui::GetCursorPos();
-                Camera *cam = nullptr;
-                Transform *camTransform = nullptr;
-                env->scene->view<Camera, Transform>().each([&](EntityId id, Camera& camera, Transform &transform) {
-                    if (env->editor->runtimeMode) {
-                        if (camera.isPrimary) {
-                            output = camera.output;
-                            cam = &camera;
-                            camTransform = &transform;
-                        }
-                    }
-                    else {
-                        if (id == editorCameraId) {
-                            output = camera.output;
-                            cam = &camera;
-                            camTransform = &transform;
-                            if(output) {
-                                if (output->getSize() != glm::vec2(viewportSize.x, viewportSize.y)) {
-                                    output->resize(viewportSize.x, viewportSize.y);
-                                    camera.aspectRatio = viewportSize.x / viewportSize.y;
-                                }
-                            }
-                        }
-                    }
-                });
-
-                if (output) {
-                    //draw image
-                    ImGui::Image((ImTextureID)(size_t)output->getAttachment(TextureAttachment::COLOR)->getId(), viewportSize, ImVec2(0, 1), ImVec2(1, 0));
-                    bool pickingAllowed = true;
-                    //gizmos
-                    if(cam && camTransform){
-                        if(env->editor->gizmos.updateGizmo(*camTransform, *cam, {viewportPosition.x, viewportPosition.y}, {viewportSize.x, viewportSize.y})){
-                            pickingAllowed = false;
-                        }
-                    }
-                    //mouse picking
-                    if(pickingAllowed){
-                        updateMousePicking(output->getAttachment((TextureAttachment)(COLOR + 1)), {viewportSize.x, viewportSize.y});
-                    }
-                }
-
-                //editor camera
-                if(cam && camTransform) {
-                    if(ImGui::IsWindowHovered()){
-                        editorCamera.update(*cam, *camTransform);
-                    }
-                }
-
-            }
-            ImGui::End();
-            ImGui::PopStyleVar(2);
+    void ViewportWindow::update(){
+        if(editorCameraId == -1){
+            setupCamera();
         }
 
-        void updateMousePicking(Ref<Texture> texture, glm::vec2 viewportSize){
-            if(texture){
-                if(ImGui::IsItemHovered()){
-                    if(env->input->pressed(Input::MOUSE_BUTTON_LEFT)){
-
-                        glm::vec2 pos = {0, 0};
-                        pos.x = ImGui::GetMousePos().x - ImGui::GetItemRectMin().x;
-                        pos.y = ImGui::GetMousePos().y - ImGui::GetItemRectMin().y;
-                        pos /= viewportSize;
-                        pos *= glm::vec2(texture->getWidth(), texture->getHeight());
-                        pos.y = texture->getHeight() - pos.y;
-
-
-                        Color color = texture->getPixel(pos.x, pos.y);
-                        if(color.value != -1){
-                            color.a = 0;
-                        }
-                        EntityId id = color.value;
-
-                        bool control = env->input->down(Input::KEY_LEFT_CONTROL) || env->input->down(Input::KEY_RIGHT_CONTROL);
-                        if(!control){
-                            env->editor->selectionContext.unselectAll();
-                        }
-                        if(id != -1) {
-                            if(control && env->editor->selectionContext.isSelected(id)){
-                                env->editor->selectionContext.unselect(id);
-                            }else{
-                                env->editor->selectionContext.select(id);
-                            }
-                        }
-
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
+        ImGui::PushStyleVar(ImGuiStyleVar_ChildBorderSize, 0);
+        if (ImGui::Begin(name.c_str(), &isOpen)) {
+            //get camera
+            Ref<FrameBuffer> output = nullptr;
+            ImVec2 viewportSize = ImGui::GetContentRegionAvail();
+            ImVec2 viewportPosition = ImGui::GetCursorPos();
+            Camera *cam = nullptr;
+            Transform *camTransform = nullptr;
+            env->scene->view<Camera, Transform>().each([&](EntityId id, Camera& camera, Transform &transform) {
+                if (env->editor->mode == RUNTIME || env->editor->mode == PAUSED) {
+                    if (camera.isPrimary) {
+                        output = camera.output;
+                        cam = &camera;
+                        camTransform = &transform;
                     }
+                }
+                else {
+                    if (id == editorCameraId) {
+                        output = camera.output;
+                        cam = &camera;
+                        camTransform = &transform;
+                    }
+                }
+                if(camera.output) {
+                    if (camera.output->getSize() != glm::vec2(viewportSize.x, viewportSize.y)) {
+                        camera.output->resize(viewportSize.x, viewportSize.y);
+                        camera.aspectRatio = viewportSize.x / viewportSize.y;
+                    }
+                }else{
+                    setupFrameBuffer(camera, true);
+                }
+            });
+
+            if(cam){
+                cam->active = true;
+            }
+
+            if (output) {
+                //draw image
+                ImGui::Image((ImTextureID)(size_t)output->getAttachment(TextureAttachment::COLOR)->getId(), viewportSize, ImVec2(0, 1), ImVec2(1, 0));
+                bool pickingAllowed = true;
+                //gizmos
+                if(cam && camTransform){
+                    if(env->editor->gizmos.updateGizmo(*camTransform, *cam, {viewportPosition.x, viewportPosition.y}, {viewportSize.x, viewportSize.y})){
+                        pickingAllowed = false;
+                    }
+                }
+                //mouse picking
+                if(pickingAllowed){
+                    updateMousePicking(output->getAttachment((TextureAttachment)(COLOR + 1)), {viewportSize.x, viewportSize.y});
+                }
+            }
+
+            //editor camera
+            if(cam && camTransform) {
+                if(ImGui::IsWindowHovered()){
+                    editorCamera.update(*cam, *camTransform);
+                }
+            }
+
+        }
+        ImGui::End();
+        ImGui::PopStyleVar(2);
+    }
+
+    void ViewportWindow::updateMousePicking(Ref<Texture> texture, glm::vec2 viewportSize){
+        if(texture){
+            if(ImGui::IsItemHovered()){
+                if(env->input->pressed(Input::MOUSE_BUTTON_LEFT)){
+
+                    glm::vec2 pos = {0, 0};
+                    pos.x = ImGui::GetMousePos().x - ImGui::GetItemRectMin().x;
+                    pos.y = ImGui::GetMousePos().y - ImGui::GetItemRectMin().y;
+                    pos /= viewportSize;
+                    pos *= glm::vec2(texture->getWidth(), texture->getHeight());
+                    pos.y = texture->getHeight() - pos.y;
+
+
+                    Color color = texture->getPixel(pos.x, pos.y);
+                    if(color.value != -1){
+                        color.a = 0;
+                    }
+                    EntityId id = color.value;
+
+                    bool control = env->input->down(Input::KEY_LEFT_CONTROL) || env->input->down(Input::KEY_RIGHT_CONTROL);
+                    if(!control){
+                        env->editor->selectionContext.unselectAll();
+                    }
+                    if(id != -1) {
+                        if(control && env->editor->selectionContext.isSelected(id)){
+                            env->editor->selectionContext.unselect(id);
+                        }else{
+                            env->editor->selectionContext.select(id);
+                        }
+                    }
+
                 }
             }
         }
-    };
+    }
+
     TRI_STARTUP_CALLBACK("") {
-        env->editor->addWindow(new ViewportWindow);
+        env->editor->addWindow(&env->editor->viewport);
     }
 
 }

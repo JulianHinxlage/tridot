@@ -18,6 +18,13 @@ namespace tri {
         glm::mat4 projectionMatrix;
         glm::vec3 eyePosition;
 
+        int drawCallCount = 0;
+        int instanceCount = 0;
+        int meshCount = 0;
+        int materialCount = 0;
+        int shaderCount = 0;
+        int lightCount = 0;
+
         class InstanceData {
         public:
             glm::mat4 transform;
@@ -38,6 +45,10 @@ namespace tri {
             int normalMap;
             int roughnessMap;
             int metallicMap;
+            int ambientOcclusionMap;
+            int displacementMap;
+            int align1;
+            int align2;
 
             glm::vec2 textureOffset;
             glm::vec2 textureScale;
@@ -50,6 +61,12 @@ namespace tri {
 
             glm::vec2 metallicMapOffset;
             glm::vec2 metallicMapScale;
+
+            glm::vec2 ambientOcclusionMapOffset;
+            glm::vec2 ambientOcclusionMapScale;
+
+            glm::vec2 displacementMapOffset;
+            glm::vec2 displacementMapScale;
         };
 
         class LightData {
@@ -106,9 +123,10 @@ namespace tri {
         };
         std::vector<Call> calls;
 
+        std::unordered_map<Shader*, uint32_t> shaderMap;
+        std::unordered_map<Mesh*, uint32_t> meshMap;
         std::unordered_map<Material*, uint32_t> materialMap;
         std::unordered_map<Texture*, uint32_t> textureMap;
-        std::unordered_map<Mesh*, uint32_t> meshMap;
         Ref<Shader> defaultShader;
 
         class MeshBatch {
@@ -121,12 +139,13 @@ namespace tri {
         BatchBuffer materialBuffer;
         BatchBuffer lightBuffer;
         Ref<Buffer> environmentBuffer;
+        bool useMaterials = true;
 
-        uint32_t getMaterialIndex(Material* material) {
-            auto x = materialMap.find(material);
-            if (x == materialMap.end()) {
-                uint32_t index = materialMap.size();
-                materialMap[material] = index;
+        uint32_t getShaderIndex(Shader* shader) {
+            auto x = shaderMap.find(shader);
+            if (x == shaderMap.end()) {
+                uint32_t index = shaderMap.size();
+                shaderMap[shader] = index;
                 return index;
             }
             else {
@@ -139,6 +158,18 @@ namespace tri {
             if (x == meshMap.end()) {
                 uint32_t index = meshMap.size();
                 meshMap[mesh] = index;
+                return index;
+            }
+            else {
+                return x->second;
+            }
+        }
+
+        uint32_t getMaterialIndex(Material* material) {
+            auto x = materialMap.find(material);
+            if (x == materialMap.end()) {
+                uint32_t index = materialMap.size();
+                materialMap[material] = index;
                 return index;
             }
             else {
@@ -191,14 +222,16 @@ namespace tri {
             key.v1 |= (uint64_t)!opaque << 57;
             if (opaque) {
                 key.v1 |= ((uint64_t)getMeshIndex(mesh) & 0xffff) << 40;
-                key.v1 |= ((uint64_t)getMaterialIndex(material) & 0xffff) << 24;
+                key.v1 |= ((uint64_t)getShaderIndex(material->shader.get()) & 0xffff) << 24;
                 key.v1 |= ((uint64_t)depth & 0xffffff) << 0;
             }
             else {
                 key.v1 |= ((uint64_t)-depth & 0xffffff) << 32;
                 key.v1 |= ((uint64_t)getMeshIndex(mesh) & 0xffff) << 16;
-                key.v1 |= ((uint64_t)getMaterialIndex(material) & 0xffff) << 0;
+                key.v1 |= ((uint64_t)getShaderIndex(material->shader.get()) & 0xffff) << 0;
+                //key.v1 |= ((uint64_t)getMaterialIndex(material) & 0xffff) << 0;
             }
+            getMaterialIndex(material);
 
             calls.push_back({transform, color, material, mesh, id});
             drawList.push_back({ key, (uint32_t)calls.size() - 1 });
@@ -235,48 +268,75 @@ namespace tri {
         }
 
         void submit(Mesh* mesh, Shader *shader) {
-            materialBuffer.update();
-            shader->set("uMaterials", materialBuffer.buffer.get());
-
-            int textures[30];
-            for(int i = 0; i < 30; i++){
-                textures[i] = i;
-            }
-            for(auto &tex : textureMap){
-                if(tex.first){
-                    tex.first->bind(tex.second);
-                }
-            }
-            shader->set("uTextures", textures, 30);
-
             MeshBatch& batch = meshes[mesh];
-            batch.instances->update();
-            batch.mesh->submit(-1, batch.instances->size());
-            batch.instances->reset();
+            if(batch.instances->size() > 0) {
+                if(useMaterials){
+                    materialBuffer.update();
+                    shader->set("uMaterials", materialBuffer.buffer.get());
+                }
+
+                int textures[30];
+                for (int i = 0; i < 30; i++) {
+                    textures[i] = i;
+                }
+                for (auto &tex : textureMap) {
+                    if (tex.first) {
+                        tex.first->bind(tex.second);
+                    }
+                }
+                shader->set("uTextures", textures, 30);
+
+                batch.instances->update();
+                batch.mesh->submit(-1, batch.instances->size());
+                batch.instances->reset();
+                RenderContext::flush(false);
+
+                materialBuffer.reset();
+                materialMap.clear();
+                textureMap.clear();
+                drawCallCount++;
+            }
         }
 
         void setMaterialData(Material *m, MaterialData *d){
             d->color = m->color.vec();
             d->mapping = (int)m->mapping;
+
             d->roughness = m->roughness;
             d->metallic = m->metallic;
             d->normalMapFactor = m->normalMapFactor;
-            d->roughnessMapOffset = m->roughnessMapOffset;
-            d->roughnessMapScale = m->roughnessMapScale;
-            d->metallicMapOffset = m->metallicMapOffset;
-            d->metallicMapScale = m->metallicMapScale;
-            d->normalMapOffset = m->normalMapOffset;
-            d->normalMapScale = m->normalMapScale;
-            d->textureOffset = m->textureOffset;
-            d->textureScale = m->textureScale;
+
             d->texture = getTextureIndex(m->texture.get());
             d->normalMap = getTextureIndex(m->normalMap.get());
             d->roughnessMap = getTextureIndex(m->roughnessMap.get());
             d->metallicMap = getTextureIndex(m->metallicMap.get());
+            d->ambientOcclusionMap = getTextureIndex(m->ambientOcclusionMap.get());
+            d->displacementMap = getTextureIndex(m->displacementMap.get());
+
+            d->textureOffset = m->textureOffset + m->offset;
+            d->textureScale = m->textureScale * m->scale;
+            d->normalMapOffset = m->normalMapOffset + m->offset;
+            d->normalMapScale = m->normalMapScale * m->scale;
+            d->roughnessMapOffset = m->roughnessMapOffset + m->offset;
+            d->roughnessMapScale = m->roughnessMapScale * m->scale;
+            d->metallicMapOffset = m->metallicMapOffset + m->offset;
+            d->metallicMapScale = m->metallicMapScale * m->scale;
+            d->ambientOcclusionMapOffset = m->ambientOcclusionMapOffset + m->offset;
+            d->ambientOcclusionMapScale = m->ambientOcclusionMapScale * m->scale;
+            d->displacementMapOffset = m->displacementMapOffset + m->offset;
+            d->displacementMapScale = m->displacementMapScale * m->scale;
         }
 
         void draw() {
             TRI_PROFILE("render/draw");
+
+            drawCallCount = 0;
+            instanceCount = 0;
+            materialCount = materialMap.size();
+            lightCount = lightBuffer.size();
+            shaderCount = shaderMap.size();
+            meshCount = meshMap.size();
+
             Mesh* mesh = nullptr;
             Material* material = nullptr;
             BatchBuffer* instances;
@@ -284,6 +344,7 @@ namespace tri {
 
             materialMap.clear();
             int materialIndex = 0;
+            useMaterials = true;
 
             for (auto& i : drawList) {
                 Call &call = calls[i.index];
@@ -291,9 +352,6 @@ namespace tri {
                 if (call.mesh != mesh) {
                     if (mesh) {
                         submit(mesh, shader);
-                        materialBuffer.reset();
-                        materialMap.clear();
-                        textureMap.clear();
                         material = nullptr;
                     }
                     mesh = call.mesh;
@@ -301,17 +359,18 @@ namespace tri {
                 }
 
                 if (material != call.material) {
-                    material = call.material;
-                    materialIndex = getMaterialIndex(material);
-                    setMaterialData(material, (MaterialData*)materialBuffer.next());
-
-                    Shader *s = material->shader.get();
+                    Shader *s = call.material->shader.get();
                     if(!s){
                         s = defaultShader.get();
                     }
-
                     if(shader != s){
+                        if(shader){
+                            submit(mesh, shader);
+                            material = nullptr;
+                        }
+
                         shader = s;
+                        useMaterials = shader->has("uMaterials");
                         shader->bind();
 
                         lightBuffer.update();
@@ -327,6 +386,16 @@ namespace tri {
                         environmentBuffer->setData(&e, sizeof(e));
                         shader->set("uEnvironment", environmentBuffer.get());
                     }
+
+                    material = call.material;
+                    if(!useMaterials){
+                        materialIndex = getTextureIndex(material->texture.get());
+                    }else{
+                        materialIndex = getMaterialIndex(material);
+                        if(materialIndex >= materialBuffer.size()){
+                            setMaterialData(material, (MaterialData*)materialBuffer.next());
+                        }
+                    }
                 }
 
                 InstanceData* instance = (InstanceData*)instances->next();
@@ -334,6 +403,7 @@ namespace tri {
                 instance->color = call.color;
                 instance->materialIndex = materialIndex;
                 instance->id = call.id;
+                instanceCount++;
             }
 
             if (mesh) {
@@ -345,6 +415,7 @@ namespace tri {
             materialMap.clear();
             textureMap.clear();
             meshMap.clear();
+            shaderMap.clear();
         }
 
         void clear() {
@@ -391,6 +462,13 @@ namespace tri {
         drawList->sort();
         drawList->draw();
         pipeline->executePipeline(frameBuffer);
+
+        drawCallCount += drawList->drawCallCount;
+        instanceCount += drawList->instanceCount;
+        meshCount += drawList->meshCount;
+        materialCount += drawList->materialCount;
+        shaderCount += drawList->shaderCount;
+        lightCount += drawList->lightCount;
     }
 
     void Renderer::resetScene() {

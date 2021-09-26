@@ -5,8 +5,12 @@
 #include "core/core.h"
 #include "render/Window.h"
 #include "engine/AssetManager.h"
+#include "entity/Scene.h"
 
 using namespace tri;
+
+class EditorOnly{};
+TRI_REGISTER_TYPE(EditorOnly);
 
 int main(int argc, char* argv[]) {
     Environment::startup();
@@ -19,6 +23,11 @@ int main(int argc, char* argv[]) {
     env->console->setVariable<int>("resolution_y", 1080);
     env->console->setVariable<bool>("vsync", true);
 
+    env->signals->sceneLoad.addCallback("launcher", [](Scene *scene){
+       scene->view<EditorOnly>().each([&](EntityId id, EditorOnly &){
+           scene->removeEntity(id);
+       });
+    });
 
     std::string configFile = "../res/config.txt";
     if (argc > 1) {

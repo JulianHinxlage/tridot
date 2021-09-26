@@ -96,10 +96,12 @@ namespace tri {
             EntityId id = entity["id"].as<EntityId>(-1);
             id = scene.addEntityHinted(id);
             for(auto &desc : env->reflection->getDescriptors()){
-                YAML::Node component = entity[desc->name];
-                if(component){
-                    void *data = scene.addComponent(desc->typeId, id);
-                    deserializeType(component, desc->typeId, data);
+                if(desc) {
+                    YAML::Node component = entity[desc->name];
+                    if (component) {
+                        void *data = scene.addComponent(desc->typeId, id);
+                        deserializeType(component, desc->typeId, data);
+                    }
                 }
             }
         }

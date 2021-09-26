@@ -83,6 +83,10 @@ struct Material{
     int normalMap;
     int roughnessMap;
     int metallicMap;
+    int ambientOcclusionMap;
+    int displacementMap;
+    int align1;
+    int align2;
     vec2 textureOffset;
     vec2 textureScale;
     vec2 normalMapOffset;
@@ -91,6 +95,10 @@ struct Material{
     vec2 roughnessMapScale;
     vec2 metallicMapOffset;
     vec2 metallicMapScale;
+    vec2 ambientOcclusionMapOffset;
+    vec2 ambientOcclusionMapScale;
+    vec2 displacementMapOffset;
+    vec2 displacementMapScale;
 };
 layout(std140) uniform uMaterials {
     Material materials[32];
@@ -119,7 +127,7 @@ vec4 sampleCubeTextureIndexed(int textureIndex, vec3 textureCoords);
 vec4 sampleCubeTextureIndexedLod(int textureIndex, vec3 textureCoords, int lod);
 
 vec3 pbrLight(vec3 albedo, vec3 normal, vec3 viewDirection, vec3 lightDirection, float metallic, float roughness);
-vec3 lighing(vec3 albedo, vec3 normal, float metallic, float roughness);
+vec3 lighing(vec3 albedo, vec3 normal, float metallic, float roughness, float ao);
 
 void main(){
     Material material = materials[int(fMaterialIndex)];
@@ -152,12 +160,24 @@ void main(){
         metallic *= (sampleTexture(material.metallicMap, material.mapping, material.metallicMapScale, material.metallicMapOffset).r);
     }
 
-    vec3 lightColor = lighing(albedo.rgb, normal, metallic, roughness);
+    //roughness
+    float ao = 1;
+    if(material.ambientOcclusionMap != -1){
+        ao *= (sampleTexture(material.ambientOcclusionMap, material.mapping, material.ambientOcclusionMapScale, material.ambientOcclusionMapOffset).r);
+    }
+
+    //metallic
+    float displacement = 0;
+    if(material.displacementMap != -1){
+        displacement = (sampleTexture(material.displacementMap, material.mapping, material.displacementMapScale, material.displacementMapOffset).r);
+    }
+
+    vec3 lightColor = lighing(albedo.rgb, normal, metallic, roughness, ao);
     oColor = vec4(lightColor, albedo.a);
     oId = vec4(fId.xyz, 1.0);
 }
 
-vec3 lighing(vec3 albedo, vec3 normal, float metallic, float roughness){
+vec3 lighing(vec3 albedo, vec3 normal, float metallic, float roughness, float ao){
     vec3 lightOutput = vec3(0.0);
     vec3 viewDirection = normalize(cameraPosition - fPosition);
 
@@ -167,7 +187,7 @@ vec3 lighing(vec3 albedo, vec3 normal, float metallic, float roughness){
 
         if(light.type == 0){
             //ambient light
-            lightOutput += albedo * light.color * light.intensity;
+            lightOutput += albedo * light.color * light.intensity * ao;
         }else {
             //directional light or point light
 
@@ -192,7 +212,7 @@ vec3 lighing(vec3 albedo, vec3 normal, float metallic, float roughness){
 
     //flat shading for no lights
     if (lightCount == 0){
-        lightOutput = albedo;
+        lightOutput = albedo * ao;
     }
 
     return lightOutput;

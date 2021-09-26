@@ -23,7 +23,7 @@ namespace tri {
 
     void Editor::startup(){
         updated = false;
-        runtimeMode = false;
+        mode = EDIT;
         env->signals->update.callbackOrder({"MeshComponent", "Imgui.begin", "Editor"});
         env->signals->postStartup.addCallback([](){
             ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
@@ -49,6 +49,8 @@ namespace tri {
             ImGui::PushStyleColor(ImGuiCol_TitleBg, ImVec4(0.177, 0.177, 0.177, 1));
             ImGui::PushStyleColor(ImGuiCol_TitleBgActive, ImVec4(0.238, 0.238, 0.238, 1));
             ImGui::PushStyleColor(ImGuiCol_DragDropTarget, ImVec4(0.0, 0.32, 1.0, 1));
+
+            ImGui::GetIO().IniFilename = "editor.ini";
 
             ImGuiSettingsHandler handler;
             handler.TypeName = "UserData";
@@ -89,6 +91,14 @@ namespace tri {
         });
 
         gui.startup();
+        sceneBuffer = Ref<Scene>::make();
+
+        env->signals->preShutdown.addCallback("Editor", [&](){
+            if(std::filesystem::exists("autosave.scene")){
+                std::filesystem::copy("autosave.scene", "autosave2.scene", std::filesystem::copy_options::overwrite_existing);
+            }
+            env->scene->save("autosave.scene");
+        });
     }
 
     void Editor::update() {
@@ -126,15 +136,32 @@ namespace tri {
                 }
             }
 
+            //runtime
+            if (env->input->pressed(Input::KEY_F6)) {
+                if (mode == RUNTIME) {
+                    mode = PAUSED;
+                } else if (mode == PAUSED) {
+                    mode = RUNTIME;
+                }
+            }
+            if(env->input->pressed(Input::KEY_F5)){
+                if(mode == RUNTIME || mode == PAUSED){
+                    env->scene->copy(*sceneBuffer);
+                    sceneBuffer->clear();
+                    mode = EDIT;
+                    env->signals->sceneLoad.invoke(env->scene);
+                }else if(mode == EDIT){
+                    sceneBuffer->clear();
+                    sceneBuffer->copy(*env->scene);
+                    mode = RUNTIME;
+                }
+            }
+
             gui.update();
         }
     }
 
     void Editor::shutdown(){
-        if(std::filesystem::exists("autosave.scene")){
-            std::filesystem::copy("autosave.scene", "autosave2.scene", std::filesystem::copy_options::overwrite_existing);
-        }
-        env->scene->save("autosave.scene");
         for (auto* window : windows) {
             window->shutdown();
         }
@@ -193,6 +220,9 @@ namespace tri {
                     if (window && window->isDebugWindow) {
                         ImGui::MenuItem(window->name.c_str(), nullptr, &window->isOpen);
                     }
+                }
+                if(ImGui::MenuItem("Reset Scene")){
+                    env->signals->sceneLoad.invoke(env->scene);
                 }
                 ImGui::EndMenu();
             }

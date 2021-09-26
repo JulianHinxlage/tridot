@@ -12,8 +12,10 @@ namespace tri {
     public:
         std::set<std::string> alwaysOn;
         bool doNotChangeState = false;
+        std::set<std::string> editModeConfig;
+        std::set<std::string> runtimeModeConfig;
 
-        void startup() {
+        void startup() override {
             name = "Runtime Config";
             isDebugWindow = true;
             alwaysOn = {
@@ -23,6 +25,28 @@ namespace tri {
                 "Imgui.end",
                 "Gizmos.begin",
             };
+
+            editModeConfig = {
+                    "SignalManager",
+                    "Console",
+                    "Reflection",
+                    "ModuleManager",
+                    "Profiler",
+                    "ThreadPool",
+                    "AssetManager",
+                    "Camera",
+                    "Input",
+                    "MeshComponent",
+                    "Serializer",
+                    "Time",
+                    "Scene",
+                    "Renderer",
+                    "Imgui",
+            };
+
+            env->signals->preUpdate.addCallback("RuntimeConfig", [&](){
+                modeChange(env->editor->mode);
+            });
         }
 
         void update() override {
@@ -56,7 +80,22 @@ namespace tri {
             }
         }
 
+        void modeChange(RuntimeMode mode) {
+            if(mode == RUNTIME){
+                env->signals->update.setActiveAll(true);
+            }else if(mode == EDIT || mode == PAUSED){
+                env->signals->update.setActiveAll(false);
+                for(auto &name : alwaysOn){
+                    env->signals->update.setActiveCallback(name, true);
+                }
+                for(auto &name : editModeConfig){
+                    env->signals->update.setActiveCallback(name, true);
+                }
+            }
+        }
+
     };
+
     TRI_STARTUP_CALLBACK("") {
         env->editor->addWindow(new RuntimeConfigWindow);
     }

@@ -31,11 +31,7 @@ namespace tri {
     }
 
     void ModuleManager::update(){
-        for (auto& record : modules) {
-            if (record.second.module) {
-                record.second.module->update();
-            }
-        }
+
     }
 
     void ModuleManager::shutdown(){
