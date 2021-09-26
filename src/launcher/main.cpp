@@ -6,6 +6,7 @@
 #include "render/Window.h"
 #include "engine/AssetManager.h"
 #include "entity/Scene.h"
+#include "engine/Camera.h"
 
 using namespace tri;
 
@@ -27,6 +28,11 @@ int main(int argc, char* argv[]) {
        scene->view<EditorOnly>().each([&](EntityId id, EditorOnly &){
            scene->removeEntity(id);
        });
+        scene->view<Camera>().each([&](EntityId id, Camera &cam){
+            if(cam.isPrimary){
+                cam.active = true;
+            }
+        });
     });
 
     std::string configFile = "../res/config.txt";

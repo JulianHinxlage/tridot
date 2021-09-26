@@ -6,6 +6,12 @@
 
 namespace tri {
 
+    enum RuntimeMode {
+        EDIT,
+        RUNTIME,
+        PAUSED,
+    };
+
     class EditorWindow {
     public:
         std::string name;

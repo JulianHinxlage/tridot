@@ -16,12 +16,6 @@
 
 namespace tri {
 
-    enum RuntimeMode {
-        EDIT,
-        RUNTIME,
-        PAUSED,
-    };
-
     class Editor : public System {
     public:
         RuntimeMode mode;
@@ -38,6 +32,7 @@ namespace tri {
         void shutdown() override;
         void addWindow(EditorWindow* window);
         void updateMenuBar();
+        void setMode(RuntimeMode mode);
 
     private:
         std::vector<EditorWindow*> windows;

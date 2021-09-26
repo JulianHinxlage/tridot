@@ -10,7 +10,7 @@
 
 namespace tri {
 
-    class Gizmos : public EditorWindow {
+    class Gizmos {
     public:
         enum Operation{
             TRANSLATE,
@@ -40,7 +40,7 @@ namespace tri {
 
         void startup();
         bool updateGizmo(const Transform &cameraTransform, const Camera &camera, const glm::vec2 &viewportPosition, const glm::vec2 &viewportSize);
-        virtual void update();
+        void updateSettings();
 
     private:
         std::vector<std::pair<EntityId,Transform>> preModifyValues;

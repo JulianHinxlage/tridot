@@ -19,11 +19,10 @@ namespace tri {
 
     TRI_REGISTER_SYSTEM_INSTANCE(Editor, env->editor);
 
-    void createTestScene();
-
     void Editor::startup(){
         updated = false;
         mode = EDIT;
+
         env->signals->update.callbackOrder({"MeshComponent", "Imgui.begin", "Editor"});
         env->signals->postStartup.addCallback([](){
             ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
@@ -91,6 +90,7 @@ namespace tri {
         });
 
         gui.startup();
+        gizmos.startup();
         sceneBuffer = Ref<Scene>::make();
 
         env->signals->preShutdown.addCallback("Editor", [&](){
@@ -139,21 +139,16 @@ namespace tri {
             //runtime
             if (env->input->pressed(Input::KEY_F6)) {
                 if (mode == RUNTIME) {
-                    mode = PAUSED;
+                    setMode(PAUSED);
                 } else if (mode == PAUSED) {
-                    mode = RUNTIME;
+                    setMode(RUNTIME);
                 }
             }
             if(env->input->pressed(Input::KEY_F5)){
                 if(mode == RUNTIME || mode == PAUSED){
-                    env->scene->copy(*sceneBuffer);
-                    sceneBuffer->clear();
-                    mode = EDIT;
-                    env->signals->sceneLoad.invoke(env->scene);
+                    setMode(EDIT);
                 }else if(mode == EDIT){
-                    sceneBuffer->clear();
-                    sceneBuffer->copy(*env->scene);
-                    mode = RUNTIME;
+                    setMode(RUNTIME);
                 }
             }
 
@@ -193,12 +188,6 @@ namespace tri {
                 }
                 if (ImGui::MenuItem("Close")) {
                     env->scene->clear();
-                }
-                if (ImGui::MenuItem("Create Test Scene")) {
-                    env->scene->clear();
-                    createTestScene();
-                    env->scene->update();
-                    env->signals->sceneLoad.invoke(env->scene);
                 }
                 if (ImGui::MenuItem("Exit")) {
                     env->window->close();
@@ -248,18 +237,32 @@ namespace tri {
         }
     }
 
-    float randf() {
-        return (float)std::rand() / RAND_MAX;
-    }
-    glm::vec3 randf3() {
-        return { randf(), randf(), randf(), };
-    }
-    void createTestScene(){
-        for (int i = 0; i < 100; i++) {
-            env->scene->addEntity(
-                    Transform(randf3(), (randf3() * 0.1f) + glm::vec3(0.01, 0.01, 0.01), randf3() * 6.0f),
-                    MeshComponent(nullptr, nullptr, Color(glm::vec4(randf3(), 1))),
-                    EntityInfo());
+    void Editor::setMode(RuntimeMode mode) {
+        if(this->mode != mode) {
+            if (mode == EDIT) {
+                if(viewport.cameraMode == EDITOR_CAMERA){
+                    viewport.saveEditorCameraTransform();
+                }
+                env->scene->copy(*sceneBuffer);
+                sceneBuffer->clear();
+                if(viewport.cameraMode == EDITOR_CAMERA) {
+                    viewport.restoreEditorCameraTransform();
+                }
+                env->signals->sceneLoad.invoke(env->scene);
+                this->mode = EDIT;
+            } else if (mode == RUNTIME) {
+                if(this->mode == EDIT){
+                    sceneBuffer->clear();
+                    sceneBuffer->copy(*env->scene);
+                }
+                this->mode = RUNTIME;
+            } else if (mode == PAUSED) {
+                if(this->mode == EDIT){
+                    sceneBuffer->clear();
+                    sceneBuffer->copy(*env->scene);
+                }
+                this->mode = PAUSED;
+            }
         }
     }
 

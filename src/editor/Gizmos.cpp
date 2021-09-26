@@ -13,13 +13,7 @@
 
 namespace tri {
 
-    TRI_STARTUP_CALLBACK("") {
-        env->editor->addWindow(&env->editor->gizmos);
-    }
-
     void Gizmos::startup() {
-        name = "Gizmo";
-
         env->signals->update.addCallback("Gizmos.begin", [](){
             if(env->window->isOpen()){
                 ImGuizmo::BeginFrame();
@@ -186,7 +180,7 @@ namespace tri {
         return false;
     }
 
-    void Gizmos::update() {
+    void Gizmos::updateSettings() {
         ImGui::PushID("gizmos");
 
         bool snap = snapping ^ snappingInvert;

@@ -5,7 +5,6 @@
 #include "pch.h"
 #include "ViewportWindow.h"
 #include "Editor.h"
-#include "EditorCamera.h"
 #include "engine/Camera.h"
 #include "engine/Transform.h"
 #include "engine/MeshComponent.h"
@@ -16,14 +15,6 @@
 #include "engine/EntityInfo.h"
 #include <imgui/imgui.h>
 
-float randf() {
-    return (float)std::rand() / RAND_MAX;
-}
-
-glm::vec3 randf3() {
-    return { randf(), randf(), randf(), };
-}
-
 class EditorOnly{};
 TRI_REGISTER_TYPE(EditorOnly);
 
@@ -33,6 +24,7 @@ namespace tri {
         name = "Viewport";
         isWindow = false;
         editorCameraId = -1;
+        cameraMode = EDITOR_CAMERA;
 
         env->signals->sceneLoad.addCallback([&](Scene *scene){
             editorCameraId = -1;
@@ -92,11 +84,21 @@ namespace tri {
             Camera *cam = nullptr;
             Transform *camTransform = nullptr;
             env->scene->view<Camera, Transform>().each([&](EntityId id, Camera& camera, Transform &transform) {
+
+                //select camera based on options
                 if (env->editor->mode == RUNTIME || env->editor->mode == PAUSED) {
-                    if (camera.isPrimary) {
-                        output = camera.output;
-                        cam = &camera;
-                        camTransform = &transform;
+                    if(cameraMode == EDITOR_CAMERA){
+                        if (id == editorCameraId) {
+                            output = camera.output;
+                            cam = &camera;
+                            camTransform = &transform;
+                        }
+                    }else{
+                        if (camera.isPrimary) {
+                            output = camera.output;
+                            cam = &camera;
+                            camTransform = &transform;
+                        }
                     }
                 }
                 else {
@@ -106,6 +108,7 @@ namespace tri {
                         camTransform = &transform;
                     }
                 }
+
                 if(camera.output) {
                     if (camera.output->getSize() != glm::vec2(viewportSize.x, viewportSize.y)) {
                         camera.output->resize(viewportSize.x, viewportSize.y);
@@ -138,12 +141,15 @@ namespace tri {
 
             //editor camera
             if(cam && camTransform) {
-                if(ImGui::IsWindowHovered()){
-                    editorCamera.update(*cam, *camTransform);
+                if(cameraMode != FIXED_PRIMARY_CAMERA) {
+                    if (ImGui::IsWindowHovered()) {
+                        editorCamera.update(*cam, *camTransform);
+                    }
                 }
             }
 
         }
+
         ImGui::End();
         ImGui::PopStyleVar(2);
     }
@@ -180,6 +186,24 @@ namespace tri {
                     }
 
                 }
+            }
+        }
+    }
+
+    void ViewportWindow::saveEditorCameraTransform() {
+        if(editorCameraId != -1){
+            if(env->scene->hasComponent<Transform>(editorCameraId)){
+                Transform &t = env->scene->getComponent<Transform>(editorCameraId);
+                editorCameraTransformBuffer = t;
+            }
+        }
+    }
+
+    void ViewportWindow::restoreEditorCameraTransform() {
+        if(editorCameraId != -1){
+            if(env->scene->hasComponent<Transform>(editorCameraId)){
+                Transform &t = env->scene->getComponent<Transform>(editorCameraId);
+                t = editorCameraTransformBuffer;
             }
         }
     }
