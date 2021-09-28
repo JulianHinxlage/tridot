@@ -26,6 +26,22 @@ namespace tri {
         pivots = CENTER;
     }
 
+    bool isSelectedInParentChain(EntityId id){
+        if(env->scene->hasComponent<Transform>(id)){
+            Transform &t = env->scene->getComponent<Transform>(id);
+            if(t.parent == -1){
+                return false;
+            }
+            if(env->editor->selectionContext.isSelected(t.parent)){
+                return true;
+            }else{
+                return isSelectedInParentChain(t.parent);
+            }
+        }else{
+            return false;
+        }
+    }
+
     bool Gizmos::updateGizmo(const Transform &cameraTransform, const Camera &camera, const glm::vec2 &viewportPosition, const glm::vec2 &viewportSize) {
         //input control
         snappingInvert = env->input->down(Input::KEY_LEFT_CONTROL) || env->input->down(Input::KEY_RIGHT_CONTROL);
@@ -77,16 +93,18 @@ namespace tri {
             for (auto &id : env->editor->selectionContext.getSelected()){
                 if(env->scene->hasComponent<Transform>(id)){
                     Transform &t = env->scene->getComponent<Transform>(id);
-                    avg.position += t.position / (float)count;
-                    avg.rotation += t.rotation / (float)count;
-                    avg.scale += t.scale / (float)count;
+                    Transform t2;
+                    t2.decompose(t.getMatrix());
+                    avg.position += t2.position / (float)count;
+                    avg.rotation += t2.rotation / (float)count;
+                    avg.scale += t2.scale / (float)count;
                 }
             }
 
             //matrices
-            glm::mat4 view = glm::inverse(cameraTransform.calculateMatrix());
-            glm::mat4 projection = camera.projection * cameraTransform.calculateMatrix();
-            glm::mat4 transform = avg.calculateMatrix();
+            glm::mat4 view = glm::inverse(cameraTransform.getMatrix());
+            glm::mat4 projection = camera.projection * cameraTransform.getMatrix();
+            glm::mat4 transform = avg.calculateLocalMatrix();
             glm::mat4 inverseTransform = glm::inverse(transform);
 
             //manipulate parameter
@@ -120,7 +138,7 @@ namespace tri {
 
             //detect changes
             if(ImGuizmo::IsUsing() && !lastFrameUsing){
-                preModifyMatrix = avg.calculateMatrix();
+                preModifyMatrix = avg.getMatrix();
                 preModifyValues.clear();
                 for (auto &id : env->editor->selectionContext.getSelected()){
                     if(env->scene->hasComponent<Transform>(id)){
@@ -135,22 +153,25 @@ namespace tri {
                 for (auto &id : env->editor->selectionContext.getSelected()) {
                     if (env->scene->hasComponent<Transform>(id)) {
                         Transform &t = env->scene->getComponent<Transform>(id);
-                        if(entityCount > 1 && operation == SCALE){
-                            Transform tmp = t;
-                            t.rotation = avg.rotation;
-                            t.decompose(transform * inverseTransform * t.calculateMatrix());
-                            t.rotation = tmp.rotation;
-                            if(pivots == OBJECTS){
-                                t.position = tmp.position;
+                        if(!isSelectedInParentChain(id)) {
+                            glm::mat4 parentMatrix = t.getMatrix() * glm::inverse(t.calculateLocalMatrix());
+                            if (entityCount > 1 && operation == SCALE) {
+                                Transform tmp = t;
+                                t.rotation = avg.rotation;
+                                t.decompose(glm::inverse(parentMatrix) * transform * inverseTransform * t.getMatrix());
+                                t.rotation = tmp.rotation;
+                                if (pivots == OBJECTS) {
+                                    t.position = tmp.position;
+                                }
+                            } else if (entityCount > 1 && operation == ROTATE) {
+                                Transform tmp = t;
+                                t.decompose(glm::inverse(parentMatrix) * transform * inverseTransform * t.getMatrix());
+                                if (pivots == OBJECTS) {
+                                    t.position = tmp.position;
+                                }
+                            } else {
+                                t.decompose(glm::inverse(parentMatrix) * transform * inverseTransform * t.getMatrix());
                             }
-                        }else if(entityCount > 1 && operation == ROTATE){
-                            Transform tmp = t;
-                            t.decompose(transform * inverseTransform * t.calculateMatrix());
-                            if(pivots == OBJECTS){
-                                t.position = tmp.position;
-                            }
-                        }else{
-                            t.decompose(transform * inverseTransform * t.calculateMatrix());
                         }
                     }
                 }

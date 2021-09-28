@@ -191,6 +191,8 @@ namespace tri {
         Signal<> shutdown;
         Signal<> postShutdown;
         Signal<Scene*> sceneLoad;
+        Signal<EntityId, Scene*> entityCreate;
+        Signal<EntityId, Scene*> entityRemove;
 
         SignalManager(){
             setSignal(&preStartup, "preStartup");

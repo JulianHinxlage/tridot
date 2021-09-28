@@ -84,20 +84,24 @@ namespace tri {
     }
 
     void UndoSystem::beginAction() {
-        inAction = true;
-        inActionWasAdded = false;
+        if(inActionCounter == 0){
+            inActionWasAdded = false;
+        }
+        inActionCounter++;
     }
 
     void UndoSystem::endAction() {
-        inAction = false;
-        inActionWasAdded = false;
+        std::max(0, inActionCounter--);
+        if(inActionCounter == 0){
+            inActionWasAdded = false;
+        }
     }
 
     void UndoSystem::entityRemoved(EntityId id) {
         Ref<Action> action = Ref<Action>::make();
         action->id = id;
         action->op = Action::ENTITY_REMOVED;
-        if(inAction){
+        if(inActionCounter > 0){
             action->isActionSequence = inActionWasAdded;
             inActionWasAdded = true;
         }
@@ -117,7 +121,7 @@ namespace tri {
         Ref<Action> action = Ref<Action>::make();
         action->id = id;
         action->op = Action::ENTITY_ADDED;
-        if(inAction){
+        if(inActionCounter > 0){
             action->isActionSequence = inActionWasAdded;
             inActionWasAdded = true;
         }
@@ -137,7 +141,7 @@ namespace tri {
         action->id = id;
         action->typeId = typeId;
         action->op = Action::COMP_CHANGED;
-        if(inAction){
+        if(inActionCounter > 0){
             action->isActionSequence = inActionWasAdded;
             inActionWasAdded = true;
         }
@@ -158,7 +162,7 @@ namespace tri {
         action->id = id;
         action->typeId = typeId;
         action->op = Action::COMP_REMOVED;
-        if(inAction){
+        if(inActionCounter > 0){
             action->isActionSequence = inActionWasAdded;
             inActionWasAdded = true;
         }
@@ -179,7 +183,7 @@ namespace tri {
         action->id = id;
         action->typeId = typeId;
         action->op = Action::COMP_ADDED;
-        if(inAction){
+        if(inActionCounter > 0){
             action->isActionSequence = inActionWasAdded;
             inActionWasAdded = true;
         }
@@ -198,7 +202,7 @@ namespace tri {
         Ref<Action> action = Ref<Action>::make();
         action->typeId = typeId;
         action->op = Action::VALUE_CHANGED;
-        if(inAction){
+        if(inActionCounter > 0){
             action->isActionSequence = inActionWasAdded;
             inActionWasAdded = true;
         }

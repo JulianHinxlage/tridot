@@ -19,6 +19,8 @@ namespace tri {
         bool blockStateChange;
         bool control;
         bool shift;
+        std::vector<EntityId> entityOrder;
+        std::vector<EntityId> lastFrameEntityOrder;
 
         void startup() {
             name = "Entities";
@@ -49,33 +51,76 @@ namespace tri {
             ImGui::BeginChild("");
 
             hovered = -1;
+            entityOrder.clear();
+
             env->scene->view<>().each([&](EntityId id){
-                ImGui::PushID(id);
-                std::string label = "";
-                if(env->scene->hasComponent<EntityInfo>(id)){
-                    label = env->scene->getComponent<EntityInfo>(id).name;
-                }
-                if(label.empty()){
-                    label = "<entity " + std::to_string(id) + ">";
-                }
-                bool selected = env->editor->selectionContext.isSelected(id);
-                if(ImGui::Selectable(label.c_str(), &selected)){
-                    if(!blockStateChange){
-                        clicked(id);
+                if(env->scene->hasComponent<Transform>(id)){
+                    Transform &t = env->scene->getComponent<Transform>(id);
+                    if(t.parent == -1){
+                        if(updateEntity(id)){
+                            updateEntityChildren(id);
+                            ImGui::TreePop();
+                        }
+                    }
+                }else{
+                    if(updateEntity(id)){
+                        updateEntityChildren(id);
+                        ImGui::TreePop();
                     }
                 }
-                if(ImGui::IsMouseHoveringRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax())){
-                    hovered = id;
-                }
-                updateEntityMenu(id);
-                ImGui::PopID();
             });
 
             updateEntityDragging();
             updateShortcuts();
             updateMenu();
 
+            lastFrameEntityOrder = entityOrder;
+
             ImGui::EndChild();
+        }
+
+        void updateEntityChildren(EntityId id){
+            for(auto child : env->systems->getSystem<TransformSystem>()->getChildren(id)){
+                if(updateEntity(child)){
+                    updateEntityChildren(child);
+                    ImGui::TreePop();
+                }
+            }
+        }
+
+        bool updateEntity(EntityId id){
+            entityOrder.push_back(id);
+            ImGui::PushID(id);
+            std::string label = "";
+            if(env->scene->hasComponent<EntityInfo>(id)){
+                label = env->scene->getComponent<EntityInfo>(id).name;
+            }
+            if(label.empty()){
+                label = "<entity " + std::to_string(id) + ">";
+            }
+
+            bool selected = env->editor->selectionContext.isSelected(id);
+            bool hasChildren = env->systems->getSystem<TransformSystem>()->getChildren(id).size() > 0;
+
+            ImGuiTreeNodeFlags flags = 0;
+            if(!hasChildren){
+                flags |= ImGuiTreeNodeFlags_Leaf;
+            }
+            bool open = ImGui::TreeNodeEx("", flags);
+            ImGui::SameLine();
+            if(ImGui::Selectable(label.c_str(), selected)){
+                if(!blockStateChange){
+                    clicked(id);
+                }
+            }
+
+            if(ImGui::IsMouseHoveringRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax())){
+                hovered = id;
+            }
+
+            updateEntityMenu(id);
+            ImGui::PopID();
+            return open;
         }
 
         void updateHeader(){
@@ -90,16 +135,7 @@ namespace tri {
         void updateShortcuts(){
             if(control){
                 if(env->input->pressed("D")){
-                    std::vector<EntityId> ids;
-                    env->editor->undo.beginAction();
-                    for(auto &id : env->editor->selectionContext.getSelected()){
-                        ids.push_back(env->editor->entityOperations.duplicateEntity(id));
-                    }
-                    env->editor->undo.endAction();
-                    env->editor->selectionContext.unselectAll();
-                    for(auto &id : ids){
-                        env->editor->selectionContext.select(id);
-                    }
+                    env->editor->entityOperations.duplicateSelection();
                 }
                 if(env->input->pressed("C")){
                     if(env->editor->selectionContext.getSelected().size() == 1) {
@@ -119,12 +155,7 @@ namespace tri {
                 }
             }
             if(env->input->pressed(Input::KEY_DELETE)){
-                env->editor->undo.beginAction();
-                for(auto &id : env->editor->selectionContext.getSelected()){
-                    env->editor->entityOperations.removeEntity(id);
-                }
-                env->editor->undo.endAction();
-                env->editor->selectionContext.unselectAll();
+                env->editor->entityOperations.removeSelection();
             }
         }
 
@@ -132,33 +163,10 @@ namespace tri {
             if(ImGui::BeginPopupContextItem()){
                 if(ImGui::MenuItem("Delete", "Delete")){
                     if(env->editor->selectionContext.isSelected(id)){
-                        env->editor->undo.beginAction();
-                        for(auto &id2 : env->editor->selectionContext.getSelected()){
-                            env->editor->entityOperations.removeEntity(id2);
-                            env->editor->selectionContext.unselect(id2);
-                        }
-                        env->editor->undo.endAction();
+                        env->editor->entityOperations.removeSelection();
                     }else{
                         env->editor->entityOperations.removeEntity(id);
                         env->editor->selectionContext.unselect(id);
-                    }
-                }
-                if(ImGui::MenuItem("Duplicate", "Ctrl+D")){
-                    if(env->editor->selectionContext.isSelected(id)){
-                        std::vector<EntityId> ids;
-                        env->editor->undo.beginAction();
-                        for (auto &id2 : env->editor->selectionContext.getSelected()) {
-                            ids.push_back(env->editor->entityOperations.duplicateEntity(id2));
-                        }
-                        env->editor->undo.endAction();
-                        env->editor->selectionContext.unselectAll();
-                        for (auto &id2 : ids) {
-                            env->editor->selectionContext.select(id2);
-                        }
-                    }else{
-                        EntityId copy = env->editor->entityOperations.duplicateEntity(id);
-                        env->editor->selectionContext.unselectAll();
-                        env->editor->selectionContext.select(copy);
                     }
                 }
                 if(ImGui::MenuItem("Copy", "Ctrl+C")){
@@ -169,6 +177,43 @@ namespace tri {
                     env->editor->selectionContext.unselectAll();
                     env->editor->selectionContext.select(copy);
                 }
+                if(ImGui::MenuItem("Duplicate", "Ctrl+D")){
+                    if(env->editor->selectionContext.isSelected(id)){
+                        env->editor->entityOperations.duplicateSelection();
+                    }else{
+                        EntityId copy = env->editor->entityOperations.duplicateEntity(id);
+                        env->editor->selectionContext.unselectAll();
+                        env->editor->selectionContext.select(copy);
+                    }
+                }
+                if(ImGui::MenuItem("Parent", nullptr, false, env->editor->selectionContext.getSelected().size() > 0)){
+                    for (auto &id2 : env->editor->selectionContext.getSelected()) {
+                        if(id != id2){
+                            if(env->scene->hasComponent<Transform>(id2)){
+                                Transform &t2 = env->scene->getComponent<Transform>(id2);
+                                Transform preEdit = t2;
+                                t2.parent = id;
+                                if(env->scene->hasComponent<Transform>(id)){
+                                    Transform &t = env->scene->getComponent<Transform>(id);
+                                    t2.decompose(glm::inverse(t.getMatrix()) * t2.getMatrix());
+                                }
+                                env->editor->undo.componentChanged(env->reflection->getTypeId<Transform>(), id2, &preEdit);
+                            }
+                        }
+                    }
+                }
+                if(env->scene->hasComponent<Transform>(id)){
+                    Transform &t = env->scene->getComponent<Transform>(id);
+                    if(t.parent != -1){
+                        if(ImGui::MenuItem("Unparent")){
+                            Transform preEdit = t;
+                            t.parent = -1;
+                            t.decompose(t.getMatrix());
+                            env->editor->undo.componentChanged(env->reflection->getTypeId<Transform>(), id, &preEdit);
+                        }
+                    }
+                }
+
                 ImGui::EndPopup();
             }
         }
@@ -187,28 +232,70 @@ namespace tri {
         void updateEntityDragging(){
             if(active != -1 && hovered != -1){
                 if(hovered != active){
-                    auto *pool = env->scene->getEntityPool();
-                    while(true){
-                        int index = pool->getIndexById(active);
-                        int targetIndex = pool->getIndexById(hovered);
-                        if(index != -1 && targetIndex != -1) {
-                            if (targetIndex > index) {
-                                pool->swap(index, index + 1);
-                                if (targetIndex == index + 1) {
-                                    break;
+
+                    if(env->systems->getSystem<TransformSystem>()->haveSameParent(active, hovered)) {
+                        auto *pool = env->scene->getEntityPool();
+                        while (true) {
+
+                            int index = -1;
+                            int targetIndex = -1;
+                            for (int i = 0; i < entityOrder.size(); i++) {
+                                EntityId id = entityOrder[i];
+                                if (active == id) {
+                                    index = i;
                                 }
-                            } else if (targetIndex < index) {
-                                pool->swap(index, index - 1);
-                                if (targetIndex == index - 1) {
+                                if (hovered == id) {
+                                    targetIndex = i;
+                                }
+                            }
+                            if (index == targetIndex) {
+                                break;
+                            }
+
+                            if (index != -1 && targetIndex != -1) {
+                                if (targetIndex > index) {
+                                    int swapIndex = pool->getIndexById(entityOrder[index]);
+                                    int swapTargetIndex = pool->getIndexById(entityOrder[index + 1]);
+                                    pool->swap(swapIndex, swapTargetIndex);
+
+                                    auto *tpool = env->scene->getComponentPool<Transform>();
+                                    if(tpool->has(entityOrder[index]) && tpool->has(entityOrder[index+1])) {
+                                        swapIndex = tpool->getIndexById(entityOrder[index]);
+                                        swapTargetIndex = tpool->getIndexById(entityOrder[index + 1]);
+                                        tpool->swap(swapIndex, swapTargetIndex);
+                                    }
+
+                                    std::swap(entityOrder[index], entityOrder[index + 1]);
+                                    if (targetIndex == index + 1) {
+                                        break;
+                                    }
+                                } else if (targetIndex < index) {
+                                    int swapIndex = pool->getIndexById(entityOrder[index]);
+                                    int swapTargetIndex = pool->getIndexById(entityOrder[index - 1]);
+                                    pool->swap(swapIndex, swapTargetIndex);
+
+                                    auto *tpool = env->scene->getComponentPool<Transform>();
+                                    if(tpool->has(entityOrder[index]) && tpool->has(entityOrder[index - 1])){
+                                        swapIndex = tpool->getIndexById(entityOrder[index]);
+                                        swapTargetIndex = tpool->getIndexById(entityOrder[index - 1]);
+                                    }
+                                    tpool->swap(swapIndex, swapTargetIndex);
+
+                                    std::swap(entityOrder[index], entityOrder[index - 1]);
+                                    if (targetIndex == index - 1) {
+                                        break;
+                                    }
+                                } else {
                                     break;
                                 }
                             } else {
                                 break;
                             }
-                        }else{
-                            break;
+
                         }
+
                     }
+
                     blockStateChange = true;
                 }
             }
@@ -250,27 +337,28 @@ namespace tri {
 
         void selectRange(EntityId id1, EntityId id2, bool select){
             bool inRange = false;
-            env->scene->view<>().each([&](EntityId id) {
+            for (int i = 0; i < lastFrameEntityOrder.size(); i++) {
+                EntityId id = lastFrameEntityOrder[i];
                 bool change = false;
                 if (id == id1 || id == id2) {
-                    if (!inRange) {
+                    if(!inRange){
                         inRange = true;
                         change = true;
                     }
                 }
-                if (inRange) {
-                    if (select) {
+                if(inRange){
+                    if(select){
                         env->editor->selectionContext.select(id);
-                    } else {
+                    }else{
                         env->editor->selectionContext.unselect(id);
                     }
                 }
                 if (id == id1 || id == id2) {
-                    if (inRange && !change || (id == id1 && id == id2)) {
+                    if((inRange && !change) || (id == id1 && id == id2)){
                         inRange = false;
                     }
                 }
-            });
+            }
         }
 
     };

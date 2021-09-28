@@ -27,21 +27,22 @@ namespace tri {
             };
 
             editModeConfig = {
-                    "SignalManager",
-                    "Console",
-                    "Reflection",
-                    "ModuleManager",
-                    "Profiler",
-                    "ThreadPool",
-                    "AssetManager",
-                    "Camera",
-                    "Input",
-                    "MeshComponent",
-                    "Serializer",
-                    "Time",
-                    "Scene",
-                    "Renderer",
-                    "Imgui",
+                "TransformSystem",
+                "SignalManager",
+                "Console",
+                "Reflection",
+                "ModuleManager",
+                "Profiler",
+                "ThreadPool",
+                "AssetManager",
+                "Camera",
+                "Input",
+                "MeshComponent",
+                "Serializer",
+                "Time",
+                "Scene",
+                "Renderer",
+                "Imgui",
             };
 
             env->signals->preUpdate.addCallback("RuntimeConfig", [&](){

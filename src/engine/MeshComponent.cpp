@@ -46,7 +46,7 @@ namespace tri {
                     if(light.type == DIRECTIONAL_LIGHT){
                         Transform t;
                         t.rotation = transform.rotation;
-                        env->renderer->submit(t.calculateMatrix() * glm::vec4(0, 0, -1, 0), light);
+                        env->renderer->submit(t.calculateLocalMatrix() * glm::vec4(0, 0, -1, 0), light);
                     }else{
                         env->renderer->submit(transform.position, light);
                     }
@@ -57,7 +57,7 @@ namespace tri {
                     TRI_PROFILE("render/submit");
                     //meshes
                     env->scene->view<MeshComponent, Transform>().each([](EntityId id, MeshComponent& mesh, Transform& transform) {
-                        env->renderer->submit(transform.calculateMatrix(), transform.position, mesh.mesh.get(), mesh.material.get(), mesh.color, id);
+                        env->renderer->submit(transform.getMatrix(), transform.position, mesh.mesh.get(), mesh.material.get(), mesh.color, id);
                     });
                 }
                 env->renderer->drawScene(camera.output, camera.pipeline);

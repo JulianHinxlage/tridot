@@ -56,7 +56,7 @@ namespace tri {
         };
         std::vector<Ref<Action>> undoActions;
         std::vector<Ref<Action>> redoActions;
-        bool inAction = false;
+        int inActionCounter = 0;
         bool inActionWasAdded = false;
         bool addToRedo = false;
         bool clearRedoOnAction = true;

@@ -21,8 +21,18 @@ namespace tri {
         if(scene == nullptr){
             scene = env->scene;
         }
-        env->editor->undo.entityRemoved(id);
-        scene->removeEntity(id);
+        if(scene->hasEntity(id)) {
+            env->editor->undo.beginAction();
+
+            //remove children
+            for (auto &child : env->systems->getSystem<TransformSystem>()->getChildren(id)) {
+                removeEntity(child, scene);
+            }
+
+            env->editor->undo.entityRemoved(id);
+            scene->removeEntity(id);
+            env->editor->undo.endAction();
+        }
     }
 
     void *EntityOperations::addComponent(int typeId, EntityId id, Scene *scene) {
@@ -46,6 +56,7 @@ namespace tri {
         if(scene == nullptr){
             scene = env->scene;
         }
+        env->editor->undo.beginAction();
         EntityId copy = scene->addEntity();
         for(auto &desc : env->reflection->getDescriptors()){
             if(scene->hasComponent(desc->typeId, id)){
@@ -53,6 +64,17 @@ namespace tri {
             }
         }
         env->editor->undo.entityAdded(copy);
+
+        //duplicate children
+        for(auto &child : env->systems->getSystem<TransformSystem>()->getChildren(id)){
+            EntityId childCopy = duplicateEntity(child, scene);
+            scene->update();
+            if(scene->hasComponent<Transform>(childCopy)){
+                scene->getComponent<Transform>(childCopy).parent = copy;
+            }
+        }
+
+        env->editor->undo.endAction();
         return copy;
     }
 
@@ -99,6 +121,47 @@ namespace tri {
 
     bool EntityOperations::wasComponentCopied() {
         return componentBuffer.isSet();
+    }
+
+    void EntityOperations::duplicateSelection(Scene *scene) {
+        if(scene == nullptr){
+            scene = env->scene;
+        }
+        std::vector<EntityId> ids;
+        env->editor->undo.beginAction();
+        auto *transformSystem = env->systems->getSystem<TransformSystem>();
+        for(auto &id : env->editor->selectionContext.getSelected()){
+
+            bool isChildOfOtherSelected = false;
+            for(auto &id2 : env->editor->selectionContext.getSelected()) {
+                if(id != id2){
+                    if(transformSystem->isParentOf(id, id2)){
+                        isChildOfOtherSelected = true;
+                        break;
+                    }
+                }
+            }
+            if(!isChildOfOtherSelected){
+                ids.push_back(duplicateEntity(id, scene));
+            }
+        }
+        env->editor->undo.endAction();
+        env->editor->selectionContext.unselectAll();
+        for(auto &id : ids){
+            env->editor->selectionContext.select(id);
+        }
+    }
+
+    void EntityOperations::removeSelection(Scene *scene) {
+        if(scene == nullptr){
+            scene = env->scene;
+        }
+        env->editor->undo.beginAction();
+        for(auto &id : env->editor->selectionContext.getSelected()){
+            removeEntity(id, scene);
+        }
+        env->editor->undo.endAction();
+        env->editor->selectionContext.unselectAll();
     }
 
 }

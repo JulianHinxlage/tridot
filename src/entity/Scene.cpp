@@ -59,6 +59,7 @@ namespace tri {
         }
         entityPool.add(hint);
         getSignature(hint) = 0;
+        env->signals->entityCreate.invoke(hint, this);
         return hint;
     }
 
@@ -70,6 +71,7 @@ namespace tri {
                 }
             }
             freeList.insert(id);
+            env->signals->entityRemove.invoke(id, this);
             return true;
         }
         else {

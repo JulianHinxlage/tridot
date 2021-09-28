@@ -50,7 +50,7 @@ namespace tri {
 
     TRI_UPDATE_CALLBACK("Camera") {
         env->scene->view<Camera, Transform>().each([](Camera& camera, Transform &transform) {
-            glm::mat4 t = transform.calculateMatrix();
+            glm::mat4 t = transform.getMatrix();
             camera.forward = t * glm::vec4(0, 0, -1, 0);
             camera.right = t * glm::vec4(1, 0, 0, 0);
             camera.up = t * glm::vec4(0, 1, 0, 0);

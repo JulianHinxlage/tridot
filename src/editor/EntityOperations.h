@@ -23,6 +23,10 @@ namespace tri {
 
         bool wasEntityCopied();
         bool wasComponentCopied();
+
+        void duplicateSelection(Scene *scene = nullptr);
+        void removeSelection(Scene *scene = nullptr);
+
     private:
         ComponentBuffer componentBuffer;
         Prefab entityBuffer;
