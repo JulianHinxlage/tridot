@@ -68,12 +68,14 @@ namespace tri {
             //save button
             if(ImGui::Button("Save")){
                 if((material.get() != nullptr) && hasFile){
+                    env->assets->setOptions(name, AssetManager::NO_RELOAD_ONCE);
                     material->save(env->assets->searchFile(name));
                 }
             }
             ImGui::SameLine();
             if(ImGui::Button("Save All")){
                 for(auto &file : files){
+                    env->assets->setOptions(file, AssetManager::NO_RELOAD_ONCE);
                     env->assets->get<Material>(file)->save(env->assets->searchFile(file));
                 }
             }

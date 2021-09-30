@@ -123,6 +123,13 @@ namespace tri {
         return UNLOADED;
     }
 
+    void AssetManager::setOptions(const std::string &file, AssetManager::Options options) {
+        auto x = assets.find(minimalFilePath(file));
+        if(x != assets.end()){
+            x->second.options = (Options)((int)x->second.options | (int)options);
+        }
+    }
+
     void AssetManager::unload(const std::string &file) {
         std::string minimalPath = minimalFilePath(file);
         for (auto &iter : assets) {
@@ -207,6 +214,14 @@ namespace tri {
                                     uint64_t currentTimeStamp = getTimeStamp(record.path);
                                     if (currentTimeStamp != 0) {
                                         if (currentTimeStamp != record.timeStamp) {
+                                            if(record.options & NO_RELOAD){
+                                                continue;
+                                            }
+                                            if(record.options & NO_RELOAD_ONCE){
+                                                record.options = (Options)((int)record.options & ~(int)NO_RELOAD_ONCE);
+                                                record.timeStamp = currentTimeStamp;
+                                                continue;
+                                            }
                                             record.status = UNLOADED;
                                             if (!asynchronousEnabled) {
                                                 load(record);

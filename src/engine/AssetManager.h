@@ -28,6 +28,11 @@ namespace tri {
             SHOULD_NOT_LOAD = 256,
         };
 
+        enum Options {
+            NO_RELOAD = 1 << 0,
+            NO_RELOAD_ONCE = 1 << 1,
+        };
+
         AssetManager();
         void addSearchDirectory(const std::string &directory);
         void removeSearchDirectory(const std::string &directory);
@@ -57,6 +62,7 @@ namespace tri {
 
         std::string getFile(Ref<Asset> asset);
         Status getStatus(const std::string &file);
+        void setOptions(const std::string &file, Options options);
         void unload(const std::string &file);
         std::vector<std::string> getAssetList(int typeId);
 
@@ -75,6 +81,7 @@ namespace tri {
             std::string file;
             std::string path;
             Status status;
+            Options options;
             int typeId;
             uint64_t timeStamp;
             uint64_t previousTimeStamp;

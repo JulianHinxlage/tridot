@@ -55,7 +55,12 @@ namespace tri {
     }
 
     bool Material::save(const std::string &file) {
-        return env->serializer->serializeType(file, env->reflection->getTypeId<Material>(), this);
+        if(env->serializer->serializeType(file, env->reflection->getTypeId<Material>(), this)){
+            env->console->debug("saved material ", file);
+            return true;
+        }else{
+            return false;
+        }
     }
 
     TRI_REGISTER_TYPE(Material::Mapping);

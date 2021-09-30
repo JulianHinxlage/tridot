@@ -179,10 +179,12 @@ namespace tri {
                     });
                 }
                 if (ImGui::MenuItem("Save", "Ctrl+S")) {
+                    env->assets->unload(env->scene->file);
                     env->scene->save(env->scene->file);
                 }
                 if (ImGui::MenuItem("Save As", "Ctrl+Shift+S")) {
                     env->editor->gui.file.openBrowseWindow("Save", "Save Scene As", env->reflection->getTypeId<Scene>(), [](const std::string &file){
+                        env->assets->unload(file);
                         env->scene->save(file);
                     });
                 }
@@ -224,9 +226,11 @@ namespace tri {
         if (control && env->input->pressed("S")) {
             if(shift){
                 env->editor->gui.file.openBrowseWindow("Save", "Save Scene", env->reflection->getTypeId<Scene>(), [](const std::string &file){
+                    env->assets->unload(file);
                     env->scene->save(file);
                 });
             }else{
+                env->assets->unload(env->scene->file);
                 env->scene->save(env->scene->file);
             }
         }

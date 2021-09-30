@@ -278,8 +278,8 @@ namespace tri {
                                     if(tpool->has(entityOrder[index]) && tpool->has(entityOrder[index - 1])){
                                         swapIndex = tpool->getIndexById(entityOrder[index]);
                                         swapTargetIndex = tpool->getIndexById(entityOrder[index - 1]);
+                                        tpool->swap(swapIndex, swapTargetIndex);
                                     }
-                                    tpool->swap(swapIndex, swapTargetIndex);
 
                                     std::swap(entityOrder[index], entityOrder[index - 1]);
                                     if (targetIndex == index - 1) {
