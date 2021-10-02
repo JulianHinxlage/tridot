@@ -22,6 +22,7 @@ namespace tri {
     class Serializer;
     class AssetManager;
     class Editor;
+    class HierarchySystem;
 
     class TRI_API Environment {
     public:
@@ -42,6 +43,7 @@ namespace tri {
         Serializer *serializer;
         AssetManager *assets;
         Editor *editor;
+        HierarchySystem *hierarchies;
 
         static Environment* startup();
         static void shutdown();

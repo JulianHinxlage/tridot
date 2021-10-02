@@ -29,7 +29,7 @@ namespace tri {
         void decompose(const glm::mat4 &matrix);
     };
 
-    class TransformSystem : public System {
+    class HierarchySystem : public System {
     public:
         const std::vector<EntityId> &getChildren(EntityId id);
         bool isParentOf(EntityId id, EntityId parent);

@@ -75,35 +75,41 @@ namespace tri {
         }
     }
 
+    void Serializer::serializeEntity(YAML::Emitter &out, Scene &scene, EntityId id) {
+        out << YAML::BeginMap;
+        out << YAML::Key << "id" << YAML::Value << id;
+        for(auto &desc : env->reflection->getDescriptors()){
+            if(scene.hasComponent(desc->typeId, id)){
+                out << YAML::Key << desc->name;
+                serializeType(out, desc->typeId, scene.getComponent(desc->typeId, id));
+            }
+        }
+        out << YAML::EndMap;
+    }
+
+    void Serializer::deserializeEntity(YAML::Node &in, Scene &scene) {
+        EntityId id = in["id"].as<EntityId>(-1);
+        id = scene.addEntityHinted(id);
+        for(auto iter : in){
+            auto *desc = env->reflection->getType(iter.first.Scalar());
+            if(desc){
+                void *data = scene.addComponent(desc->typeId, id);
+                deserializeType(iter.second, desc->typeId, data);
+            }
+        }
+    }
+
     void Serializer::serializeScene(YAML::Emitter &out, Scene &scene) {
         out << YAML::BeginSeq;
         scene.view<>().each([&](EntityId id){
-            out << YAML::BeginMap;
-            out << YAML::Key << "id" << YAML::Value << id;
-            for(auto &desc : env->reflection->getDescriptors()){
-                if(scene.hasComponent(desc->typeId, id)){
-                    out << YAML::Key << desc->name;
-                    serializeType(out, desc->typeId, scene.getComponent(desc->typeId, id));
-                }
-            }
-            out << YAML::EndMap;
+            serializeEntity(out, scene, id);
         });
         out << YAML::EndSeq;
     }
 
     void Serializer::deserializeScene(YAML::Node &in, Scene &scene) {
         for(auto entity : in){
-            EntityId id = entity["id"].as<EntityId>(-1);
-            id = scene.addEntityHinted(id);
-            for(auto &desc : env->reflection->getDescriptors()){
-                if(desc) {
-                    YAML::Node component = entity[desc->name];
-                    if (component) {
-                        void *data = scene.addComponent(desc->typeId, id);
-                        deserializeType(component, desc->typeId, data);
-                    }
-                }
-            }
+            deserializeEntity(entity, scene);
         }
     }
 
@@ -229,7 +235,46 @@ namespace tri {
         defineAssetFunctions<Texture>(*this);
         defineAssetFunctions<Material>(*this);
         defineAssetFunctions<Shader>(*this);
+        defineAssetFunctions<Prefab>(*this);
 
+    }
+
+    void Serializer::serializePrefab(YAML::Emitter &out, Prefab &prefab) {
+        out << YAML::BeginMap;
+        for (ComponentBuffer& comp : prefab.getComponents()) {
+            out << YAML::Key << env->reflection->getType(comp.getTypeId())->name;
+            env->serializer->serializeType(out, comp.getTypeId(), comp.get());
+        }
+
+        if(prefab.getChildren().size() > 0){
+            out << YAML::Key << "Children";
+            out << YAML::BeginSeq;
+            for(auto &child : prefab.getChildren()){
+                serializePrefab(out, *child);
+            }
+            out << YAML::EndSeq;
+        }
+
+        out << YAML::EndMap;
+    }
+
+    void Serializer::deserializePrefab(YAML::Node &in, Prefab &prefab) {
+        for(auto &desc : env->reflection->getDescriptors()){
+            if(desc) {
+                YAML::Node component = in[desc->name];
+                if (component) {
+                    void *comp = prefab.addComponent(desc->typeId);
+                    env->serializer->deserializeType(component, desc->typeId, comp);
+                }
+            }
+        }
+
+        YAML::Node children = in["Children"];
+        if(children){
+            for(auto child : children){
+                deserializePrefab(child, prefab.addChild());
+            }
+        }
     }
 
 #undef S_FLOW

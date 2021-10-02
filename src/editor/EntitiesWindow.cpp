@@ -80,7 +80,7 @@ namespace tri {
         }
 
         void updateEntityChildren(EntityId id){
-            for(auto child : env->systems->getSystem<TransformSystem>()->getChildren(id)){
+            for(auto child : env->hierarchies->getChildren(id)){
                 if(updateEntity(child)){
                     updateEntityChildren(child);
                     ImGui::TreePop();
@@ -100,7 +100,7 @@ namespace tri {
             }
 
             bool selected = env->editor->selectionContext.isSelected(id);
-            bool hasChildren = env->systems->getSystem<TransformSystem>()->getChildren(id).size() > 0;
+            bool hasChildren = env->hierarchies->getChildren(id).size() > 0;
 
             ImGuiTreeNodeFlags flags = 0;
             if(!hasChildren){
@@ -213,6 +213,25 @@ namespace tri {
                         }
                     }
                 }
+                if(ImGui::MenuItem("Save")){
+                    env->editor->gui.file.openBrowseWindow("Save", "Save Entity",
+                        env->reflection->getTypeId<Prefab>(), [id](const std::string &file){
+                        Prefab prefab;
+                        prefab.copyEntity(id, env->scene);
+                        prefab.save(file);
+                    });
+                }
+                if(env->hierarchies->getChildren(id).size() > 0) {
+                    if (ImGui::MenuItem("Recenter")) {
+                        reTransform(id, true, false, false);
+                    }
+                    if (ImGui::MenuItem("Rescale")) {
+                        reTransform(id, false, true, false);
+                    }
+                    if (ImGui::MenuItem("Rerotate")) {
+                        reTransform(id, false, false, true);
+                    }
+                }
 
                 ImGui::EndPopup();
             }
@@ -225,6 +244,17 @@ namespace tri {
                     env->editor->selectionContext.unselectAll();
                     env->editor->selectionContext.select(copy);
                 }
+                if (ImGui::MenuItem("Load")) {
+                    env->editor->gui.file.openBrowseWindow("Load", "Load Entity",
+                        env->reflection->getTypeId<Prefab>(), [](const std::string &file){
+                        Prefab prefab;
+                        prefab.load(file);
+                        EntityId id = prefab.createEntity(env->scene);
+                        env->editor->undo.entityAdded(id);
+                        env->editor->selectionContext.unselectAll();
+                        env->editor->selectionContext.select(id);
+                    });
+                }
                 ImGui::EndPopup();
             }
         }
@@ -233,7 +263,7 @@ namespace tri {
             if(active != -1 && hovered != -1){
                 if(hovered != active){
 
-                    if(env->systems->getSystem<TransformSystem>()->haveSameParent(active, hovered)) {
+                    if(env->hierarchies->haveSameParent(active, hovered)) {
                         auto *pool = env->scene->getEntityPool();
                         while (true) {
 
@@ -357,6 +387,66 @@ namespace tri {
                     if((inRange && !change) || (id == id1 && id == id2)){
                         inRange = false;
                     }
+                }
+            }
+        }
+
+        void reTransform(EntityId id, bool position, bool scale, bool rotation){
+            Transform avg;
+            int count = 0;
+            for (auto child : env->hierarchies->getChildren(id)) {
+                if (env->scene->hasComponent<Transform>(child)) {
+                    Transform &t = env->scene->getComponent<Transform>(child);
+                    Transform t2;
+                    t2.decompose(t.getMatrix());
+                    avg.position += t2.position;
+                    avg.scale += t2.scale;
+                    avg.rotation += t2.rotation;
+                    count++;
+                }
+            }
+            avg.position /= (float) count;
+            avg.scale /= (float) count;
+            avg.rotation /= (float) count;
+
+
+            if (count > 0) {
+                if (env->scene->hasComponent<Transform>(id)) {
+
+                    env->editor->undo.beginAction();
+
+                    Transform &t = env->scene->getComponent<Transform>(id);
+                    if(!position){
+                        avg.position = t.position;
+                    }
+                    if(!scale){
+                        avg.scale = t.scale;
+                    }else{
+                        avg.scale = {1, 1, 1};
+                    }
+                    if(!rotation){
+                        avg.rotation = t.rotation;
+                    }else{
+                        avg.rotation = {0, 0, 0};
+                    }
+                    glm::mat4 matrix = t.getMatrix() * glm::inverse(avg.calculateLocalMatrix());
+
+                    Transform preEdit = t;
+                    glm::mat4 parentMatrix = t.getMatrix() * glm::inverse(t.calculateLocalMatrix());
+                    t.decompose(glm::inverse(parentMatrix) * glm::inverse(matrix) * t.getMatrix());
+                    env->editor->undo.componentChanged(env->reflection->getTypeId<Transform>(), id, &preEdit);
+
+                    for (auto child : env->hierarchies->getChildren(id)) {
+                        if (env->scene->hasComponent<Transform>(child)) {
+                            Transform &t = env->scene->getComponent<Transform>(child);
+                            Transform preEdit = t;
+                            glm::mat4 parentMatrix = t.getMatrix() * glm::inverse(t.calculateLocalMatrix());
+                            t.decompose(glm::inverse(parentMatrix) * matrix * t.getMatrix());
+                            env->editor->undo.componentChanged(env->reflection->getTypeId<Transform>(), child, &preEdit);
+                        }
+                    }
+
+                    env->editor->undo.endAction();
                 }
             }
         }

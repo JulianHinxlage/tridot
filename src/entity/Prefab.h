@@ -9,13 +9,10 @@
 
 namespace tri {
 
-    class Prefab {
+    class Prefab : public Asset {
     public:
-        Prefab() {}
-
-        Prefab(const Prefab& prefab) {
-            operator=(prefab);
-        }
+        Prefab();
+        Prefab(const Prefab& prefab);
 
         template<typename... Components>
         Prefab(const Components&... comps) {
@@ -49,83 +46,30 @@ namespace tri {
             return removeComponent(env->reflection->getTypeId<Component>());
         }
 
-        void *addComponent(int typeId) {
-            if (void* data = getComponent(typeId)) {
-                return data;
-            }
-            else {
-                comps.push_back({typeId});
-                ComponentBuffer& comp = comps.back();
-                return comp.get();
-            }
-        }
-
-        void *getComponent(int typeId) {
-            for (int i = 0; i < comps.size(); i++) {
-                if (comps[i].getTypeId() == typeId) {
-                    return comps[i].get();
-                }
-            }
-            return nullptr;
-        }
-
-        bool hasComponent(int typeId) {
-            return getComponent(typeId) != nullptr;
-        }
-
-        bool removeComponent(int typeId) {
-            for (int i = 0; i < comps.size(); i++) {
-                if (comps[i].getTypeId() == typeId) {
-                    comps.erase(comps.begin() + i);
-                    return true;
-                }
-            }
-            return false;
-        }
+        void *addComponent(int typeId);
+        void *getComponent(int typeId);
+        bool hasComponent(int typeId);
+        bool removeComponent(int typeId);
 
         template<typename... Components>
         Prefab& addChild(const Components&... comps) {
-            childs.push_back(std::make_shared<Prefab>(comps...));
-            return *childs.back().get();
+            children.push_back(std::make_shared<Prefab>(comps...));
+            return *children.back().get();
         }
 
-        EntityId createEntity(Scene* scene) {
-            EntityId id = scene->addEntity();
-            for (int i = 0; i < comps.size(); i++) {
-                ComponentBuffer& comp = comps[i];
-                void *ptr = scene->addComponent(comp.getTypeId(), id);
-                comp.get(ptr);
-            }
-            //todo: childs
-            return id;
-        }
+        EntityId createEntity(Scene* scene);
+        void copyEntity(EntityId id, Scene *scene);
+        void operator=(const Prefab& prefab);
+        void clear();
+        std::vector<ComponentBuffer> &getComponents(){return comps;}
+        std::vector<std::shared_ptr<Prefab>> &getChildren(){return children;}
 
-        void copyEntity(EntityId id, Scene *scene){
-            clear();
-            for(auto &desc : env->reflection->getDescriptors()){
-                if(scene->hasComponent(desc->typeId, id)){
-                    desc->copy(scene->getComponent(desc->typeId, id), addComponent(desc->typeId));
-                }
-            }
-            //todo: childs
-        }
-
-        void operator=(const Prefab& prefab) {
-            comps = prefab.comps;
-            childs.resize(prefab.childs.size());
-            for (int i = 0; i < childs.size(); i++) {
-                childs[i] = std::make_shared<Prefab>(*prefab.childs[i]);
-            }
-        }
-
-        void clear(){
-            comps.clear();
-            childs.clear();
-        }
+        bool load(const std::string &file) override;
+        bool save(const std::string &file) override;
 
     private:
         std::vector<ComponentBuffer> comps;
-        std::vector<std::shared_ptr<Prefab>> childs;
+        std::vector<std::shared_ptr<Prefab>> children;
     };
 
 }

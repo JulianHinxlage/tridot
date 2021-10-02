@@ -25,7 +25,7 @@ namespace tri {
             env->editor->undo.beginAction();
 
             //remove children
-            for (auto &child : env->systems->getSystem<TransformSystem>()->getChildren(id)) {
+            for (auto &child : env->hierarchies->getChildren(id)) {
                 removeEntity(child, scene);
             }
 
@@ -66,7 +66,7 @@ namespace tri {
         env->editor->undo.entityAdded(copy);
 
         //duplicate children
-        for(auto &child : env->systems->getSystem<TransformSystem>()->getChildren(id)){
+        for(auto &child : env->hierarchies->getChildren(id)){
             EntityId childCopy = duplicateEntity(child, scene);
             scene->update();
             if(scene->hasComponent<Transform>(childCopy)){
@@ -129,13 +129,12 @@ namespace tri {
         }
         std::vector<EntityId> ids;
         env->editor->undo.beginAction();
-        auto *transformSystem = env->systems->getSystem<TransformSystem>();
         for(auto &id : env->editor->selectionContext.getSelected()){
 
             bool isChildOfOtherSelected = false;
             for(auto &id2 : env->editor->selectionContext.getSelected()) {
                 if(id != id2){
-                    if(transformSystem->isParentOf(id, id2)){
+                    if(env->hierarchies->isParentOf(id, id2)){
                         isChildOfOtherSelected = true;
                         break;
                     }

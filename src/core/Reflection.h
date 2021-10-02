@@ -104,10 +104,20 @@ namespace tri {
             return getType(getTypeId<T>());
         }
 
+        const TypeDescriptor* getType(const std::string &name) {
+            auto iter = descriptorsByName.find(name);
+            if(iter != descriptorsByName.end()) {
+                return iter->second;
+            }
+            return nullptr;
+        }
+
         template<typename T>
         int registerType(const std::string &name, bool isComponent = false) {
             TypeDescriptor* desc = descriptors[getTypeId<T>()].get();
+            descriptorsByName.erase(desc->name);
             desc->name = name;
+            descriptorsByName[desc->name] = desc;
             desc->isComponent = isComponent;
             desc->hashCode = typeid(T).hash_code();
             return desc->typeId;
@@ -155,6 +165,7 @@ namespace tri {
 
         void unregisterType(int typeId) {
             if (typeId >= 0 && typeId < descriptors.size()) {
+                descriptorsByName.erase(descriptors[typeId]->name);
                 descriptors[typeId] = nullptr;
             }
         }
@@ -170,6 +181,7 @@ namespace tri {
 
     private:
         std::vector<std::shared_ptr<TypeDescriptor>> descriptors;
+        std::unordered_map<std::string, TypeDescriptor*> descriptorsByName;
 
         template<typename T>
         int getNewTypeId() {
@@ -186,6 +198,7 @@ namespace tri {
             desc->typeId = (int)descriptors.size();
             desc->size = sizeof(T);
             desc->name = typeid(T).name();
+            descriptorsByName[desc->name] = desc.get();
             descriptors.push_back(desc);
             return desc->typeId;
         }

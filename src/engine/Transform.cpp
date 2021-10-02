@@ -43,9 +43,9 @@ namespace tri {
     TRI_REGISTER_MEMBER(Transform, rotation);
     TRI_REGISTER_MEMBER(Transform, parent);
 
-    TRI_REGISTER_SYSTEM(TransformSystem);
+    TRI_REGISTER_SYSTEM_INSTANCE(HierarchySystem, env->hierarchies);
 
-    const std::vector<EntityId> &TransformSystem::getChildren(EntityId id) {
+    const std::vector<EntityId> &HierarchySystem::getChildren(EntityId id) {
         auto x = children.find(id);
         if(x == children.end()){
             return empty;
@@ -54,7 +54,7 @@ namespace tri {
         }
     }
 
-    bool TransformSystem::isParentOf(EntityId id, EntityId parent){
+    bool HierarchySystem::isParentOf(EntityId id, EntityId parent){
         if(id == parent){
             return true;
         }
@@ -70,7 +70,7 @@ namespace tri {
         return false;
     }
 
-    bool TransformSystem::haveSameParent(EntityId id1, EntityId id2){
+    bool HierarchySystem::haveSameParent(EntityId id1, EntityId id2){
         if(id1 == id2){
             return true;
         }
@@ -87,7 +87,7 @@ namespace tri {
         return parent1 == parent2;
     }
 
-    void TransformSystem::update() {
+    void HierarchySystem::update() {
         children.clear();
         auto *pool = env->scene->getComponentPool<Transform>();
         env->scene->view<Transform>().each([&](EntityId id, Transform &t){
@@ -116,7 +116,7 @@ namespace tri {
         });
     }
 
-    void TransformSystem::startup() {
+    void HierarchySystem::startup() {
         env->signals->entityRemove.addCallback([&](EntityId id, Scene *scene){
             if(scene == env->scene){
                 for(auto &child : getChildren(id)){

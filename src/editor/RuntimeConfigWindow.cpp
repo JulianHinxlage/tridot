@@ -14,6 +14,7 @@ namespace tri {
         bool doNotChangeState = false;
         std::set<std::string> editModeConfig;
         std::set<std::string> runtimeModeConfig;
+        RuntimeMode currentMode = RUNTIME;
 
         void startup() override {
             name = "Runtime Config";
@@ -27,7 +28,7 @@ namespace tri {
             };
 
             editModeConfig = {
-                "TransformSystem",
+                "HierarchySystem",
                 "SignalManager",
                 "Console",
                 "Reflection",
@@ -44,6 +45,12 @@ namespace tri {
                 "Renderer",
                 "Imgui",
             };
+
+            for(auto &observer : env->signals->update.getObservers()){
+                if(observer.active){
+                    runtimeModeConfig.insert(observer.name);
+                }
+            }
 
             env->signals->preUpdate.addCallback("RuntimeConfig", [&](){
                 modeChange(env->editor->mode);
@@ -82,16 +89,45 @@ namespace tri {
         }
 
         void modeChange(RuntimeMode mode) {
-            if(mode == RUNTIME){
-                env->signals->update.setActiveAll(true);
-            }else if(mode == EDIT || mode == PAUSED){
-                env->signals->update.setActiveAll(false);
-                for(auto &name : alwaysOn){
-                    env->signals->update.setActiveCallback(name, true);
+            if(currentMode != mode) {
+                if (mode == RUNTIME) {
+
+                    editModeConfig.clear();
+                    for(auto &observer : env->signals->update.getObservers()){
+                        if(observer.active){
+                            editModeConfig.insert(observer.name);
+                        }
+                    }
+
+                    env->signals->update.setActiveAll(false);
+                    for (auto &name : alwaysOn) {
+                        env->signals->update.setActiveCallback(name, true);
+                    }
+                    for (auto &name : runtimeModeConfig) {
+                        env->signals->update.setActiveCallback(name, true);
+                    }
+
+                } else if (mode == EDIT || mode == PAUSED) {
+
+                    if(currentMode != PAUSED) {
+                        runtimeModeConfig.clear();
+                        for (auto &observer : env->signals->update.getObservers()) {
+                            if (observer.active) {
+                                runtimeModeConfig.insert(observer.name);
+                            }
+                        }
+                    }
+
+                    env->signals->update.setActiveAll(false);
+                    for (auto &name : alwaysOn) {
+                        env->signals->update.setActiveCallback(name, true);
+                    }
+                    for (auto &name : editModeConfig) {
+                        env->signals->update.setActiveCallback(name, true);
+                    }
+
                 }
-                for(auto &name : editModeConfig){
-                    env->signals->update.setActiveCallback(name, true);
-                }
+                currentMode = mode;
             }
         }
 

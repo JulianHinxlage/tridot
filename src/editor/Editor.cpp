@@ -23,7 +23,7 @@ namespace tri {
         updated = false;
         mode = EDIT;
 
-        env->signals->update.callbackOrder({"MeshComponent", "Imgui.begin", "Editor"});
+        env->signals->update.callbackOrder({"Imgui.begin", "Editor", "MeshComponent"});
         env->signals->postStartup.addCallback([](){
             ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
@@ -180,12 +180,21 @@ namespace tri {
                 }
                 if (ImGui::MenuItem("Save", "Ctrl+S")) {
                     env->assets->unload(env->scene->file);
-                    env->scene->save(env->scene->file);
+                    Ref<Scene> buffer(true);
+                    buffer->copy(*env->scene);
+                    env->threads->addThread([buffer](){
+                        buffer->save(buffer->file);
+                    });
                 }
                 if (ImGui::MenuItem("Save As", "Ctrl+Shift+S")) {
                     env->editor->gui.file.openBrowseWindow("Save", "Save Scene As", env->reflection->getTypeId<Scene>(), [](const std::string &file){
                         env->assets->unload(file);
-                        env->scene->save(file);
+                        env->scene->file = file;
+                        Ref<Scene> buffer(true);
+                        buffer->copy(*env->scene);
+                        env->threads->addThread([buffer](){
+                            buffer->save(buffer->file);
+                        });
                     });
                 }
                 if (ImGui::MenuItem("Close")) {
@@ -227,11 +236,20 @@ namespace tri {
             if(shift){
                 env->editor->gui.file.openBrowseWindow("Save", "Save Scene", env->reflection->getTypeId<Scene>(), [](const std::string &file){
                     env->assets->unload(file);
-                    env->scene->save(file);
+                    env->scene->file = file;
+                    Ref<Scene> buffer(true);
+                    buffer->copy(*env->scene);
+                    env->threads->addThread([buffer](){
+                        buffer->save(buffer->file);
+                    });
                 });
             }else{
                 env->assets->unload(env->scene->file);
-                env->scene->save(env->scene->file);
+                Ref<Scene> buffer(true);
+                buffer->copy(*env->scene);
+                env->threads->addThread([buffer](){
+                    buffer->save(buffer->file);
+                });
             }
         }
         if (control && env->input->pressed("O")) {

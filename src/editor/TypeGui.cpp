@@ -186,7 +186,7 @@ namespace tri {
         addAssetTypeFunction<Material>();
         addAssetTypeFunction<Shader>();
         addAssetTypeFunction<Texture>();
-
+        addAssetTypeFunction<Prefab>();
 
         env->editor->gui.type.setTypeFunction<Ref<FrameBuffer>>([](const char *label, Ref<FrameBuffer> &v, Ref<FrameBuffer> *min, Ref<FrameBuffer> *max) {
             if(v){

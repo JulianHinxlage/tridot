@@ -154,6 +154,7 @@ namespace tri {
     }
 
     void Scene::copy(const Scene &from) {
+        file = from.file;
         freeList = from.freeList;
         entityPool.copy(from.entityPool);
         pools.resize(from.pools.size());

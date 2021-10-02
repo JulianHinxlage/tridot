@@ -8,6 +8,7 @@
 #include "render/Mesh.h"
 #include "entity/Scene.h"
 #include "engine/AssetManager.h"
+#include "entity/Prefab.h"
 #include <imgui.h>
 #include <imgui_internal.h>
 
@@ -34,6 +35,7 @@ namespace tri {
                 {".png", env->reflection->getTypeId<Texture>()},
                 {".jpg", env->reflection->getTypeId<Texture>()},
                 {".mat", env->reflection->getTypeId<Material>()},
+                {".prefab", env->reflection->getTypeId<Prefab>()},
         };
     }
 

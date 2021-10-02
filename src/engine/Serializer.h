@@ -6,6 +6,7 @@
 
 #include "pch.h"
 #include "entity/Scene.h"
+#include "entity/Prefab.h"
 #include <yaml-cpp/yaml.h>
 
 namespace tri {
@@ -15,9 +16,14 @@ namespace tri {
         void serializeType(YAML::Emitter &out, int typeId, void *data);
         void deserializeType(YAML::Node &in, int typeId, void *data);
 
+        void serializeEntity(YAML::Emitter &out, Scene &scene, EntityId id);
+        void deserializeEntity(YAML::Node &in, Scene &scene);
+
+        void serializePrefab(YAML::Emitter &out, Prefab &prefab);
+        void deserializePrefab(YAML::Node &in, Prefab &prefab);
+
         void serializeScene(YAML::Emitter &out, Scene &scene);
         void deserializeScene(YAML::Node &in, Scene &scene);
-
 
         bool serializeType(const std::string &filename, int typeId, void *data);
         bool deserializeType(const std::string &filename, int typeId, void *data);

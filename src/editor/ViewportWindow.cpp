@@ -13,6 +13,8 @@
 #include "engine/Serializer.h"
 #include "engine/Input.h"
 #include "engine/EntityInfo.h"
+#include "engine/AssetManager.h"
+#include "entity/Prefab.h"
 #include <imgui/imgui.h>
 
 class EditorOnly{};
@@ -30,7 +32,6 @@ namespace tri {
             editorCameraId = -1;
         });
 
-        env->editor->gizmos.startup();
         sceneBuffer = Ref<Scene>::make();
     }
 
@@ -146,6 +147,31 @@ namespace tri {
                         editorCamera.update(*cam, *camTransform);
                     }
                 }
+            }
+
+            //dragging prefabs in
+            std::string file = env->editor->gui.dragDropTarget(env->reflection->getTypeId<Prefab>());
+            if(!file.empty()){
+                Ref<Prefab> prefab = env->assets->get<Prefab>(file, true);
+
+                glm::vec3 pos;
+                if(cam && camTransform){
+                    pos = camTransform->position + cam->forward;
+                }
+
+                EntityId id = prefab->createEntity(env->scene);
+                env->editor->undo.entityAdded(id);
+                env->editor->selectionContext.unselectAll();
+                env->editor->selectionContext.select(id);
+
+                Transform *t;
+                if(env->scene->hasComponent<Transform>(id)){
+                    t = &env->scene->getComponent<Transform>(id);
+                }else{
+                    t = &env->scene->addComponent<Transform>(id);
+                }
+                t->position = pos;
+                t->parent = -1;
             }
 
         }

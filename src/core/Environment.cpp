@@ -42,6 +42,7 @@ namespace tri {
         serializer = nullptr;
         assets = nullptr;
         editor = nullptr;
+        hierarchies = nullptr;
     }
 
     Environment* Environment::startup() {

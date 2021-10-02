@@ -68,7 +68,7 @@ namespace tri {
     TRI_REGISTER_CONSTANT(Material::Mapping, TRI_PLANAR);
     TRI_REGISTER_CONSTANT(Material::Mapping, SCALE_TRI_PLANAR);
 
-    TRI_REGISTER_COMPONENT(Material);
+    TRI_REGISTER_TYPE(Material);
     TRI_REGISTER_MEMBER(Material, color);
     TRI_REGISTER_MEMBER(Material, mapping);
     TRI_REGISTER_MEMBER_RANGE(Material, roughness, 0, 1);
