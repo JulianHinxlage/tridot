@@ -15,18 +15,22 @@ namespace tri {
 
         void startup();
         void update() override;
-        void updateHeader(EntityId id);
+        void updateHeader();
         void updateEntity(EntityId id);
+        void updateMultipleEntities();
         void updateComponent(int typeId, EntityId id);
-        void updateComponentMenu(int typeId, EntityId id);
-        void updateMenu(EntityId id);
+        void updateComponentMenu(int typeId, EntityId editId);
+        void updateMenu();
 
     private:
+        std::vector<std::pair<ComponentBuffer, EntityId>> componentChangeBuffers;
         ComponentBuffer componentChangeBuffer;
         int lastFrameChangeTypeId;
         bool lastFrameAnyActiveItem;
         bool lastNoContextMenu;
         bool lastNoWindowScroll;
+
+        void propagateComponentChange(int rootTypeId, int typeId, void *preEdit, void *postEdit, int offset = 0);
 
     };
 

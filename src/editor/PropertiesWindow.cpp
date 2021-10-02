@@ -28,19 +28,30 @@ namespace tri {
                 break;
             }
 
-            updateHeader(id);
+            updateHeader();
 
             ImGui::Separator();
             ImGui::BeginChild("", ImVec2(0, 0), false, lastNoWindowScroll ? ImGuiWindowFlags_NoScrollWithMouse : 0);
 
             updateEntity(id);
             if(!lastNoContextMenu){
-                updateMenu(id);
+                updateMenu();
             }
 
             ImGui::EndChild();
         }else if(env->editor->selectionContext.getSelected().size() > 1){
-            //todo: multi selection properties
+
+            updateHeader();
+
+            ImGui::Separator();
+            ImGui::BeginChild("", ImVec2(0, 0), false, lastNoWindowScroll ? ImGuiWindowFlags_NoScrollWithMouse : 0);
+
+            updateMultipleEntities();
+            if(!lastNoContextMenu){
+                updateMenu();
+            }
+
+            ImGui::EndChild();
         }
         lastNoWindowScroll = noWindowScroll;
         lastNoContextMenu = noContextMenu;
@@ -48,23 +59,146 @@ namespace tri {
         noContextMenu = false;
     }
 
-    void PropertiesWindow::updateHeader(EntityId id){
+    void PropertiesWindow::updateHeader(){
         if(ImGui::Button("Add Component")){
             ImGui::OpenPopup("add");
         }
         if(ImGui::BeginPopup("add")){
             for(auto &desc : env->reflection->getDescriptors()){
                 if(desc->isComponent) {
-                    if (!env->scene->hasComponent(desc->typeId, id)) {
+
+                    bool canAdd = false;
+                    for(EntityId id : env->editor->selectionContext.getSelected()){
+                        if (!env->scene->hasComponent(desc->typeId, id)) {
+                            canAdd = true;
+                            break;
+                        }
+                    }
+
+                    if (canAdd) {
                         if (ImGui::MenuItem(desc->name.c_str())) {
-                            void *comp = env->editor->entityOperations.addComponent(desc->typeId, id);
-                            desc->construct(comp);
+
+                            for(EntityId id : env->editor->selectionContext.getSelected()){
+                                if (!env->scene->hasComponent(desc->typeId, id)) {
+                                    void *comp = env->editor->entityOperations.addComponent(desc->typeId, id);
+                                }
+                            }
                             ImGui::CloseCurrentPopup();
+                        }
+                    }
+
+                }
+            }
+            ImGui::EndPopup();
+        }
+    }
+
+    void PropertiesWindow::updateMultipleEntities(){
+        for(auto &desc : env->reflection->getDescriptors()) {
+            void *comp = nullptr;
+            EntityId editId;
+            for(EntityId id : env->editor->selectionContext.getSelected()){
+                if(env->scene->hasComponent(desc->typeId, id)){
+                    comp = env->scene->getComponent(desc->typeId, id);
+                    editId = id;
+                    break;
+                }
+            }
+            if(comp != nullptr){
+
+                if(desc->typeId != env->reflection->getTypeId<EntityInfo>()) {
+                    if(desc->typeId != env->reflection->getTypeId<Transform>()) {
+                        ImGui::PushID(desc->name.c_str());
+                        if (ImGui::CollapsingHeader(desc->name.c_str(), ImGuiTreeNodeFlags_DefaultOpen)) {
+                            if(!lastNoContextMenu) {
+                                updateComponentMenu(desc->typeId, editId);
+                            }
+
+                            //detect changes
+                            ComponentBuffer preEditValue;
+                            preEditValue.set(desc->typeId, comp);
+
+                            //draw gui
+                            env->editor->gui.type.drawType(desc->typeId, comp);
+
+                            //detect changes
+                            bool anyChange = env->editor->gui.type.anyTypeChange(desc->typeId, comp, preEditValue.get());
+                            if (anyChange) {
+                                if(lastFrameAnyActiveItem || ImGui::IsAnyItemActive()) {
+                                    if (lastFrameChangeTypeId == -1) {
+                                        componentChangeBuffers.clear();
+                                        for(EntityId id : env->editor->selectionContext.getSelected()) {
+                                            if(env->scene->hasComponent(desc->typeId, id)){
+                                                ComponentBuffer buffer;
+                                                if(id == editId){
+                                                    buffer.set(desc->typeId, preEditValue.get());
+                                                }else{
+                                                    buffer.set(desc->typeId, env->scene->getComponent(desc->typeId, id));
+                                                }
+                                                componentChangeBuffers.push_back({buffer, id});
+                                            }
+                                        }
+                                    }
+                                    lastFrameChangeTypeId = desc->typeId;
+                                }
+                            }
+
+                            if(anyChange){
+                                propagateComponentChange(desc->typeId, desc->typeId, preEditValue.get(), comp);
+                            }
+
+                            //add detected changes to the undo system
+                            if(!anyChange){
+                                if(!lastFrameAnyActiveItem && !ImGui::IsAnyItemActive()) {
+                                    if (lastFrameChangeTypeId == desc->typeId) {
+                                        lastFrameChangeTypeId = -1;
+                                        env->editor->undo.beginAction();
+                                        for(auto &i : componentChangeBuffers){
+                                            if(env->scene->hasComponent(desc->typeId, i.second)){
+                                                env->editor->undo.componentChanged(desc->typeId, i.second, i.first.get());
+                                            }
+                                        }
+                                        env->editor->undo.endAction();
+                                        componentChangeBuffers.clear();
+                                    }
+                                }
+                            }
+
+                        } else {
+                            if(!lastNoContextMenu) {
+                                updateComponentMenu(desc->typeId, editId);
+                            }
+                        }
+                        ImGui::PopID();
+                    }
+                }
+
+            }
+        }
+
+        if(ImGui::IsAnyItemActive()){
+            lastFrameAnyActiveItem = true;
+        }else{
+            lastFrameAnyActiveItem = false;
+        }
+    }
+
+    void PropertiesWindow::propagateComponentChange(int rootTypeId, int typeId, void *preEdit, void *postEdit, int offset){
+        auto *desc = env->reflection->getType(typeId);
+        if(desc->member.size() == 0){
+            if(desc->hasEquals()){
+                if(!desc->equals(preEdit, postEdit)){
+                    for(EntityId id : env->editor->selectionContext.getSelected()){
+                        if (env->scene->hasComponent(rootTypeId, id)) {
+                            void *comp = env->scene->getComponent(rootTypeId, id);
+                            desc->copy(postEdit, (uint8_t *) comp + offset);
                         }
                     }
                 }
             }
-            ImGui::EndPopup();
+        }
+        for(auto &m : desc->member){
+            propagateComponentChange(rootTypeId, m.type->typeId, (uint8_t*)preEdit + m.offset, (uint8_t*)postEdit + m.offset, offset + m.offset);
         }
     }
 
@@ -131,25 +265,37 @@ namespace tri {
         }
     }
 
-    void PropertiesWindow::updateComponentMenu(int typeId, EntityId id){
+    void PropertiesWindow::updateComponentMenu(int typeId, EntityId editId){
         if (ImGui::BeginPopupContextItem()) {
             if (ImGui::MenuItem("Delete")) {
-                env->editor->entityOperations.removeComponent(typeId, id);
+                env->editor->undo.beginAction();
+                for(EntityId id : env->editor->selectionContext.getSelected()){
+                    env->editor->entityOperations.removeComponent(typeId, id);
+                }
+                env->editor->undo.endAction();
             }
             if (ImGui::MenuItem("Copy")) {
-                env->editor->entityOperations.copyComponent(typeId, id);
+                env->editor->entityOperations.copyComponent(typeId, editId);
             }
             if (ImGui::MenuItem("Past", nullptr, false, env->editor->entityOperations.wasComponentCopied())) {
-                env->editor->entityOperations.pastComponent(id);
+                env->editor->undo.beginAction();
+                for(EntityId id : env->editor->selectionContext.getSelected()){
+                    env->editor->entityOperations.pastComponent(id);
+                }
+                env->editor->undo.endAction();
             }
             ImGui::EndPopup();
         }
     }
 
-    void PropertiesWindow::updateMenu(EntityId id){
+    void PropertiesWindow::updateMenu(){
         if (ImGui::BeginPopupContextWindow("component", ImGuiMouseButton_Right, false)) {
             if (ImGui::MenuItem("Past", nullptr, false, env->editor->entityOperations.wasComponentCopied())) {
-                env->editor->entityOperations.pastComponent(id);
+                env->editor->undo.beginAction();
+                for(EntityId id : env->editor->selectionContext.getSelected()){
+                    env->editor->entityOperations.pastComponent(id);
+                }
+                env->editor->undo.endAction();
             }
             ImGui::EndPopup();
         }

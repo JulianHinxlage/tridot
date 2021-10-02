@@ -110,8 +110,17 @@ namespace tri {
             scene = env->scene;
         }
         if(componentBuffer.isSet()){
-            componentBuffer.get(scene->addComponent(componentBuffer.getTypeId(), id));
-            env->editor->undo.componentAdded(componentBuffer.getTypeId(), id);
+            int typeId = componentBuffer.getTypeId();
+            if(scene->hasComponent(typeId, id)){
+                void *comp = scene->getComponent(typeId, id);
+                ComponentBuffer buffer;
+                buffer.set(typeId, comp);
+                componentBuffer.get(comp);
+                env->editor->undo.componentChanged(typeId, id, buffer.get());
+            }else{
+                componentBuffer.get(scene->addComponent(typeId, id));
+                env->editor->undo.componentAdded(typeId, id);
+            }
         }
     }
 
