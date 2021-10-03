@@ -57,8 +57,8 @@ namespace tri {
             return *children.back().get();
         }
 
-        EntityId createEntity(Scene* scene);
-        void copyEntity(EntityId id, Scene *scene);
+        EntityId createEntity(Scene* scene, EntityId hint = -1);
+        void copyEntity(EntityId id, Scene *scene, bool copyChildren = true);
         void operator=(const Prefab& prefab);
         void clear();
         std::vector<ComponentBuffer> &getComponents(){return comps;}

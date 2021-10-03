@@ -187,6 +187,7 @@ namespace tri {
                     }
                 }
                 if(ImGui::MenuItem("Parent", nullptr, false, env->editor->selectionContext.getSelected().size() > 0)){
+                    env->editor->undo.beginAction();
                     for (auto &id2 : env->editor->selectionContext.getSelected()) {
                         if(id != id2){
                             if(env->scene->hasComponent<Transform>(id2)){
@@ -201,6 +202,7 @@ namespace tri {
                             }
                         }
                     }
+                    env->editor->undo.endAction();
                 }
                 if(env->scene->hasComponent<Transform>(id)){
                     Transform &t = env->scene->getComponent<Transform>(id);

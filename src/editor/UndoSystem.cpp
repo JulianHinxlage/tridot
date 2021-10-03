@@ -48,7 +48,7 @@ namespace tri {
                 break;
             }
             case Action::ENTITY_REMOVED: {
-                EntityId id = action.entity.createEntity(env->scene);
+                EntityId id = action.entity.createEntity(env->scene, action.id);
                 entityAdded(id);
                 break;
             }
@@ -105,7 +105,7 @@ namespace tri {
             action->isActionSequence = inActionWasAdded;
             inActionWasAdded = true;
         }
-        action->entity.copyEntity(id, env->scene);
+        action->entity.copyEntity(id, env->scene, false);
 
         if(addToRedo){
             redoActions.push_back(action);

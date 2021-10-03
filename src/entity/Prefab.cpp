@@ -50,8 +50,8 @@ namespace tri {
         return false;
     }
 
-    EntityId Prefab::createEntity(Scene* scene) {
-        EntityId id = scene->addEntity();
+    EntityId Prefab::createEntity(Scene* scene, EntityId hint) {
+        EntityId id = scene->addEntityHinted(hint);
         for (int i = 0; i < comps.size(); i++) {
             ComponentBuffer& comp = comps[i];
             void *ptr = scene->addComponent(comp.getTypeId(), id);
@@ -67,15 +67,17 @@ namespace tri {
         return id;
     }
 
-    void Prefab::copyEntity(EntityId id, Scene *scene){
+    void Prefab::copyEntity(EntityId id, Scene *scene, bool copyChildren){
         clear();
         for(auto &desc : env->reflection->getDescriptors()){
             if(scene->hasComponent(desc->typeId, id)){
                 desc->copy(scene->getComponent(desc->typeId, id), addComponent(desc->typeId));
             }
         }
-        for(auto child : env->hierarchies->getChildren(id)){
-            addChild().copyEntity(child, scene);
+        if(copyChildren){
+            for(auto child : env->hierarchies->getChildren(id)){
+                addChild().copyEntity(child, scene);
+            }
         }
     }
 
