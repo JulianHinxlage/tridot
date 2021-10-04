@@ -24,7 +24,7 @@ namespace tri {
 
     void ViewportWindow::startup() {
         name = "Viewport";
-        isWindow = false;
+        type = ELEMENT;
         editorCameraId = -1;
         cameraMode = EDITOR_CAMERA;
 
@@ -235,7 +235,7 @@ namespace tri {
     }
 
     TRI_STARTUP_CALLBACK("") {
-        env->editor->addWindow(&env->editor->viewport);
+        env->editor->addElement(&env->editor->viewport);
     }
 
 }

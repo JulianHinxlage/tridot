@@ -12,7 +12,7 @@ namespace tri {
     class ConsoleWindow;
     ConsoleWindow *consoleWindow = nullptr;
 
-    class ConsoleWindow : public EditorWindow {
+    class ConsoleWindow : public EditorElement {
     public:
         LogLevel level;
         std::string inputBuffer;
@@ -21,6 +21,7 @@ namespace tri {
 
         void startup() override {
             name = "Console";
+            type = WINDOW;
             level = DEBUG;
             commandIndex = 0;
             consoleWindow = this;
@@ -112,7 +113,7 @@ namespace tri {
     };
 
     TRI_STARTUP_CALLBACK("") {
-        env->editor->addWindow(new ConsoleWindow);
+        env->editor->addElement<ConsoleWindow>();
     }
 
 }

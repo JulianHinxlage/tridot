@@ -13,6 +13,7 @@ namespace tri {
 
     void PropertiesWindow::startup() {
         name = "Properties";
+        type = WINDOW;
         lastFrameChangeTypeId = -1;
         lastFrameAnyActiveItem = false;
 
@@ -119,10 +120,10 @@ namespace tri {
                             preEditValue.set(desc->typeId, comp);
 
                             //draw gui
-                            env->editor->gui.type.drawType(desc->typeId, comp);
+                            env->editor->gui.typeGui.drawType(desc->typeId, comp);
 
                             //detect changes
-                            bool anyChange = env->editor->gui.type.anyTypeChange(desc->typeId, comp, preEditValue.get());
+                            bool anyChange = env->editor->gui.typeGui.anyTypeChange(desc->typeId, comp, preEditValue.get());
                             if (anyChange) {
                                 if(lastFrameAnyActiveItem || ImGui::IsAnyItemActive()) {
                                     if (lastFrameChangeTypeId == -1) {
@@ -245,10 +246,10 @@ namespace tri {
         preEditValue.set(desc->typeId, comp);
 
         //draw gui
-        env->editor->gui.type.drawType(desc->typeId, comp);
+        env->editor->gui.typeGui.drawType(desc->typeId, comp);
 
         //detect changes
-        if (env->editor->gui.type.anyTypeChange(desc->typeId, comp, preEditValue.get())) {
+        if (env->editor->gui.typeGui.anyTypeChange(desc->typeId, comp, preEditValue.get())) {
             if(lastFrameAnyActiveItem || ImGui::IsAnyItemActive()) {
                 if (lastFrameChangeTypeId == -1) {
                     componentChangeBuffer.set(desc->typeId, preEditValue.get());
@@ -303,7 +304,7 @@ namespace tri {
 
 
     TRI_STARTUP_CALLBACK("") {
-        env->editor->addWindow(&env->editor->properties);
+        env->editor->addElement(&env->editor->properties);
     }
 
 }

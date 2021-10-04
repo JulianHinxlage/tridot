@@ -5,7 +5,7 @@
 #pragma once
 
 #include "core/core.h"
-#include "EditorWindow.h"
+#include "EditorElement.h"
 #include "SelectionContext.h"
 #include "EditorGui.h"
 #include "EntityOperations.h"
@@ -30,12 +30,20 @@ namespace tri {
         void startup() override;
         void update() override;
         void shutdown() override;
-        void addWindow(EditorWindow* window);
+
+        void addElement(EditorElement* element);
+
+        template<typename T>
+        void addElement(){
+            elements.push_back(std::make_shared<T>());
+        }
+
         void updateMenuBar();
         void setMode(RuntimeMode mode);
 
     private:
-        std::vector<EditorWindow*> windows;
+        std::vector<std::shared_ptr<EditorElement>> elements;
+        //std::vector<EditorWindow*> windows;
         bool updated;
         Ref<Scene> sceneBuffer;
     };

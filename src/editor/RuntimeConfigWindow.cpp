@@ -8,7 +8,7 @@
 
 namespace tri {
 
-    class RuntimeConfigWindow : public EditorWindow {
+    class RuntimeConfigWindow : public EditorElement {
     public:
         std::set<std::string> alwaysOn;
         bool doNotChangeState = false;
@@ -18,12 +18,12 @@ namespace tri {
 
         void startup() override {
             name = "Runtime Config";
-            isDebugWindow = true;
+            type = DEBUG_WINDOW;
             alwaysOn = {
                 "Editor",
                 "Window",
-                "Imgui.begin",
-                "Imgui.end",
+                "Imgui/begin",
+                "Imgui/end",
                 "Gizmos.begin",
             };
 
@@ -134,7 +134,7 @@ namespace tri {
     };
 
     TRI_STARTUP_CALLBACK("") {
-        env->editor->addWindow(new RuntimeConfigWindow);
+        env->editor->addElement<RuntimeConfigWindow>();
     }
 
 }

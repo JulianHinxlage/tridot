@@ -8,11 +8,11 @@
 
 namespace tri{
 
-    class StatisticsWindow : public EditorWindow {
+    class StatisticsWindow : public EditorElement {
     public:
         void startup() {
             name = "Statistics";
-            isDebugWindow = true;
+            type = DEBUG_WINDOW;
         }
 
         void update() override {
@@ -41,7 +41,7 @@ namespace tri{
     };
 
     TRI_STARTUP_CALLBACK("") {
-        env->editor->addWindow(new StatisticsWindow);
+        env->editor->addElement<StatisticsWindow>();
     }
 
 }

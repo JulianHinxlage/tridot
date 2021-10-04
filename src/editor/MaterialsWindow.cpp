@@ -9,7 +9,7 @@
 
 namespace tri {
 
-    class MaterialsWindow : public EditorWindow {
+    class MaterialsWindow : public EditorElement {
     public:
         Ref<Material> material;
         bool lastFrameAnyActiveItem;
@@ -18,6 +18,7 @@ namespace tri {
 
         void startup() {
             name = "Materials";
+            type = WINDOW;
             material = nullptr;
             lastFrameAnyActiveItem = false;
             inChange = false;
@@ -49,7 +50,7 @@ namespace tri {
                     }
                 }
                 if(ImGui::Selectable("...")){
-                    env->editor->gui.file.openBrowseWindow("Open", "Open Material", typeId, [&](const std::string &file){
+                    env->editor->gui.fileGui.openBrowseWindow("Open", "Open Material", typeId, [&](const std::string &file){
                         material = env->assets->get<Material>(file);
                     });
                 }
@@ -90,10 +91,10 @@ namespace tri {
                 preEditValue.set(typeId, material.get());
 
                 //draw gui
-                env->editor->gui.type.drawType(typeId, material.get(), false);
+                env->editor->gui.typeGui.drawType(typeId, material.get(), false);
 
                 //detect changes
-                if (env->editor->gui.type.anyTypeChange(typeId, material.get(), preEditValue.get())) {
+                if (env->editor->gui.typeGui.anyTypeChange(typeId, material.get(), preEditValue.get())) {
                     if(lastFrameAnyActiveItem || ImGui::IsAnyItemActive()) {
                         if(!inChange){
                             changeBuffer.set(typeId, preEditValue.get());
@@ -122,7 +123,7 @@ namespace tri {
     };
 
     TRI_STARTUP_CALLBACK("") {
-        env->editor->addWindow(new MaterialsWindow);
+        env->editor->addElement<MaterialsWindow>();
     }
 
 }

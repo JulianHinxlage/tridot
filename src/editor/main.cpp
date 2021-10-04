@@ -35,8 +35,9 @@ int main(int argc, char* argv[]) {
     env->signals->postStartup.invoke();
 
     while (env->window->isOpen()) {
+        TRI_PROFILE("total");
         env->signals->preUpdate.invoke();
-        env->signals->update.invoke();
+        env->signals->update.invoke(true);
         env->signals->postUpdate.invoke();
 
         env->window->setVSync(*env->console->getVariable<bool>("vsync"));

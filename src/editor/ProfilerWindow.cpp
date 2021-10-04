@@ -9,11 +9,11 @@
 
 namespace tri {
 
-    class ProfilerWindow : public EditorWindow {
+    class ProfilerWindow : public EditorElement {
     public:
         void startup() {
             name = "Profiler";
-            isDebugWindow = true;
+            type = WINDOW;
         }
 
         void update() override {
@@ -37,7 +37,7 @@ namespace tri {
 
     };
     TRI_STARTUP_CALLBACK("") {
-        env->editor->addWindow(new ProfilerWindow);
+        env->editor->addElement<ProfilerWindow>();
     }
 
 }

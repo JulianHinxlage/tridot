@@ -84,7 +84,6 @@ namespace tri {
     }
 
     void Window::update() {
-        TRI_PROFILE("window");
         if(context != nullptr) {
             GLFWwindow *window = (GLFWwindow*)context;
             bind();
@@ -99,15 +98,15 @@ namespace tri {
                 glfwSwapInterval(0);
             }
             {
-                TRI_PROFILE("window/wait for GPU");
+                TRI_PROFILE("Window/wait for GPU");
                 RenderContext::flush(true);
             }
             {
-                TRI_PROFILE("window/swap buffers");
+                TRI_PROFILE("Window/swap buffers");
                 glfwSwapBuffers(window);
             }
             {
-                TRI_PROFILE("window/clear");
+                TRI_PROFILE("Window/clear");
                 glm::vec4 color = backgroundColor.vec();
                 glClearColor(color.r, color.g, color.b, color.a);
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

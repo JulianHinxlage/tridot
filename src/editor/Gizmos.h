@@ -3,14 +3,14 @@
 //
 
 #pragma once
-#include "EditorWindow.h"
+#include "EditorElement.h"
 #include "engine/Transform.h"
 #include "engine/Camera.h"
 #include <glm/glm.hpp>
 
 namespace tri {
 
-    class Gizmos {
+    class Gizmos : public EditorElement {
     public:
         enum Operation{
             TRANSLATE,
@@ -38,7 +38,7 @@ namespace tri {
         glm::vec3 scaleSnapValues = {0.25, 0.25, 0.25};
         glm::vec3 rotateSnapValues = {45, 45, 45};
 
-        void startup();
+        void startup() override;
         bool updateGizmo(const Transform &cameraTransform, const Camera &camera, const glm::vec2 &viewportPosition, const glm::vec2 &viewportSize);
         void updateSettings();
 

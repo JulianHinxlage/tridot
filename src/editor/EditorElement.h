@@ -12,12 +12,20 @@ namespace tri {
         PAUSED,
     };
 
-    class EditorWindow {
+    class EditorElement {
     public:
         std::string name;
+        enum Type{
+            WINDOW,
+            DEBUG_WINDOW,
+            ELEMENT,
+            ALWAYS_OPEN,
+        };
+        Type type;
+
         bool isOpen = false;
-        bool isDebugWindow = false;
-        bool isWindow = true;
+        //bool isDebugWindow = false;
+        //bool isWindow = true;
         std::string profileName;
 
         virtual void startup() {}

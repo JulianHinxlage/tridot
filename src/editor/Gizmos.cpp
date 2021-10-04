@@ -14,12 +14,15 @@
 namespace tri {
 
     void Gizmos::startup() {
-        env->signals->update.addCallback("Gizmos.begin", [](){
+        name = "Gizmos";
+        type = ALWAYS_OPEN;
+
+        env->signals->update.addCallback("Gizmos/begin", [](){
             if(env->window->isOpen()){
                 ImGuizmo::BeginFrame();
             }
         });
-        env->signals->update.callbackOrder({"Imgui.begin", "Gizmos.begin", "Editor"});
+        env->signals->update.callbackOrder({"Imgui/begin", "Gizmos/begin", "Editor"});
 
         operation = TRANSLATE;
         mode = LOCAL;
@@ -260,6 +263,10 @@ namespace tri {
         }
 
         ImGui::PopID();
+    }
+
+    TRI_REGISTER_CALLBACK(){
+        env->editor->addElement(&env->editor->gizmos);
     }
 
 }

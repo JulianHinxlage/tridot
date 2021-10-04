@@ -9,15 +9,16 @@
 
 namespace tri {
 
-    class AssetBrowserWindow : public EditorWindow {
+    class AssetBrowserWindow : public EditorElement {
     public:
 
         void startup() {
             name = "Asset Browser";
+            type = WINDOW;
         }
 
         void update() override {
-            env->editor->gui.file.browse([&](const std::string &file, int typeId){
+            env->editor->gui.fileGui.browse([&](const std::string &file, int typeId){
                 if(typeId != -1) {
                     std::string path = env->assets->minimalFilePath(file);
                     env->editor->gui.dragDropSource(typeId, file);
@@ -58,7 +59,7 @@ namespace tri {
 
     };
     TRI_STARTUP_CALLBACK("") {
-        env->editor->addWindow(new AssetBrowserWindow);
+        env->editor->addElement<AssetBrowserWindow>();
     }
 
 }

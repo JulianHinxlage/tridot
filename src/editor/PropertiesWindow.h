@@ -3,12 +3,12 @@
 //
 
 #pragma once
-#include "EditorWindow.h"
+#include "EditorElement.h"
 #include "entity/ComponentBuffer.h"
 
 namespace tri {
 
-    class PropertiesWindow : public EditorWindow {
+    class PropertiesWindow : public EditorElement {
     public:
         bool noContextMenu;
         bool noWindowScroll;

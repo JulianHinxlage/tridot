@@ -21,7 +21,6 @@ namespace tri {
 
     TRI_UPDATE_CALLBACK("MeshComponent") {
 
-
         env->scene->view<Camera, Transform>().each([](Camera& camera, Transform &cameraTransform) {
             if (camera.active) {
                 env->renderer->cameraCount++;
@@ -64,6 +63,7 @@ namespace tri {
                         env->renderer->submit(transform.getMatrix(), transform.position, mesh.mesh.get(), mesh.material.get(), mesh.color, id);
                     });
                 }
+
                 env->renderer->drawScene(camera.output, camera.pipeline);
                 env->renderer->resetScene();
             }
@@ -71,6 +71,7 @@ namespace tri {
                 camera.active = false;
             }
         });
+
     }
 
 }

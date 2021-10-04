@@ -10,7 +10,7 @@
 
 namespace tri {
 
-    class EntitiesWindow : public EditorWindow {
+    class EntitiesWindow : public EditorElement {
     public:
         EntityId active;
         EntityId hovered;
@@ -24,6 +24,7 @@ namespace tri {
 
         void startup() {
             name = "Entities";
+            type = WINDOW;
             active = -1;
             hovered = -1;
             lastClicked = -1;
@@ -216,8 +217,8 @@ namespace tri {
                     }
                 }
                 if(ImGui::MenuItem("Save")){
-                    env->editor->gui.file.openBrowseWindow("Save", "Save Entity",
-                        env->reflection->getTypeId<Prefab>(), [id](const std::string &file){
+                    env->editor->gui.fileGui.openBrowseWindow("Save", "Save Entity",
+                                                              env->reflection->getTypeId<Prefab>(), [id](const std::string &file){
                         Prefab prefab;
                         prefab.copyEntity(id, env->scene);
                         prefab.save(file);
@@ -247,8 +248,8 @@ namespace tri {
                     env->editor->selectionContext.select(copy);
                 }
                 if (ImGui::MenuItem("Load")) {
-                    env->editor->gui.file.openBrowseWindow("Load", "Load Entity",
-                        env->reflection->getTypeId<Prefab>(), [](const std::string &file){
+                    env->editor->gui.fileGui.openBrowseWindow("Load", "Load Entity",
+                                                              env->reflection->getTypeId<Prefab>(), [](const std::string &file){
                         Prefab prefab;
                         prefab.load(file);
                         EntityId id = prefab.createEntity(env->scene);
@@ -455,7 +456,7 @@ namespace tri {
 
     };
     TRI_STARTUP_CALLBACK("") {
-        env->editor->addWindow(new EntitiesWindow);
+        env->editor->addElement<EntitiesWindow>();
     }
 
 }

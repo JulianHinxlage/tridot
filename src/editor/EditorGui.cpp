@@ -10,7 +10,9 @@
 namespace tri {
 
     void EditorGui::startup() {
-        file.startup();
+        name = "EditorGui";
+        type = ALWAYS_OPEN;
+        fileGui.startup();
     }
 
     void EditorGui::dragDropSource(int typeId, const std::string &file) {
@@ -43,7 +45,11 @@ namespace tri {
     }
 
     void EditorGui::update() {
-        file.update();
+        fileGui.update();
+    }
+
+    TRI_STARTUP_CALLBACK(""){
+        env->editor->addElement(&env->editor->gui);
     }
 
 }

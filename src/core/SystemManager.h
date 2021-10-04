@@ -62,6 +62,18 @@ namespace tri {
             return getSystem<T>() != nullptr;
         }
 
+        template<typename T>
+        void startupSystem(){
+            size_t type = typeid(T).hash_code();
+            if(systems.contains(type)){
+                auto &record = systems[type];
+                if(record.startupFlag == false){
+                    record.startupFlag = true;
+                    record.system->startup();
+                }
+            }
+        }
+
         void startup() {
             startupFlag = true;
             for (auto sys : systems) {

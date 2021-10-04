@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "EditorWindow.h"
+#include "EditorElement.h"
 #include "EditorCamera.h"
 #include "entity/Scene.h"
 
@@ -16,7 +16,7 @@ namespace tri {
         FIXED_PRIMARY_CAMERA,
     };
 
-    class ViewportWindow : public EditorWindow {
+    class ViewportWindow : public EditorElement {
     public:
         EntityId editorCameraId;
         EditorCamera editorCamera;

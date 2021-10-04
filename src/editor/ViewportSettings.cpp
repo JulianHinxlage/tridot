@@ -7,7 +7,7 @@
 
 namespace tri{
 
-    class ViewportSettings : public EditorWindow {
+    class ViewportSettings : public EditorElement {
     public:
         void startup() override{
             name = "Viewport Settings";
@@ -45,7 +45,7 @@ namespace tri{
         }
     };
     TRI_STARTUP_CALLBACK("") {
-        env->editor->addWindow(new ViewportSettings);
+        env->editor->addElement<ViewportSettings>();
     }
 
 }

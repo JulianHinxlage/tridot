@@ -7,6 +7,7 @@
 #include "pch.h"
 #include "System.h"
 #include "Reflection.h"
+#include "Profiler.h"
 
 namespace tri {
 
@@ -86,13 +87,18 @@ namespace tri {
             observers.clear();
         }
 
-        void invoke(Args... args){
+        void invoke(Args... args, bool profile = false){
             handledFlag = false;
             for(int i = 0; i < observers.size(); i++){
                 auto &observer = observers[i];
                 if(observer.callback){
                     if(observer.active){
-                        observer.callback(args...);
+                        if(profile){
+                            TRI_PROFILE(observer.name.c_str());
+                            observer.callback(args...);
+                        }else{
+                            observer.callback(args...);
+                        }
                     }
                 }
                 if(handledFlag){

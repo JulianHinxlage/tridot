@@ -30,19 +30,19 @@ namespace tri {
             inFrame = false;
 
 
-            env->signals->update.addCallback("Imgui.begin", [this]() {
+            env->signals->update.addCallback("Imgui/begin", [this]() {
                 begin();
             });
 
-            env->signals->update.addCallback("Imgui.end", [this]() {
+            env->signals->update.addCallback("Imgui/end", [this]() {
                 end();
             });
 
-            env->signals->update.callbackOrder({ "Imgui.end", "Window", "Imgui.begin" });
+            env->signals->update.callbackOrder({ "Imgui/end", "Window", "Imgui/begin" });
         }
 
         void begin() {
-            TRI_PROFILE("imgui/begin");
+            //TRI_PROFILE("Imgui/begin");
             if (env->window->isOpen()) {
                 ImGuiIO& io = ImGui::GetIO();
                 io.MouseWheel += (float)env->input->getMouseWheelDelta();
@@ -55,7 +55,7 @@ namespace tri {
         }
 
         void end() {
-            TRI_PROFILE("imgui/end");
+            //TRI_PROFILE("Imgui/end");
             if (inFrame && env->window->isOpen()) {
                 FrameBuffer::unbind();
                 ImGui::Render();
@@ -73,8 +73,8 @@ namespace tri {
         }
 
         void shutdown() override {
-            env->signals->update.removeCallback("Imgui.begin");
-            env->signals->update.removeCallback("Imgui.end");
+            env->signals->update.removeCallback("Imgui/begin");
+            env->signals->update.removeCallback("Imgui/end");
 
             ImGui_ImplOpenGL3_Shutdown();
             ImGui_ImplGlfw_Shutdown();

@@ -23,7 +23,7 @@ namespace tri {
         updated = false;
         mode = EDIT;
 
-        env->signals->update.callbackOrder({"Imgui.begin", "Editor", "MeshComponent"});
+        env->signals->update.callbackOrder({"Imgui/begin", "Editor", "MeshComponent"});
         env->signals->postStartup.addCallback([](){
             ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
@@ -65,11 +65,11 @@ namespace tri {
             handler.ReadLineFn = [](ImGuiContext* ctx, ImGuiSettingsHandler* handler, void* entry, const char* line) {
                 auto parts = StrUtil::split(line, "=");
                 if (parts.size() >= 2) {
-                    for (auto* window : env->editor->windows) {
-                        if (window) {
-                            if (window->name == parts[0]) {
+                    for (auto &element : env->editor->elements) {
+                        if (element && element->type != EditorElement::ALWAYS_OPEN) {
+                            if (element->name == parts[0]) {
                                 try {
-                                    window->isOpen = std::stoi(parts[1]);
+                                    element->isOpen = std::stoi(parts[1]);
                                 }
                                 catch (...) {}
                             }
@@ -79,8 +79,10 @@ namespace tri {
             };
             handler.WriteAllFn = [](ImGuiContext* ctx, ImGuiSettingsHandler* handler, ImGuiTextBuffer* buf) {
                 buf->append("[UserData][OpenFlags]\n");
-                for (auto* window : env->editor->windows) {
-                    buf->appendf("%s=%i\n", window->name.c_str(), (int)window->isOpen);
+                for (auto &element : env->editor->elements) {
+                    if (element && element->type != EditorElement::ALWAYS_OPEN) {
+                        buf->appendf("%s=%i\n", element->name.c_str(), (int)element->isOpen);
+                    }
                 }
             };
             ImGui::GetCurrentContext()->SettingsHandlers.push_back(handler);
@@ -89,8 +91,16 @@ namespace tri {
             updated = false;
         });
 
-        gui.startup();
-        gizmos.startup();
+
+        env->signals->postStartup.addCallback([this](){
+            for(auto &element : elements){
+                if(element){
+                    element->profileName = "Editor/" + element->name;
+                    element->startup();
+                }
+            }
+        });
+
         sceneBuffer = Ref<Scene>::make();
 
         env->signals->preShutdown.addCallback("Editor", [&](){
@@ -108,18 +118,18 @@ namespace tri {
             updateMenuBar();
 
             //windows
-            for (auto* window : windows) {
-                if (window) {
-                    if (window->isOpen) {
-                        TRI_PROFILE(window->profileName.c_str());
-                        if (window->isWindow) {
-                            if (ImGui::Begin(window->name.c_str(), &window->isOpen)) {
-                                window->update();
+            for (auto &element : elements) {
+                if (element) {
+                    if(element->isOpen || element->type == EditorElement::ALWAYS_OPEN){
+                        TRI_PROFILE(element->profileName.c_str());
+                        if (element->type == EditorElement::WINDOW || element->type == EditorElement::DEBUG_WINDOW) {
+                            if (ImGui::Begin(element->name.c_str(), &element->isOpen)) {
+                                element->update();
                             }
                             ImGui::End();
                         }
                         else {
-                            window->update();
+                            element->update();
                         }
                     }
                 }
@@ -157,24 +167,22 @@ namespace tri {
     }
 
     void Editor::shutdown(){
-        for (auto* window : windows) {
-            window->shutdown();
+        for (auto &element : elements) {
+            if(element){
+                element->shutdown();
+            }
         }
     }
 
-    void Editor::addWindow(EditorWindow* window){
-        if (window) {
-            windows.push_back(window);
-            window->startup();
-            window->profileName = "editor/" + window->name;
-        }
+    void Editor::addElement(EditorElement* element){
+        elements.push_back(std::shared_ptr<EditorElement>(element, [](EditorElement *ptr){}));
     }
 
     void Editor::updateMenuBar() {
         if (ImGui::BeginMainMenuBar()) {
             if (ImGui::BeginMenu("File")) {
                 if (ImGui::MenuItem("Open", "Ctrl+O")) {
-                    env->editor->gui.file.openBrowseWindow("Open", "Open Scene", env->reflection->getTypeId<Scene>(), [](const std::string &file){
+                    env->editor->gui.fileGui.openBrowseWindow("Open", "Open Scene", env->reflection->getTypeId<Scene>(), [](const std::string &file){
                         Scene::loadMainScene(file);
                     });
                 }
@@ -187,7 +195,7 @@ namespace tri {
                     });
                 }
                 if (ImGui::MenuItem("Save As", "Ctrl+Shift+S")) {
-                    env->editor->gui.file.openBrowseWindow("Save", "Save Scene As", env->reflection->getTypeId<Scene>(), [](const std::string &file){
+                    env->editor->gui.fileGui.openBrowseWindow("Save", "Save Scene As", env->reflection->getTypeId<Scene>(), [](const std::string &file){
                         env->assets->unload(file);
                         env->scene->file = file;
                         Ref<Scene> buffer(true);
@@ -207,18 +215,22 @@ namespace tri {
             }
 
             if (ImGui::BeginMenu("View")) {
-                for (auto* window : windows) {
-                    if (window && !window->isDebugWindow) {
-                        ImGui::MenuItem(window->name.c_str(), nullptr, &window->isOpen);
+                for (auto &element : elements) {
+                    if (element) {
+                        if (element->type == EditorElement::WINDOW || element->type == EditorElement::ELEMENT) {
+                            ImGui::MenuItem(element->name.c_str(), nullptr, &element->isOpen);
+                        }
                     }
                 }
                 ImGui::EndMenu();
             }
 
             if (ImGui::BeginMenu("Debug")) {
-                for (auto* window : windows) {
-                    if (window && window->isDebugWindow) {
-                        ImGui::MenuItem(window->name.c_str(), nullptr, &window->isOpen);
+                for (auto &element : elements) {
+                    if (element) {
+                        if (element->type == EditorElement::DEBUG_WINDOW) {
+                            ImGui::MenuItem(element->name.c_str(), nullptr, &element->isOpen);
+                        }
                     }
                 }
                 if(ImGui::MenuItem("Reset Scene")){
@@ -234,7 +246,7 @@ namespace tri {
         bool shift = env->input->down(Input::KEY_LEFT_SHIFT) || env->input->down(Input::KEY_RIGHT_SHIFT);
         if (control && env->input->pressed("S")) {
             if(shift){
-                env->editor->gui.file.openBrowseWindow("Save", "Save Scene", env->reflection->getTypeId<Scene>(), [](const std::string &file){
+                env->editor->gui.fileGui.openBrowseWindow("Save", "Save Scene", env->reflection->getTypeId<Scene>(), [](const std::string &file){
                     env->assets->unload(file);
                     env->scene->file = file;
                     Ref<Scene> buffer(true);
@@ -253,7 +265,7 @@ namespace tri {
             }
         }
         if (control && env->input->pressed("O")) {
-            env->editor->gui.file.openBrowseWindow("Open", "Open Scene", env->reflection->getTypeId<Scene>(), [](const std::string &file){
+            env->editor->gui.fileGui.openBrowseWindow("Open", "Open Scene", env->reflection->getTypeId<Scene>(), [](const std::string &file){
                 Scene::loadMainScene(file);
             });
         }
@@ -288,19 +300,18 @@ namespace tri {
         }
     }
 
-    class ImguiDemo : public EditorWindow {
+    class ImguiDemo : public EditorElement {
     public:
         void startup() {
             name = "ImGui Demo";
-            isDebugWindow = true;
-            isWindow = false;
+            type = DEBUG_WINDOW;
         }
         void update() override{
             ImGui::ShowDemoWindow(&isOpen);
         }
     };
     TRI_STARTUP_CALLBACK("") {
-        env->editor->addWindow(new ImguiDemo);
+        env->editor->addElement<ImguiDemo>();
     }
 
 }
