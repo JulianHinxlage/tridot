@@ -8,141 +8,105 @@
 
 namespace tri {
 
-    void Profiler::begin(const char *name) {
-        auto &entry = entries[name];
-        if (!entry.inProgress) {
-            entry.inProgress = true;
-            entry.clock.reset();
-        }
+    thread_local std::shared_ptr<Profiler::Node> Profiler::currentNode;
+    thread_local std::vector<std::shared_ptr<Profiler::Node>> Profiler::phaseNodeStack;
+
+    Profiler::Profiler() {
+        currentFrame = 0;
+        currentNode = nullptr;
     }
 
-    void Profiler::end(const char *name) {
-        auto &entry = entries[name];
-        if(entry.inProgress){
-            entry.inProgress = false;
-            entry.times.push_back((float)entry.clock.elapsed());
-        }
-    }
-
-    void Profiler::update() {
-        for(auto &entry : entries){
-            entry.second.sums.push_back(entry.second.sum());
-            entry.second.counts.push_back((float)entry.second.times.size());
-            entry.second.times.clear();
-        }
-    }
-
-    void Profiler::updateNodes(){
-        node.clear();
-        for (auto& entry : entries) {
-            Node* node = &this->node;
-            if (std::string(entry.first) != "total") {
-                auto parts = StrUtil::split(StrUtil::split(entry.first, "/"), "::");
-                for (auto& name : parts) {
-                    node = node->get(name);
+    void Profiler::begin(const std::string &name) {
+        if(currentNode){
+            for(auto &node : currentNode->children){
+                if(node && node->name == name){
+                    node->clock.reset();
+                    currentNode = node;
+                    return;
                 }
             }
-            else {
-                node->name = entry.first;
-            }
-            node->time += entry.second.avgSum();
-            node->count += entry.second.avgCount();
-            entry.second.sums.clear();
-            entry.second.counts.clear();
-        }
-        node.update();
-        if (node.name == "") {
-            node.name = "total";
+            mutex.lock();
+            std::shared_ptr<Node> node = std::make_shared<Node>();
+            node->name = name;
+            node->parent = currentNode;
+            node->clock.reset();
+            currentNode->children.push_back(node);
+            currentNode = node;
+            mutex.unlock();
         }
     }
 
-    Profiler::Node *Profiler::Node::get(const std::string &name){
-        for(auto &n : nodes){
-            if(n.name == name){
-                return &n;
-            }
-        }
-        for(int i = 0; i < nodes.size(); i++){
-            if(nodes[i].name >= name){
-                nodes.insert(nodes.begin() + i, Node());
-                nodes[i].name = name;
-                return &nodes[i];
-            }
-        }
-        nodes.emplace_back();
-        nodes.back().name = name;
-        return &nodes.back();
-    }
-
-    void Profiler::Node::clear(){
-        time = 0;
-        count = 0;
-        for(auto &n : nodes){
-            n.clear();
+    void Profiler::end() {
+        if(currentNode){
+            double elapsed = currentNode->clock.elapsed();
+            currentNode->frames[currentFrame].push_back(elapsed);
+            currentNode = currentNode->parent;
         }
     }
 
-    float Profiler::Node::update() {
-        float sum = 0;
-        for(auto &n : nodes){
-            sum += n.update();
+    void Profiler::beginPhase(const std::string &name) {
+        if(currentNode != nullptr){
+            phaseNodeStack.push_back(currentNode);
         }
-        if(count == 0){
-            time = sum;
-            if(sum != 0){
-                count = 1;
+        for(auto &node : phases){
+            if(node && node->name == name){
+                node->clock.reset();
+                currentNode = node;
+                return;
             }
         }
-        return time;
+        mutex.lock();
+        std::shared_ptr<Node> node = std::make_shared<Node>();
+        node->name = name;
+        node->parent = nullptr;
+        node->clock.reset();
+        phases.push_back(node);
+        currentNode = node;
+        mutex.unlock();
     }
 
-    float Profiler::Entry::sum() {
-        float value = 0;
-        for(float time : times){
-            value += time;
+    void Profiler::endPhase() {
+        if(currentNode){
+            double elapsed = currentNode->clock.elapsed();
+            currentNode->frames[currentFrame].push_back(elapsed);
         }
-        return value;
-    }
-
-    float Profiler::Entry::avgSum() {
-        float value = 0;
-        for(float time : sums){
-            value += time;
-        }
-        if(sums.size() == 0){
-            return 0;
+        if(!phaseNodeStack.empty()){
+            currentNode = phaseNodeStack.back();
+            phaseNodeStack.pop_back();
         }else{
-            return value / sums.size();
+            currentNode = nullptr;
         }
     }
 
-    float Profiler::Entry::avgCount() {
-        float value = 0;
-        for(float time : counts){
-            value += time;
-        }
-        if(counts.size() == 0){
-            return 0;
-        }else{
-            return value / counts.size();
+    void Profiler::nextFrame() {
+        currentFrame++;
+    }
+
+    int Profiler::getCurrentFrame() {
+        return currentFrame;
+    }
+
+    impl::ProfileScope::ProfileScope(const std::string &name) {
+        if(env->profiler){
+            env->profiler->begin(name);
         }
     }
 
-    namespace impl {
-
-        ProfileScope::ProfileScope(const char *name) {
-            if(env->profiler){
-                env->profiler->begin(name);
-            }
-            this->name = name;
+    impl::ProfileScope::~ProfileScope() {
+        if(env->profiler) {
+            env->profiler->end();
         }
-
-        ProfileScope::~ProfileScope() {
-            if(env->profiler) {
-                env->profiler->end(name);
-            }
-        }
-
     }
 
+    impl::ProfilePhase::ProfilePhase(const std::string &name) {
+        if(env->profiler){
+            env->profiler->beginPhase(name);
+        }
+    }
+
+    impl::ProfilePhase::~ProfilePhase() {
+        if(env->profiler) {
+            env->profiler->endPhase();
+        }
+    }
 }

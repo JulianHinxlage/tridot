@@ -238,7 +238,7 @@ namespace tri {
         }
 
         void sort() {
-            TRI_PROFILE("render/sort");
+            TRI_PROFILE("sort");
             std::sort(drawList.begin(), drawList.end());
         }
 
@@ -328,7 +328,7 @@ namespace tri {
         }
 
         void draw() {
-            TRI_PROFILE("render/draw");
+            TRI_PROFILE("draw");
 
             drawCallCount = 0;
             instanceCount = 0;

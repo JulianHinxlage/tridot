@@ -22,11 +22,7 @@ namespace tri {
             ALWAYS_OPEN,
         };
         Type type;
-
         bool isOpen = false;
-        //bool isDebugWindow = false;
-        //bool isWindow = true;
-        std::string profileName;
 
         virtual void startup() {}
         virtual void update() {}

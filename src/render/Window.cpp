@@ -48,6 +48,7 @@ namespace tri {
     }
 
     void Window::init(int width, int height, const std::string &title, bool fullscreen) {
+        TRI_PROFILE("window init");
         context = RenderContext::create();
         if(!context){
             return;
@@ -98,15 +99,15 @@ namespace tri {
                 glfwSwapInterval(0);
             }
             {
-                TRI_PROFILE("Window/wait for GPU");
+                TRI_PROFILE("wait for GPU");
                 RenderContext::flush(true);
             }
             {
-                TRI_PROFILE("Window/swap buffers");
+                TRI_PROFILE("swap buffers");
                 glfwSwapBuffers(window);
             }
             {
-                TRI_PROFILE("Window/clear");
+                TRI_PROFILE("clear");
                 glm::vec4 color = backgroundColor.vec();
                 glClearColor(color.r, color.g, color.b, color.a);
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

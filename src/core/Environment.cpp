@@ -61,10 +61,10 @@ namespace tri {
             env->profiler = env->systems->addSystem<Profiler>("Profiler");
             env->threads = env->systems->addSystem<ThreadPool>("ThreadPool");
 
-            env->signals->startup.addCallback([]() {
+            env->signals->startup.addCallback("systems", []() {
                 env->systems->startup();
             });
-            env->signals->shutdown.addCallback([]() {
+            env->signals->shutdown.addCallback("systems", []() {
                 env->systems->shutdown();
             });
         }

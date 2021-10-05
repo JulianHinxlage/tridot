@@ -24,7 +24,7 @@ namespace tri {
                 "Window",
                 "Imgui/begin",
                 "Imgui/end",
-                "Gizmos.begin",
+                "Gizmos/begin",
             };
 
             editModeConfig = {

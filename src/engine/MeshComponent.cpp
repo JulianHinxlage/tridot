@@ -57,7 +57,7 @@ namespace tri {
 
                 env->renderer->beginScene(camera.projection, cameraTransform.position);
                 {
-                    TRI_PROFILE("render/submit");
+                    TRI_PROFILE("submit");
                     //meshes
                     env->scene->view<MeshComponent, Transform>().each([](EntityId id, MeshComponent& mesh, Transform& transform) {
                         env->renderer->submit(transform.getMatrix(), transform.position, mesh.mesh.get(), mesh.material.get(), mesh.color, id);

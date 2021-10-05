@@ -15,24 +15,64 @@ namespace tri {
             name = "Profiler";
             type = WINDOW;
         }
+        int previousDisplayFrame = 0;
+        int displayFrame = 0;
+        bool allFrames = false;
 
         void update() override {
             if (env->time->frameTicks(0.5)) {
-                env->profiler->updateNodes();
+                previousDisplayFrame = displayFrame;
+                displayFrame = env->profiler->getCurrentFrame() - 1;
             }
-            updateNode(env->profiler->node, ImGuiTreeNodeFlags_DefaultOpen);
+            for(auto &node : env->profiler->getPhaseNodes()){
+                if(node->name == "update"){
+                    allFrames = false;
+                }else{
+                    allFrames = true;
+                }
+                updateNode(*node);
+            }
         }
 
         void updateNode(Profiler::Node &node, ImGuiTreeNodeFlags flags = 0) {
-            if (node.nodes.size() == 0) {
+            if (node.children.size() == 0) {
                 flags |= ImGuiTreeNodeFlags_Leaf;
             }
-            if (ImGui::TreeNodeEx(node.name.c_str(), flags, "%.2f ms (x %i) %s", node.time * 1000.0f, (int)node.count, node.name.c_str())) {
-                for (auto& n : node.nodes) {
-                    updateNode(n);
+            float count = 0;
+            float sum = 0;
+
+            if(allFrames){
+                for(auto &i : node.frames){
+                    for (auto time : i.second) {
+                        sum += time;
+                        count++;
+                    }
+                }
+            }else {
+                int frames = 0;
+                for (int i = previousDisplayFrame + 1; i <= displayFrame; i++) {
+                    if (node.frames.contains(i)) {
+                        auto &times = node.frames[i];
+                        for (auto time : times) {
+                            sum += time;
+                            count++;
+                        }
+                        frames++;
+                    }
+                }
+                if(frames > 0){
+                    sum /= frames;
+                    count /= frames;
+                }
+            }
+
+            if (ImGui::TreeNodeEx(node.name.c_str(), flags, "%.2f ms (x %i) %s", sum * 1000.0f, (int)count, node.name.c_str())) {
+                for (auto& child : node.children) {
+                    updateNode(*child);
                 }
                 ImGui::TreePop();
             }
+
         }
 
     };

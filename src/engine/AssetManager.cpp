@@ -276,11 +276,16 @@ namespace tri {
                         } else {
                             record.previousTimeStamp = record.timeStamp;
                             record.timeStamp = getTimeStamp(record.path);
-                            if (record.asset->load(record.path)) {
-                                record.status = (Status) (record.status | STATE_LOADED);
-                            } else {
-                                record.status = (Status) (record.status | FAILED_TO_LOAD);
-                                env->console->warning("failed to load asset: ", record.file);
+                            TRI_PROFILE_PHASE("assets");
+                            TRI_PROFILE("load");
+                            {
+                                TRI_PROFILE(record.file);
+                                if (record.asset->load(record.path)) {
+                                    record.status = (Status) (record.status | STATE_LOADED);
+                                } else {
+                                    record.status = (Status) (record.status | FAILED_TO_LOAD);
+                                    env->console->warning("failed to load asset: ", record.file);
+                                }
                             }
                         }
                         processed = true;
@@ -299,13 +304,18 @@ namespace tri {
                 if(!(record.status & SHOULD_NOT_LOAD)) {
 
                     if ((record.status & STATE_LOADED) && !(record.status & STATE_ACTIVATED)) {
-                        if (record.asset->loadActivate()) {
-                            record.status = (Status) (record.status | STATE_ACTIVATED);
-                        } else {
-                            record.status = (Status) (record.status | FAILED_TO_LOAD);
-                            env->console->warning("failed to load asset: ", record.file);
+                        TRI_PROFILE_PHASE("assets");
+                        TRI_PROFILE("activate");
+                        {
+                            TRI_PROFILE(record.file);
+                            if (record.asset->loadActivate()) {
+                                record.status = (Status) (record.status | STATE_ACTIVATED);
+                            } else {
+                                record.status = (Status) (record.status | FAILED_TO_LOAD);
+                                env->console->warning("failed to load asset: ", record.file);
+                            }
+                            processed = true;
                         }
-                        processed = true;
                     }
 
                     if ((record.status & STATE_ACTIVATED) && !(record.status & STATE_POST_LOADED)) {

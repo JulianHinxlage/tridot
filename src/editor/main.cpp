@@ -11,6 +11,7 @@ using namespace tri;
 int main(int argc, char* argv[]) {
     Environment::startup();
 
+    env->profiler->beginPhase("startup");
     env->signals->preStartup.invoke();
 
     env->assets->hotReloadEnabled = true;
@@ -31,21 +32,26 @@ int main(int argc, char* argv[]) {
         "Tridot Editor");
     env->window->setBackgroundColor(Color(50, 50, 50));
 
-    env->signals->startup.invoke();
+    env->signals->startup.invoke(true);
     env->signals->postStartup.invoke();
+    env->profiler->endPhase();
 
     while (env->window->isOpen()) {
-        TRI_PROFILE("total");
+        env->profiler->beginPhase("update");
         env->signals->preUpdate.invoke();
         env->signals->update.invoke(true);
         env->signals->postUpdate.invoke();
 
         env->window->setVSync(*env->console->getVariable<bool>("vsync"));
+        env->profiler->endPhase();
+        env->profiler->nextFrame();
     }
 
+    env->profiler->beginPhase("shutdown");
     env->signals->preShutdown.invoke();
     env->signals->shutdown.invoke();
     env->signals->postShutdown.invoke();
+    env->profiler->endPhase();
 
     Environment::shutdown();
     return 0;

@@ -95,7 +95,6 @@ namespace tri {
         env->signals->postStartup.addCallback([this](){
             for(auto &element : elements){
                 if(element){
-                    element->profileName = "Editor/" + element->name;
                     element->startup();
                 }
             }
@@ -121,7 +120,7 @@ namespace tri {
             for (auto &element : elements) {
                 if (element) {
                     if(element->isOpen || element->type == EditorElement::ALWAYS_OPEN){
-                        TRI_PROFILE(element->profileName.c_str());
+                        TRI_PROFILE(element->name.c_str());
                         if (element->type == EditorElement::WINDOW || element->type == EditorElement::DEBUG_WINDOW) {
                             if (ImGui::Begin(element->name.c_str(), &element->isOpen)) {
                                 element->update();
