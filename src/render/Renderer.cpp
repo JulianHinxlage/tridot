@@ -123,10 +123,12 @@ namespace tri {
         };
         std::vector<Call> calls;
 
-        std::unordered_map<Shader*, uint32_t> shaderMap;
-        std::unordered_map<Mesh*, uint32_t> meshMap;
-        std::unordered_map<Material*, uint32_t> materialMap;
-        std::unordered_map<Texture*, uint32_t> textureMap;
+        std::vector<Shader*> shaderList;
+        int nullShaderIndex = -1;
+        std::vector<Mesh*> meshList;
+        std::vector<Material*> materialList;
+        std::vector<Texture*> textureList;
+
         Ref<Shader> defaultShader;
 
         class MeshBatch {
@@ -142,54 +144,73 @@ namespace tri {
         bool useMaterials = true;
 
         uint32_t getShaderIndex(Shader* shader) {
-            auto x = shaderMap.find(shader);
-            if (x == shaderMap.end()) {
-                uint32_t index = shaderMap.size();
-                shaderMap[shader] = index;
-                return index;
+            if(!shader){
+                if(nullShaderIndex == -1){
+                    shaderList.push_back(shader);
+                    nullShaderIndex = shaderList.size() - 1;
+                }
+                return nullShaderIndex;
             }
-            else {
-                return x->second;
+            if(shader->assetIndex == -1){
+                shaderList.push_back(shader);
+                shader->assetIndex = shaderList.size() - 1;
             }
+            return shader->assetIndex;
         }
 
         uint32_t getMeshIndex(Mesh* mesh) {
-            auto x = meshMap.find(mesh);
-            if (x == meshMap.end()) {
-                uint32_t index = meshMap.size();
-                meshMap[mesh] = index;
-                return index;
+            if(mesh->assetIndex == -1){
+                meshList.push_back(mesh);
+                mesh->assetIndex = meshList.size() - 1;
             }
-            else {
-                return x->second;
-            }
+            return mesh->assetIndex;
         }
 
         uint32_t getMaterialIndex(Material* material) {
-            auto x = materialMap.find(material);
-            if (x == materialMap.end()) {
-                uint32_t index = materialMap.size();
-                materialMap[material] = index;
-                return index;
+            if(material->assetIndex == -1){
+                materialList.push_back(material);
+                material->assetIndex = materialList.size() - 1;
             }
-            else {
-                return x->second;
-            }
+            return material->assetIndex;
         }
 
         uint32_t getTextureIndex(Texture* texture) {
             if(!texture){
                 return -1;
             }
-            auto x = textureMap.find(texture);
-            if (x == textureMap.end()) {
-                uint32_t index = textureMap.size();
-                textureMap[texture] = index;
-                return index;
+            if(texture->assetIndex == -1){
+                textureList.push_back(texture);
+                texture->assetIndex = textureList.size() - 1;
             }
-            else {
-                return x->second;
+            return texture->assetIndex;
+        }
+
+        void resetTextures(){
+            for(auto &texture : textureList){
+                texture->assetIndex = -1;
             }
+            textureList.clear();
+        }
+        void resetShaders(){
+            for(auto &shader : shaderList){
+                if(shader){
+                    shader->assetIndex = -1;
+                }
+            }
+            shaderList.clear();
+            nullShaderIndex = -1;
+        }
+        void resetMaterials(){
+            for(auto &material : materialList){
+                material->assetIndex = -1;
+            }
+            materialList.clear();
+        }
+        void resetMeshes(){
+            for(auto &mesh : meshList){
+                mesh->assetIndex = -1;
+            }
+            meshList.clear();
         }
 
         void init() {
@@ -229,7 +250,6 @@ namespace tri {
                 key.v1 |= ((uint64_t)-depth & 0xffffff) << 32;
                 key.v1 |= ((uint64_t)getMeshIndex(mesh) & 0xffff) << 16;
                 key.v1 |= ((uint64_t)getShaderIndex(material->shader.get()) & 0xffff) << 0;
-                //key.v1 |= ((uint64_t)getMaterialIndex(material) & 0xffff) << 0;
             }
             getMaterialIndex(material);
 
@@ -279,11 +299,10 @@ namespace tri {
                 for (int i = 0; i < 30; i++) {
                     textures[i] = i;
                 }
-                for (auto &tex : textureMap) {
-                    if (tex.first) {
-                        tex.first->bind(tex.second);
-                    }
+                for(int i = 0; i < textureList.size(); i++){
+                    textureList[i]->bind(i);
                 }
+
                 shader->set("uTextures", textures, 30);
 
                 batch.instances->update();
@@ -292,8 +311,8 @@ namespace tri {
                 RenderContext::flush(false);
 
                 materialBuffer.reset();
-                materialMap.clear();
-                textureMap.clear();
+                resetMaterials();
+                resetTextures();
                 drawCallCount++;
             }
         }
@@ -332,17 +351,17 @@ namespace tri {
 
             drawCallCount = 0;
             instanceCount = 0;
-            materialCount = materialMap.size();
+            materialCount = materialList.size();
             lightCount = lightBuffer.size();
-            shaderCount = shaderMap.size();
-            meshCount = meshMap.size();
+            shaderCount = shaderList.size();
+            meshCount = meshList.size();
 
             Mesh* mesh = nullptr;
             Material* material = nullptr;
             BatchBuffer* instances;
             Shader *shader = nullptr;
 
-            materialMap.clear();
+            resetMaterials();
             int materialIndex = 0;
             useMaterials = true;
 
@@ -412,10 +431,10 @@ namespace tri {
 
             materialBuffer.reset();
             lightBuffer.reset();
-            materialMap.clear();
-            textureMap.clear();
-            meshMap.clear();
-            shaderMap.clear();
+            resetMaterials();
+            resetTextures();
+            resetMeshes();
+            resetShaders();
         }
 
         void clear() {

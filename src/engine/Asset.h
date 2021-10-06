@@ -8,6 +8,8 @@ namespace tri {
 
     class Asset {
     public:
+        int assetIndex = -1;
+
         Asset(){}
         virtual ~Asset(){}
         virtual bool load(const std::string &file){return true;}
