@@ -5,6 +5,8 @@
 #pragma once
 
 #include "Color.h"
+#include "FrameBuffer.h"
+#include "core/util/Ref.h"
 #include <glm/glm.hpp>
 
 namespace tri {
@@ -20,6 +22,7 @@ namespace tri {
         Color color;
         float intensity;
         LightType type;
+        Ref<FrameBuffer> shadowMap;
 
         Light(LightType type = DIRECTIONAL_LIGHT, Color color = Color::white, float intensity = 1);
     };

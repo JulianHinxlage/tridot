@@ -42,17 +42,13 @@ namespace tri {
 
                 //lights
                 env->scene->view<Light, Transform>().each([](Light &light, Transform &transform){
-                    if(light.type == DIRECTIONAL_LIGHT){
-                        Transform t;
-                        t.decompose(transform.getMatrix());
-                        t.position = {0, 0, 0};
-                        t.scale = {1, 1, 1};
-                        env->renderer->submit(t.calculateLocalMatrix() * glm::vec4(0, 0, -1, 0), light);
-                    }else{
-                        Transform t;
-                        t.decompose(transform.getMatrix());
-                        env->renderer->submit(t.position, light);
-                    }
+                    Transform t;
+                    t.decompose(transform.getMatrix());
+                    glm::vec3 position = t.position;
+                    t.position = {0, 0, 0};
+                    t.scale = {1, 1, 1};
+                    glm::vec3 direction = t.calculateLocalMatrix() * glm::vec4(0, 0, -1, 0);
+                    env->renderer->submit(position, direction, light);
                 });
 
                 env->renderer->beginScene(camera.projection, cameraTransform.position);

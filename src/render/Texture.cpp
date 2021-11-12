@@ -83,6 +83,14 @@ namespace tri {
         this->tRepeat = tRepeat;
     }
 
+    void Texture::setBorderColor(Color color) {
+        bindTexture(id, type);
+        glm::vec4 c = color.vec();
+        glTexParameteri(internalEnum(type), GL_TEXTURE_WRAP_S, sRepeat ? GL_REPEAT : GL_CLAMP_TO_BORDER);
+        glTexParameteri(internalEnum(type), GL_TEXTURE_WRAP_T, tRepeat ? GL_REPEAT : GL_CLAMP_TO_BORDER);
+        glTexParameterfv(internalEnum(type), GL_TEXTURE_BORDER_COLOR, (float*)&c);
+    }
+
     void Texture::create(uint32_t width, uint32_t height, TextureFormat format, bool enableMipMapping) {
         if(id != 0){
             glDeleteTextures(1, &id);

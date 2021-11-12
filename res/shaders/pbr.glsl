@@ -62,12 +62,25 @@ in vec4 fId;
 struct Light{
     vec3 position;
     int align1;
+    vec3 direction;
+    int align2;
+    vec3 color;
+    int align3;
+    int type;
+    float intensity;
+    int shadowMapIndex;
+    int align4;
+    mat4 projection;
+    /*
+    vec3 position;
+    int align1;
     vec3 color;
     int align2;
     float intensity;
     int type;
     int align3;
     int align4;
+    */
 };
 layout(std140) uniform uLights {
     Light lights[32];
@@ -123,6 +136,7 @@ out vec4 oId;
 
 vec4 sampleTexture(int textureIndex, int mapping, vec2 textureScale, vec2 textureOffset);
 vec4 sampleTextureIndexed(int textureIndex, vec2 textureCoords);
+vec2 textureSizeIndexed(int textureIndex);
 vec4 sampleCubeTextureIndexed(int textureIndex, vec3 textureCoords);
 vec4 sampleCubeTextureIndexedLod(int textureIndex, vec3 textureCoords, int lod);
 
@@ -177,6 +191,32 @@ void main(){
     oId = vec4(fId.xyz, 1.0);
 }
 
+float shadowMapping(int lightIndex, float ndotl){
+    Light light = lights[lightIndex];
+    vec3 pos = vec3(light.projection * vec4(fPosition, 1.0)) * 0.5 + 0.5;
+
+    float bias = max(0.005 * (1.0 - ndotl), 0.0005);
+    if(pos.z > 1.0){
+        pos.z = 1.0;
+    }
+
+    //float depth = sampleTextureIndexed(light.shadowMapIndex, pos.xy).r;
+    //return (depth + bias) < pos.z ? 0.0 : 1.0;
+
+    //vec2 texelSize = 1.0 / textureSizeIndexed(light.shadowMapIndex);
+    vec2 texelSize = 1.0 / vec2(2048.0, 2048.0);
+    float shadow = 0;
+    int count = 2;
+    for(int x = -count; x <= count; ++x){
+        for(int y = -count; y <= count; ++y){
+            float depth = sampleTextureIndexed(light.shadowMapIndex, pos.xy + vec2(x, y) * texelSize).r;
+            shadow += (depth + bias) < pos.z ? 0.0 : 1.0;
+        }
+    }
+
+    return shadow / float((count * 2 + 1) * (count * 2 + 1));
+}
+
 vec3 lighing(vec3 albedo, vec3 normal, float metallic, float roughness, float ao){
     vec3 lightOutput = vec3(0.0);
     vec3 viewDirection = normalize(cameraPosition - fPosition);
@@ -193,6 +233,7 @@ vec3 lighing(vec3 albedo, vec3 normal, float metallic, float roughness, float ao
 
             float attenuation = 1;
             vec3 lightDirection = vec3(0, 0, -1);
+            float shadow = 1;
 
             if (light.type == 2){
                 //point light
@@ -202,11 +243,13 @@ vec3 lighing(vec3 albedo, vec3 normal, float metallic, float roughness, float ao
                 attenuation = 1.0 / pow(lightDistance, attenuationFallof);
             }else{
                 //directional light
-                lightDirection = normalize(-light.position);
+                lightDirection = normalize(-light.direction);
+                float ndotl = max(0.0, dot(normal, lightDirection));
+                shadow = shadowMapping(i, ndotl);
             }
 
             vec3 radiance = light.color * light.intensity * attenuation;
-            lightOutput += pbrLight(albedo, normal, viewDirection, lightDirection, metallic, roughness) * radiance;
+            lightOutput += pbrLight(albedo, normal, viewDirection, lightDirection, metallic, roughness) * radiance * shadow;
         }
     }
 
@@ -299,6 +342,15 @@ vec4 sampleTextureIndexed(int textureIndex, vec2 textureCoords){
         }
     }
     return vec4(0, 0, 0, 1);
+}
+
+vec2 textureSizeIndexed(int textureIndex){
+    for(int i = 0; i < 30; i++){
+        if(i == textureIndex){
+            return vec2(textureSize(uTextures[i], 0));
+        }
+    }
+    return vec2(1, 1);
 }
 
 vec4 sampleCubeTextureIndexed(int textureIndex, vec3 textureCoords){

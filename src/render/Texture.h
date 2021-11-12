@@ -27,6 +27,7 @@ namespace tri {
 
         void setMagMin(bool magNearest, bool minNearest);
         void setWrap(bool sRepeat, bool tRepeat);
+        void setBorderColor(Color color);
 
         uint32_t getWidth();
         uint32_t getHeight();

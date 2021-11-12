@@ -8,6 +8,8 @@
 #include "engine/AssetManager.h"
 #include "BatchBuffer.h"
 #include "render/RenderContext.h"
+#include <glm/ext/matrix_transform.hpp>
+#include <glm/ext/matrix_clip_space.hpp>
 
 namespace tri {
 
@@ -71,14 +73,25 @@ namespace tri {
 
         class LightData {
         public:
-            glm::vec3 positionOrDirection;
+            glm::vec3 position;
             int align1;
-            glm::vec3 color;
+            glm::vec3 direction;
             int align2;
-            float intensity;
-            int type;
+            glm::vec3 color;
             int align3;
+            int type;
+            float intensity;
+            int shadowMapIndex;
             int align4;
+            glm::mat4 projection;
+        };
+
+        class LightEntry {
+        public:
+            LightData data;
+            Ref<FrameBuffer> shadowMap;
+            glm::mat4 projection;
+            LightType type;
         };
 
         class EnvironmentData{
@@ -128,8 +141,10 @@ namespace tri {
         std::vector<Mesh*> meshList;
         std::vector<Material*> materialList;
         std::vector<Texture*> textureList;
+        std::vector<LightEntry> lightList;
 
         Ref<Shader> defaultShader;
+        Ref<FrameBuffer> shadowMapFrameBuffer;
 
         class MeshBatch {
         public:
@@ -142,6 +157,7 @@ namespace tri {
         BatchBuffer lightBuffer;
         Ref<Buffer> environmentBuffer;
         bool useMaterials = true;
+        bool enableShadows = true;
 
         uint32_t getShaderIndex(Shader* shader) {
             if(!shader){
@@ -218,14 +234,40 @@ namespace tri {
             lightBuffer.init(sizeof(LightData), UNIFORM_BUFFER);
             environmentBuffer = Ref<Buffer>::make();
             environmentBuffer->init(nullptr, 0, sizeof(EnvironmentData), UNIFORM_BUFFER, true);
+
+            env->console->setVariable("shadows", &enableShadows);
         }
 
-        void addLight(const glm::vec3 &positionOrDirection, const Light &light){
+        void addLight(const glm::vec3 &position, const glm::vec3 direction, Light &light){
             LightData *l = (LightData*)lightBuffer.next();
             l->color = light.color.vec();
             l->type = (int)light.type;
-            l->positionOrDirection = positionOrDirection;
+            l->position = position;
+            l->direction = direction;
             l->intensity = light.intensity;
+
+            if(light.shadowMap.get() == nullptr){
+                light.shadowMap = Ref<FrameBuffer>::make();
+                Ref<Texture> depth = Ref<Texture>::make();
+                depth->create(2048, 2048, DEPTH32, false);
+                depth->setMagMin(false, false);
+                depth->setWrap(false, false);
+                depth->setBorderColor(Color::white);
+                light.shadowMap->setAttachment({DEPTH, Color(0)}, depth);
+                light.shadowMap->resize(2048, 2048);
+            }
+
+            if(light.type == DIRECTIONAL_LIGHT){
+                float near = 1.0f;
+                float far = 100.0f;
+                float size = 20.0f;
+                glm::mat4 projection = glm::ortho(-size, size, -size, size, near, far);
+                glm::mat4 view = glm::lookAt(position - direction, position, {0, 1, 0});
+                l->projection = projection * view;
+            }else{
+                l->projection = glm::mat4(1);
+            }
+            lightList.push_back({*l, light.shadowMap, l->projection, light.type});
         }
 
         void add(const glm::mat4 &transform, const glm::vec3& position, Mesh* mesh, Material* material, Color color, uint32_t id, uint32_t layer = 0) {
@@ -317,6 +359,17 @@ namespace tri {
             }
         }
 
+        void submitShadowMap(Mesh* mesh, Shader *shader) {
+            MeshBatch& batch = meshes[mesh];
+            if(batch.instances->size() > 0) {
+                batch.instances->update();
+                batch.mesh->submit(-1, batch.instances->size());
+                batch.instances->reset();
+                RenderContext::flush(false);
+                drawCallCount++;
+            }
+        }
+
         void setMaterialData(Material *m, MaterialData *d){
             d->color = m->color.vec();
             d->mapping = (int)m->mapping;
@@ -346,11 +399,93 @@ namespace tri {
             d->displacementMapScale = m->displacementMapScale * m->scale;
         }
 
-        void draw() {
-            TRI_PROFILE("draw");
+        void updateShadowMaps(){
+            TRI_PROFILE("shadow maps");
 
+            Mesh *mesh = nullptr;
+            BatchBuffer *instances;
+            Ref<Shader> shader = env->assets->get<Shader>("shaders/shadow.glsl");
+            if(shader->getId() == 0){
+                return;
+            }
+            shader->bind();
+
+            for(auto &light : lightList) {
+                if(light.type != DIRECTIONAL_LIGHT){
+                    continue;
+                }
+
+                light.shadowMap->bind();
+                light.shadowMap->clear();
+
+                EnvironmentData e;
+                e.projection = light.projection;
+                e.cameraPosition = {0, 0, 0};
+                e.lightCount = lightBuffer.size();
+                e.environmentMapIndex = -1;
+                e.irradianceMapIndex = -1;
+                e.environmentMapIntensity = 0;
+                environmentBuffer->setData(&e, sizeof(e));
+                shader->set("uEnvironment", environmentBuffer.get());
+
+                for (auto &i : drawList) {
+                    Call &call = calls[i.index];
+
+                    if (call.mesh != mesh) {
+                        if (mesh) {
+                            submitShadowMap(mesh, shader.get());
+                        }
+                        mesh = call.mesh;
+                        instances = prepareMesh(mesh);
+                    }
+
+                    InstanceData *instance = (InstanceData *) instances->next();
+                    instance->transform = call.transform;
+                    instance->color = call.color;
+                    instance->materialIndex = -1;
+                    instance->id = call.id;
+                    instanceCount++;
+                }
+
+                if (mesh) {
+                    submitShadowMap(mesh, shader.get());
+                }
+
+                shadowMapFrameBuffer->unbind();
+            }
+        }
+
+        void updateLightBuffer(Shader *shader){
+            lightBuffer.reset();
+            for(auto &light : lightList){
+                if(enableShadows){
+                    light.data.shadowMapIndex = getTextureIndex(light.shadowMap->getAttachment(DEPTH).get());
+                    *(LightData*)lightBuffer.next() = light.data;
+                }else{
+                    light.data.shadowMapIndex = -1;
+                    *(LightData*)lightBuffer.next() = light.data;
+                }
+            }
+            lightBuffer.update();
+            shader->set("uLights", lightBuffer.buffer.get());
+        }
+
+        void draw(Ref<FrameBuffer> frameBuffer) {
+            TRI_PROFILE("draw");
             drawCallCount = 0;
             instanceCount = 0;
+
+            if(enableShadows) {
+                updateShadowMaps();
+            }
+
+            if (frameBuffer) {
+                frameBuffer->bind();
+            }
+            else {
+                FrameBuffer::unbind();
+            }
+
             materialCount = materialList.size();
             lightCount = lightBuffer.size();
             shaderCount = shaderList.size();
@@ -365,68 +500,71 @@ namespace tri {
             int materialIndex = 0;
             useMaterials = true;
 
-            for (auto& i : drawList) {
-                Call &call = calls[i.index];
+            {
+                TRI_PROFILE("geometry");
+                for (auto &i : drawList) {
+                    Call &call = calls[i.index];
 
-                if (call.mesh != mesh) {
-                    if (mesh) {
-                        submit(mesh, shader);
-                        material = nullptr;
-                    }
-                    mesh = call.mesh;
-                    instances = prepareMesh(mesh);
-                }
-
-                if (material != call.material) {
-                    Shader *s = call.material->shader.get();
-                    if(!s){
-                        s = defaultShader.get();
-                    }
-                    if(shader != s){
-                        if(shader){
+                    if (call.mesh != mesh) {
+                        if (mesh) {
+                            updateLightBuffer(shader);
                             submit(mesh, shader);
                             material = nullptr;
                         }
-
-                        shader = s;
-                        useMaterials = shader->has("uMaterials");
-                        shader->bind();
-
-                        lightBuffer.update();
-                        shader->set("uLights", lightBuffer.buffer.get());
-
-                        EnvironmentData e;
-                        e.projection = projectionMatrix;
-                        e.cameraPosition = eyePosition;
-                        e.lightCount = lightBuffer.size();
-                        e.environmentMapIndex = -1;
-                        e.irradianceMapIndex = -1;
-                        e.environmentMapIntensity = 0;
-                        environmentBuffer->setData(&e, sizeof(e));
-                        shader->set("uEnvironment", environmentBuffer.get());
+                        mesh = call.mesh;
+                        instances = prepareMesh(mesh);
                     }
 
-                    material = call.material;
-                    if(!useMaterials){
-                        materialIndex = getTextureIndex(material->texture.get());
-                    }else{
-                        materialIndex = getMaterialIndex(material);
-                        if(materialIndex >= materialBuffer.size()){
-                            setMaterialData(material, (MaterialData*)materialBuffer.next());
+                    if (material != call.material) {
+                        Shader *s = call.material->shader.get();
+                        if (!s) {
+                            s = defaultShader.get();
+                        }
+                        if (shader != s) {
+                            if (shader) {
+                                updateLightBuffer(shader);
+                                submit(mesh, shader);
+                                material = nullptr;
+                            }
+
+                            shader = s;
+                            shader->bind();
+                            useMaterials = shader->has("uMaterials");
+
+                            EnvironmentData e;
+                            e.projection = projectionMatrix;
+                            e.cameraPosition = eyePosition;
+                            e.lightCount = lightBuffer.size();
+                            e.environmentMapIndex = -1;
+                            e.irradianceMapIndex = -1;
+                            e.environmentMapIntensity = 0;
+                            environmentBuffer->setData(&e, sizeof(e));
+                            shader->set("uEnvironment", environmentBuffer.get());
+                        }
+
+                        material = call.material;
+                        if (!useMaterials) {
+                            materialIndex = getTextureIndex(material->texture.get());
+                        } else {
+                            materialIndex = getMaterialIndex(material);
+                            if (materialIndex >= materialBuffer.size()) {
+                                setMaterialData(material, (MaterialData *) materialBuffer.next());
+                            }
                         }
                     }
+
+                    InstanceData *instance = (InstanceData *) instances->next();
+                    instance->transform = call.transform;
+                    instance->color = call.color;
+                    instance->materialIndex = materialIndex;
+                    instance->id = call.id;
+                    instanceCount++;
                 }
 
-                InstanceData* instance = (InstanceData*)instances->next();
-                instance->transform = call.transform;
-                instance->color = call.color;
-                instance->materialIndex = materialIndex;
-                instance->id = call.id;
-                instanceCount++;
-            }
-
-            if (mesh) {
-                submit(mesh, shader);
+                if (mesh) {
+                    updateLightBuffer(shader);
+                    submit(mesh, shader);
+                }
             }
 
             materialBuffer.reset();
@@ -440,6 +578,7 @@ namespace tri {
         void clear() {
             drawList.clear();
             calls.clear();
+            lightList.clear();
         }
 
     };
@@ -459,8 +598,8 @@ namespace tri {
         drawList->add(transform, position, mesh, material, color, id);
     }
 
-    void Renderer::submit(const glm::vec3 &positionOrDirection, const Light &light) {
-        drawList->addLight(positionOrDirection, light);
+    void Renderer::submit(const glm::vec3 &position, const glm::vec3 direction, Light &light) {
+        drawList->addLight(position, direction, light);
     }
 
     void Renderer::drawScene(Ref<FrameBuffer> frameBuffer, Ref<RenderPipeline> pipeline) {
@@ -479,7 +618,7 @@ namespace tri {
             }
         }
         drawList->sort();
-        drawList->draw();
+        drawList->draw(frameBuffer);
         pipeline->executePipeline(frameBuffer);
 
         drawCallCount += drawList->drawCallCount;

@@ -1,0 +1,87 @@
+- id: 103
+  EntityInfo:
+    name: ambient light
+  Transform:
+    position: [0.193302348, 0.800970316, 1.34647191]
+    scale: [1, 1, 1]
+    rotation: [0, -0, 0]
+    parent: 4294967295
+  Light:
+    type: AMBIENT_LIGHT
+    color: [254, 255, 254, 255]
+    intensity: 0.310000002
+- id: 4
+  Camera:
+    forward: [0.863269985, -0.504380167, 0.0191183221]
+    up: [0.504256487, 0.8634817, 0.0111674666]
+    right: [-0.0221409705, 0, 0.999754846]
+    projection: ~
+    target: ~
+    output: ~
+    pipeline: ~
+    isPrimary: false
+    active: true
+    type: PERSPECTIVE
+    near: 0.00999999978
+    far: 1000
+    fieldOfView: 69.1159973
+    aspectRatio: 1.85816622
+  EntityInfo:
+    name: camera
+  Transform:
+    position: [-10.0138159, 7.49040127, 2.83906889]
+    scale: [1, 1, 1]
+    rotation: [-0.528663993, -146.106201, 0]
+    parent: 4294967295
+  Light:
+    type: DIRECTIONAL_LIGHT
+    color: [255, 254, 254, 255]
+    intensity: 0.449999988
+  EditorOnly: ~
+- id: 20
+  EntityInfo:
+    name: directional light
+  Transform:
+    position: [-1.27199996, 0.405581743, 5.37699986]
+    scale: [0.999996483, 0.999998569, 0.999998093]
+    rotation: [-0.587146163, 0.73012358, 1.4914012]
+    parent: 4294967295
+  Light:
+    type: DIRECTIONAL_LIGHT
+    color: [255, 255, 255, 255]
+    intensity: 1.75999999
+- id: 50
+  Camera:
+    forward: [0.748134077, -0.395467252, -0.53282702]
+    up: [0.322120607, 0.918480396, -0.229416862]
+    right: [0.580115616, 0, 0.814531207]
+    projection: ~
+    target: ~
+    output: ~
+    pipeline: ~
+    isPrimary: true
+    active: false
+    type: PERSPECTIVE
+    near: 0.00999999978
+    far: 1000
+    fieldOfView: 60
+    aspectRatio: 1.85816622
+  EntityInfo:
+    name: primary camera
+  Transform:
+    position: [-8.45986271, 4.16529655, 9.89205933]
+    scale: [0.999997616, 1, 1.00000179]
+    rotation: [-0.406575739, -0.951924026, 0]
+    parent: 4294967295
+- id: 41
+  EntityInfo:
+    name: ground-plane
+  MeshComponent:
+    mesh: models/circle.obj
+    material: materials/m4.mat
+    color: [255, 254, 254, 255]
+  Transform:
+    position: [-1.05901015, -3.15736413, 2.80143952]
+    scale: [298.946899, 298.946899, 298.946899]
+    rotation: [0, -0, 0]
+    parent: 4294967295

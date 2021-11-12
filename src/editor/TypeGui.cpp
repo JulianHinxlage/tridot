@@ -10,6 +10,7 @@
 #include "engine/AssetManager.h"
 #include "render/Material.h"
 #include "EditorCamera.h"
+#include "render/Light.h"
 #include <glm/glm.hpp>
 #include <imgui.h>
 
@@ -262,6 +263,26 @@ namespace tri {
                 }
             }
         });
+
+        /*
+        env->editor->gui.typeGui.setTypeFunction<Light>([](const char *label, Light &v, Light *min, Light *max) {
+            env->editor->gui.typeGui.drawMember(env->reflection->getTypeId<Light>(), &v, label, min, max, false, false);
+            if(v.shadowMap) {
+                if(ImGui::TreeNode("Shadow Map")) {
+                    auto texture = v.shadowMap->getAttachment(DEPTH);
+                    if (texture) {
+                        float aspect = 1;
+                        if (texture->getHeight() != 0) {
+                            aspect = (float) texture->getWidth() / (float) texture->getHeight();
+                        }
+                        ImGui::Image((void *) (size_t) texture->getId(), ImVec2(200 * aspect, 200), ImVec2(0, 1),
+                                     ImVec2(1, 0));
+                    }
+                    ImGui::TreePop();
+                }
+            }
+        });
+         */
     }
 
 }

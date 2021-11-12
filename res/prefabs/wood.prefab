@@ -1,0 +1,118 @@
+EntityInfo:
+  name: wood
+Transform:
+  position: [-1.32062399, 0.114525735, 7.54417276]
+  scale: [1, 1, 1]
+  rotation: [0, -0, 0]
+  parent: 4294967295
+Children:
+  - EntityInfo:
+      name: plane
+    MeshComponent:
+      mesh: models/plane.obj
+      material: materials/m3.mat
+      color: [255, 254, 254, 255]
+    Transform:
+      position: [-2.24689627, -0.147926897, -0.112781048]
+      scale: [1, 1, 1]
+      rotation: [0, -0, 0]
+      parent: 52
+  - EntityInfo:
+      name: sphere
+    MeshComponent:
+      mesh: models/sphere.obj
+      material: materials/m3.mat
+      color: [255, 254, 254, 255]
+    Transform:
+      position: [1.14742339, -0.114525616, -1.5227952]
+      scale: [1, 1, 1]
+      rotation: [0, -0, 0]
+      parent: 52
+  - EntityInfo:
+      name: circle
+    MeshComponent:
+      mesh: models/circle.obj
+      material: materials/m3.mat
+      color: [255, 255, 255, 255]
+    Transform:
+      position: [-2.24689627, -0.147926897, -1.5706811]
+      scale: [1, 1, 1]
+      rotation: [0, -0, 0]
+      parent: 52
+  - EntityInfo:
+      name: cone
+    MeshComponent:
+      mesh: ~
+      material: materials/m3.mat
+      color: [255, 254, 254, 255]
+    Transform:
+      position: [-0.563097239, -0.114525616, -1.57177448]
+      scale: [1, 1, 1]
+      rotation: [0, -0, 0]
+      parent: 52
+  - EntityInfo:
+      name: monkey
+    MeshComponent:
+      mesh: models/monkey.obj
+      material: materials/m3.mat
+      color: [255, 254, 254, 255]
+    Transform:
+      position: [4.99979162, 0.902280867, 0.617400646]
+      scale: [4.5148716, 4.51489687, 4.51493216]
+      rotation: [1.43720806, -1.5695982, -1.9905715]
+      parent: 52
+  - EntityInfo:
+      name: cylinder
+    MeshComponent:
+      mesh: models/cylinder.obj
+      material: materials/m3.mat
+      color: [255, 254, 254, 255]
+    Transform:
+      position: [1.1137619, -0.0348942578, 1.55587959]
+      scale: [1, 1, 1]
+      rotation: [0, -0, 0]
+      parent: 52
+  - EntityInfo:
+      name: torus
+    MeshComponent:
+      mesh: models/torus.obj
+      material: materials/m3.mat
+      color: [255, 254, 254, 255]
+    Transform:
+      position: [-0.563097239, -0.114525616, -0.141383171]
+      scale: [1, 1, 1]
+      rotation: [0, -0, 0]
+      parent: 52
+  - EntityInfo:
+      name: capsule
+    MeshComponent:
+      mesh: models/capsule.obj
+      material: materials/m3.mat
+      color: [255, 254, 254, 255]
+    Transform:
+      position: [-0.541522026, 0.00109480321, 1.48592758]
+      scale: [0.999964774, 0.999957502, 0.999968708]
+      rotation: [0, -0, 0]
+      parent: 52
+  - EntityInfo:
+      name: default-plane
+    MeshComponent:
+      mesh: ~
+      material: materials/m3.mat
+      color: [255, 255, 255, 255]
+    Transform:
+      position: [-2.24689627, -0.114525616, 1.47084808]
+      scale: [1, 1, 1]
+      rotation: [0, -0, 0]
+      parent: 52
+  - EntityInfo:
+      name: cube
+    MeshComponent:
+      mesh: models/cube.obj
+      material: materials/m3.mat
+      color: [255, 254, 254, 255]
+    Transform:
+      position: [1.1474278, -0.114524908, -0.210649014]
+      scale: [0.999998569, 1.00000072, 1.0000031]
+      rotation: [0, -0, 0]
+      parent: 52
