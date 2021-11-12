@@ -27,7 +27,7 @@ int main(int argc, char* argv[]) {
     });
 
     MainLoop loop;
-    loop.startup("../res/config.txt");
+    loop.startup("config.txt", "../res/config.txt");
     loop.run();
     loop.shutdown();
 }

@@ -99,6 +99,7 @@ namespace tri {
             int callbackId = -1;
             if (module) {
                 callbackId = env->signals->update.addCallback(name, [module]() { module->update(); });
+                env->signals->moduleLoad.invoke(module);
             }
             if (module && startupFlag == true) {
                 module->startup();
@@ -135,6 +136,7 @@ namespace tri {
                 if (it->second.module == module) {
                     it->second.module->shutdown();
                     env->signals->update.removeCallback(it->second.updateCallbackId);
+                    env->signals->moduleUnload.invoke(it->second.module);
                     delete it->second.module;
 #ifdef TRI_WINDOWS
                     FreeLibrary((HINSTANCE)it->second.handle);

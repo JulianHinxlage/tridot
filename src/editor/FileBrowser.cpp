@@ -9,6 +9,7 @@
 #include "entity/Scene.h"
 #include "engine/AssetManager.h"
 #include "entity/Prefab.h"
+#include "core/util/StrUtil.h"
 #include <imgui.h>
 #include <imgui_internal.h>
 
@@ -121,8 +122,8 @@ namespace tri {
 
     void FileBrowser::directory(const std::string &directory, const std::string &searchDirectory) {
         for(auto &entry : std::filesystem::directory_iterator(directory)){
-            std::string path = entry.path().string();
-            std::string filename = entry.path().filename().string();
+            std::string path = StrUtil::replace(entry.path().string(), "\\", "/");
+            std::string filename = StrUtil::replace(entry.path().filename().string(), "\\", "/");
             if(entry.is_directory()){
                 if(ImGui::TreeNode(filename.c_str())){
                     directoryMenu(path);
@@ -136,9 +137,9 @@ namespace tri {
             }
         }
         for(auto &entry : std::filesystem::directory_iterator(directory)){
-            std::string path = entry.path().string();
-            std::string filename = entry.path().filename().string();
-            std::string extension = entry.path().extension().string();
+            std::string path = StrUtil::replace(entry.path().string(), "\\", "/");
+            std::string filename = StrUtil::replace(entry.path().filename().string(), "\\", "/");
+            std::string extension = StrUtil::replace(entry.path().extension().string(), "\\", "/");
             if(entry.is_regular_file()){
                 if(canSelectFiles) {
                     //selectable files

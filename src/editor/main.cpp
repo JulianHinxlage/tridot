@@ -11,7 +11,7 @@ int main(int argc, char* argv[]) {
     env->assets->hotReloadEnabled = true;
 
     MainLoop loop;
-    loop.startup("../res/config.txt");
+    loop.startup("config.txt", "../res/config.txt");
     loop.run();
     loop.shutdown();
 }

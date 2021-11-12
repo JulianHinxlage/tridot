@@ -9,7 +9,7 @@
 
 namespace tri {
 
-    void MainLoop::startup(const std::string &configFile) {
+    void MainLoop::startup(const std::string &configFile, const std::string& fallbackConfigFile) {
         Environment::startup();
         TRI_PROFILE_PHASE("startup");
 
@@ -19,7 +19,14 @@ namespace tri {
         env->console->setVariable<bool>("vsync", true);
 
         env->signals->preStartup.invoke();
-        env->console->loadConfigFile(configFile);
+        if (std::filesystem::exists(configFile)) {
+            env->console->loadConfigFile(configFile);
+        }
+        else if(!fallbackConfigFile.empty()) {
+            if (std::filesystem::exists(fallbackConfigFile)) {
+                env->console->loadConfigFile(fallbackConfigFile);
+            }
+        }
 
         env->window->init(
                 *env->console->getVariable<int>("resolution_x"),

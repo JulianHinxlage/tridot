@@ -163,12 +163,7 @@ namespace tri {
             registerConstant(getTypeId<T>(), name, offset);
         }
 
-        void unregisterType(int typeId) {
-            if (typeId >= 0 && typeId < descriptors.size()) {
-                descriptorsByName.erase(descriptors[typeId]->name);
-                descriptors[typeId] = nullptr;
-            }
-        }
+        void unregisterType(int typeId);
 
         template<typename T>
         void unregisterType() {
@@ -200,8 +195,11 @@ namespace tri {
             desc->name = typeid(T).name();
             descriptorsByName[desc->name] = desc.get();
             descriptors.push_back(desc);
+            onTypeRegister(desc->typeId);
             return desc->typeId;
         }
+
+        void onTypeRegister(int typeId);
 
         template<typename T>
         class TypeDescriptorT : public TypeDescriptor {

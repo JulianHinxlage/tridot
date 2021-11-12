@@ -8,7 +8,7 @@ namespace tri {
 
     class MainLoop {
     public:
-        void startup(const std::string &configFile);
+        void startup(const std::string &configFile, const std::string& fallbackConfigFile = "");
         void run();
         void shutdown();
     };

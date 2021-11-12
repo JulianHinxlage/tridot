@@ -7,6 +7,7 @@
 #include "pch.h"
 #include "System.h"
 #include "Reflection.h"
+#include "Module.h"
 #include "Profiler.h"
 
 namespace tri {
@@ -197,6 +198,10 @@ namespace tri {
         Signal<> shutdown;
         Signal<> postShutdown;
         Signal<Scene*> sceneLoad;
+        Signal<Module*> moduleLoad;
+        Signal<Module*> moduleUnload;
+        Signal<int> typeRegister;
+        Signal<int> typeUnregister;
         Signal<EntityId, Scene*> entityCreate;
         Signal<EntityId, Scene*> entityRemove;
 

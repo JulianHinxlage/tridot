@@ -49,6 +49,11 @@ namespace tri {
             ImGui::PushStyleColor(ImGuiCol_TitleBgActive, ImVec4(0.238, 0.238, 0.238, 1));
             ImGui::PushStyleColor(ImGuiCol_DragDropTarget, ImVec4(0.0, 0.32, 1.0, 1));
 
+            if (!std::filesystem::exists("editor.ini")) {
+                if (std::filesystem::exists("../res/editor.ini")) {
+                    std::filesystem::copy("../res/editor.ini", "editor.ini");
+                }
+            }
             ImGui::GetIO().IniFilename = "editor.ini";
 
             ImGuiSettingsHandler handler;

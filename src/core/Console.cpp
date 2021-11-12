@@ -428,7 +428,12 @@ namespace tri {
                 }
             }
 
-            info("command not found: ", parts[0].c_str());
+            if (!isPostStartup) {
+                delayedCommands.push_back(command);
+            }
+            else {
+                info("command not found: ", parts[0].c_str());
+            }
         }
     }
 
