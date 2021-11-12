@@ -18,11 +18,14 @@ namespace tri {
     void ComponentBuffer::set(int typeId, void *ptr) {
         this->typeId = typeId;
         auto *desc = env->reflection->getType(typeId);
-        data.resize(desc->size);
-        if(ptr != nullptr) {
-            desc->copy(ptr, data.data());
-        }else{
-            desc->construct(data.data());
+        if (desc) {
+            data.resize(desc->size);
+            if (ptr != nullptr) {
+                desc->copy(ptr, data.data());
+            }
+            else {
+                desc->construct(data.data());
+            }
         }
     }
 
@@ -32,7 +35,9 @@ namespace tri {
 
     void ComponentBuffer::get(void *ptr) {
         auto *desc = env->reflection->getType(typeId);
-        desc->copy(data.data(), ptr);
+        if (desc) {
+            desc->copy(data.data(), ptr);
+        }
     }
 
     int ComponentBuffer::getTypeId() {

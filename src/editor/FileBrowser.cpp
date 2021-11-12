@@ -59,7 +59,7 @@ namespace tri {
     void FileBrowser::browse(const std::function<void(const std::string &, int)> &fileMenuCallback) {
         this->fileMenuCallback = fileMenuCallback;
         for(auto &dir : env->assets->getSearchDirectories()){
-            std::string name = std::filesystem::path(dir).parent_path().filename();
+            std::string name = std::filesystem::path(dir).parent_path().filename().string();
             if(ImGui::TreeNode(name.c_str())){
                 directoryMenu(dir);
                 newFileBox(dir);
@@ -121,35 +121,40 @@ namespace tri {
 
     void FileBrowser::directory(const std::string &directory, const std::string &searchDirectory) {
         for(auto &entry : std::filesystem::directory_iterator(directory)){
+            std::string path = entry.path().string();
+            std::string filename = entry.path().filename().string();
             if(entry.is_directory()){
-                if(ImGui::TreeNode(entry.path().filename().c_str())){
-                    directoryMenu(entry.path());
-                    newFileBox(entry.path());
-                    this->directory(entry.path(), searchDirectory);
+                if(ImGui::TreeNode(filename.c_str())){
+                    directoryMenu(path);
+                    newFileBox(path);
+                    this->directory(path, searchDirectory);
                     ImGui::TreePop();
                 }
                 else{
-                    directoryMenu(entry.path());
+                    directoryMenu(path);
                 }
             }
         }
         for(auto &entry : std::filesystem::directory_iterator(directory)){
+            std::string path = entry.path().string();
+            std::string filename = entry.path().filename().string();
+            std::string extension = entry.path().extension().string();
             if(entry.is_regular_file()){
                 if(canSelectFiles) {
                     //selectable files
-                    if (ImGui::Selectable(entry.path().filename().c_str(),
-                        selectedFile == entry.path(), ImGuiSelectableFlags_DontClosePopups)) {
-                        if (fileTypeId == -1 || getFileAssociation(entry.path().extension()) == fileTypeId) {
-                            selectedFile = entry.path();
+                    if (ImGui::Selectable(filename.c_str(),
+                        selectedFile == path, ImGuiSelectableFlags_DontClosePopups)) {
+                        if (fileTypeId == -1 || getFileAssociation(extension) == fileTypeId) {
+                            selectedFile = path;
                         }
                     }
                 }else {
                     //file with context menu
-                    if(ImGui::TreeNodeEx(entry.path().filename().c_str(), ImGuiTreeNodeFlags_Leaf)){
+                    if(ImGui::TreeNodeEx(filename.c_str(), ImGuiTreeNodeFlags_Leaf)){
                         ImGui::TreePop();
                     }
                     if (fileMenuCallback) {
-                        fileMenuCallback(entry.path().string(), getFileAssociation(entry.path().extension()));
+                        fileMenuCallback(path, getFileAssociation(extension));
                     }
                 }
             }

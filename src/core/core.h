@@ -24,7 +24,9 @@ namespace tri::impl {
             this->signal = &signal;
         }
         ~SignalCallbackRegisterer() {
-            signal->removeCallback(callbackId);
+            if (env && env->signals) {
+                signal->removeCallback(callbackId);
+            }
         }
     };
 

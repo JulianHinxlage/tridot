@@ -23,7 +23,7 @@ namespace tri {
 
         auto *desc = env->reflection->getType(typeId);
 
-        if(desc->constants.size() > 0){
+        if(desc && desc->constants.size() > 0){
             int value = *(int*)data;
             for(auto &c : desc->constants){
                 if(c.value == value){
@@ -33,7 +33,7 @@ namespace tri {
             }
         }
 
-        if(desc->member.size() > 0){
+        if(desc && desc->member.size() > 0){
             out << YAML::Value << YAML::BeginMap;
             for(auto &m : desc->member){
                 out << YAML::Key << m.name;
@@ -54,7 +54,7 @@ namespace tri {
         }
         auto *desc = env->reflection->getType(typeId);
 
-        if(desc->constants.size() > 0){
+        if(desc && desc->constants.size() > 0){
             int &value = *(int*)data;
             std::string name = in.Scalar();
             for(auto &c : desc->constants){
@@ -65,7 +65,7 @@ namespace tri {
             }
         }
 
-        if(desc->member.size() > 0){
+        if(desc && desc->member.size() > 0){
             for(auto &m : desc->member){
                 YAML::Node type = in[m.name];
                 if(type){
@@ -79,7 +79,7 @@ namespace tri {
         out << YAML::BeginMap;
         out << YAML::Key << "id" << YAML::Value << id;
         for(auto &desc : env->reflection->getDescriptors()){
-            if(scene.hasComponent(desc->typeId, id)){
+            if(desc && scene.hasComponent(desc->typeId, id)){
                 out << YAML::Key << desc->name;
                 serializeType(out, desc->typeId, scene.getComponent(desc->typeId, id));
             }
@@ -242,8 +242,11 @@ namespace tri {
     void Serializer::serializePrefab(YAML::Emitter &out, Prefab &prefab) {
         out << YAML::BeginMap;
         for (ComponentBuffer& comp : prefab.getComponents()) {
-            out << YAML::Key << env->reflection->getType(comp.getTypeId())->name;
-            env->serializer->serializeType(out, comp.getTypeId(), comp.get());
+            auto* desc = env->reflection->getType(comp.getTypeId());
+            if (desc) {
+                out << YAML::Key << desc->name;
+                env->serializer->serializeType(out, comp.getTypeId(), comp.get());
+            }
         }
 
         if(prefab.getChildren().size() > 0){

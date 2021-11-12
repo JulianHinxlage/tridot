@@ -66,7 +66,7 @@ namespace tri {
         }
         if(ImGui::BeginPopup("add")){
             for(auto &desc : env->reflection->getDescriptors()){
-                if(desc->isComponent) {
+                if(desc && desc->isComponent) {
 
                     bool canAdd = false;
                     for(EntityId id : env->editor->selectionContext.getSelected()){
@@ -96,84 +96,86 @@ namespace tri {
 
     void PropertiesWindow::updateMultipleEntities(){
         for(auto &desc : env->reflection->getDescriptors()) {
-            void *comp = nullptr;
-            EntityId editId;
-            for(EntityId id : env->editor->selectionContext.getSelected()){
-                if(env->scene->hasComponent(desc->typeId, id)){
-                    comp = env->scene->getComponent(desc->typeId, id);
-                    editId = id;
-                    break;
-                }
-            }
-            if(comp != nullptr){
-
-                if(desc->typeId != env->reflection->getTypeId<EntityInfo>()) {
-                    if(desc->typeId != env->reflection->getTypeId<Transform>()) {
-                        ImGui::PushID(desc->name.c_str());
-                        if (ImGui::CollapsingHeader(desc->name.c_str(), ImGuiTreeNodeFlags_DefaultOpen)) {
-                            if(!lastNoContextMenu) {
-                                updateComponentMenu(desc->typeId, editId);
-                            }
-
-                            //detect changes
-                            ComponentBuffer preEditValue;
-                            preEditValue.set(desc->typeId, comp);
-
-                            //draw gui
-                            env->editor->gui.typeGui.drawType(desc->typeId, comp);
-
-                            //detect changes
-                            bool anyChange = env->editor->gui.typeGui.anyTypeChange(desc->typeId, comp, preEditValue.get());
-                            if (anyChange) {
-                                if(lastFrameAnyActiveItem || ImGui::IsAnyItemActive()) {
-                                    if (lastFrameChangeTypeId == -1) {
-                                        componentChangeBuffers.clear();
-                                        for(EntityId id : env->editor->selectionContext.getSelected()) {
-                                            if(env->scene->hasComponent(desc->typeId, id)){
-                                                ComponentBuffer buffer;
-                                                if(id == editId){
-                                                    buffer.set(desc->typeId, preEditValue.get());
-                                                }else{
-                                                    buffer.set(desc->typeId, env->scene->getComponent(desc->typeId, id));
-                                                }
-                                                componentChangeBuffers.push_back({buffer, id});
-                                            }
-                                        }
-                                    }
-                                    lastFrameChangeTypeId = desc->typeId;
-                                }
-                            }
-
-                            if(anyChange){
-                                propagateComponentChange(desc->typeId, desc->typeId, preEditValue.get(), comp);
-                            }
-
-                            //add detected changes to the undo system
-                            if(!anyChange){
-                                if(!lastFrameAnyActiveItem && !ImGui::IsAnyItemActive()) {
-                                    if (lastFrameChangeTypeId == desc->typeId) {
-                                        lastFrameChangeTypeId = -1;
-                                        env->editor->undo.beginAction();
-                                        for(auto &i : componentChangeBuffers){
-                                            if(env->scene->hasComponent(desc->typeId, i.second)){
-                                                env->editor->undo.componentChanged(desc->typeId, i.second, i.first.get());
-                                            }
-                                        }
-                                        env->editor->undo.endAction();
-                                        componentChangeBuffers.clear();
-                                    }
-                                }
-                            }
-
-                        } else {
-                            if(!lastNoContextMenu) {
-                                updateComponentMenu(desc->typeId, editId);
-                            }
-                        }
-                        ImGui::PopID();
+            if(desc){
+                void *comp = nullptr;
+                EntityId editId;
+                for(EntityId id : env->editor->selectionContext.getSelected()){
+                    if(env->scene->hasComponent(desc->typeId, id)){
+                        comp = env->scene->getComponent(desc->typeId, id);
+                        editId = id;
+                        break;
                     }
                 }
+                if(comp != nullptr){
 
+                    if(desc->typeId != env->reflection->getTypeId<EntityInfo>()) {
+                        if(desc->typeId != env->reflection->getTypeId<Transform>()) {
+                            ImGui::PushID(desc->name.c_str());
+                            if (ImGui::CollapsingHeader(desc->name.c_str(), ImGuiTreeNodeFlags_DefaultOpen)) {
+                                if(!lastNoContextMenu) {
+                                    updateComponentMenu(desc->typeId, editId);
+                                }
+
+                                //detect changes
+                                ComponentBuffer preEditValue;
+                                preEditValue.set(desc->typeId, comp);
+
+                                //draw gui
+                                env->editor->gui.typeGui.drawType(desc->typeId, comp);
+
+                                //detect changes
+                                bool anyChange = env->editor->gui.typeGui.anyTypeChange(desc->typeId, comp, preEditValue.get());
+                                if (anyChange) {
+                                    if(lastFrameAnyActiveItem || ImGui::IsAnyItemActive()) {
+                                        if (lastFrameChangeTypeId == -1) {
+                                            componentChangeBuffers.clear();
+                                            for(EntityId id : env->editor->selectionContext.getSelected()) {
+                                                if(env->scene->hasComponent(desc->typeId, id)){
+                                                    ComponentBuffer buffer;
+                                                    if(id == editId){
+                                                        buffer.set(desc->typeId, preEditValue.get());
+                                                    }else{
+                                                        buffer.set(desc->typeId, env->scene->getComponent(desc->typeId, id));
+                                                    }
+                                                    componentChangeBuffers.push_back({buffer, id});
+                                                }
+                                            }
+                                        }
+                                        lastFrameChangeTypeId = desc->typeId;
+                                    }
+                                }
+
+                                if(anyChange){
+                                    propagateComponentChange(desc->typeId, desc->typeId, preEditValue.get(), comp);
+                                }
+
+                                //add detected changes to the undo system
+                                if(!anyChange){
+                                    if(!lastFrameAnyActiveItem && !ImGui::IsAnyItemActive()) {
+                                        if (lastFrameChangeTypeId == desc->typeId) {
+                                            lastFrameChangeTypeId = -1;
+                                            env->editor->undo.beginAction();
+                                            for(auto &i : componentChangeBuffers){
+                                                if(env->scene->hasComponent(desc->typeId, i.second)){
+                                                    env->editor->undo.componentChanged(desc->typeId, i.second, i.first.get());
+                                                }
+                                            }
+                                            env->editor->undo.endAction();
+                                            componentChangeBuffers.clear();
+                                        }
+                                    }
+                                }
+
+                            } else {
+                                if(!lastNoContextMenu) {
+                                    updateComponentMenu(desc->typeId, editId);
+                                }
+                            }
+                            ImGui::PopID();
+                        }
+                    }
+
+                }
             }
         }
 
@@ -186,21 +188,25 @@ namespace tri {
 
     void PropertiesWindow::propagateComponentChange(int rootTypeId, int typeId, void *preEdit, void *postEdit, int offset){
         auto *desc = env->reflection->getType(typeId);
-        if(desc->member.size() == 0){
-            if(desc->hasEquals()){
-                if(!desc->equals(preEdit, postEdit)){
-                    for(EntityId id : env->editor->selectionContext.getSelected()){
+        if (!desc) {
+            return;
+        }
+
+        if (desc->member.size() == 0) {
+            if (desc->hasEquals()) {
+                if (!desc->equals(preEdit, postEdit)) {
+                    for (EntityId id : env->editor->selectionContext.getSelected()) {
                         if (env->scene->hasComponent(rootTypeId, id)) {
-                            void *comp = env->scene->getComponent(rootTypeId, id);
-                            desc->copy(postEdit, (uint8_t *) comp + offset);
+                            void* comp = env->scene->getComponent(rootTypeId, id);
+                            desc->copy(postEdit, (uint8_t*)comp + offset);
                         }
                     }
                 }
             }
         }
-        for(auto &m : desc->member){
+        for (auto& m : desc->member) {
             propagateComponentChange(rootTypeId, m.type->typeId, (uint8_t*)preEdit + m.offset, (uint8_t*)postEdit + m.offset, offset + m.offset);
-        }
+        }   
     }
 
     void PropertiesWindow::updateEntity(EntityId id){
@@ -210,20 +216,22 @@ namespace tri {
             env->editor->gui.textInput("name", info.name);
         }
         for(auto &desc : env->reflection->getDescriptors()){
-            if(env->scene->hasComponent(desc->typeId, id)) {
-                if(desc->typeId != env->reflection->getTypeId<EntityInfo>()) {
-                    ImGui::PushID(desc->name.c_str());
-                    if (ImGui::CollapsingHeader(desc->name.c_str(), ImGuiTreeNodeFlags_DefaultOpen)) {
-                        if(!lastNoContextMenu) {
-                            updateComponentMenu(desc->typeId, id);
+            if(desc){
+                if(env->scene->hasComponent(desc->typeId, id)) {
+                    if(desc->typeId != env->reflection->getTypeId<EntityInfo>()) {
+                        ImGui::PushID(desc->name.c_str());
+                        if (ImGui::CollapsingHeader(desc->name.c_str(), ImGuiTreeNodeFlags_DefaultOpen)) {
+                            if(!lastNoContextMenu) {
+                                updateComponentMenu(desc->typeId, id);
+                            }
+                            updateComponent(desc->typeId, id);
+                        } else {
+                            if(!lastNoContextMenu) {
+                                updateComponentMenu(desc->typeId, id);
+                            }
                         }
-                        updateComponent(desc->typeId, id);
-                    } else {
-                        if(!lastNoContextMenu) {
-                            updateComponentMenu(desc->typeId, id);
-                        }
+                        ImGui::PopID();
                     }
-                    ImGui::PopID();
                 }
             }
         }
@@ -239,6 +247,9 @@ namespace tri {
 
     void PropertiesWindow::updateComponent(int typeId, EntityId id){
         auto *desc = env->reflection->getType(typeId);
+        if (!desc) {
+            return;
+        }
 
         //detect changes
         void *comp = env->scene->getComponent(desc->typeId, id);

@@ -44,6 +44,7 @@ project(test)
 file(GLOB_RECURSE SOURCES src/test/*.cpp)
 add_library(${PROJECT_NAME} SHARED ${SOURCES})
 target_include_directories(${PROJECT_NAME} PUBLIC src src/test)
+target_link_libraries(${PROJECT_NAME} PUBLIC tridot)
 
 project(tridot-editor)
 file(GLOB_RECURSE SOURCES src/editor/*.cpp)

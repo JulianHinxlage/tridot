@@ -59,7 +59,7 @@ namespace tri {
         env->editor->undo.beginAction();
         EntityId copy = scene->addEntity();
         for(auto &desc : env->reflection->getDescriptors()){
-            if(scene->hasComponent(desc->typeId, id)){
+            if(desc && scene->hasComponent(desc->typeId, id)){
                 desc->copy(scene->getComponent(desc->typeId, id), scene->addComponent(desc->typeId, copy));
             }
         }

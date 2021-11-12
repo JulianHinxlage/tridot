@@ -82,6 +82,9 @@ namespace tri {
 
         //create asset instance
         auto *desc = env->reflection->getType(typeId);
+        if (!desc) {
+            return nullptr;
+        }
         Ref<Asset> asset = std::shared_ptr<Asset>((Asset*)desc->alloc(), [desc](Asset *ptr){ desc->free(ptr);});
 
         AssetRecord &record = assets[minimalPath];

@@ -70,7 +70,7 @@ namespace tri {
     void Prefab::copyEntity(EntityId id, Scene *scene, bool copyChildren){
         clear();
         for(auto &desc : env->reflection->getDescriptors()){
-            if(scene->hasComponent(desc->typeId, id)){
+            if(desc && scene->hasComponent(desc->typeId, id)){
                 desc->copy(scene->getComponent(desc->typeId, id), addComponent(desc->typeId));
             }
         }
