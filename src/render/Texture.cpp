@@ -237,12 +237,14 @@ namespace tri {
 
 
             if(id != 0){
+                unbind();
                 glDeleteTextures(1, &id);
                 glGenTextures(1, &id);
             }
             if(id == 0){
                 glGenTextures(1, &id);
             }
+
 
             type = TEXTURE_CUBE_MAP;
             width = x;
@@ -260,27 +262,9 @@ namespace tri {
                 mipCount = 1;
             }
 
-            //for(int i = 0; i < 6; i++) {
-            //    glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, internalEnum(format), x, y, 0, GL_RGBA, GL_UNSIGNED_BYTE, colors[i].data());
-            //}
-
-            //mipCount = std::max(1, (int)std::log2(std::min(width, height)) - 1);
-            //glTexStorage2D(internalEnum(type), mipCount, internalEnum(format), width, height);
-
             for(int i = 0; i < 6; i++) {
                 glTexParameteri(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, GL_TEXTURE_MAX_LEVEL, mipCount);
                 glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, internalEnum(format), x, y, 0, GL_RGBA, GL_UNSIGNED_BYTE, colors[i].data());
-                //if(mipCount > 1){
-                //    glGenerateMipmap(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i);
-                //}
-
-
-                //glTexStorage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, mipCount, internalEnum(format), width, height);
-                //glTexSubImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, 0, 0, image.getWidth(), image.getHeight(), GL_RGBA, GL_UNSIGNED_BYTE, image.getData());
-
-                //if(mipCount > 1){
-                //    glGenerateMipmap(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i);
-                //}
             }
             if(mipCount > 1){
                 glGenerateMipmap(internalEnum(type));

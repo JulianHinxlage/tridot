@@ -48,6 +48,10 @@ namespace tri {
         aspectRatio = 1.0f;
     }
 
+    TRI_STARTUP_CALLBACK("Camera") {
+        env->signals->update.callbackOrder({"Window", "Camera"});
+    }
+
     TRI_UPDATE_CALLBACK("Camera") {
         env->scene->view<Camera, Transform>().each([](Camera& camera, Transform &transform) {
             glm::mat4 t = transform.getMatrix();
@@ -58,6 +62,11 @@ namespace tri {
                 camera.projection = glm::perspective(glm::radians(camera.fieldOfView), camera.aspectRatio, camera.near, camera.far) * glm::inverse(t);
             }else if (camera.type == Camera::ORTHOGRAPHIC) {
                 camera.projection = glm::ortho(-transform.scale.x * camera.aspectRatio, transform.scale.x * camera.aspectRatio, -transform.scale.y, transform.scale.y, camera.near, camera.far) * glm::inverse(t);
+            }
+
+            //frame buffer
+            if (camera.output) {
+                camera.output->clear();
             }
         });
     }

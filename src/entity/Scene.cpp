@@ -10,6 +10,12 @@ namespace tri {
 
     TRI_REGISTER_SYSTEM_INSTANCE(Scene, env->scene);
 
+    TRI_REGISTER_CALLBACK() {
+        env->signals->typeUnregister.addCallback("scene", [](int typeId) {
+            env->scene->clearComponent(typeId);
+        });
+    }
+
     Scene::Scene() {
         file = "";
         entityPool = ComponentPool(env->reflection->getTypeId<EntitySignatureBitmap>(), sizeof(EntitySignatureBitmap));
@@ -151,6 +157,12 @@ namespace tri {
         entityPool.clear();
         freeList.clear();
         pendingOperations.clear();
+    }
+
+    void Scene::clearComponent(int typeId) {
+        if (pools.size() > typeId) {
+            pools[typeId] = nullptr;
+        }
     }
 
     void Scene::copy(const Scene &from) {

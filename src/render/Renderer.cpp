@@ -19,6 +19,9 @@ namespace tri {
     public:
         glm::mat4 projectionMatrix;
         glm::vec3 eyePosition;
+        Ref<Texture> radianceMap;
+        Ref<Texture> irradianceMap;
+        float environmentMapIntensity = 0;
 
         int drawCallCount = 0;
         int instanceCount = 0;
@@ -537,7 +540,23 @@ namespace tri {
                             e.lightCount = lightBuffer.size();
                             e.environmentMapIndex = -1;
                             e.irradianceMapIndex = -1;
-                            e.environmentMapIntensity = 0;
+
+                            if (radianceMap.get() && radianceMap->getId() != 0) {
+                                e.environmentMapIndex = 0;
+                                radianceMap->bind(30);
+                            }
+                            if (irradianceMap.get() && irradianceMap->getId() != 0) {
+                                e.irradianceMapIndex = 1;
+                                irradianceMap->bind(31);
+                            }
+
+                            int textures[2] = { 30, 31 };
+                            for (int i = 0; i < textureList.size(); i++) {
+                                textureList[i]->bind(i);
+                            }
+                            shader->set("uCubeTextures", textures, 2);
+
+                            e.environmentMapIntensity = environmentMapIntensity;
                             environmentBuffer->setData(&e, sizeof(e));
                             shader->set("uEnvironment", environmentBuffer.get());
                         }
@@ -602,6 +621,12 @@ namespace tri {
         drawList->addLight(position, direction, light);
     }
 
+    void Renderer::setEnvironMap(Ref<Texture> radianceMap, Ref<Texture> irradianceMap, float intensity){
+        drawList->radianceMap = radianceMap;
+        drawList->irradianceMap = irradianceMap;
+        drawList->environmentMapIntensity = intensity;
+    }
+
     void Renderer::drawScene(Ref<FrameBuffer> frameBuffer, Ref<RenderPipeline> pipeline) {
         if (pipeline.get() == nullptr) {
             pipeline = defaultPipeline;
@@ -631,6 +656,9 @@ namespace tri {
 
     void Renderer::resetScene() {
         drawList->clear();
+        drawList->radianceMap = nullptr;
+        drawList->irradianceMap = nullptr;
+        drawList->environmentMapIntensity = 0.0f;
     }
 
     void Renderer::startup() {

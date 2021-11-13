@@ -71,16 +71,6 @@ struct Light{
     int shadowMapIndex;
     int align4;
     mat4 projection;
-    /*
-    vec3 position;
-    int align1;
-    vec3 color;
-    int align2;
-    float intensity;
-    int type;
-    int align3;
-    int align4;
-    */
 };
 layout(std140) uniform uLights {
     Light lights[32];
@@ -253,8 +243,21 @@ vec3 lighing(vec3 albedo, vec3 normal, float metallic, float roughness, float ao
         }
     }
 
+    //environment mapping
+    if(environmentMapIntensity != 0){
+        vec3 reflectionDirection = normalize(-reflect(viewDirection, normal));
+
+        vec3 radiance = sampleCubeTextureIndexed(environmentMapIndex, reflectionDirection).xyz * environmentMapIntensity;
+        vec3 irradiance = sampleCubeTextureIndexed(irradianceMapIndex, normal).xyz * environmentMapIntensity;
+    
+        lightOutput += albedo.rgb * irradiance * (1.0 - metallic);
+        lightOutput += radiance * (1.0f - roughness);
+
+        //lightOutput = vec3(1, 0, 0);
+    }
+
     //flat shading for no lights
-    if (lightCount == 0){
+    if (lightCount == 0 && environmentMapIntensity == 0){
         lightOutput = albedo * ao;
     }
 
@@ -359,7 +362,8 @@ vec4 sampleCubeTextureIndexed(int textureIndex, vec3 textureCoords){
     }
     for(int i = 0; i < 2; i++){
         if(i == textureIndex){
-            return texture(uCubeTextures[i], textureCoords);
+            vec3 v = textureCoords;
+            return texture(uCubeTextures[i], vec3(v.x, -v.z, v.y));
         }
     }
     return vec4(0, 0, 0, 1);
@@ -368,7 +372,8 @@ vec4 sampleCubeTextureIndexed(int textureIndex, vec3 textureCoords){
 vec4 sampleCubeTextureIndexedLod(int textureIndex, vec3 textureCoords, int lod){
     for(int i = 0; i < 2; i++){
         if(i == textureIndex){
-            return texture(uCubeTextures[i], textureCoords, lod);
+            vec3 v = textureCoords;
+            return texture(uCubeTextures[i], vec3(v.x, -v.z, v.y), lod);
         }
     }
     return vec4(0, 0, 0, 1);

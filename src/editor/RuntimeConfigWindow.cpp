@@ -44,6 +44,7 @@ namespace tri {
                 "Scene",
                 "Renderer",
                 "Imgui",
+                "Skybox",
             };
 
             for(auto &observer : env->signals->update.getObservers()){

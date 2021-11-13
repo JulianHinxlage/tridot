@@ -74,6 +74,7 @@ namespace tri {
         ComponentPool* getComponentPool(int typeId);
         ComponentPool* getEntityPool();
         void clear();
+        void clearComponent(int typeId);
         void copy(const Scene &from);
         void swap(Scene &scene);
         void update() override;

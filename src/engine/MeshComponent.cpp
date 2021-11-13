@@ -8,6 +8,7 @@
 #include "render/Window.h"
 #include "Transform.h"
 #include "Camera.h"
+#include "Skybox.h"
 #include "core/core.h"
 
 namespace tri {
@@ -20,15 +21,11 @@ namespace tri {
     TRI_REGISTER_TYPE(Color);
 
     TRI_UPDATE_CALLBACK("MeshComponent") {
-
         env->scene->view<Camera, Transform>().each([](Camera& camera, Transform &cameraTransform) {
             if (camera.active) {
                 env->renderer->cameraCount++;
 
                 //frame buffer
-                if (camera.output) {
-                    camera.output->clear();
-                }
                 if(!env->editor){
                     if (camera.isPrimary) {
                         camera.aspectRatio = env->window->getAspectRatio();
@@ -52,6 +49,13 @@ namespace tri {
                 });
 
                 env->renderer->beginScene(camera.projection, cameraTransform.position);
+
+                env->scene->view<Skybox>().each([](Skybox& skybox) {
+                    if (skybox.useIBL && skybox.irradianceMap.get() != nullptr) {
+                        env->renderer->setEnvironMap(skybox.texture, skybox.irradianceMap, skybox.intensity);
+                    }
+                });
+
                 {
                     TRI_PROFILE("submit");
                     //meshes
