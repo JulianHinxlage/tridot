@@ -164,6 +164,14 @@ namespace tri {
         }
     }
 
+    bool AssetManager::isUsed(const std::string& file) {
+        auto x = assets.find(minimalFilePath(file));
+        if (x != assets.end()) {
+            return x->second.asset.use_count() > 1;
+        }
+        return false;
+    }
+
     void AssetManager::startup() {
         running = true;
         for (int i = 0; i < 16; i++) {
@@ -348,11 +356,23 @@ namespace tri {
         std::vector<std::string> list;
         for(auto &iter : assets){
             auto &record = iter.second;
-            if(record.typeId == typeId){
+            if(typeId == -1 || record.typeId == typeId){
                 list.push_back(record.file);
             }
         }
         return list;
+    }
+
+    bool AssetManager::isLoadingInProcess(int typeId) {
+        for (auto& iter : assets) {
+            auto& record = iter.second;
+            if (typeId == -1 || record.typeId == typeId) {
+                if (!((record.status & LOADED) || (record.status & FAILED_TO_LOAD))) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
 }

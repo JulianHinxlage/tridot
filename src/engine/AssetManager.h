@@ -64,11 +64,13 @@ namespace tri {
         Status getStatus(const std::string &file);
         void setOptions(const std::string &file, Options options);
         void unload(const std::string &file);
-        std::vector<std::string> getAssetList(int typeId);
+        std::vector<std::string> getAssetList(int typeId = -1);
 
         //unload all assets that are not in use
         //if they get used again, they get loaded again
         void unloadAllUnused();
+        bool isLoadingInProcess(int typeId = -1);
+        bool isUsed(const std::string& file);
 
         void startup() override;
         void update() override;

@@ -17,6 +17,7 @@ namespace tri {
         env->console->setVariable<int>("resolution_x", 1920);
         env->console->setVariable<int>("resolution_y", 1080);
         env->console->setVariable<bool>("vsync", true);
+        env->console->setVariable<std::string>("log_file", "log.txt");
 
         env->signals->preStartup.invoke();
         if (std::filesystem::exists(configFile)) {
@@ -27,6 +28,8 @@ namespace tri {
                 env->console->loadConfigFile(fallbackConfigFile);
             }
         }
+
+        env->console->addLogFile(*env->console->getVariable<std::string>("log_file"), Console::Options(TRACE, true, true, false));
 
         env->window->init(
                 *env->console->getVariable<int>("resolution_x"),
