@@ -82,6 +82,7 @@ namespace tri {
         private:
             friend class Reflection;
             int hashCode;
+            bool initFlag = false;
         };
 
         template<typename T>
@@ -195,11 +196,10 @@ namespace tri {
             desc->name = typeid(T).name();
             descriptorsByName[desc->name] = desc.get();
             descriptors.push_back(desc);
-            onTypeRegister(desc->typeId);
             return desc->typeId;
         }
 
-        void onTypeRegister(int typeId);
+        void update() override;
 
         template<typename T>
         class TypeDescriptorT : public TypeDescriptor {

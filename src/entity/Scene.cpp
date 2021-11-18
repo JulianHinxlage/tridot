@@ -10,12 +10,6 @@ namespace tri {
 
     TRI_REGISTER_SYSTEM_INSTANCE(Scene, env->scene);
 
-    TRI_REGISTER_CALLBACK() {
-        env->signals->typeUnregister.addCallback("scene", [](int typeId) {
-            env->scene->clearComponent(typeId);
-        });
-    }
-
     Scene::Scene() {
         file = "";
         entityPool = ComponentPool(env->reflection->getTypeId<EntitySignatureBitmap>(), sizeof(EntitySignatureBitmap));

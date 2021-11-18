@@ -24,10 +24,13 @@ namespace tri {
     private:
         class ModuleRecord {
         public:
+            std::string name;
+            std::string file;
             Module* module;
             void* handle;
             bool startupFlag;
             int updateCallbackId;
+            uint64_t timeStamp;
         };
         std::unordered_map<std::string, ModuleRecord> modules;
         bool startupFlag;

@@ -7,12 +7,16 @@
 #include "Environment.h"
 #include "Console.h"
 #include "SignalManager.h"
+#include "engine/AssetManager.h"
+#include "engine/Time.h"
 
 #if !TRI_WINDOWS
 #include <dlfcn.h>
 #endif
 
 namespace tri {
+
+    uint64_t getTimeStamp(const std::string& file);
 
     ModuleManager::ModuleManager(){
         startupFlag = false;
@@ -31,7 +35,20 @@ namespace tri {
     }
 
     void ModuleManager::update(){
-
+        if (env->assets->hotReloadEnabled) {
+            if (env->time->frameTicks(1.0)) {
+                for (auto& record : modules) {
+                    uint64_t currentTimeStamp = getTimeStamp(record.second.file);
+                    if (currentTimeStamp != record.second.timeStamp) {
+                        std::string file = record.second.file;
+                        record.second.timeStamp = currentTimeStamp;
+                        unloadModule(record.second.module);
+                        loadModule(file);
+                        break;
+                    }
+                }
+            }
+        }
     }
 
     void ModuleManager::shutdown(){
@@ -49,7 +66,7 @@ namespace tri {
     }
 
     Module* ModuleManager::loadModule(const std::string& file){
-        if (modules.find(file) != modules.end()) {
+        if (modules.find(file) != modules.end() && modules.find(file)->second.module != nullptr) {
             env->console->warning("module ", file, " already loaded");
             return modules[file].module;
         }
@@ -103,15 +120,20 @@ namespace tri {
             }
             if (module && startupFlag == true) {
                 module->startup();
-                modules[file] = { module, handle, true };
+                modules[file] = { name, file, module, handle, true };
             }
             else {
-                modules[file] = { module, handle, false };
+                modules[file] = { name, file, module, handle, false };
             }
             modules[file].updateCallbackId = callbackId;
+            modules[file].timeStamp = getTimeStamp(file);
             return module;
         }
         else {
+
+            modules[file] = { "", file, nullptr, handle, true };
+            modules[file].timeStamp = getTimeStamp(file);
+
 #if TRI_WINDOWS
             env->console->warning("failed to load module ", file, " (code ", GetLastError(), ")");
 #else

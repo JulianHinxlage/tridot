@@ -71,11 +71,55 @@ namespace tri {
                 if (ImGui::Selectable(observer.name.c_str(), &active)) {
                     if (!doNotChangeState && canChange) {
                         env->signals->update.setActiveCallback(observer.name, active);
+
+                        if (active) {
+                            if (currentMode == EDIT) {
+                                editModeConfig.insert(observer.name);
+                            }
+                            else {
+                                runtimeModeConfig.insert(observer.name);
+                            }
+                        }
+                        else {
+                            if (currentMode == EDIT) {
+                                editModeConfig.erase(observer.name);
+                            }
+                            else {
+                                runtimeModeConfig.erase(observer.name);
+                            }
+                        }
+
                     }
                     doNotChangeState = false;
                 }
                 if (!canChange) {
                     ImGui::PopStyleColor();
+                }
+
+                if (canChange) {
+                    if (currentMode == EDIT) {
+                        bool contains = editModeConfig.contains(observer.name);
+                        if (active != contains) {
+                            env->signals->update.setActiveCallback(observer.name, contains);
+                            if (active) {
+                                runtimeModeConfig.insert(observer.name);
+                            }
+                            else {
+                                runtimeModeConfig.erase(observer.name);
+                            }
+                        }
+                    }
+                    else {
+                        bool contains = runtimeModeConfig.contains(observer.name);
+                        if (active != contains) {
+                            if (active) {
+                                runtimeModeConfig.insert(observer.name);
+                            }
+                            else {
+                                runtimeModeConfig.erase(observer.name);
+                            }
+                        }
+                    }
                 }
 
                 if (canChange && ImGui::IsItemActive() && !ImGui::IsItemHovered()) {
@@ -93,13 +137,6 @@ namespace tri {
             if(currentMode != mode) {
                 if (mode == RUNTIME) {
 
-                    editModeConfig.clear();
-                    for(auto &observer : env->signals->update.getObservers()){
-                        if(observer.active){
-                            editModeConfig.insert(observer.name);
-                        }
-                    }
-
                     env->signals->update.setActiveAll(false);
                     for (auto &name : alwaysOn) {
                         env->signals->update.setActiveCallback(name, true);
@@ -109,15 +146,6 @@ namespace tri {
                     }
 
                 } else if (mode == EDIT || mode == PAUSED) {
-
-                    if(currentMode != PAUSED) {
-                        runtimeModeConfig.clear();
-                        for (auto &observer : env->signals->update.getObservers()) {
-                            if (observer.active) {
-                                runtimeModeConfig.insert(observer.name);
-                            }
-                        }
-                    }
 
                     env->signals->update.setActiveAll(false);
                     for (auto &name : alwaysOn) {

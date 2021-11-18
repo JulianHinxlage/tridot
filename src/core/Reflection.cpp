@@ -20,8 +20,14 @@ namespace tri {
         }
     }
 
-    void Reflection::onTypeRegister(int typeId) {
-        env->signals->typeRegister.invoke(typeId);
+    void Reflection::update() {
+        for (auto desc : descriptors) {
+            if (desc && !desc->initFlag) {
+                desc->initFlag = true;
+                env->signals->typeRegister.invoke(desc->typeId);
+            }
+        }
+
     }
 
 }
