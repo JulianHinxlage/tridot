@@ -23,7 +23,7 @@ namespace tri {
         updated = false;
         mode = EDIT;
 
-        env->signals->update.callbackOrder({"Imgui/begin", "Editor", "Camera", "MeshComponent"});
+        env->signals->update.callbackOrder({"Imgui/begin", "Camera", "MeshComponent", "Editor"});
         env->signals->postStartup.addCallback([](){
             ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 

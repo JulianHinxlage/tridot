@@ -12,7 +12,7 @@ namespace tri {
         void unselect(EntityId id);
         void unselectAll();
         bool isSelected(EntityId id);
-        const std::set<EntityId> getSelected();
+        const std::set<EntityId> &getSelected();
     private:
         std::set<EntityId> selected;
     };

@@ -23,12 +23,14 @@ namespace tri {
         Ref<Scene> sceneBuffer;
         EditorCameraMode cameraMode;
         Transform editorCameraTransformBuffer;
+        Ref<FrameBuffer> selectionOverlay;
 
         void startup();
         void setupFrameBuffer(Camera &cam, bool idBuffer);
         void setupCamera();
         void update() override;
         void updateMousePicking(Ref<Texture> texture, glm::vec2 viewportSize);
+        void updateSelectionOverlay(Transform& cameraTransform, Camera& camera, glm::vec2 viewportSize);
         void saveEditorCameraTransform();
         void restoreEditorCameraTransform();
     };

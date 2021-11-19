@@ -15,7 +15,10 @@
 #include "engine/EntityInfo.h"
 #include "engine/AssetManager.h"
 #include "entity/Prefab.h"
+#include "render/Renderer.h"
+#include "render/RenderContext.h"
 #include <imgui/imgui.h>
+#include <glm/gtc/matrix_transform.hpp>
 
 class EditorOnly{};
 TRI_REGISTER_TYPE(EditorOnly);
@@ -40,7 +43,6 @@ namespace tri {
             cam.output = cam.output.make();
             cam.output->setAttachment({COLOR, env->window->getBackgroundColor()});
             cam.output->setAttachment({DEPTH, Color(0)});
-
         }
         if(idBuffer){
             if(cam.output->getAttachment((TextureAttachment) (COLOR + 1)).get() == nullptr) {
@@ -127,6 +129,16 @@ namespace tri {
             if (output) {
                 //draw image
                 ImGui::Image((ImTextureID)(size_t)output->getAttachment(TextureAttachment::COLOR)->getId(), viewportSize, ImVec2(0, 1), ImVec2(1, 0));
+
+                //draw selection overlay
+                if (env->editor->selectionContext.getSelected().size() > 0) {
+                    if (cam && camTransform) {
+                        updateSelectionOverlay(*camTransform, *cam, glm::vec2(viewportSize.x, viewportSize.y));
+                        ImGui::SetCursorPos(viewportPosition);
+                        ImGui::Image((ImTextureID)(size_t)selectionOverlay->getAttachment(TextureAttachment::COLOR)->getId(), viewportSize, ImVec2(0, 1), ImVec2(1, 0));
+                    }
+                }
+
                 bool pickingAllowed = true;
                 //gizmos
                 if(cam && camTransform){
@@ -214,6 +226,49 @@ namespace tri {
                 }
             }
         }
+    }
+
+    void ViewportWindow::updateSelectionOverlay(Transform &cameraTransform, Camera &camera, glm::vec2 viewportSize){
+        if (!selectionOverlay) {
+            selectionOverlay = selectionOverlay.make();
+            selectionOverlay->resize(viewportSize.x, viewportSize.y);
+            selectionOverlay->setAttachment({ COLOR, Color::transparent });
+        }
+        else {
+            if (selectionOverlay->getSize() != viewportSize) {
+                selectionOverlay->resize(viewportSize.x, viewportSize.y);
+            }
+        }
+        
+        selectionOverlay->clear();
+
+        env->renderer->beginScene(camera.projection, cameraTransform.position);
+        for (auto id : env->editor->selectionContext.getSelected()) {
+            if (env->scene->hasComponent<Transform>(id)) {
+                if (env->scene->hasComponent<MeshComponent>(id)) {
+                    Transform& transform = env->scene->getComponent<Transform>(id);
+                    MeshComponent& mesh = env->scene->getComponent<MeshComponent>(id);
+                    env->renderer->submit(transform.getMatrix() * glm::scale(glm::mat4(1), glm::vec3(1, 1, 1) * 1.05f), transform.position, mesh.mesh.get(), nullptr, Color(255, 128, 0));
+                }
+            }
+        }
+        env->renderer->drawScene(selectionOverlay);
+        env->renderer->resetScene();
+
+        RenderContext::setBlend(false);
+        env->renderer->beginScene(camera.projection, cameraTransform.position);
+        for (auto id : env->editor->selectionContext.getSelected()) {
+            if (env->scene->hasComponent<Transform>(id)) {
+                if (env->scene->hasComponent<MeshComponent>(id)) {
+                    Transform& transform = env->scene->getComponent<Transform>(id);
+                    MeshComponent& mesh = env->scene->getComponent<MeshComponent>(id);
+                    env->renderer->submit(transform.getMatrix(), transform.position, mesh.mesh.get(), nullptr, Color::transparent);
+                }
+            }
+        }
+        env->renderer->drawScene(selectionOverlay);
+        env->renderer->resetScene();
+        RenderContext::setBlend(true);
     }
 
     void ViewportWindow::saveEditorCameraTransform() {

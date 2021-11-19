@@ -22,7 +22,7 @@ namespace tri {
         return selected.contains(id);
     }
 
-    const std::set<EntityId> SelectionContext::getSelected() {
+    const std::set<EntityId> &SelectionContext::getSelected() {
         return selected;
     }
 
