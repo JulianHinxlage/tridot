@@ -59,9 +59,6 @@ namespace tri {
 
         template<typename Component>
         bool removeComponent(EntityId id) {
-            if (hasComponent<Component>(id)) {
-                getComponent<Component>(id)->~Component();
-            }
             return removeComponent(env->reflection->getTypeId<Component>(), id);
         }
 

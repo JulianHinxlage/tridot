@@ -7,6 +7,7 @@
 #include "render/Mesh.h"
 #include "AssetManager.h"
 #include "render/Material.h"
+#include "ComponentCache.h"
 #include <glm/glm.hpp>
 
 namespace tri {
@@ -80,8 +81,17 @@ namespace tri {
         out << YAML::Key << "id" << YAML::Value << id;
         for(auto &desc : env->reflection->getDescriptors()){
             if(desc && scene.hasComponent(desc->typeId, id)){
-                out << YAML::Key << desc->name;
-                serializeType(out, desc->typeId, scene.getComponent(desc->typeId, id));
+                if (desc->typeId == env->reflection->getTypeId<ComponentCache>()) {
+                    auto &cache = scene.getComponent<ComponentCache>(id);
+                    for (auto& i : cache.data) {
+                        out << YAML::Key << i.first;
+                        out << YAML::Value << YAML::Load(i.second);
+                    }
+                }
+                else {
+                    out << YAML::Key << desc->name;
+                    serializeType(out, desc->typeId, scene.getComponent(desc->typeId, id));
+                }
             }
         }
         out << YAML::EndMap;
@@ -91,10 +101,26 @@ namespace tri {
         EntityId id = in["id"].as<EntityId>(-1);
         id = scene.addEntityHinted(id);
         for(auto iter : in){
-            auto *desc = env->reflection->getType(iter.first.Scalar());
-            if(desc){
-                void *data = scene.addComponent(desc->typeId, id);
-                deserializeType(iter.second, desc->typeId, data);
+            if (iter.first.Scalar() != "id") {
+                auto* desc = env->reflection->getType(iter.first.Scalar());
+                if (desc) {
+                    void* data = scene.addComponent(desc->typeId, id);
+                    deserializeType(iter.second, desc->typeId, data);
+                }
+                else if (env->editor) {
+                    if (scene.hasComponent<ComponentCache>(id)) {
+                        auto& cache = scene.getComponent<ComponentCache>(id);
+                        YAML::Emitter e;
+                        e << iter.second;
+                        cache.cache(iter.first.Scalar(), e.c_str());
+                    }
+                    else {
+                        auto& cache = scene.addComponent<ComponentCache>(id);
+                        YAML::Emitter e;
+                        e << iter.second;
+                        cache.cache(iter.first.Scalar(), e.c_str());
+                    }
+                }
             }
         }
     }

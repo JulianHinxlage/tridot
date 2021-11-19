@@ -11,6 +11,7 @@
 #include "render/Material.h"
 #include "EditorCamera.h"
 #include "render/Light.h"
+#include "engine/ComponentCache.h"
 #include <glm/glm.hpp>
 #include <imgui.h>
 
@@ -260,6 +261,20 @@ namespace tri {
                         }
                     }
                     ImGui::TreePop();
+                }
+            }
+        });
+
+        env->editor->gui.typeGui.setTypeFunction<ComponentCache>([](const char* label, ComponentCache& v, ComponentCache* min, ComponentCache* max) {
+            for (auto& i : v.data) {
+                ImGui::Text("%s", i.first.c_str());
+                ImGui::SameLine();
+                if (ImGui::Button("Remove")) {
+                    v.uncache(i.first);
+                    if (v.data.size() == 0) {
+                        env->scene->removeComponent<ComponentCache>(env->scene->getEntityIdByComponent(v));
+                    }
+                    break;
                 }
             }
         });
