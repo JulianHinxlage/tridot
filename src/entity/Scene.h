@@ -62,6 +62,16 @@ namespace tri {
             return removeComponent(env->reflection->getTypeId<Component>(), id);
         }
 
+        template<typename Component>
+        Component& getOrAddComponent(EntityId id) {
+            if (hasComponent<Component>(id)) {
+                return getComponent<Component>(id);
+            }
+            else {
+                return addComponent<Component>(id);
+            }
+        }
+
         void* addComponent(int typeId, EntityId id);
         void* getComponent(int typeId, EntityId id);
         bool hasComponent(int typeId, EntityId id);

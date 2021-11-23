@@ -1,9 +1,15 @@
-cmake_minimum_required(VERSION 3.4)
+cmake_minimum_required(VERSION 3.0)
 set(CMAKE_CXX_STANDARD 20)
+
 
 #set(CMAKE_UNITY_BUILD ON)
 if(WIN32)
     set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
+    set(LIBRARY_OUTPUT_PATH ${CMAKE_CURRENT_BINARY_DIR})
+    set(CMAKE_DEBUG_POSTFIX "")
+    set(CMAKE_IMPORT_LIBRARY_SUFFIX ".lib")
+
+    set(USE_MSVC_RUNTIME_LIBRARY_DLL 1)
 else()
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
 endif()
@@ -18,20 +24,21 @@ target_precompile_headers(${PROJECT_NAME} PUBLIC src/pch.h)
 target_include_directories(${PROJECT_NAME} PUBLIC src extern/imgui)
 if(WIN32)
     target_compile_definitions(${PROJECT_NAME} PRIVATE TRI_DLL_EXPORT)
-    target_compile_definitions(${PROJECT_NAME} PUBLIC TRI_DEBUG)
 endif()
+target_compile_definitions(${PROJECT_NAME} PUBLIC TRI_DEBUG)
 
+add_subdirectory(extern/bullet3)
 add_subdirectory(extern/glfw)
 add_subdirectory(extern/glew/build/cmake)
 add_subdirectory(extern/glm)
 add_subdirectory(extern/yaml-cpp)
-target_link_libraries(${PROJECT_NAME} glfw glm yaml-cpp)
+target_link_libraries(${PROJECT_NAME} glfw glm yaml-cpp BulletDynamics BulletCollision LinearMath)
 if(WIN32)
     target_link_libraries(${PROJECT_NAME} opengl32 glew_s imm32)
 else()
     target_link_libraries(${PROJECT_NAME} GL glew pthread stdc++fs)
 endif()
-target_include_directories(${PROJECT_NAME} PUBLIC extern extern/glm extern/glfw/include extern/glew/include extern/yaml-cpp/include)
+target_include_directories(${PROJECT_NAME} PUBLIC extern extern/glm extern/glfw/include extern/glew/include extern/yaml-cpp/include extern/bullet3/src)
 
 add_link_options(-no-pie)
 project(tridot-launcher)
@@ -45,12 +52,12 @@ file(GLOB_RECURSE SOURCES src/test/*.cpp)
 add_library(${PROJECT_NAME} SHARED ${SOURCES})
 target_include_directories(${PROJECT_NAME} PUBLIC src src/test)
 target_link_libraries(${PROJECT_NAME} PUBLIC tridot)
+
+
 add_custom_command(
-    TARGET ${PROJECT_NAME}
-    PRE_LINK
-    COMMAND ${CMAKE_COMMAND} -E rename
-    "test.dll"
-    "junk-test.dll"
+    TARGET ${PROJECT_NAME} PRE_LINK
+    COMMAND ${CMAKE_COMMAND} -E touch "test.dll"
+    COMMAND ${CMAKE_COMMAND} -E rename "test.dll" "junk-test.dll" 
 )
 
 project(tridot-editor)

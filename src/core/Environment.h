@@ -23,6 +23,7 @@ namespace tri {
     class AssetManager;
     class Editor;
     class HierarchySystem;
+    class Physics;
 
     class TRI_API Environment {
     public:
@@ -44,6 +45,7 @@ namespace tri {
         AssetManager *assets;
         Editor *editor;
         HierarchySystem *hierarchies;
+        Physics* physics;
 
         static Environment* startup();
         static void shutdown();

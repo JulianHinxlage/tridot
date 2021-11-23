@@ -198,6 +198,8 @@ namespace tri {
         Signal<> shutdown;
         Signal<> postShutdown;
         Signal<Scene*> sceneLoad;
+        Signal<Scene*> sceneBegin;
+        Signal<Scene*> sceneEnd;
         Signal<Module*> moduleLoad;
         Signal<Module*> moduleUnload;
         Signal<int> typeRegister;

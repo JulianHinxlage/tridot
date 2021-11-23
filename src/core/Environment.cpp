@@ -43,6 +43,7 @@ namespace tri {
         assets = nullptr;
         editor = nullptr;
         hierarchies = nullptr;
+        physics = nullptr;
     }
 
     Environment* Environment::startup() {

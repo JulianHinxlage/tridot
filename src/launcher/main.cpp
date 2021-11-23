@@ -45,6 +45,8 @@ int main(int argc, char* argv[]) {
         }
     }
 
+    env->signals->sceneBegin.invoke(env->scene);
+
     loop.run();
     loop.shutdown();
 }

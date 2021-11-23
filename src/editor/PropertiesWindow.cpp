@@ -198,7 +198,9 @@ namespace tri {
                     for (EntityId id : env->editor->selectionContext.getSelected()) {
                         if (env->scene->hasComponent(rootTypeId, id)) {
                             void* comp = env->scene->getComponent(rootTypeId, id);
-                            desc->copy(postEdit, (uint8_t*)comp + offset);
+                            if (postEdit != (uint8_t*)comp + offset) {
+                                desc->copy(postEdit, (uint8_t*)comp + offset);
+                            }
                         }
                     }
                 }

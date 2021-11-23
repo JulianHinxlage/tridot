@@ -108,6 +108,10 @@ namespace tri {
         sceneBuffer = Ref<Scene>::make();
 
         env->signals->preShutdown.addCallback("Editor", [&](){
+            setMode(EDIT);
+            if (std::filesystem::exists("autosave2.scene")) {
+                std::filesystem::copy("autosave2.scene", "autosave3.scene", std::filesystem::copy_options::overwrite_existing);
+            }
             if(std::filesystem::exists("autosave.scene")){
                 std::filesystem::copy("autosave.scene", "autosave2.scene", std::filesystem::copy_options::overwrite_existing);
             }
@@ -279,6 +283,7 @@ namespace tri {
                 if(viewport.cameraMode == EDITOR_CAMERA){
                     viewport.saveEditorCameraTransform();
                 }
+                env->signals->sceneEnd.invoke(env->scene);
                 env->scene->copy(*sceneBuffer);
                 sceneBuffer->clear();
                 if(viewport.cameraMode == EDITOR_CAMERA) {
@@ -292,6 +297,7 @@ namespace tri {
                     sceneBuffer->copy(*env->scene);
                 }
                 this->mode = RUNTIME;
+                env->signals->sceneBegin.invoke(env->scene);
             } else if (mode == PAUSED) {
                 if(this->mode == EDIT){
                     sceneBuffer->clear();

@@ -2,6 +2,8 @@
 // Copyright (c) 2021 Julian Hinxlage. All rights reserved.
 //
 
+#pragma once
+
 #include <string>
 #include <vector> 
 #include <unordered_map>
