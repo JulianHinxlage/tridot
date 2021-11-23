@@ -1,20 +1,19 @@
 cmake_minimum_required(VERSION 3.0)
 set(CMAKE_CXX_STANDARD 20)
 
-
+#general settings
 #set(CMAKE_UNITY_BUILD ON)
 if(WIN32)
     set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
     set(LIBRARY_OUTPUT_PATH ${CMAKE_CURRENT_BINARY_DIR})
     set(CMAKE_DEBUG_POSTFIX "")
     set(CMAKE_IMPORT_LIBRARY_SUFFIX ".lib")
-
     set(USE_MSVC_RUNTIME_LIBRARY_DLL 1)
 else()
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
 endif()
 
-
+#tridot
 project(tridot)
 file(GLOB_RECURSE SOURCES src/core/*.cpp src/entity/*.cpp src/engine/*.cpp src/render/*.cpp)
 file(GLOB IMGUI_SOURCES extern/imgui/*.cpp extern/imgui/backends/imgui_impl_glfw.cpp extern/imgui/backends/imgui_impl_opengl3.cpp)
@@ -27,6 +26,7 @@ if(WIN32)
 endif()
 target_compile_definitions(${PROJECT_NAME} PUBLIC TRI_DEBUG)
 
+#dependencies
 add_subdirectory(extern/bullet3)
 add_subdirectory(extern/glfw)
 add_subdirectory(extern/glew/build/cmake)
@@ -40,6 +40,7 @@ else()
 endif()
 target_include_directories(${PROJECT_NAME} PUBLIC extern extern/glm extern/glfw/include extern/glew/include extern/yaml-cpp/include extern/bullet3/src)
 
+#launcher
 add_link_options(-no-pie)
 project(tridot-launcher)
 file(GLOB_RECURSE SOURCES src/launcher/*.cpp)
@@ -47,19 +48,19 @@ add_executable(${PROJECT_NAME} ${SOURCES})
 target_include_directories(${PROJECT_NAME} PUBLIC src src/launcher)
 target_link_libraries(${PROJECT_NAME} PUBLIC tridot)
 
+#test module
 project(test)
 file(GLOB_RECURSE SOURCES src/test/*.cpp)
 add_library(${PROJECT_NAME} SHARED ${SOURCES})
 target_include_directories(${PROJECT_NAME} PUBLIC src src/test)
 target_link_libraries(${PROJECT_NAME} PUBLIC tridot)
-
-
 add_custom_command(
     TARGET ${PROJECT_NAME} PRE_LINK
     COMMAND ${CMAKE_COMMAND} -E touch "test.dll"
     COMMAND ${CMAKE_COMMAND} -E rename "test.dll" "junk-test.dll" 
 )
 
+#editor
 project(tridot-editor)
 file(GLOB_RECURSE SOURCES src/editor/*.cpp)
 add_executable(${PROJECT_NAME} ${SOURCES})
@@ -67,6 +68,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC src src/editor)
 target_link_libraries(${PROJECT_NAME} PUBLIC tridot)
 add_dependencies(${PROJECT_NAME} test)
 
+#install
 project(tridot)
 set(CMAKE_INSTALL_PREFIX ${CMAKE_SOURCE_DIR}/install)
 install(TARGETS tridot tridot-launcher tridot-editor RUNTIME)

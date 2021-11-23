@@ -65,7 +65,17 @@ namespace tri {
         }
     }
 
-    Module* ModuleManager::loadModule(const std::string& file){
+    Module* ModuleManager::loadModule(const std::string& name){
+        std::string file = name;
+        if (!std::filesystem::exists(name)) {
+#if TRI_WINDOWS
+            file = name + ".dll";
+#else
+            file = std::string("lib") + name + ".so";
+#endif
+        }
+
+
         if (modules.find(file) != modules.end() && modules.find(file)->second.module != nullptr) {
             env->console->warning("module ", file, " already loaded");
             return modules[file].module;
@@ -95,24 +105,8 @@ namespace tri {
                 env->console->warning("no module class defined in module ", file, " (", dlerror(), ")");
 #endif
             }
-            auto pos1 = file.find_last_of('.');
-            if (pos1 == std::string::npos) {
-                pos1 = file.size();
-            }
-            auto pos2 = file.find_last_of('/');
-            if (pos2 == std::string::npos) {
-                pos2 = file.find_last_of('\\');
-                if (pos2 == std::string::npos) {
-                    pos2 = 0;
-                }
-                else {
-                    pos2++;
-                }
-            }
-            else {
-                pos2++;
-            }
-            std::string name = file.substr(pos2, pos1 - pos2);
+
+            std::string name = std::filesystem::path(file).filename().replace_extension().string();
             int callbackId = -1;
             if (module) {
                 callbackId = env->signals->update.addCallback(name, [module]() { module->update(); });

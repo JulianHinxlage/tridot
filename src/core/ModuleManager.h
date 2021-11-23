@@ -17,8 +17,8 @@ namespace tri {
         virtual void update() override;
         virtual void shutdown() override;
 
-        Module* loadModule(const std::string& file);
-        Module* getModule(const std::string& file);
+        Module* loadModule(const std::string& name);
+        Module* getModule(const std::string& name);
         void unloadModule(Module* module);
 
     private:
