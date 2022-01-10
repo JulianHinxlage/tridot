@@ -15,3 +15,9 @@ int main(int argc, char* argv[]) {
     loop.run();
     loop.shutdown();
 }
+
+#if TRI_WINDOWS
+INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR lpCmdLine, INT nCmdShow) {
+    return main(nCmdShow, (char**)lpCmdLine);
+}
+#endif

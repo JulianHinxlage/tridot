@@ -116,7 +116,6 @@ namespace tri {
         });
         RenderContext::setCull(true);
         RenderContext::setDepth(true);
-        RenderContext::flush(true);
     }
 
 }

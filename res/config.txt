@@ -1,4 +1,5 @@
 vsync 1
+shadows 0
 asset_directory ../res/
 asset_directory ./
 scene_load autosave.scene

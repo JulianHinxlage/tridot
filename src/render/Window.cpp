@@ -99,10 +99,6 @@ namespace tri {
                 glfwSwapInterval(0);
             }
             {
-                TRI_PROFILE("wait for GPU");
-                RenderContext::flush(true);
-            }
-            {
                 TRI_PROFILE("swap buffers");
                 glfwSwapBuffers(window);
             }

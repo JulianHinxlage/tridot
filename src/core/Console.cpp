@@ -219,6 +219,9 @@ namespace tri {
         inputThreadId = env->threads->addThread([this]() {
             while (true) {
                 char c = getCharacter();
+                if (inputThreadId == -1) {
+                    break;
+                }
                 if (c == 13 || c == '\n') { //enter
                     std::cout << "\r";
                     std::cout << inputLine << "\n";
@@ -300,6 +303,7 @@ namespace tri {
     void Console::shutdown() {
         env->threads->terminateThread(inputThreadId);
         env->signals->postStartup.removeCallback("Console");
+        inputThreadId = -1;
     }
 
     void Console::addLogFile(const std::string &file, Console::Options options, bool append) {
