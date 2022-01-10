@@ -39,6 +39,8 @@ namespace tri {
 		enum Type {
 			BOX,
 			SPHERE,
+			MESH,
+			CONCAVE_MESH,
 		};
 		Type type;
 		glm::vec3 size;

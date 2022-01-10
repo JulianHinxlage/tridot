@@ -19,6 +19,9 @@ namespace tri {
         bool loadActivate() override;
         void create(float *vertices, int vertexCount, int *indices, int indexCount, std::vector<Attribute> layout = {{FLOAT, 3}, {FLOAT, 3}, {FLOAT, 2}});
 
+        const std::vector<float>& getVertexData() { return vertexData; }
+        const std::vector<int>& getIndexData() { return indexData; }
+
         VertexArray vertexArray;
         glm::vec3 boundingMin;
         glm::vec3 boundingMax;

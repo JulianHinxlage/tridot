@@ -26,6 +26,8 @@ namespace tri {
 	TRI_REGISTER_TYPE(Collider::Type);
 	TRI_REGISTER_CONSTANT(Collider::Type, BOX);
 	TRI_REGISTER_CONSTANT(Collider::Type, SPHERE);
+	TRI_REGISTER_CONSTANT(Collider::Type, MESH);
+	TRI_REGISTER_CONSTANT(Collider::Type, CONCAVE_MESH);
 
 	TRI_REGISTER_COMPONENT(Collider);
 	TRI_REGISTER_MEMBER(Collider, type);

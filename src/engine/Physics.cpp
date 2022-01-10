@@ -8,18 +8,24 @@
 #include "core/ThreadPool.h"
 #include "engine/Time.h"
 #include "entity/Scene.h"
+#include "MeshComponent.h"
 
 #include <glm/detail/type_quat.hpp>
 #include <glm/gtx/euler_angles.hpp>
 
 #include <BulletDynamics/Dynamics/btSimpleDynamicsWorld.h>
+#include <BulletDynamics/Dynamics/btDiscreteDynamicsWorld.h>
 #include <BulletCollision/CollisionDispatch/btDefaultCollisionConfiguration.h>
 #include <BulletCollision/BroadphaseCollision/btDbvtBroadphase.h>
 #include <BulletDynamics/ConstraintSolver/btSequentialImpulseConstraintSolver.h>
-#include <BulletCollision/CollisionShapes/btBoxShape.h>
 #include <LinearMath/btDefaultMotionState.h>
+#include <BulletCollision/CollisionShapes/btBoxShape.h>
 #include <BulletCollision/CollisionShapes/btSphereShape.h>
-#include <BulletDynamics/Dynamics/btDiscreteDynamicsWorld.h>
+#include <BulletCollision/CollisionShapes/btConvexHullShape.h>
+#include <BulletCollision/CollisionShapes/btConvexTriangleMeshShape.h>
+#include <BulletCollision/CollisionShapes/btShapeHull.h>
+#include <BulletCollision/CollisionShapes/btTriangleMesh.h>
+#include <BulletCollision/CollisionShapes/btConcaveShape.h>
 
 namespace tri {
 
@@ -125,6 +131,50 @@ namespace tri {
 				s->calculateLocalInertia(mass, localInertia);
 			}
 			shape = s;
+		}
+		else if (collider.type == Collider::MESH) {
+			btConvexTriangleMeshShape* s = nullptr;
+			if (env->scene->hasComponent<MeshComponent>(id)) {
+				auto& mesh = env->scene->getComponent<MeshComponent>(id);
+				if (mesh.mesh) {
+					auto &vertices = mesh.mesh->getVertexData();
+					auto &indices = mesh.mesh->getIndexData();
+
+					btTriangleMesh* m = new btTriangleMesh();
+					
+					int stride = 8;
+					for (int i = 0; i < indices.size(); i += 3) {
+						glm::vec3 v1(
+							(float)vertices[i * stride + 0],
+							(float)vertices[i * stride + 1],
+							(float)vertices[i * stride + 2]
+						);
+						glm::vec3 v2(
+							(float)vertices[(i + 1) * stride + 0],
+							(float)vertices[(i + 1) * stride + 1],
+							(float)vertices[(i + 1) * stride + 2]
+						);
+						glm::vec3 v3(
+							(float)vertices[(i + 2) * stride + 0],
+							(float)vertices[(i + 2) * stride + 1],
+							(float)vertices[(i + 2) * stride + 2]
+						);
+
+						m->addTriangle(conv(v1 * collider.size), conv(v2 * collider.size), conv(v3 * collider.size));
+					}
+					env->console->info("tris: ", m->getNumTriangles());
+					s = new btConvexTriangleMeshShape(m);
+				}
+			}
+
+			if (s != nullptr) {
+				if (mass != 0) {
+					s->calculateLocalInertia(mass, localInertia);
+				}
+				shape = s;
+			}
+		}
+		else if (collider.type == Collider::CONCAVE_MESH) {
 		}
 
 		btTransform bodyTransform;
