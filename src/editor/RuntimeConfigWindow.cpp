@@ -64,7 +64,7 @@ namespace tri {
                 auto& observer = observers[i];
 
                 bool active = observer.active;
-                bool canChange = !alwaysOn.contains(observer.name);
+                bool canChange = alwaysOn.find(observer.name) == alwaysOn.end();
                 if (!canChange) {
                     ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetStyleColorVec4(ImGuiCol_TextDisabled));
                 }
@@ -98,7 +98,7 @@ namespace tri {
 
                 if (canChange) {
                     if (currentMode == EDIT) {
-                        bool contains = editModeConfig.contains(observer.name);
+                        bool contains = editModeConfig.find(observer.name) != editModeConfig.end();
                         if (active != contains) {
                             env->signals->update.setActiveCallback(observer.name, contains);
                             if (active) {
@@ -110,7 +110,7 @@ namespace tri {
                         }
                     }
                     else {
-                        bool contains = runtimeModeConfig.contains(observer.name);
+                        bool contains = runtimeModeConfig.find(observer.name) != runtimeModeConfig.end();
                         if (active != contains) {
                             if (active) {
                                 runtimeModeConfig.insert(observer.name);

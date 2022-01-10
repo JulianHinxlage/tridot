@@ -23,7 +23,7 @@ namespace tri {
         template<typename T>
         T *getSystem(){
             size_t type = typeid(T).hash_code();
-            if(systems.contains(type)){
+            if(systems.find(type) != systems.end()){
                 return (T*)systems[type].system.get();
             }else{
                 return nullptr;
@@ -39,7 +39,7 @@ namespace tri {
         template<typename T>
         bool removeSystem(){
             size_t type = typeid(T).hash_code();
-            if(systems.contains(type)){
+            if(systems.find(type) != systems.end()){
                 if (systems[type].system) {
                     systems[type].system->shutdown();
                     env->signals->update.removeCallback(systems[type].updateCallbackId);
@@ -65,7 +65,7 @@ namespace tri {
         template<typename T>
         void startupSystem(){
             size_t type = typeid(T).hash_code();
-            if(systems.contains(type)){
+            if(systems.find(type) != systems.end()){
                 auto &record = systems[type];
                 if(record.startupFlag == false){
                     record.startupFlag = true;

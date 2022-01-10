@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "pch.h"
 #include "enum.h"
 
 namespace tri {

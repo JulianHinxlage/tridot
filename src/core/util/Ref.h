@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include "pch.h"
+
 namespace tri {
 
     template<typename T>

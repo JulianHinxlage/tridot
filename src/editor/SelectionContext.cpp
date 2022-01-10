@@ -19,7 +19,7 @@ namespace tri {
     }
 
     bool SelectionContext::isSelected(EntityId id) {
-        return selected.contains(id);
+        return selected.find(id) != selected.end();
     }
 
     const std::set<EntityId> &SelectionContext::getSelected() {

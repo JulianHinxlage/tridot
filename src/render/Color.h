@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "pch.h"
 #include "core/config.h"
 #include <cstdint>
 #include <glm/glm.hpp>

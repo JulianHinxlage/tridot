@@ -4,10 +4,10 @@
 
 #pragma once
 
+#include "pch.h"
 #include "Color.h"
 #include "core/core.h"
 #include "glm/glm.hpp"
-#include <string>
 
 namespace tri {
 

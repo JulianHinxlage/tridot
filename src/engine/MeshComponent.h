@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "pch.h"
 #include "render/Material.h"
 #include "render/Mesh.h"
 

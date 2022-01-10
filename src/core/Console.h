@@ -105,7 +105,7 @@ namespace tri {
         template<typename T>
         T *getVariable(const std::string &name){
             size_t type = typeid(T).hash_code();
-            if(!variables.contains(name)){
+            if(variables.find(name) == variables.end()){
                 variables[name] = { std::make_shared<T>(), type };
             }
             Variable &var = variables[name];

@@ -138,7 +138,7 @@ namespace tri {
     }
 
     Module* ModuleManager::getModule(const std::string& file){
-        if (modules.contains(file)) {
+        if (modules.find(file) != modules.end()) {
             return modules[file].module;
         }
         else {

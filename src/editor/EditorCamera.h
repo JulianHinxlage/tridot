@@ -3,6 +3,8 @@
 //
 
 #pragma once
+
+#include "pch.h"
 #include "engine/Transform.h"
 #include "engine/Camera.h"
 

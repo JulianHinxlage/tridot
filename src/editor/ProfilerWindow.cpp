@@ -51,7 +51,7 @@ namespace tri {
             }else {
                 int frames = 0;
                 for (int i = previousDisplayFrame + 1; i <= displayFrame; i++) {
-                    if (node.frames.contains(i)) {
+                    if (node.frames.find(i) != node.frames.end()) {
                         auto &times = node.frames[i];
                         for (auto time : times) {
                             sum += time;

@@ -4,10 +4,10 @@
 
 #pragma once
 
+#include "pch.h"
 #include "Image.h"
 #include "enum.h"
 #include "engine/Asset.h"
-#include <cstdint>
 
 namespace tri {
 

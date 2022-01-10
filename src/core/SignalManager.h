@@ -88,21 +88,32 @@ namespace tri {
             observers.clear();
         }
 
-        void invoke(Args... args, bool profile = false){
+        void invoke(Args... args){
             handledFlag = false;
             for(int i = 0; i < observers.size(); i++){
                 auto &observer = observers[i];
                 if(observer.callback){
                     if(observer.active){
-                        if(profile){
-                            TRI_PROFILE(observer.name.c_str());
-                            observer.callback(args...);
-                        }else{
-                            observer.callback(args...);
-                        }
+                        observer.callback(args...);
                     }
                 }
                 if(handledFlag){
+                    break;
+                }
+            }
+        }
+
+        void invokeProfile(Args... args) {
+            handledFlag = false;
+            for (int i = 0; i < observers.size(); i++) {
+                auto& observer = observers[i];
+                if (observer.callback) {
+                    if (observer.active) {
+                        TRI_PROFILE(observer.name.c_str());
+                        observer.callback(args...);
+                    }
+                }
+                if (handledFlag) {
                     break;
                 }
             }
@@ -223,7 +234,7 @@ namespace tri {
         template<typename... Args>
         Signal<Args...> &getSignal(const std::string &name = ""){
             size_t type = typeid(Signal<Args...>).hash_code();
-            if(!signals.contains(type) || !signals[type].contains(name)){
+            if((signals.find(type) == signals.end()) || (signals[type].find(name) == signals[type].end())) {
                 signals[type][name] = std::make_shared<Signal<Args...>>();
             }
             return *(Signal<Args...>*)signals[type][name].get();

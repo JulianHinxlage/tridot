@@ -37,7 +37,7 @@ namespace tri {
                 "Tridot Editor");
         env->window->setBackgroundColor(Color(50, 50, 50));
 
-        env->signals->startup.invoke(true);
+        env->signals->startup.invokeProfile();
         env->signals->postStartup.invoke();
     }
 
@@ -45,7 +45,7 @@ namespace tri {
         while (env->window->isOpen()) {
             TRI_PROFILE_PHASE("update");
             env->signals->preUpdate.invoke();
-            env->signals->update.invoke(true);
+            env->signals->update.invokeProfile();
             env->signals->postUpdate.invoke();
             env->window->setVSync(*env->console->getVariable<bool>("vsync"));
             env->profiler->nextFrame();

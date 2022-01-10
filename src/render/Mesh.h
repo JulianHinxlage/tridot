@@ -4,10 +4,10 @@
 
 #pragma once
 
+#include "pch.h"
 #include "VertexArray.h"
 #include "engine/Asset.h"
 #include <glm/glm.hpp>
-#include <string>
 
 namespace tri {
 

@@ -4,12 +4,9 @@
 
 #pragma once
 
+#include "pch.h"
 #include "Buffer.h"
 #include "engine/Asset.h"
-#include <cstdint>
-#include <string>
-#include <vector>
-#include <unordered_map>
 #include <glm/glm.hpp>
 
 namespace tri {

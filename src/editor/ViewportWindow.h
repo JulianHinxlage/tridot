@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "pch.h"
 #include "EditorElement.h"
 #include "EditorCamera.h"
 #include "entity/Scene.h"

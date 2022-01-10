@@ -4,9 +4,8 @@
 
 #pragma once
 
+#include "pch.h"
 #include "core/config.h"
-#include <string>
-#include <vector>
 
 namespace tri {
 

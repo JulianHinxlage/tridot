@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "pch.h"
 #include "core/core.h"
 #include "core/util/Clock.h"
 

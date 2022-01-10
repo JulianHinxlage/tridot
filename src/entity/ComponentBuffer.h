@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include "pch.h"
+
 namespace tri {
 
     //stores a single instance of an component as a dynamic type

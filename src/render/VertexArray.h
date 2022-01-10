@@ -4,10 +4,10 @@
 
 #pragma once
 
+#include "pch.h"
 #include "core/util/Ref.h"
 #include "Buffer.h"
 #include "enum.h"
-#include <vector>
 
 namespace tri {
 

@@ -34,7 +34,7 @@ namespace tri {
 
     EntityId Scene::addEntityHinted(EntityId hint) {
         if (hint != -1) {
-            if (freeList.contains(hint)) {
+            if (freeList.find(hint) != freeList.end()) {
                 freeList.erase(hint);
             }
             else if (hint < (EntityId)entityPool.size()) {
