@@ -24,6 +24,8 @@ namespace tri {
                     env->editor->gui.dragDropSource(typeId, file);
                     if (typeId == env->reflection->getTypeId<Scene>()) {
                         updateSceneMenu(file);
+                    }else if (typeId == env->reflection->getTypeId<Module>()) {
+                        updateModuleMenu(file);
                     } else {
                         updateAssetMenu(typeId, file);
                     }
@@ -43,6 +45,19 @@ namespace tri {
                 if(ImGui::MenuItem("Reload", nullptr, false, status & AssetManager::LOADED)){
                     env->assets->unload(file);
                     env->assets->get(typeId, file);
+                }
+                ImGui::EndPopup();
+            }
+        }
+
+        void updateModuleMenu(const std::string& file) {
+            if (ImGui::BeginPopupContextItem()) {
+                Module* module = env->modules->getModule(file);
+                if (ImGui::MenuItem("Load", nullptr, false, module == nullptr)) {
+                    env->modules->loadModule(file);
+                }
+                if (ImGui::MenuItem("Unload", nullptr, false, module != nullptr)) {
+                    env->modules->unloadModule(module);
                 }
                 ImGui::EndPopup();
             }

@@ -49,25 +49,12 @@ add_executable(${PROJECT_NAME} ${SOURCES})
 target_include_directories(${PROJECT_NAME} PUBLIC src src/launcher)
 target_link_libraries(${PROJECT_NAME} PUBLIC tridot)
 
-#test module
-project(test)
-file(GLOB_RECURSE SOURCES src/test/*.cpp)
-add_library(${PROJECT_NAME} SHARED ${SOURCES})
-target_include_directories(${PROJECT_NAME} PUBLIC src src/test)
-target_link_libraries(${PROJECT_NAME} PUBLIC tridot)
-add_custom_command(
-    TARGET ${PROJECT_NAME} PRE_LINK
-    COMMAND ${CMAKE_COMMAND} -E touch "test.dll"
-    COMMAND ${CMAKE_COMMAND} -E rename "test.dll" "junk-test.dll" 
-)
-
 #editor
 project(tridot-editor)
 file(GLOB_RECURSE SOURCES src/editor/*.cpp)
 add_executable(${PROJECT_NAME} ${SOURCES})
 target_include_directories(${PROJECT_NAME} PUBLIC src src/editor)
 target_link_libraries(${PROJECT_NAME} PUBLIC tridot)
-add_dependencies(${PROJECT_NAME} test)
 
 #install
 project(tridot)

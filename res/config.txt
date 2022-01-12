@@ -5,4 +5,3 @@ asset_directory ./
 scene_load autosave.scene
 resolution_x 1920
 resolution_y 1080
-module_load test

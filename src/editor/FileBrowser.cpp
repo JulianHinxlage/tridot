@@ -37,6 +37,8 @@ namespace tri {
                 {".jpg", env->reflection->getTypeId<Texture>()},
                 {".mat", env->reflection->getTypeId<Material>()},
                 {".prefab", env->reflection->getTypeId<Prefab>()},
+                {".so", env->reflection->getTypeId<Module>()},
+                {".dll", env->reflection->getTypeId<Module>()},
         };
     }
 
