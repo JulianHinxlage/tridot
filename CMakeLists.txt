@@ -55,9 +55,3 @@ file(GLOB_RECURSE SOURCES src/editor/*.cpp)
 add_executable(${PROJECT_NAME} ${SOURCES})
 target_include_directories(${PROJECT_NAME} PUBLIC src src/editor)
 target_link_libraries(${PROJECT_NAME} PUBLIC tridot)
-
-#install
-project(tridot)
-set(CMAKE_INSTALL_PREFIX ${CMAKE_SOURCE_DIR}/install)
-install(TARGETS tridot tridot-launcher tridot-editor RUNTIME)
-install(FILES res/config.txt RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/res)

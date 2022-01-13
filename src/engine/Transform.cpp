@@ -43,6 +43,8 @@ namespace tri {
     TRI_REGISTER_MEMBER(Transform, rotation);
     TRI_REGISTER_MEMBER(Transform, parent);
 
+    TRI_REGISTER_COMPONENT(NoHierarchyUpdate)
+
     TRI_REGISTER_SYSTEM_INSTANCE(HierarchySystem, env->hierarchies);
 
     const std::vector<EntityId> &HierarchySystem::getChildren(EntityId id) {
@@ -88,9 +90,9 @@ namespace tri {
     }
 
     void HierarchySystem::update() {
-        children.clear();
+        children = childrenBase;
         auto *pool = env->scene->getComponentPool<Transform>();
-        env->scene->view<Transform>().each([&](EntityId id, Transform &t){
+        env->scene->view<Transform>().except<NoHierarchyUpdate>().each([&](EntityId id, Transform &t){
             if(t.parent != -1){
                 children[t.parent].push_back(id);
                 if(env->scene->hasComponent<Transform>(t.parent)){
@@ -121,6 +123,29 @@ namespace tri {
             if(scene == env->scene){
                 for(auto &child : getChildren(id)){
                     scene->removeEntity(child);
+                }
+            }
+        });
+        env->signals->getComponentInit<NoHierarchyUpdate>().addCallback([&](EntityId id, Scene *scene) {
+            if (scene->hasComponent<Transform>(id)) {
+                Transform &t = scene->getComponent<Transform>(id);
+                if (t.parent != -1) {
+                    childrenBase[t.parent].push_back(id);
+                }
+                t.matrix = t.calculateLocalMatrix();
+            }
+        });
+        env->signals->getComponentShutdown<NoHierarchyUpdate>().addCallback([&](EntityId id, Scene* scene) {
+            if (scene->hasComponent<Transform>(id)) {
+                Transform& t = scene->getComponent<Transform>(id);
+                if (t.parent != -1) {
+                    auto& list = childrenBase[t.parent];
+                    for (int i = 0; i < list.size(); i++) {
+                        if (list[i] == t.parent) {
+                            list.erase(list.begin() + i);
+                            break;
+                        }
+                    }
                 }
             }
         });

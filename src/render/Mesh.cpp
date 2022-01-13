@@ -20,7 +20,7 @@ namespace tri {
         return true;
     }
 
-    void Mesh::create(float *vertices, int vertexCount, int *indices, int indexCount, std::vector<Attribute> layout) {
+    void Mesh::create(float *vertices, int vertexCount, int *indices, int indexCount, std::vector<Attribute> layout, bool keepData) {
         vertexArray.clear();
 
         Ref<Buffer> vertexBuffer(true);
@@ -37,6 +37,13 @@ namespace tri {
 
         vertexArray.addIndexBuffer(indexBuffer, UINT32);
         vertexArray.addVertexBuffer(vertexBuffer, layout);
+
+        if (keepData) {
+            vertexData.clear();
+            indexData.clear();
+            vertexData.insert(vertexData.begin(), vertices, vertices + vertexCount);
+            indexData.insert(indexData.begin(), indices, indices + indexCount);
+        }
     }
 
     std::vector<std::string> split(const std::string &str, char delimiter = ' '){
@@ -245,6 +252,40 @@ namespace tri {
             env->console->warning("mesh: file ", file, " not found");
         }
         return false;
+    }
+
+    bool Mesh::save(const std::string& file) {
+        auto& vs = getVertexData();
+        auto& is = getIndexData();
+
+        //todo: check layout
+        int stride = (3 + 3 + 2);
+        int count = vs.size() / (3 + 3 + 2);
+
+        std::ofstream stream(file);
+        if (stream.is_open()) {
+            for (int i = 0; i < count; i++) {
+                float* v = (float*)vs.data() + stride * i;
+                stream << "v " << v[0] << " " << v[1] << " " << v[2] << "\n";
+            }
+            for (int i = 0; i < count; i++) {
+                float* v = (float*)vs.data() + stride * i + 6;
+                stream << "vt " << v[0] << " " << v[1] << "\n";
+            }
+            for (int i = 0; i < count; i++) {
+                float* v = (float*)vs.data() + stride * i + 3;
+                stream << "vn " << v[0] << " " << v[1] << " " << v[2] << "\n";
+            }
+            for (int i = 0; i < is.size() / 3; i++) {
+                stream << "f " << is[i * 3 + 0] + 1 << " " << is[i * 3 + 1] + 1 << " " << is[i * 3 + 2] + 1 << "\n";
+            }
+            stream.flush();
+            stream.close();
+            return true;
+        }
+        else {
+            return false;
+        }
     }
 
 }

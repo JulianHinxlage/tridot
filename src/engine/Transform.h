@@ -30,6 +30,8 @@ namespace tri {
         void decompose(const glm::mat4 &matrix);
     };
 
+    class NoHierarchyUpdate{};
+
     class HierarchySystem : public System {
     public:
         const std::vector<EntityId> &getChildren(EntityId id);
@@ -40,6 +42,7 @@ namespace tri {
 
     private:
         std::unordered_map<EntityId, std::vector<EntityId>> children;
+        std::unordered_map<EntityId, std::vector<EntityId>> childrenBase;
         std::vector<EntityId> empty;
     };
 

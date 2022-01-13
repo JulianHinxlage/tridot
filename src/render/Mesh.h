@@ -17,7 +17,8 @@ namespace tri {
 
         bool load(const std::string &file) override;
         bool loadActivate() override;
-        void create(float *vertices, int vertexCount, int *indices, int indexCount, std::vector<Attribute> layout = {{FLOAT, 3}, {FLOAT, 3}, {FLOAT, 2}});
+        bool save(const std::string& file) override;
+        void create(float *vertices, int vertexCount, int *indices, int indexCount, std::vector<Attribute> layout = {{FLOAT, 3}, {FLOAT, 3}, {FLOAT, 2}}, bool keepData = false);
 
         const std::vector<float>& getVertexData() { return vertexData; }
         const std::vector<int>& getIndexData() { return indexData; }
