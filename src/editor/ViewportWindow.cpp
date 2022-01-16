@@ -154,7 +154,7 @@ namespace tri {
 
             //editor camera
             if(cam && camTransform) {
-                if(cameraMode != FIXED_PRIMARY_CAMERA) {
+                if(cameraMode != FIXED_PRIMARY_CAMERA || env->editor->mode == EDIT) {
                     if (ImGui::IsWindowHovered()) {
                         editorCamera.update(*cam, *camTransform);
                     }

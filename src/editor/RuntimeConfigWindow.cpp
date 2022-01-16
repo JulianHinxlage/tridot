@@ -27,6 +27,7 @@ namespace tri {
                 "Gizmos/begin",
             };
 
+            /*
             editModeConfig = {
                 "HierarchySystem",
                 "SignalManager",
@@ -46,6 +47,15 @@ namespace tri {
                 "Imgui",
                 "Skybox",
             };
+            */
+
+            env->signals->update.setActiveInEditModeCallback("Physics", false);
+
+            for (auto& observer : env->signals->update.getObservers()) {
+                if (observer.activeInEditMode) {
+                    editModeConfig.insert(observer.name);
+                }
+            }
 
             for(auto &observer : env->signals->update.getObservers()){
                 if(observer.active){

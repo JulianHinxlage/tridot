@@ -120,12 +120,12 @@ namespace tri {
                                 catch (...) {}
                             }
                             else {
-                                vs.push_back(0);
+                                ns.push_back(0);
                             }
                         }
                     }
                     else if (parts[0] == "vt") {
-                        for (int i = 0; i < 3; i++) {
+                        for (int i = 0; i < 2; i++) {
                             if (parts.size() > i + 1) {
                                 try {
                                     ts.push_back(std::stof(parts[i + 1]));
@@ -133,7 +133,7 @@ namespace tri {
                                 catch (...) {}
                             }
                             else {
-                                vs.push_back(0);
+                                ts.push_back(0);
                             }
                         }
                     }
@@ -153,6 +153,9 @@ namespace tri {
                                     is.back().t = std::stof(parts2[1]) - 1;
                                 }
                                 catch (...) {}
+                            }
+                            else {
+                                is.back().t = is.back().v;
                             }
                             if (parts2.size() > 2) {
                                 try {

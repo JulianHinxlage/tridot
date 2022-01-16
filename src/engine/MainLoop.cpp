@@ -16,7 +16,7 @@ namespace tri {
         env->console->setVariable<bool>("hot_reloading", &env->assets->hotReloadEnabled);
         env->console->setVariable<int>("resolution_x", 1920);
         env->console->setVariable<int>("resolution_y", 1080);
-        env->console->setVariable<bool>("vsync", true);
+        env->console->setVariable<int>("vsync", 1);
         env->console->setVariable<std::string>("log_file", "log.txt");
 
         env->signals->preStartup.invoke();
@@ -47,7 +47,7 @@ namespace tri {
             env->signals->preUpdate.invoke();
             env->signals->update.invokeProfile();
             env->signals->postUpdate.invoke();
-            env->window->setVSync(*env->console->getVariable<bool>("vsync"));
+            env->window->setVSync(*env->console->getVariable<int>("vsync"));
             env->profiler->nextFrame();
         }
     }

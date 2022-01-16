@@ -93,11 +93,7 @@ namespace tri {
                 clear();
                 return;
             }
-            if (vsync) {
-                glfwSwapInterval(1);
-            } else {
-                glfwSwapInterval(0);
-            }
+            glfwSwapInterval(vsync);
             {
                 TRI_PROFILE("swap buffers");
                 glfwSwapBuffers(window);
@@ -187,8 +183,8 @@ namespace tri {
         glfwSetWindowTitle((GLFWwindow*)context, title.c_str());
     }
 
-    void Window::setVSync(bool enabled) {
-        this->vsync = enabled;
+    void Window::setVSync(int value) {
+        this->vsync = value;
     }
 
 }

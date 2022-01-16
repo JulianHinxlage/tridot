@@ -27,6 +27,7 @@ namespace tri {
             std::string name;
             int id;
             bool active;
+            bool activeInEditMode;
             bool swapped;
         };
 
@@ -42,7 +43,7 @@ namespace tri {
         int addCallback(const Callback &callback, const std::string &name = ""){
             int id = nextId++;
             int index = checkDependencies(name);
-            observers.insert(observers.begin() + index, {callback, name, id, true, false});
+            observers.insert(observers.begin() + index, {callback, name, id, true, true, false});
             return id;
         }
 
@@ -81,6 +82,20 @@ namespace tri {
         void setActiveAll(bool active = true){
             for(auto &observer : observers){
                 observer.active = active;
+            }
+        }
+
+        void setActiveInEditModeCallback(const std::string& callback, bool active = true) {
+            for (auto& observer : observers) {
+                if (observer.name == callback) {
+                    observer.activeInEditMode = active;
+                }
+            }
+        }
+
+        void setActiveInEditModeCallbacks(const std::vector<std::string>& callbacks, bool active = true) {
+            for (auto& callback : callbacks) {
+                setActiveInEditModeCallback(callback, active);
             }
         }
 
@@ -229,6 +244,14 @@ namespace tri {
             setSignal(&shutdown, "shutdown");
             setSignal(&postShutdown, "postShutdown");
             setSignal(&sceneLoad, "sceneLoad");
+            setSignal(&sceneBegin, "sceneBegin");
+            setSignal(&sceneEnd, "sceneEnd");
+            setSignal(&moduleLoad, "moduleLoad");
+            setSignal(&moduleUnload, "moduleUnload");
+            setSignal(&typeRegister, "typeRegister");
+            setSignal(&typeUnregister, "typeUnregister");
+            setSignal(&entityCreate, "entityCreate");
+            setSignal(&entityRemove, "entityRemove");
         }
 
         template<typename... Args>

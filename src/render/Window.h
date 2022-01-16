@@ -33,9 +33,9 @@ namespace tri {
         void setPosition(const glm::vec2 &position);
         void setBackgroundColor(const Color &color);
         void setTitle(const std::string &title);
-        void setVSync(bool enabled);
+        void setVSync(int value);
     private:
-        bool vsync;
+        int vsync;
         Color backgroundColor;
         glm::vec2 size;
         glm::vec2 position;
