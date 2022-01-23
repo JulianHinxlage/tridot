@@ -55,17 +55,20 @@ namespace tri {
             env->reflection = new Reflection();
             env->signals = new SignalManager();
             env->console = new Console();
+            env->modules = new ModuleManager();
             env->systems->setSystem("SignalManager", env->signals);
             env->systems->setSystem("Console", env->console);
             env->systems->setSystem("Reflection", env->reflection);
-            env->modules = env->systems->addSystem<ModuleManager>("ModuleManager");
             env->profiler = env->systems->addSystem<Profiler>("Profiler");
             env->threads = env->systems->addSystem<ThreadPool>("ThreadPool");
 
             env->signals->startup.addCallback("systems", []() {
                 env->systems->startup();
+                env->modules->startup();
             });
             env->signals->shutdown.addCallback("systems", []() {
+                //todo: fix unloading modules on shutdown causing a crash
+                //env->modules->shutdown();
                 env->systems->shutdown();
             });
         }
@@ -78,6 +81,7 @@ namespace tri {
     void Environment::shutdown() {
         env = getInstance();
         if (env != nullptr) {
+            delete env->modules;
             delete env->signals;
             delete env->reflection;
             delete env->console;

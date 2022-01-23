@@ -125,11 +125,33 @@ namespace tri {
         }
 
         void updateHeader(){
-            if(ImGui::Button("Add Entity")){
-                EntityId id = env->editor->entityOperations.addEntity();
-                env->scene->addComponent<EntityInfo>(id);
-                env->editor->selectionContext.unselectAll();
-                env->editor->selectionContext.select(id);
+            if (ImGui::Button("Add Entity")) {
+                ImGui::OpenPopup("add entity");
+            }
+            if (ImGui::BeginPopup("add entity")) {
+
+                if (ImGui::MenuItem("Empty", nullptr, nullptr)) {
+                    EntityId id = env->editor->entityOperations.addEntity();
+                    env->scene->addComponents(id, EntityInfo());
+                    env->editor->selectionContext.unselectAll();
+                    env->editor->selectionContext.select(id);
+                }
+
+                for (auto& desc : env->reflection->getDescriptors()) {
+                    if (desc && desc->isComponent) {
+                        if (!desc->isType<Transform>() && !desc->isType<EntityInfo>() && !desc->isType<NoHierarchyUpdate>()) {
+                            if (ImGui::MenuItem(desc->name.c_str(), nullptr, nullptr)) {
+                                EntityId id = env->editor->entityOperations.addEntity();
+                                env->scene->addComponents(id, Transform(), EntityInfo());
+                                env->scene->addComponent(desc->typeId, id);
+                                env->editor->selectionContext.unselectAll();
+                                env->editor->selectionContext.select(id);
+                            }
+                        }
+                    }
+                }
+
+                ImGui::EndPopup();
             }
         }
 

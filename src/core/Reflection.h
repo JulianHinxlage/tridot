@@ -63,7 +63,7 @@ namespace tri {
 
             template<typename T>
             bool isType() const {
-                return hashCode == typeid(T).hash_code();
+                return hashCode == (int)typeid(T).hash_code();
             }
 
             virtual void construct(void* ptr) const = 0;

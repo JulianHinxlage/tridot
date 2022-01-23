@@ -46,6 +46,9 @@ namespace tri {
         //std::vector<EditorWindow*> windows;
         bool updated;
         Ref<Scene> sceneBuffer;
+
+        void setupFlagSaving();
+        void setupSettingsSaving();
     };
 
 }

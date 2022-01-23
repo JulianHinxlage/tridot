@@ -9,7 +9,7 @@
 
 namespace tri {
 
-    void MainLoop::startup(const std::string &configFile, const std::string& fallbackConfigFile) {
+    void MainLoop::startup(const std::vector<std::string>& configFileList) {
         Environment::startup();
         TRI_PROFILE_PHASE("startup");
 
@@ -20,12 +20,12 @@ namespace tri {
         env->console->setVariable<std::string>("log_file", "log.txt");
 
         env->signals->preStartup.invoke();
-        if (std::filesystem::exists(configFile)) {
-            env->console->loadConfigFile(configFile);
-        }
-        else if(!fallbackConfigFile.empty()) {
-            if (std::filesystem::exists(fallbackConfigFile)) {
-                env->console->loadConfigFile(fallbackConfigFile);
+        for (auto& file : configFileList) {
+            if (!file.empty()) {
+                if (std::filesystem::exists(file)) {
+                    env->console->loadConfigFile(file);
+                    break;
+                }
             }
         }
 

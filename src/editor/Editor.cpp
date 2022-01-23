@@ -24,9 +24,10 @@ namespace tri {
         mode = EDIT;
 
         env->signals->update.callbackOrder({"Imgui/begin", "Camera", "MeshComponent", "Editor"});
-        env->signals->postStartup.addCallback([](){
+        env->signals->postStartup.addCallback([&](){
             ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
+            //set colors of gui
             ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(1, 1, 1, 0.3));
             ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(1, 1, 1, 0.4));
             ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(1, 1, 1, 0.5));
@@ -49,48 +50,23 @@ namespace tri {
             ImGui::PushStyleColor(ImGuiCol_TitleBgActive, ImVec4(0.238, 0.238, 0.238, 1));
             ImGui::PushStyleColor(ImGuiCol_DragDropTarget, ImVec4(0.0, 0.32, 1.0, 1));
 
-            if (!std::filesystem::exists("editor.ini")) {
-                if (std::filesystem::exists("../res/editor.ini")) {
-                    std::filesystem::copy("../res/editor.ini", "editor.ini");
-                }
-            }
-            ImGui::GetIO().IniFilename = "editor.ini";
-
-            ImGuiSettingsHandler handler;
-            handler.TypeName = "UserData";
-            handler.TypeHash = ImHashStr("UserData");
-            handler.ReadOpenFn = [](ImGuiContext* ctx, ImGuiSettingsHandler* handler, const char* name) -> void* {
-                if (std::string(name) == "OpenFlags") {
-                    return (void*)1;
-                }
-                else {
-                    return nullptr;
-                }
-            };
-            handler.ReadLineFn = [](ImGuiContext* ctx, ImGuiSettingsHandler* handler, void* entry, const char* line) {
-                auto parts = StrUtil::split(line, "=");
-                if (parts.size() >= 2) {
-                    for (auto &element : env->editor->elements) {
-                        if (element && element->type != EditorElement::ALWAYS_OPEN) {
-                            if (element->name == parts[0]) {
-                                try {
-                                    element->isOpen = std::stoi(parts[1]);
-                                }
-                                catch (...) {}
-                            }
+            //set editor layout/config file
+            const char *configFile = "editor.ini";
+            if (!std::filesystem::exists(configFile)) {
+                std::vector<std::string> configFileList = { "../editor.ini" , "../../editor.ini" };
+                for (auto& file : configFileList) {
+                    if (!file.empty()) {
+                        if (std::filesystem::exists(file)) {
+                            std::filesystem::copy(file, configFile);
+                            break;
                         }
                     }
                 }
-            };
-            handler.WriteAllFn = [](ImGuiContext* ctx, ImGuiSettingsHandler* handler, ImGuiTextBuffer* buf) {
-                buf->append("[UserData][OpenFlags]\n");
-                for (auto &element : env->editor->elements) {
-                    if (element && element->type != EditorElement::ALWAYS_OPEN) {
-                        buf->appendf("%s=%i\n", element->name.c_str(), (int)element->isOpen);
-                    }
-                }
-            };
-            ImGui::GetCurrentContext()->SettingsHandlers.push_back(handler);
+            }
+            ImGui::GetIO().IniFilename = configFile;
+
+            setupFlagSaving();
+            setupSettingsSaving();
         });
         env->signals->postUpdate.addCallback([this](){
             updated = false;
@@ -306,6 +282,152 @@ namespace tri {
                 this->mode = PAUSED;
             }
         }
+    }
+
+    void Editor::setupFlagSaving(){
+        ImGuiSettingsHandler handler;
+        handler.TypeName = "OpenFlags";
+        handler.TypeHash = ImHashStr("OpenFlags");
+        handler.ReadOpenFn = [](ImGuiContext* ctx, ImGuiSettingsHandler* handler, const char* name) -> void* {
+            if (std::string(name) == "") {
+                return (void*)1;
+            }
+            else {
+                return nullptr;
+            }
+        };
+        handler.ReadLineFn = [](ImGuiContext* ctx, ImGuiSettingsHandler* handler, void* entry, const char* line) {
+            auto parts = StrUtil::split(line, "=");
+            if (parts.size() >= 2) {
+                for (auto& element : env->editor->elements) {
+                    if (element && element->type != EditorElement::ALWAYS_OPEN) {
+                        if (element->name == parts[0]) {
+                            try {
+                                element->isOpen = std::stoi(parts[1]);
+                            }
+                            catch (...) {}
+                        }
+                    }
+                }
+            }
+        };
+        handler.WriteAllFn = [](ImGuiContext* ctx, ImGuiSettingsHandler* handler, ImGuiTextBuffer* buf) {
+            buf->append("[OpenFlags][]\n");
+            for (auto& element : env->editor->elements) {
+                if (element && element->type != EditorElement::ALWAYS_OPEN) {
+                    buf->appendf("%s=%i\n", element->name.c_str(), (int)element->isOpen);
+                }
+            }
+            buf->appendf("\n");
+        };
+        ImGui::GetCurrentContext()->SettingsHandlers.push_back(handler);
+    }
+
+    void Editor::setupSettingsSaving(){
+        ImGuiSettingsHandler handler;
+        handler.TypeName = "ViewportSettings";
+        handler.TypeHash = ImHashStr("ViewportSettings");
+        handler.ReadOpenFn = [](ImGuiContext* ctx, ImGuiSettingsHandler* handler, const char* name) -> void* {
+            if (std::string(name) == "") {
+                return (void*)1;
+            }
+            else {
+                return nullptr;
+            }
+        };
+        handler.ReadLineFn = [](ImGuiContext* ctx, ImGuiSettingsHandler* handler, void* entry, const char* line) {
+            auto parts = StrUtil::split(line, "=");
+            if (parts.size() >= 2) {
+
+                if (parts[0] == "speed") {
+                    try {
+                        env->editor->viewport.editorCamera.speed = std::stof(parts[1]);
+                    }
+                    catch (...) {}
+                }
+                else if (parts[0] == "cameraMode") {
+                    try {
+                        env->editor->viewport.cameraMode = (tri::EditorCameraMode)std::stoi(parts[1]);
+                    }
+                    catch (...) {}
+                }
+                else if (parts[0] == "gizmoOperation") {
+                    try {
+                        env->editor->gizmos.operation = (tri::Gizmos::Operation)std::stoi(parts[1]);
+                    }
+                    catch (...) {}
+                }
+                else if (parts[0] == "gizmoMode") {
+                    try {
+                        env->editor->gizmos.mode = (tri::Gizmos::Mode)std::stoi(parts[1]);
+                    }
+                    catch (...) {}
+                }
+                else if (parts[0] == "gizmoPivots") {
+                    try {
+                        env->editor->gizmos.pivots = (tri::Gizmos::Pivots)std::stoi(parts[1]);
+                    }
+                    catch (...) {}
+                }
+                else if (parts[0] == "snap") {
+                    try {
+                        env->editor->gizmos.snapping = std::stoi(parts[1]);
+                    }
+                    catch (...) {}
+                }
+                else if (parts[0] == "snapTranslate") {
+                    try {
+                        env->editor->gizmos.translateSnapValues.x = std::stof(parts[1]);
+                        env->editor->gizmos.translateSnapValues.y = std::stof(parts[1]);
+                        env->editor->gizmos.translateSnapValues.z = std::stof(parts[1]);
+                    }
+                    catch (...) {}
+                }
+                else if (parts[0] == "snapScale") {
+                    try {
+                        env->editor->gizmos.scaleSnapValues.x = std::stof(parts[1]);
+                        env->editor->gizmos.scaleSnapValues.y = std::stof(parts[1]);
+                        env->editor->gizmos.scaleSnapValues.z = std::stof(parts[1]);
+                    }
+                    catch (...) {}
+                }
+                else if (parts[0] == "snapRotate") {
+                    try {
+                        env->editor->gizmos.rotateSnapValues.x = std::stof(parts[1]);
+                        env->editor->gizmos.rotateSnapValues.y = std::stof(parts[1]);
+                        env->editor->gizmos.rotateSnapValues.z = std::stof(parts[1]);
+                    }
+                    catch (...) {}
+                }
+
+
+
+                for (auto& element : env->editor->elements) {
+                    if (element && element->type != EditorElement::ALWAYS_OPEN) {
+                        if (element->name == parts[0]) {
+                            try {
+                                element->isOpen = std::stoi(parts[1]);
+                            }
+                            catch (...) {}
+                        }
+                    }
+                }
+            }
+        };
+        handler.WriteAllFn = [](ImGuiContext* ctx, ImGuiSettingsHandler* handler, ImGuiTextBuffer* buf) {
+            buf->append("[ViewportSettings][]\n");
+            buf->appendf("%s=%f\n", "speed", env->editor->viewport.editorCamera.speed);
+            buf->appendf("%s=%i\n", "cameraMode", (int)env->editor->viewport.cameraMode);
+            buf->appendf("%s=%i\n", "snap", env->editor->gizmos.snapping);
+            buf->appendf("%s=%f\n", "snapTranslate", env->editor->gizmos.translateSnapValues.x);
+            buf->appendf("%s=%f\n", "snapScale", env->editor->gizmos.scaleSnapValues.x);
+            buf->appendf("%s=%f\n", "snapRotate", env->editor->gizmos.rotateSnapValues.x);
+            buf->appendf("%s=%i\n", "gizmoOperation", (int)env->editor->gizmos.operation);
+            buf->appendf("%s=%i\n", "gizmoMode", (int)env->editor->gizmos.mode);
+            buf->appendf("%s=%i\n", "gizmoPivots", (int)env->editor->gizmos.pivots);
+            buf->appendf("\n");
+        };
+        ImGui::GetCurrentContext()->SettingsHandlers.push_back(handler);
     }
 
     class ImguiDemo : public EditorElement {

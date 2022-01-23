@@ -30,7 +30,7 @@ int main(int argc, char* argv[]) {
     });
 
     MainLoop loop;
-    loop.startup("config.txt", "../res/config.txt");
+    loop.startup({ "config.txt", "../config.txt", "../../config.txt" });
 
     //wait to load all assets before displaying the scene
     //wait 30 seconds max
