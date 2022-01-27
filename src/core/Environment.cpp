@@ -66,6 +66,9 @@ namespace tri {
                 env->systems->startup();
                 env->modules->startup();
             });
+            env->signals->update.addCallback("systems", []() {
+                env->modules->update();
+            });
             env->signals->shutdown.addCallback("systems", []() {
                 //todo: fix unloading modules on shutdown causing a crash
                 //env->modules->shutdown();
