@@ -39,11 +39,14 @@ namespace tri {
             if (env->time->frameTicks(1.0)) {
                 for (auto& record : modules) {
                     uint64_t currentTimeStamp = getTimeStamp(record.second.file);
-                    if (currentTimeStamp != record.second.timeStamp) {
+                    if (currentTimeStamp != record.second.timeStamp ||
+                        (currentTimeStamp != 0 && record.second.handle == nullptr)) {
                         std::string file = record.second.file;
-                        record.second.timeStamp = currentTimeStamp;
+                        std::string name = record.second.name;
                         unloadModule(record.second.module);
-                        loadModule(file);
+                        if (loadModule(name) == nullptr) {
+                            modules[file] = { name, file, nullptr, nullptr, true, -1,  currentTimeStamp };
+                        }
                         break;
                     }
                 }
@@ -67,14 +70,21 @@ namespace tri {
 
     Module* ModuleManager::loadModule(const std::string& name){
         std::string file = name;
-        if (!std::filesystem::exists(name)) {
+
+        file = env->assets->searchFile(file);
+        if (file == "") {
 #if TRI_WINDOWS
             file = name + ".dll";
 #else
             file = std::string("lib") + name + ".so";
 #endif
+            file = env->assets->searchFile(file);
         }
 
+        if (!std::filesystem::exists(file)) {
+            env->console->warning("module ", name, " not found");
+            return nullptr;
+        }
 
         if (modules.find(file) != modules.end() && modules.find(file)->second.module != nullptr) {
             env->console->warning("module ", file, " already loaded");

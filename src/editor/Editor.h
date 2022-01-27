@@ -43,7 +43,6 @@ namespace tri {
 
     private:
         std::vector<std::shared_ptr<EditorElement>> elements;
-        //std::vector<EditorWindow*> windows;
         bool updated;
         Ref<Scene> sceneBuffer;
 

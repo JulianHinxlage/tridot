@@ -21,6 +21,7 @@ namespace tri {
         bool shift;
         std::vector<EntityId> entityOrder;
         std::vector<EntityId> lastFrameEntityOrder;
+        std::unordered_set<EntityId> visited;
 
         void startup() {
             name = "Entities";
@@ -53,6 +54,7 @@ namespace tri {
 
             hovered = -1;
             entityOrder.clear();
+            visited.clear();
 
             env->scene->view<>().each([&](EntityId id){
                 if(env->scene->hasComponent<Transform>(id)){
@@ -70,6 +72,34 @@ namespace tri {
                     }
                 }
             });
+
+            //entities with invalid parent id
+            bool first = true;
+            bool open = false;
+            env->scene->view<>().each([&](EntityId id) {
+                if (env->scene->hasComponent<Transform>(id)) {
+                    Transform& t = env->scene->getComponent<Transform>(id);
+                    if (t.parent != -1) {
+                        if (!env->scene->hasEntity(t.parent)) {
+                            if (first) {
+                                open = ImGui::TreeNodeEx("", 0);
+                                ImGui::SameLine();
+                                if (ImGui::Selectable("<invalid parent>", false)) {}
+                                first = false;
+                            }
+                            if (open) {
+                                if (updateEntity(id)) {
+                                    updateEntityChildren(id);
+                                    ImGui::TreePop();
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            if (!first) {
+                ImGui::TreePop();
+            }
 
             updateEntityDragging();
             updateShortcuts();
@@ -90,6 +120,10 @@ namespace tri {
         }
 
         bool updateEntity(EntityId id){
+            if (visited.contains(id)) {
+                return false;
+            }
+            visited.insert(id);
             entityOrder.push_back(id);
             ImGui::PushID(id);
             std::string label = "";
@@ -133,6 +167,14 @@ namespace tri {
                 if (ImGui::MenuItem("Empty", nullptr, nullptr)) {
                     EntityId id = env->editor->entityOperations.addEntity();
                     env->scene->addComponents(id, EntityInfo());
+                    env->editor->selectionContext.unselectAll();
+                    env->editor->selectionContext.select(id);
+                }
+
+                if (ImGui::MenuItem("Invalid", nullptr, nullptr)) {
+                    EntityId id = env->editor->entityOperations.addEntity();
+                    env->scene->addComponents(id, EntityInfo());
+                    env->scene->addComponent<Transform>(id).parent = 3475384;
                     env->editor->selectionContext.unselectAll();
                     env->editor->selectionContext.select(id);
                 }
@@ -213,16 +255,14 @@ namespace tri {
                     env->editor->undo.beginAction();
                     for (auto &id2 : env->editor->selectionContext.getSelected()) {
                         if(id != id2){
-                            if(env->scene->hasComponent<Transform>(id2)){
-                                Transform &t2 = env->scene->getComponent<Transform>(id2);
-                                Transform preEdit = t2;
-                                t2.parent = id;
-                                if(env->scene->hasComponent<Transform>(id)){
-                                    Transform &t = env->scene->getComponent<Transform>(id);
-                                    t2.decompose(glm::inverse(t.getMatrix()) * t2.getMatrix());
-                                }
-                                env->editor->undo.componentChanged(env->reflection->getTypeId<Transform>(), id2, &preEdit);
+                            Transform& t = env->scene->getOrAddComponent<Transform>(id2);
+                            Transform preEdit = t;
+                            t.parent = id;
+                            if(env->scene->hasComponent<Transform>(id)){
+                                Transform &t2 = env->scene->getComponent<Transform>(id);
+                                t.decompose(glm::inverse(t2.getMatrix()) * t.getMatrix());
                             }
+                            env->editor->undo.componentChanged(env->reflection->getTypeId<Transform>(), id2, &preEdit);
                         }
                     }
                     env->editor->undo.endAction();

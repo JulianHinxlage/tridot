@@ -17,7 +17,10 @@ namespace tri {
         return id;
     }
 
-    void EntityOperations::removeEntity(EntityId id, Scene *scene) {
+    void EntityOperations::removeEntity(EntityId id, Scene *scene, int level) {
+        if (level > 25) {
+            return;
+        }
         if(scene == nullptr){
             scene = env->scene;
         }
@@ -26,7 +29,7 @@ namespace tri {
 
             //remove children
             for (auto &child : env->hierarchies->getChildren(id)) {
-                removeEntity(child, scene);
+                removeEntity(child, scene, level + 1);
             }
 
             env->editor->undo.entityRemoved(id);

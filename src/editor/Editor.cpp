@@ -280,6 +280,7 @@ namespace tri {
                     sceneBuffer->copy(*env->scene);
                 }
                 this->mode = PAUSED;
+                env->signals->sceneEnd.invoke(env->scene);
             }
         }
     }

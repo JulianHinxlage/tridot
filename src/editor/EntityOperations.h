@@ -11,7 +11,7 @@ namespace tri {
     class EntityOperations {
     public:
         EntityId addEntity(Scene *scene = nullptr);
-        void removeEntity(EntityId id, Scene *scene = nullptr);
+        void removeEntity(EntityId id, Scene *scene = nullptr, int level = 0);
         void *addComponent(int typeId, EntityId id, Scene *scene = nullptr);
         void removeComponent(int typeId, EntityId id, Scene *scene = nullptr);
 
