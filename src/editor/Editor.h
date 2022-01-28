@@ -18,7 +18,6 @@ namespace tri {
 
     class Editor : public System {
     public:
-        RuntimeMode mode;
         SelectionContext selectionContext;
         EditorGui gui;
         EntityOperations entityOperations;
@@ -39,7 +38,6 @@ namespace tri {
         }
 
         void updateMenuBar();
-        void setMode(RuntimeMode mode);
 
     private:
         std::vector<std::shared_ptr<EditorElement>> elements;

@@ -12,6 +12,7 @@
 #include "engine/Input.h"
 #include "engine/AssetManager.h"
 #include "engine/EntityInfo.h"
+#include "engine/RuntimeMode.h"
 #include <imgui/imgui.h>
 #include <imgui/imgui_internal.h>
 
@@ -21,7 +22,6 @@ namespace tri {
 
     void Editor::startup(){
         updated = false;
-        mode = EDIT;
 
         env->signals->update.callbackOrder({"Imgui/begin", "Camera", "MeshComponent", "Editor"});
         env->signals->postStartup.addCallback([&](){
@@ -73,18 +73,19 @@ namespace tri {
         });
 
 
-        env->signals->postStartup.addCallback([this](){
+        env->signals->postStartup.addCallback("Editor", [this]() {
             for(auto &element : elements){
                 if(element){
                     element->startup();
                 }
             }
         });
+        env->signals->postStartup.callbackOrder({ "Editor", "RuntimeMode" });
 
         sceneBuffer = Ref<Scene>::make();
 
         env->signals->preShutdown.addCallback("Editor", [&](){
-            setMode(EDIT);
+            env->runtime->setMode(RuntimeMode::SHUTDOWN);
             if (std::filesystem::exists("autosave2.scene")) {
                 std::filesystem::copy("autosave2.scene", "autosave3.scene", std::filesystem::copy_options::overwrite_existing);
             }
@@ -92,6 +93,38 @@ namespace tri {
                 std::filesystem::copy("autosave.scene", "autosave2.scene", std::filesystem::copy_options::overwrite_existing);
             }
             env->scene->save("autosave.scene");
+        });
+
+        env->signals->runtimeModeChanged.addCallback("Editor", [&]() {
+            auto mode = env->runtime->getMode();
+            auto previous = env->runtime->getPreviousMode();
+
+            if (mode == RuntimeMode::EDIT || (mode == RuntimeMode::SHUTDOWN && previous != RuntimeMode::EDIT)) {
+                if (viewport.cameraMode == EDITOR_CAMERA) {
+                    viewport.saveEditorCameraTransform();
+                }
+                env->signals->sceneEnd.invoke(env->scene);
+                env->scene->copy(*sceneBuffer);
+                sceneBuffer->clear();
+                if (viewport.cameraMode == EDITOR_CAMERA) {
+                    viewport.restoreEditorCameraTransform();
+                }
+                env->signals->sceneLoad.invoke(env->scene);
+            }
+            else if (mode == RuntimeMode::RUNTIME) {
+                if (previous == RuntimeMode::EDIT) {
+                    sceneBuffer->clear();
+                    sceneBuffer->copy(*env->scene);
+                }
+                env->signals->sceneBegin.invoke(env->scene);
+            }
+            else if (mode == RuntimeMode::PAUSE) {
+                if (previous == RuntimeMode::EDIT) {
+                    sceneBuffer->clear();
+                    sceneBuffer->copy(*env->scene);
+                }
+                env->signals->sceneEnd.invoke(env->scene);
+            }
         });
     }
 
@@ -132,17 +165,18 @@ namespace tri {
 
             //runtime
             if (env->input->pressed(Input::KEY_F6)) {
-                if (mode == RUNTIME) {
-                    setMode(PAUSED);
-                } else if (mode == PAUSED) {
-                    setMode(RUNTIME);
+                if (env->runtime->getMode() == RuntimeMode::PAUSE) {
+                    env->runtime->setMode(RuntimeMode::RUNTIME);
+                }
+                else {
+                    env->runtime->setMode(RuntimeMode::PAUSE);
                 }
             }
             if(env->input->pressed(Input::KEY_F5)){
-                if(mode == RUNTIME || mode == PAUSED){
-                    setMode(EDIT);
-                }else if(mode == EDIT){
-                    setMode(RUNTIME);
+                if(env->runtime->getMode() == RuntimeMode::RUNTIME || env->runtime->getMode() == RuntimeMode::PAUSE){
+                    env->runtime->setMode(RuntimeMode::EDIT);
+                }else if(env->runtime->getMode() == RuntimeMode::EDIT){
+                    env->runtime->setMode(RuntimeMode::RUNTIME);
                 }
             }
         }
@@ -250,38 +284,6 @@ namespace tri {
             env->editor->gui.fileGui.openBrowseWindow("Open", "Open Scene", env->reflection->getTypeId<Scene>(), [](const std::string &file){
                 Scene::loadMainScene(file);
             });
-        }
-    }
-
-    void Editor::setMode(RuntimeMode mode) {
-        if(this->mode != mode) {
-            if (mode == EDIT) {
-                if(viewport.cameraMode == EDITOR_CAMERA){
-                    viewport.saveEditorCameraTransform();
-                }
-                env->signals->sceneEnd.invoke(env->scene);
-                env->scene->copy(*sceneBuffer);
-                sceneBuffer->clear();
-                if(viewport.cameraMode == EDITOR_CAMERA) {
-                    viewport.restoreEditorCameraTransform();
-                }
-                env->signals->sceneLoad.invoke(env->scene);
-                this->mode = EDIT;
-            } else if (mode == RUNTIME) {
-                if(this->mode == EDIT){
-                    sceneBuffer->clear();
-                    sceneBuffer->copy(*env->scene);
-                }
-                this->mode = RUNTIME;
-                env->signals->sceneBegin.invoke(env->scene);
-            } else if (mode == PAUSED) {
-                if(this->mode == EDIT){
-                    sceneBuffer->clear();
-                    sceneBuffer->copy(*env->scene);
-                }
-                this->mode = PAUSED;
-                env->signals->sceneEnd.invoke(env->scene);
-            }
         }
     }
 

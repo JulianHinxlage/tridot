@@ -25,28 +25,32 @@ namespace tri {
     class Editor;
     class HierarchySystem;
     class Physics;
+    class Random;
+    class RuntimeMode;
 
     class TRI_API Environment {
     public:
         Environment();
 
-        SystemManager* systems;
-        Console* console;
-        ModuleManager* modules;
-        Reflection* reflection;
-        Profiler* profiler;
-        SignalManager* signals;
+        SystemManager *systems;
+        Console *console;
+        ModuleManager *modules;
+        Reflection *reflection;
+        Profiler *profiler;
+        SignalManager *signals;
         ThreadPool *threads;
-        Scene* scene;
-        Input* input;
-        Time* time;
-        Window* window;
-        Renderer* renderer;
+        Scene *scene;
+        Input *input;
+        Time *time;
+        Window *window;
+        Renderer *renderer;
         Serializer *serializer;
         AssetManager *assets;
         Editor *editor;
         HierarchySystem *hierarchies;
-        Physics* physics;
+        Physics *physics;
+        Random* random;
+        RuntimeMode* runtime;
 
         static Environment* startup();
         static void shutdown();

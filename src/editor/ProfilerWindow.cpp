@@ -13,7 +13,7 @@ namespace tri {
     public:
         void startup() {
             name = "Profiler";
-            type = WINDOW;
+            type = DEBUG_WINDOW;
         }
         int previousDisplayFrame = 0;
         int displayFrame = 0;

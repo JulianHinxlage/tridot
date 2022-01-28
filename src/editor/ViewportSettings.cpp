@@ -3,6 +3,7 @@
 //
 
 #include "Editor.h"
+#include "engine/RuntimeMode.h"
 #include <imgui.h>
 
 namespace tri{
@@ -14,22 +15,20 @@ namespace tri{
         }
 
         void update() override{
-            bool runtime = env->editor->mode != EDIT;
+            bool runtime = env->runtime->getMode() != RuntimeMode::EDIT;
             if(ImGui::Checkbox("play", &runtime)) {
                 if (runtime) {
-                    env->editor->setMode(RUNTIME);
+                    env->runtime->setMode(RuntimeMode::RUNTIME);
                 } else {
-                    env->editor->setMode(EDIT);
+                    env->runtime->setMode(RuntimeMode::EDIT);
                 }
             }
-            bool pause = env->editor->mode == PAUSED;
+            bool pause = env->runtime->getMode() == RuntimeMode::PAUSE;
             if(ImGui::Checkbox("pause", &pause)) {
-                if(runtime){
-                    if (pause) {
-                        env->editor->setMode(PAUSED);
-                    } else {
-                        env->editor->setMode(RUNTIME);
-                    }
+                if (pause) {
+                    env->runtime->setMode(RuntimeMode::PAUSE);
+                } else {
+                    env->runtime->setMode(RuntimeMode::RUNTIME);
                 }
             }
 

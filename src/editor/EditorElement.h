@@ -8,12 +8,6 @@
 
 namespace tri {
 
-    enum RuntimeMode {
-        EDIT,
-        RUNTIME,
-        PAUSED,
-    };
-
     class EditorElement {
     public:
         std::string name;

@@ -171,14 +171,6 @@ namespace tri {
                     env->editor->selectionContext.select(id);
                 }
 
-                if (ImGui::MenuItem("Invalid", nullptr, nullptr)) {
-                    EntityId id = env->editor->entityOperations.addEntity();
-                    env->scene->addComponents(id, EntityInfo());
-                    env->scene->addComponent<Transform>(id).parent = 3475384;
-                    env->editor->selectionContext.unselectAll();
-                    env->editor->selectionContext.select(id);
-                }
-
                 for (auto& desc : env->reflection->getDescriptors()) {
                     if (desc && desc->isComponent) {
                         if (!desc->isType<Transform>() && !desc->isType<EntityInfo>() && !desc->isType<NoHierarchyUpdate>()) {

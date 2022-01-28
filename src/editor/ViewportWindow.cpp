@@ -17,6 +17,7 @@
 #include "entity/Prefab.h"
 #include "render/Renderer.h"
 #include "render/RenderContext.h"
+#include "engine/RuntimeMode.h"
 #include <imgui/imgui.h>
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -89,7 +90,7 @@ namespace tri {
             env->scene->view<Camera, Transform>().each([&](EntityId id, Camera& camera, Transform &transform) {
 
                 //select camera based on options
-                if (env->editor->mode == RUNTIME || env->editor->mode == PAUSED) {
+                if (env->runtime->getMode() == RuntimeMode::RUNTIME || env->runtime->getMode() == RuntimeMode::PAUSE) {
                     if(cameraMode == EDITOR_CAMERA){
                         if (id == editorCameraId) {
                             output = camera.output;
@@ -154,7 +155,7 @@ namespace tri {
 
             //editor camera
             if(cam && camTransform) {
-                if(cameraMode != FIXED_PRIMARY_CAMERA || env->editor->mode == EDIT) {
+                if(cameraMode != FIXED_PRIMARY_CAMERA || env->runtime->getMode() == RuntimeMode::EDIT) {
                     if (ImGui::IsWindowHovered()) {
                         editorCamera.update(*cam, *camTransform);
                     }

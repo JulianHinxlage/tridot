@@ -44,6 +44,8 @@ namespace tri {
         editor = nullptr;
         hierarchies = nullptr;
         physics = nullptr;
+        random = nullptr;
+        runtime = nullptr;
     }
 
     Environment* Environment::startup() {
