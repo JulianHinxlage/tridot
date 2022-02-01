@@ -7,7 +7,6 @@
 #include "pch.h"
 #include "core/config.h"
 #include "render/FrameBuffer.h"
-#include "render/RenderPipeline.h"
 #include <glm/glm.hpp>
 
 namespace tri {
@@ -25,7 +24,6 @@ namespace tri {
         //output after other passes
         Ref<FrameBuffer> output;
 
-        Ref<RenderPipeline> pipeline;
         bool isPrimary;
         bool active;
 

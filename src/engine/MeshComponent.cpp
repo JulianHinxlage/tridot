@@ -64,7 +64,7 @@ namespace tri {
                     });
                 }
 
-                env->renderer->drawScene(camera.output, camera.pipeline);
+                env->renderer->drawScene(camera.output);
                 env->renderer->resetScene();
             }
             if(env->editor || !camera.isPrimary){

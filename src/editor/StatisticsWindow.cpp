@@ -4,6 +4,7 @@
 
 #include "Editor.h"
 #include "render/Renderer.h"
+#include "engine/Time.h"
 #include <imgui.h>
 
 namespace tri{
@@ -16,6 +17,9 @@ namespace tri{
         }
 
         void update() override {
+            ImGui::Text("%.2f fps", env->time->framesPerSecond);
+            ImGui::Separator();
+            
             ImGui::Text("entities:");
             ImGui::Text("%i entities in scene", env->scene->getEntityPool()->size());
             ImGui::Text("%i entities selected", (int)env->editor->selectionContext.getSelected().size());

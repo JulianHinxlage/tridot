@@ -249,9 +249,6 @@ namespace tri {
                         }
                     }
                 }
-                if(ImGui::MenuItem("Reset Scene")){
-                    env->signals->sceneLoad.invoke(env->scene);
-                }
                 ImGui::EndMenu();
             }
 
@@ -444,7 +441,7 @@ namespace tri {
         }
     };
     TRI_STARTUP_CALLBACK("") {
-        env->editor->addElement<ImguiDemo>();
+        //env->editor->addElement<ImguiDemo>();
     }
 
 }

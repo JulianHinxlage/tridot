@@ -4,6 +4,7 @@
 
 #include "Shader.h"
 #include "core/core.h"
+#include "ShaderState.h"
 #include "GL/glew.h"
 #include <fstream>
 
@@ -11,6 +12,7 @@ namespace tri {
 
     Shader::Shader() {
         id = 0;
+        state = Ref<ShaderState>::make();
     }
 
     Shader::~Shader() {
@@ -152,66 +154,82 @@ namespace tri {
 
     void Shader::set(const std::string &uniform, int value) {
         glUniform1i(getLocation(uniform), value);
+        state->set(uniform, value);
     }
 
     void Shader::set(const std::string &uniform, float value) {
         glUniform1f(getLocation(uniform), value);
+        state->set(uniform, value);
     }
 
     void Shader::set(const std::string &uniform, const glm::vec2 &value) {
         glUniform2f(getLocation(uniform), value.x, value.y);
+        state->set(uniform, value);
     }
 
     void Shader::set(const std::string &uniform, const glm::vec3 &value) {
         glUniform3f(getLocation(uniform), value.x, value.y, value.z);
+        state->set(uniform, value);
     }
 
     void Shader::set(const std::string &uniform, const glm::vec4 &value) {
         glUniform4f(getLocation(uniform), value.x, value.y, value.z, value.w);
+        state->set(uniform, value);
     }
 
     void Shader::set(const std::string &uniform, const glm::mat2 &value) {
         glUniformMatrix2fv(getLocation(uniform), 1, GL_FALSE, (float*)&value);
+        state->set(uniform, value);
     }
 
     void Shader::set(const std::string &uniform, const glm::mat3 &value) {
         glUniformMatrix3fv(getLocation(uniform), 1, GL_FALSE, (float*)&value);
+        state->set(uniform, value);
     }
 
     void Shader::set(const std::string &uniform, const glm::mat4 &value) {
         glUniformMatrix4fv(getLocation(uniform), 1, GL_FALSE, (float*)&value);
+        state->set(uniform, value);
     }
 
     void Shader::set(const std::string &uniform, int *values, int count) {
         glUniform1iv(getLocation(uniform), count, values);
+        state->set(uniform, values, count);
     }
 
     void Shader::set(const std::string &uniform, float *values, int count) {
         glUniform1fv(getLocation(uniform), count, values);
+        state->set(uniform, values, count);
     }
 
     void Shader::set(const std::string &uniform, glm::vec2 *values, int count) {
         glUniform2fv(getLocation(uniform), count, (float*)values);
+        state->set(uniform, values, count);
     }
 
     void Shader::set(const std::string &uniform, glm::vec3 *values, int count) {
         glUniform3fv(getLocation(uniform), count, (float*)values);
+        state->set(uniform, values, count);
     }
 
     void Shader::set(const std::string &uniform, glm::vec4 *values, int count) {
         glUniform4fv(getLocation(uniform), count, (float*)values);
+        state->set(uniform, values, count);
     }
 
     void Shader::set(const std::string &uniform, glm::mat2 *values, int count) {
         glUniformMatrix2fv(getLocation(uniform), count, GL_FALSE, (float*)values);
+        state->set(uniform, values, count);
     }
 
     void Shader::set(const std::string &uniform, glm::mat3 *values, int count) {
         glUniformMatrix3fv(getLocation(uniform), count, GL_FALSE, (float*)values);
+        state->set(uniform, values, count);
     }
 
     void Shader::set(const std::string &uniform, glm::mat4 *values, int count) {
         glUniformMatrix4fv(getLocation(uniform), count, GL_FALSE, (float*)values);
+        state->set(uniform, values, count);
     }
 
     void Shader::set(const std::string &uniform, Buffer *buffer) {
@@ -229,7 +247,7 @@ namespace tri {
         }else{
             uint32_t location = glGetUniformLocation(id, name.c_str());
             if(location == -1 && warn){
-                env->console->warning("uniform ", name, " not found");
+                env->console->warning("uniform ", name, " not found in shader ", file);
             }
             locations[name] = location;
             return location;
@@ -243,7 +261,7 @@ namespace tri {
         }else{
             uint32_t location = glGetUniformBlockIndex(id, name.c_str());
             if(location == -1 && warn){
-                env->console->warning("uniform buffer ", name, " not found");
+                env->console->warning("uniform buffer ", name, " not found in shader ", file);
             }
             bufferLocations[name] = location;
             return location;

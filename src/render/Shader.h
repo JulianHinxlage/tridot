@@ -7,12 +7,17 @@
 #include "pch.h"
 #include "Buffer.h"
 #include "engine/Asset.h"
+#include "core/util/Ref.h"
 #include <glm/glm.hpp>
 
 namespace tri {
 
+    class ShaderState;
+
     class Shader : public Asset {
     public:
+        Ref<ShaderState> state;
+
         Shader();
         ~Shader();
 

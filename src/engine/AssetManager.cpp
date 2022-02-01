@@ -26,10 +26,15 @@ namespace tri {
     }
 
     void AssetManager::addSearchDirectory(const std::string &directory) {
-        if(directory.size() > 0 && directory.back() == '/'){
-            searchDirectories.push_back(directory);
-        }else{
-            searchDirectories.push_back(directory + "/");
+        if (!std::filesystem::exists(directory)) {
+            env->console->warning("asset directory ", directory, " not found");
+        }
+        else {
+            if(directory.size() > 0 && directory.back() == '/'){
+                searchDirectories.push_back(directory);
+            }else{
+                searchDirectories.push_back(directory + "/");
+            }
         }
     }
 

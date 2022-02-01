@@ -13,6 +13,7 @@ if(WIN32)
     set(CMAKE_WIN32_EXECUTABLE true)
 else()
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
+    add_link_options(-no-pie)
 endif()
 
 #tridot
@@ -43,7 +44,6 @@ endif()
 target_include_directories(${PROJECT_NAME} PUBLIC extern extern/glm extern/glfw/include extern/glew/include extern/yaml-cpp/include extern/bullet3/src)
 
 #launcher
-add_link_options(-no-pie)
 project(tridot-launcher)
 file(GLOB_RECURSE SOURCES src/launcher/*.cpp)
 add_executable(${PROJECT_NAME} ${SOURCES})

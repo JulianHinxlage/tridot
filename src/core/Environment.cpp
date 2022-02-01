@@ -46,6 +46,7 @@ namespace tri {
         physics = nullptr;
         random = nullptr;
         runtime = nullptr;
+        pipeline = nullptr;
     }
 
     Environment* Environment::startup() {

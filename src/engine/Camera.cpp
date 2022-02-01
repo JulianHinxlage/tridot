@@ -18,7 +18,6 @@ namespace tri {
     TRI_REGISTER_MEMBER(Camera, projection);
     TRI_REGISTER_MEMBER(Camera, target);
     TRI_REGISTER_MEMBER(Camera, output);
-    TRI_REGISTER_MEMBER(Camera, pipeline);
     TRI_REGISTER_MEMBER(Camera, isPrimary);
     TRI_REGISTER_MEMBER(Camera, active);
     TRI_REGISTER_MEMBER(Camera, type);
@@ -38,7 +37,6 @@ namespace tri {
         projection = glm::mat4(1);
         target = nullptr;
         output = nullptr;
-        pipeline = nullptr;
         this->isPrimary = isPrimary;
         this->type = type;
         active = true;

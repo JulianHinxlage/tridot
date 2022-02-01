@@ -18,6 +18,7 @@
 #include "render/Renderer.h"
 #include "render/RenderContext.h"
 #include "engine/RuntimeMode.h"
+#include "render/RenderPipeline.h"
 #include <imgui/imgui.h>
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -125,6 +126,11 @@ namespace tri {
 
             if(cam){
                 cam->active = true;
+            }
+
+            if (output) {
+                env->pipeline->setSize(viewportSize.x, viewportSize.y);
+                env->pipeline->setOutput(output);
             }
 
             if (output) {

@@ -66,7 +66,9 @@ namespace tri {
             if(ImGui::TreeNode(name.c_str())){
                 directoryMenu(dir);
                 newFileBox(dir);
-                directory(dir, dir);
+                if (std::filesystem::exists(dir)) {
+                    directory(dir, dir);
+                }
                 ImGui::TreePop();
             }else{
                 directoryMenu(dir);

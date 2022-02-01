@@ -10,6 +10,8 @@
 #include "render/Window.h"
 #include "Transform.h"
 #include "Camera.h"
+#include "render/RenderPipeline.h"
+#include "render/ShaderState.h"
 #include "core/core.h"
 
 namespace tri {
@@ -25,87 +27,82 @@ namespace tri {
         env->signals->update.callbackOrder({"Camera", "Skybox", "MeshComponent"});
     }
 
-    Ref<Texture> createIrradianceMap(Ref<Texture>& texture) {
+    void generateIrradianceMap(Skybox& skybox) {
+        auto pass = env->pipeline->getOrAddRenderPass("skybox");
         Ref<Shader> shader = env->assets->get<Shader>("shaders/blur.glsl", true);
+
         Ref<FrameBuffer> frameBuffer1 = Ref<FrameBuffer>::make();
         Ref<FrameBuffer> frameBuffer2 = Ref<FrameBuffer>::make();
         frameBuffer1->setAttachment({ COLOR });
         frameBuffer2->setAttachment({ COLOR });
-        frameBuffer1->resize(texture->getWidth(), texture->getHeight());
-        frameBuffer2->resize(texture->getWidth(), texture->getHeight());
+        frameBuffer1->resize(skybox.texture->getWidth(), skybox.texture->getHeight());
+        frameBuffer2->resize(skybox.texture->getWidth(), skybox.texture->getHeight());
+
         auto blur = [&](Ref<FrameBuffer>& frameBuffer, const Ref<Texture>& texture, bool horizontal) {
-            shader->bind();
-            shader->set("steps", (int)50);
+            auto& step = pass->addDrawCall();
+            step.shader = shader;
+            step.textures.push_back(texture);
+            step.frameBuffer = frameBuffer;
+            step.shaderState = Ref<ShaderState>::make();
+            step.shaderState->set("steps", 50);
             if (horizontal) {
-                shader->set("spread", glm::vec2(1.0f / (float)texture->getWidth(), 0.0f));
+                step.shaderState->set("spread", glm::vec2(1.0f / (float)texture->getWidth(), 0.0f));
             }
             else {
-                shader->set("spread", glm::vec2(0.0f, 1.0f / (float)texture->getHeight()));
+                step.shaderState->set("spread", glm::vec2(0.0f, 1.0f / (float)texture->getHeight()));
             }
-            env->renderer->beginScene(glm::mat4(1), { 0, 0, 0 });
-
-            Material mat;
-            mat.shader = shader;
-            mat.texture = texture;
-            Ref<Mesh> plane = env->assets->get<Mesh>("models/plane.obj", true);
-
-            Transform transform;
-            transform.scale = { 2, 2, 2 };
-            transform.rotation = { glm::radians(90.0f), 0, 0 };
-
-            env->renderer->submit(transform.calculateLocalMatrix(), { 0, 0, 0 }, plane.get(), &mat);
-            env->renderer->drawScene(frameBuffer);
-            env->renderer->resetScene();
         };
-        blur(frameBuffer1, texture, true);
+
+
+        blur(frameBuffer1, skybox.texture, true);
         blur(frameBuffer2, frameBuffer1->getAttachment(COLOR), false);
-        
         for (int i = 0; i < 10; i++) {
             blur(frameBuffer1, frameBuffer2->getAttachment(COLOR), true);
             blur(frameBuffer2, frameBuffer1->getAttachment(COLOR), false);
         }
-        
-        return frameBuffer2->getAttachment(COLOR);
+
+        skybox.irradianceMap = frameBuffer2->getAttachment(COLOR);
+        pass->addCallback([&]() {
+            skybox.texture->setCubeMap(true);
+            skybox.irradianceMap->setCubeMap(false);
+        });
     }
 
     TRI_UPDATE_CALLBACK("Skybox") {
-        RenderContext::setCull(false);
-        RenderContext::setDepth(false);
-        env->scene->view<Camera, Transform>().each([](Camera& camera, Transform &cameraTransform) {
+
+        auto pass = env->pipeline->getOrAddRenderPass("skybox");
+        pass->addCommand(CULL_OFF).name = "CULL_OFF";
+        pass->addCommand(DEPTH_OFF).name = "DEPTH_OFF";
+
+        int skyboxIndex = 0;
+        env->scene->view<Camera, Transform>().each([&](Camera& camera, Transform& cameraTransform) {
             if (camera.active) {
                 env->scene->view<Skybox>().each([&](Skybox& skybox) {
 
                     if (skybox.texture) {
                         if (skybox.texture->getId() != 0) {
                             if (skybox.texture->getType() != TextureType::TEXTURE_CUBE_MAP) {
-                                skybox.irradianceMap = createIrradianceMap(skybox.texture);
-                                skybox.texture->setCubeMap(true);
-                                skybox.irradianceMap->setCubeMap(false);
+                                generateIrradianceMap(skybox);
                             }
                             else {
                                 if (skybox.useSky) {
-      
-                                    Ref<Mesh> cube = env->assets->get<Mesh>("models/cube.obj");
-                                    Ref<Shader> shader = env->assets->get<Shader>("shaders/skybox.glsl");
-                                    if (shader->getId() != 0) {
-                                        shader->bind();
-                                        shader->set("uEnvironmentMap", (int)0);
-                                        skybox.texture->bind(0);
 
-                                        env->renderer->beginScene(camera.projection, cameraTransform.position);
+                                    auto &step = pass->addDrawCall("skybox " + std::to_string(skyboxIndex++));
+                                    step.shader = env->assets->get<Shader>("shaders/skybox.glsl");
+                                    step.mesh = env->assets->get<Mesh>("models/cube.obj");
+                                    step.textures.push_back(skybox.texture);
+                                    step.shaderState = Ref<ShaderState>::make();
 
-                                        Material mat;
-                                        mat.shader = shader;
-                                        Transform transform;
-                                        transform.decompose(cameraTransform.getMatrix());
-                                        transform.scale = { 1, 1, 1 };
-                                        transform.rotation = { 0, 0, 0 };
-                            
-                                        env->renderer->submit(transform.calculateLocalMatrix(), transform.position, cube.get(), &mat, skybox.color);
-                                        env->renderer->drawScene(camera.output);
-                                        env->renderer->resetScene();
-                                    }
-                                    
+                                    Transform transform;
+                                    transform.decompose(cameraTransform.getMatrix());
+                                    transform.scale = { 1, 1, 1 };
+                                    transform.rotation = { 0, 0, 0 };
+
+                                    step.shaderState->set("uProjection", camera.projection);
+                                    step.shaderState->set("uTransform", transform.calculateLocalMatrix());
+                                    step.shaderState->set("uColor", skybox.color.vec());
+                                    step.frameBuffer = camera.output;
+
                                 }
                             }
                         }
@@ -114,8 +111,9 @@ namespace tri {
                 });
             }
         });
-        RenderContext::setCull(true);
-        RenderContext::setDepth(true);
+
+        pass->addCommand(CULL_ON).name = "CULL_ON";
+        pass->addCommand(DEPTH_ON).name = "DEPTH_ON";
     }
 
 }

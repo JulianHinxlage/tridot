@@ -627,24 +627,16 @@ namespace tri {
         drawList->environmentMapIntensity = intensity;
     }
 
-    void Renderer::drawScene(Ref<FrameBuffer> frameBuffer, Ref<RenderPipeline> pipeline) {
-        if (pipeline.get() == nullptr) {
-            pipeline = defaultPipeline;
-        }
-        if (pipeline->input) {
-            pipeline->input->bind();
+    void Renderer::drawScene(Ref<FrameBuffer> frameBuffer) {
+        if (frameBuffer) {
+            frameBuffer->bind();
         }
         else {
-            if (frameBuffer) {
-                frameBuffer->bind();
-            }
-            else {
-                FrameBuffer::unbind();
-            }
+            FrameBuffer::unbind();
         }
+        
         drawList->sort();
         drawList->draw(frameBuffer);
-        pipeline->executePipeline(frameBuffer);
 
         drawCallCount += drawList->drawCallCount;
         instanceCount += drawList->instanceCount;
@@ -679,8 +671,6 @@ namespace tri {
         };
         quad->create(quadVertices, sizeof(quadVertices) / sizeof(quadVertices[0]), quadIndices, sizeof(quadIndices) / sizeof(quadIndices[0]), { {FLOAT, 3}, {FLOAT, 3} ,{FLOAT, 2} });
 
-        defaultPipeline = defaultPipeline.make(quad);
-
         Image image;
         image.init(1, 1, 4, 8);
         image.set(0, 0, Color::white);
@@ -706,7 +696,6 @@ namespace tri {
         defaultMaterial = nullptr;
         defaultShader = nullptr;
         defaultTexture = nullptr;
-        defaultPipeline = nullptr;
         drawList = nullptr;
     }
 
