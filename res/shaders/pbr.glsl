@@ -16,7 +16,7 @@ layout(std140) uniform uEnvironment {
     int align1;
     int lightCount;
     float environmentMapIntensity;
-    int environmentMapIndex;
+    int radianceMapIndex;
     int irradianceMapIndex;
 };
 
@@ -113,7 +113,7 @@ layout(std140) uniform uEnvironment {
     int align1;
     int lightCount;
     float environmentMapIntensity;
-    int environmentMapIndex;
+    int radianceMapIndex;
     int irradianceMapIndex;
 };
 
@@ -247,13 +247,11 @@ vec3 lighing(vec3 albedo, vec3 normal, float metallic, float roughness, float ao
     if(environmentMapIntensity != 0){
         vec3 reflectionDirection = normalize(-reflect(viewDirection, normal));
 
-        vec3 radiance = sampleCubeTextureIndexed(environmentMapIndex, reflectionDirection).xyz * environmentMapIntensity;
+        vec3 radiance = sampleCubeTextureIndexed(radianceMapIndex, reflectionDirection).xyz * environmentMapIntensity;
         vec3 irradiance = sampleCubeTextureIndexed(irradianceMapIndex, normal).xyz * environmentMapIntensity;
     
         lightOutput += albedo.rgb * irradiance * (1.0 - metallic);
         lightOutput += radiance * (1.0f - roughness);
-
-        //lightOutput = vec3(1, 0, 0);
     }
 
     //flat shading for no lights

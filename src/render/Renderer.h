@@ -12,10 +12,12 @@
 #include "Texture.h"
 #include "Material.h"
 #include "Light.h"
+#include "RenderPass.h"
+#include "BatchBuffer.h"
 
 namespace tri {
 
-    class Renderer : public System {
+    class Renderer : public System{
     public:
         int drawCallCount = 0;
         int instanceCount = 0;
@@ -25,24 +27,28 @@ namespace tri {
         int lightCount = 0;
         int cameraCount = 0;
 
-        void beginScene(glm::mat4 projectionMatrix, glm::vec3 eyePosition);
-        void submit(const glm::mat4& transform, const glm::vec3& position, Mesh* mesh = nullptr, Material* material = nullptr, Color color = Color::white, uint32_t id = -1);
-        void submit(const glm::vec3 &position, const glm::vec3 direction, Light &light);
-        void setEnvironMap(Ref<Texture> radianceMap, Ref<Texture> irradianceMap, float intensity);
-        void drawScene(Ref<FrameBuffer> frameBuffer = nullptr);
-        void resetScene();
-
         void startup() override;
         void update() override;
         void shutdown() override;
 
+
+        void beginScene(glm::mat4& projection, glm::vec3 position);
+        void setEnvironMap(Ref<Texture> radianceMap, Ref<Texture> irradianceMap, float intensity);
+        void submit(const glm::vec3& position, const glm::vec3 direction, Light& light);
+        void submit(const glm::mat4& transform, const glm::vec3& position, Mesh* mesh = nullptr, Material* material = nullptr, Color color = Color::white, uint32_t id = -1);
+        void drawScene(Ref<FrameBuffer> frameBuffer = nullptr);
+        void resetScene();
+
     private:
-        Ref<Mesh> quad;
-        Ref<Shader> defaultShader;
+        Ref<RenderPass> renderPass;
+        Ref<Mesh> defaultMesh;
         Ref<Texture> defaultTexture;
+        Ref<Shader> defaultShader;
         Ref<Material> defaultMaterial;
-        class DrawList;
-        Ref<DrawList> drawList;
+        Ref<FrameBuffer> frameBuffer;
+
+        class Impl;
+        Ref<Impl> impl;
     };
 
 }

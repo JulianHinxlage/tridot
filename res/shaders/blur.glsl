@@ -6,11 +6,12 @@ layout (location=1) in vec3 vNormal;
 layout (location=2) in vec2 vTexCoords;
 
 uniform mat4 uProjection = mat4(1);
+uniform mat4 uTransform = mat4(1);
 
 out vec2 fTexCoords;
 
 void main(){
-    gl_Position = uProjection * vec4(vPosition, 1.0);
+    gl_Position = uProjection * uTransform * vec4(vPosition, 1.0);
     fTexCoords = vTexCoords;
 }
 
@@ -24,6 +25,7 @@ uniform int steps = 10;
 uniform vec2 spread = vec2(0.001, 0);
 
 out vec4 oColor;
+out vec4 oId;
 
 void main(){
     vec4 color = vec4(0);

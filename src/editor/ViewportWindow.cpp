@@ -138,13 +138,13 @@ namespace tri {
                 ImGui::Image((ImTextureID)(size_t)output->getAttachment(TextureAttachment::COLOR)->getId(), viewportSize, ImVec2(0, 1), ImVec2(1, 0));
 
                 //draw selection overlay
-                if (env->editor->selectionContext.getSelected().size() > 0) {
+                /*if (env->editor->selectionContext.getSelected().size() > 0) {
                     if (cam && camTransform) {
                         updateSelectionOverlay(*camTransform, *cam, glm::vec2(viewportSize.x, viewportSize.y));
                         ImGui::SetCursorPos(viewportPosition);
                         ImGui::Image((ImTextureID)(size_t)selectionOverlay->getAttachment(TextureAttachment::COLOR)->getId(), viewportSize, ImVec2(0, 1), ImVec2(1, 0));
                     }
-                }
+                }*/
 
                 bool pickingAllowed = true;
                 //gizmos

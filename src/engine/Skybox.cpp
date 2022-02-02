@@ -71,8 +71,8 @@ namespace tri {
     TRI_UPDATE_CALLBACK("Skybox") {
 
         auto pass = env->pipeline->getOrAddRenderPass("skybox");
-        pass->addCommand(CULL_OFF).name = "CULL_OFF";
-        pass->addCommand(DEPTH_OFF).name = "DEPTH_OFF";
+        pass->addCommand(CULL_OFF).name = "cull off";
+        pass->addCommand(DEPTH_OFF).name = "depth off";
 
         int skyboxIndex = 0;
         env->scene->view<Camera, Transform>().each([&](Camera& camera, Transform& cameraTransform) {
@@ -112,8 +112,8 @@ namespace tri {
             }
         });
 
-        pass->addCommand(CULL_ON).name = "CULL_ON";
-        pass->addCommand(DEPTH_ON).name = "DEPTH_ON";
+        pass->addCommand(CULL_ON).name = "cull on";
+        pass->addCommand(DEPTH_ON).name = "depth on";
     }
 
 }

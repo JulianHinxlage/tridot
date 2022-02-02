@@ -11,12 +11,50 @@ namespace tri {
     
     TRI_REGISTER_SYSTEM_INSTANCE(RenderPipeline, env->pipeline);
 
+    void RenderPipeline::setupPipeline() {
+        outputFrameBuffer = Ref <FrameBuffer>::make();
+        mainFrameBuffer = Ref <FrameBuffer>::make();
+        outputFrameBuffer->setAttachment({ COLOR });
+        mainFrameBuffer->setAttachment({ COLOR });
+
+        addRenderPass("skybox");
+        addRenderPass("geometry");
+        auto postProcess = addRenderPass("post process");
+
+        postProcess->active = false;
+        auto& resize = postProcess->addCommand(RESIZE, true);
+        resize.frameBuffer = mainFrameBuffer;
+        resize.name = "resize";
+        
+        {
+            auto &step = postProcess->addDrawCall("hblur", true);
+            step.frameBuffer = mainFrameBuffer;
+            step.textures.push_back(outputFrameBuffer->getAttachment(COLOR));
+            step.shader = env->assets->get<Shader>("shaders/blur.glsl");
+            step.shaderState = Ref<ShaderState>::make();
+            step.shaderState->set("steps", 10);
+            step.shaderState->set("spread", glm::vec2(1.0f / 2000, 0.0f));
+        }
+        {
+            auto& step = postProcess->addDrawCall("vblur", true);
+            step.frameBuffer = outputFrameBuffer;
+            step.textures.push_back(mainFrameBuffer->getAttachment(COLOR));
+            step.shader = env->assets->get<Shader>("shaders/blur.glsl");
+            step.shaderState = Ref<ShaderState>::make();
+            step.shaderState->set("steps", 10);
+            step.shaderState->set("spread", glm::vec2(0.0f, 1.0f / 2000));
+        }
+
+    }
+
     RenderPipeline::RenderPipeline() {
         renderThreadId = -1;
+        width = 0;
+        height = 0;
     }
 
     void RenderPipeline::startup() {
-        env->signals->update.callbackOrder({"Camera", "Skybox", "RenderPipeline", "MeshComponent"});
+        env->signals->update.callbackOrder({"Camera", "Skybox", "MeshComponent", "Renderer", "RenderPipeline"});
 
         //create quad mesh for full screen passes
         quad = quad.make();
@@ -43,6 +81,8 @@ namespace tri {
                 cv.notify_one();
                 cv.wait(lock);
                 cv.notify_one();
+
+                //runPipeline();
             }
         });
 
@@ -128,10 +168,6 @@ namespace tri {
         this->height = height;
     }
 
-    void RenderPipeline::setupPipeline() {        
-        addRenderPass("skybox");
-    }
-
     void RenderPipeline::replaceFrameBuffer(Ref<FrameBuffer> target, Ref<FrameBuffer> replacement) {
         for (auto& pass : renderPasses) {
             if (pass) {
@@ -161,7 +197,6 @@ namespace tri {
     }
 
     void RenderPipeline::runPipeline() {
-
         //clear render pipeline
         for (auto& pass : renderPasses) {
             if (pass) {
@@ -189,7 +224,6 @@ namespace tri {
         }
 
         //execute render pipeline
-        RenderContext::setDepth(false);
         for (auto& pass : renderPasses) {
             if (pass && pass->active) {
                 TRI_PROFILE(pass->name);
@@ -215,8 +249,6 @@ namespace tri {
                 }
             }
         }
-        RenderContext::setDepth(true);
-
 
     }
 
@@ -234,8 +266,8 @@ namespace tri {
             }
 
             if (call.textures.size() > 0) {
-                int slots[32];
-                for (int i = 0; i < 32; i++) {
+                int slots[30];
+                for (int i = 0; i < 30; i++) {
                     slots[i] = i;
                     if (call.textures.size() > i) {
                         if (call.textures[i]) {
@@ -243,16 +275,27 @@ namespace tri {
                         }
                     }
                 }
-                call.shader->set("uTextures", slots, 32);
+                call.shader->set("uTextures", slots, 30);
             }
 
+            VertexArray* va = nullptr;
             if (call.mesh) {
-                if (call.mesh->vertexArray.getId() != 0) {
-                    call.mesh->vertexArray.submit();
-                }
+                va = &call.mesh->vertexArray;
             }
-            else {
-                quad->vertexArray.submit();
+            if (call.vertexArray) {
+                va = call.vertexArray;
+            }
+            if (va == nullptr) {
+                va = &quad->vertexArray;
+            }
+            if (va->getId() != 0) {
+                va->submit(-1, call.insatnceCount);
+            }
+
+            for (auto& tex : call.textures) {
+                if (tex) {
+                    tex->unbind();
+                }
             }
         }
     }

@@ -94,6 +94,7 @@ namespace tri::impl {
 
 #define TRI_REGISTER_COMPONENT_NAME(type, name) namespace{ static tri::impl::TypeRegisterer<type> TRI_UNIQUE_IDENTIFIER(_tri_register_component)(#name, true);}
 #define TRI_REGISTER_COMPONENT(type) TRI_REGISTER_COMPONENT_NAME(type, type)
+#define TRI_REGISTER_COMPONENT_UPDATE(type, func) TRI_UPDATE_CALLBACK(#type) { env->scene->view<type>().each([](type &c){ c.update(); }); }
 
 #define TRI_REGISTER_MEMBER(type, memberName) TRI_REGISTER_CALLBACK(){tri::Environment::startup(); env->reflection->registerMember<type, decltype(type::memberName)>(#memberName, offsetof(type, memberName));}
 #define TRI_REGISTER_MEMBER_RANGE(type, memberName, min, max) TRI_REGISTER_CALLBACK(){tri::Environment::startup(); env->reflection->registerMember<type, decltype(type::memberName)>(#memberName, offsetof(type, memberName), min, max);}

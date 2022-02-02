@@ -41,6 +41,8 @@ namespace tri {
 
         Type type = DRAW_CALL;
         Ref<Mesh> mesh;
+        VertexArray *vertexArray;
+        int insatnceCount = -1;
         Ref<Shader> shader;
         Ref<ShaderState> shaderState;
         Ref<FrameBuffer> frameBuffer;
