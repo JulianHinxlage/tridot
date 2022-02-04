@@ -5,6 +5,7 @@
 
 #include "RenderPass.h"
 #include "core/core.h"
+#include "RenderThread.h"
 
 namespace tri {
 
@@ -35,26 +36,32 @@ namespace tri {
     TRI_REGISTER_MEMBER(RenderPassStep, buffers);
 
     RenderPassStep& RenderPass::addDrawCall(const std::string& name, bool fixed) {
+        env->renderThread->lock();
         steps.emplace_back();
         steps.back().type = RenderPassStep::DRAW_CALL;
         steps.back().name = name;
         steps.back().fixed = fixed;
+        env->renderThread->unlock();
         return steps.back();
     }
 
     RenderPassStep& RenderPass::addCommand(RenderCommand command, bool fixed) {
+        env->renderThread->lock();
         steps.emplace_back();
         steps.back().type = RenderPassStep::DRAW_COMMAND;
         steps.back().command = command;
         steps.back().fixed = fixed;
+        env->renderThread->unlock();
         return steps.back();
     }
 
     RenderPassStep& RenderPass::addCallback(const std::function<void()>& callback, bool fixed) {
+        env->renderThread->lock();
         steps.emplace_back();
         steps.back().type = RenderPassStep::DRAW_CALLBACK;
         steps.back().callback = callback;
         steps.back().fixed = fixed;
+        env->renderThread->unlock();
         return steps.back();
     }
 

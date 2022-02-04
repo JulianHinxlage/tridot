@@ -8,6 +8,7 @@
 #include "entity/Scene.h"
 #include "engine/Camera.h"
 #include "render/Window.h"
+#include "render/RenderThread.h"
 
 using namespace tri;
 
@@ -39,6 +40,7 @@ int main(int argc, char* argv[]) {
         if (env->assets->isLoadingInProcess() && env->window->isOpen()) {
             env->window->update();
             env->assets->update();
+            env->renderThread->update();
         }
         else {
             break;

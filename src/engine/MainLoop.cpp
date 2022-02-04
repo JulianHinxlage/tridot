@@ -6,6 +6,8 @@
 #include "core/core.h"
 #include "engine/AssetManager.h"
 #include "render/Window.h"
+#include "render/RenderThread.h"
+#include "render/RenderContext.h"
 
 namespace tri {
 
@@ -31,13 +33,17 @@ namespace tri {
 
         env->console->addLogFile(*env->console->getVariable<std::string>("log_file"), Console::Options(TRACE, true, true, false));
 
-        env->window->init(
-                *env->console->getVariable<int>("resolution_x"),
-                *env->console->getVariable<int>("resolution_y"),
-                "Tridot Editor");
-        env->window->setBackgroundColor(Color(50, 50, 50));
+        env->renderThread->launch([]() {
+            env->window->init(
+                    *env->console->getVariable<int>("resolution_x"),
+                    *env->console->getVariable<int>("resolution_y"),
+                    "Tridot Editor");
+            env->window->setBackgroundColor(Color(50, 50, 50));
 
-        env->signals->startup.invokeProfile();
+            env->signals->startup.invokeProfile();
+        });
+        env->renderThread->synchronize();
+
         env->signals->postStartup.invoke();
     }
 
@@ -55,9 +61,13 @@ namespace tri {
     void MainLoop::shutdown() {
         {
             TRI_PROFILE_PHASE("shutdown");
-            env->signals->preShutdown.invoke();
-            env->signals->shutdown.invoke();
-            env->signals->postShutdown.invoke();
+            env->renderThread->addTask([]() {
+                env->signals->preShutdown.invoke();
+                env->signals->shutdown.invoke();
+                env->signals->postShutdown.invoke();
+            });
+            env->renderThread->synchronize();
+            env->renderThread->terminate();
         }
         Environment::shutdown();
     }

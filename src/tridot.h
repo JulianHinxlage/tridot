@@ -29,3 +29,4 @@
 #include "render/Renderer.h"
 #include "render/RenderContext.h"
 #include "render/RenderPipeline.h"
+#include "render/RenderThread.h"

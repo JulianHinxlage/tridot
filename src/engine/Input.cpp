@@ -3,6 +3,8 @@
 //
 
 #include "Input.h"
+#include "render/Window.h"
+#include "render/RenderThread.h"
 #include <GL/glew.h>
 #include <GL/gl.h>
 #include <GLFW/glfw3.h>
@@ -17,7 +19,7 @@ namespace tri {
     }
 
     void Input::startup() {
-        GLFWwindow *window = (GLFWwindow*)glfwGetCurrentContext();
+        GLFWwindow* window = (GLFWwindow*)env->window->getContext();
         static Input *input = this;
         glfwSetScrollCallback(window, [](GLFWwindow *window, double x, double y){
             input->wheelUpdate += (float)y;
@@ -25,7 +27,7 @@ namespace tri {
     }
 
     void Input::update() {
-        GLFWwindow *window = (GLFWwindow*)glfwGetCurrentContext();
+        GLFWwindow* window = (GLFWwindow*)env->window->getContext();
         if(!window){
             return;
         }
@@ -129,7 +131,7 @@ namespace tri {
     }
 
     glm::vec2 Input::getMousePosition(bool screenSpace) {
-        GLFWwindow *window = (GLFWwindow*)glfwGetCurrentContext();
+        GLFWwindow* window = (GLFWwindow*)env->window->getContext();
         double x = 0;
         double y = 0;
         if(window){
@@ -157,7 +159,7 @@ namespace tri {
     }
 
     void Input::setMousePosition(glm::vec2 position, bool screenSpace) {
-        GLFWwindow *window = (GLFWwindow*)glfwGetCurrentContext();
+        GLFWwindow* window = (GLFWwindow*)env->window->getContext();
         if(screenSpace){
             int width = 0;
             int height = 0;
@@ -173,7 +175,9 @@ namespace tri {
             position = m;
         }
         if(window){
-            glfwSetCursorPos(window, position.x, position.y);
+            env->renderThread->addTask([window, position]() {
+                glfwSetCursorPos(window, position.x, position.y);
+            });
         }
     }
 

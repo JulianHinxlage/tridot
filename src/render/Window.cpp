@@ -7,6 +7,7 @@
 #include "core/Profiler.h"
 #include "core/core.h"
 #include "RenderContext.h"
+#include "RenderPipeline.h"
 #include "GL/glew.h"
 #include "GLFW/glfw3.h"
 
@@ -85,28 +86,32 @@ namespace tri {
     }
 
     void Window::update() {
-        if(context != nullptr) {
-            GLFWwindow *window = (GLFWwindow*)context;
-            bind();
-            glfwPollEvents();
-            if (glfwWindowShouldClose(window)) {
-                clear();
-                return;
+        env->pipeline->getOrAddRenderPass("window")->addCallback([&]() {
+
+            if(context != nullptr) {
+                GLFWwindow *window = (GLFWwindow*)context;
+                bind();
+                glfwPollEvents();
+                if (glfwWindowShouldClose(window)) {
+                    clear();
+                    return;
+                }
+                glfwSwapInterval(vsync);
+                {
+                    TRI_PROFILE("swap buffers");
+                    glfwSwapBuffers(window);
+                }
+                {
+                    TRI_PROFILE("clear");
+                    glm::vec4 color = backgroundColor.vec();
+                    glClearColor(color.r, color.g, color.b, color.a);
+                    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+                }
+            }else{
+                env->console->warning("window: update called before init or after close");
             }
-            glfwSwapInterval(vsync);
-            {
-                TRI_PROFILE("swap buffers");
-                glfwSwapBuffers(window);
-            }
-            {
-                TRI_PROFILE("clear");
-                glm::vec4 color = backgroundColor.vec();
-                glClearColor(color.r, color.g, color.b, color.a);
-                glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-            }
-        }else{
-            env->console->warning("window: update called before init or after close");
-        }
+
+        });
     }
 
     bool Window::isOpen() {

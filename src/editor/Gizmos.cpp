@@ -9,6 +9,7 @@
 #include "engine/Transform.h"
 #include "engine/Input.h"
 #include <imgui.h>
+#include <imgui/imgui_internal.h>
 #include <imguizmo/ImGuizmo.h>
 
 namespace tri {
@@ -17,12 +18,12 @@ namespace tri {
         name = "Gizmos";
         type = ALWAYS_OPEN;
 
-        env->signals->update.addCallback("Gizmos/begin", [](){
-            if(env->window->isOpen()){
+        env->signals->update.addCallback("Gizmos begin", [](){
+            if(env->window->isOpen() && ImGui::GetCurrentContext()->WithinFrameScope){
                 ImGuizmo::BeginFrame();
             }
         });
-        env->signals->update.callbackOrder({"Imgui/begin", "Gizmos/begin", "Editor"});
+        env->signals->update.callbackOrder({"Gui begin", "Gizmos begin", "Editor"});
 
         operation = TRANSLATE;
         mode = LOCAL;

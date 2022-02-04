@@ -8,6 +8,7 @@
 #include "render/Window.h"
 #include "render/FrameBuffer.h"
 #include "engine/Input.h"
+#include "render/RenderPipeline.h"
 #include <imgui/imgui.h>
 #include <imgui/backends/imgui_impl_glfw.h>
 #include <imgui/backends/imgui_impl_opengl3.h>
@@ -30,46 +31,48 @@ namespace tri {
             inFrame = false;
 
 
-            env->signals->update.addCallback("Imgui/begin", [this]() {
+            env->signals->update.addCallback("Gui begin", [this]() {
                 begin();
             });
 
-            env->signals->update.addCallback("Imgui/end", [this]() {
+            env->signals->update.addCallback("Gui end", [this]() {
                 end();
             });
 
-            env->signals->update.callbackOrder({ "Imgui/end", "Window", "Imgui/begin" });
+            env->signals->update.callbackOrder({ "Gui end", "Window", "Gui begin" });
         }
 
         void begin() {
-            //TRI_PROFILE("Imgui/begin");
-            if (env->window->isOpen()) {
-                ImGuiIO& io = ImGui::GetIO();
-                io.MouseWheel += (float)env->input->getMouseWheelDelta();
+            env->pipeline->getOrAddRenderPass("gui begin")->addCallback([&]() {
+                if (env->window->isOpen()) {
+                    ImGuiIO& io = ImGui::GetIO();
+                    io.MouseWheel += (float)env->input->getMouseWheelDelta();
 
-                ImGui_ImplOpenGL3_NewFrame();
-                ImGui_ImplGlfw_NewFrame();
-                ImGui::NewFrame();
-                inFrame = true;
-            }
+                    ImGui_ImplOpenGL3_NewFrame();
+                    ImGui_ImplGlfw_NewFrame();
+                    ImGui::NewFrame();
+                    inFrame = true;
+                }
+            });
         }
 
         void end() {
-            //TRI_PROFILE("Imgui/end");
-            if (inFrame && env->window->isOpen()) {
-                FrameBuffer::unbind();
-                ImGui::Render();
+            env->pipeline->getOrAddRenderPass("gui end")->addCallback([&]() {
+                if (inFrame && env->window->isOpen()) {
+                    FrameBuffer::unbind();
+                    ImGui::Render();
 
-                auto* data = ImGui::GetDrawData();
-                if (data) {
-                    ImGui_ImplOpenGL3_RenderDrawData(data);
+                    auto* data = ImGui::GetDrawData();
+                    if (data) {
+                        ImGui_ImplOpenGL3_RenderDrawData(data);
+                    }
+                    if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
+                        ImGui::UpdatePlatformWindows();
+                        ImGui::RenderPlatformWindowsDefault();
+                    }
+                    inFrame = false;
                 }
-                if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
-                    ImGui::UpdatePlatformWindows();
-                    ImGui::RenderPlatformWindowsDefault();
-                }
-                inFrame = false;
-            }
+            });
         }
 
         void shutdown() override {

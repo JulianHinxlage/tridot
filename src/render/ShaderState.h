@@ -17,7 +17,7 @@ namespace tri {
             for (auto& state : states) {
                 if (state && state->name == uniform) {
                     state = std::static_pointer_cast<Base>(Ref<Value<T>>::make(uniform, value));
-                    break;
+                    return;
                 }
             }
             states.push_back(std::static_pointer_cast<Base>(Ref<Value<T>>::make(uniform, value)));
@@ -28,7 +28,7 @@ namespace tri {
             for (auto& state : states) {
                 if (state && state->name == uniform) {
                     state = std::static_pointer_cast<Base>(Ref<Values<T>>::make(uniform, values, count));
-                    break;
+                    return;
                 }
             }
             states.push_back(std::static_pointer_cast<Base>(Ref<Values<T>>::make(uniform, values, count)));

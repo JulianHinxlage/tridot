@@ -28,44 +28,47 @@ namespace tri {
     }
 
     void generateIrradianceMap(Skybox& skybox) {
-        auto pass = env->pipeline->getOrAddRenderPass("skybox");
-        Ref<Shader> shader = env->assets->get<Shader>("shaders/blur.glsl", true);
+        env->pipeline->getOrAddRenderPass("skybox")->addCallback([&]() {
+            Ref<Shader> shader = env->assets->get<Shader>("shaders/blur.glsl", true);
 
-        Ref<FrameBuffer> frameBuffer1 = Ref<FrameBuffer>::make();
-        Ref<FrameBuffer> frameBuffer2 = Ref<FrameBuffer>::make();
-        frameBuffer1->setAttachment({ COLOR });
-        frameBuffer2->setAttachment({ COLOR });
-        frameBuffer1->resize(skybox.texture->getWidth(), skybox.texture->getHeight());
-        frameBuffer2->resize(skybox.texture->getWidth(), skybox.texture->getHeight());
+            Ref<FrameBuffer> frameBuffer1 = Ref<FrameBuffer>::make();
+            Ref<FrameBuffer> frameBuffer2 = Ref<FrameBuffer>::make();
 
-        auto blur = [&](Ref<FrameBuffer>& frameBuffer, const Ref<Texture>& texture, bool horizontal) {
-            auto& step = pass->addDrawCall();
-            step.shader = shader;
-            step.textures.push_back(texture);
-            step.frameBuffer = frameBuffer;
-            step.shaderState = Ref<ShaderState>::make();
-            step.shaderState->set("steps", 50);
-            if (horizontal) {
-                step.shaderState->set("spread", glm::vec2(1.0f / (float)texture->getWidth(), 0.0f));
-            }
-            else {
-                step.shaderState->set("spread", glm::vec2(0.0f, 1.0f / (float)texture->getHeight()));
-            }
-        };
+            frameBuffer1->setAttachment({ COLOR });
+            frameBuffer2->setAttachment({ COLOR });
+            frameBuffer1->resize(skybox.texture->getWidth(), skybox.texture->getHeight());
+            frameBuffer2->resize(skybox.texture->getWidth(), skybox.texture->getHeight());
+
+            auto blur = [&](Ref<FrameBuffer>& frameBuffer, const Ref<Texture>& texture, bool horizontal) {
+                shader->bind();
+                texture->bind(0);
+                int i = 0;
+                shader->set("uTextures", &i, 1);
+                frameBuffer->bind();
+                shader->set("steps", 50);
+                if (horizontal) {
+                    shader->set("spread", glm::vec2(1.0f / (float)texture->getWidth(), 0.0f));
+                }
+                else {
+                    shader->set("spread", glm::vec2(0.0f, 1.0f / (float)texture->getHeight()));
+                }
+                env->pipeline->getQuad()->vertexArray.submit();
+            };
 
 
-        blur(frameBuffer1, skybox.texture, true);
-        blur(frameBuffer2, frameBuffer1->getAttachment(COLOR), false);
-        for (int i = 0; i < 10; i++) {
-            blur(frameBuffer1, frameBuffer2->getAttachment(COLOR), true);
+            blur(frameBuffer1, skybox.texture, true);
             blur(frameBuffer2, frameBuffer1->getAttachment(COLOR), false);
-        }
+            for (int i = 0; i < 10; i++) {
+                blur(frameBuffer1, frameBuffer2->getAttachment(COLOR), true);
+                blur(frameBuffer2, frameBuffer1->getAttachment(COLOR), false);
+            }
 
-        skybox.irradianceMap = frameBuffer2->getAttachment(COLOR);
-        pass->addCallback([&]() {
+            skybox.irradianceMap = frameBuffer2->getAttachment(COLOR);
             skybox.texture->setCubeMap(true);
             skybox.irradianceMap->setCubeMap(false);
+
         });
+
     }
 
     TRI_UPDATE_CALLBACK("Skybox") {

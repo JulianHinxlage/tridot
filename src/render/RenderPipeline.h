@@ -15,8 +15,6 @@ namespace tri {
         RenderPipeline();
 
         void startup() override;
-        void update() override;
-        void shutdown() override;
 
         Ref<RenderPass> addRenderPass(const std::string &name);
         Ref<RenderPass> getRenderPass(const std::string& name);
@@ -28,6 +26,9 @@ namespace tri {
         void setInput(Ref<FrameBuffer> frameBuffer);
         void setOutput(Ref<FrameBuffer> frameBuffer);
         void setSize(uint32_t width, uint32_t height);
+        Ref<Mesh> getQuad();
+
+        void execute();
 
     private:
         Ref<FrameBuffer> mainFrameBuffer;
@@ -37,19 +38,13 @@ namespace tri {
         Ref<Mesh> quad;
         std::vector<Ref<RenderPass>> renderPasses;
 
-        int renderThreadId;
-        std::mutex mutex;
-        std::condition_variable cv;
-        std::atomic_bool running;
-
         uint32_t width;
         uint32_t height;
 
         void setupPipeline();
         void replaceFrameBuffer(Ref<FrameBuffer> target, Ref<FrameBuffer> replacement);
-        void runPipeline();
-        void runDrawCall(RenderPassStep& step);
-        void runDrawCommand(RenderPassStep& step);
+        void executeDrawCall(RenderPassStep& step);
+        void executeRenderCommand(RenderPassStep& step);
     };
 
 }

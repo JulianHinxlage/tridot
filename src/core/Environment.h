@@ -28,6 +28,7 @@ namespace tri {
     class Random;
     class RuntimeMode;
     class RenderPipeline;
+    class RenderThread;
 
     class TRI_API Environment {
     public:
@@ -53,6 +54,7 @@ namespace tri {
         Random* random;
         RuntimeMode* runtime;
         RenderPipeline* pipeline;
+        RenderThread* renderThread;
 
         static Environment* startup();
         static void shutdown();

@@ -18,6 +18,7 @@
 #include "render/Renderer.h"
 #include "render/RenderContext.h"
 #include "engine/RuntimeMode.h"
+#include "render/RenderThread.h"
 #include "render/RenderPipeline.h"
 #include <imgui/imgui.h>
 #include <glm/gtc/matrix_transform.hpp>
@@ -114,14 +115,20 @@ namespace tri {
                     }
                 }
 
-                if(camera.output) {
-                    if (camera.output->getSize() != glm::vec2(viewportSize.x, viewportSize.y)) {
-                        camera.output->resize(viewportSize.x, viewportSize.y);
-                        camera.aspectRatio = viewportSize.x / viewportSize.y;
+                env->pipeline->getOrAddRenderPass("viewport")->addCallback([this, id, viewportSize]() {
+                    if (env->scene->hasComponent<Camera>(id)) {
+                        Camera& camera = env->scene->getComponent<Camera>(id);
+                        if (camera.output) {
+                            if (camera.output->getSize() != glm::vec2(viewportSize.x, viewportSize.y)) {
+                                camera.output->resize(viewportSize.x, viewportSize.y);
+                                camera.aspectRatio = viewportSize.x / viewportSize.y;
+                            }
+                        }
+                        else {
+                            setupFrameBuffer(camera, true);
+                        }
                     }
-                }else{
-                    setupFrameBuffer(camera, true);
-                }
+                });
             });
 
             if(cam){
@@ -129,20 +136,28 @@ namespace tri {
             }
 
             if (output) {
-                env->pipeline->setSize(viewportSize.x, viewportSize.y);
-                env->pipeline->setOutput(output);
+                env->pipeline->getOrAddRenderPass("viewport")->addCallback([output, viewportSize]() {
+                    env->pipeline->setSize(viewportSize.x, viewportSize.y);
+                    env->pipeline->setOutput(output);
+                });
             }
 
             if (output) {
                 //draw image
-                ImGui::Image((ImTextureID)(size_t)output->getAttachment(TextureAttachment::COLOR)->getId(), viewportSize, ImVec2(0, 1), ImVec2(1, 0));
+                if (output->getId() != 0) {
+                    ImGui::Image((ImTextureID)(size_t)output->getAttachment(TextureAttachment::COLOR)->getId(), viewportSize, ImVec2(0, 1), ImVec2(1, 0));
+                }
 
                 //draw selection overlay
                 /*if (env->editor->selectionContext.getSelected().size() > 0) {
                     if (cam && camTransform) {
-                        updateSelectionOverlay(*camTransform, *cam, glm::vec2(viewportSize.x, viewportSize.y));
-                        ImGui::SetCursorPos(viewportPosition);
-                        ImGui::Image((ImTextureID)(size_t)selectionOverlay->getAttachment(TextureAttachment::COLOR)->getId(), viewportSize, ImVec2(0, 1), ImVec2(1, 0));
+                        env->pipeline->getOrAddRenderPass("viewport")->addCallback([this, viewportSize, camTransform, &cam]() {
+                            updateSelectionOverlay(*camTransform, *cam, glm::vec2(viewportSize.x, viewportSize.y));
+                        });
+                        if (selectionOverlay) {
+                            ImGui::SetCursorPos(viewportPosition);
+                            ImGui::Image((ImTextureID)(size_t)selectionOverlay->getAttachment(TextureAttachment::COLOR)->getId(), viewportSize, ImVec2(0, 1), ImVec2(1, 0));
+                        }
                     }
                 }*/
 
@@ -155,7 +170,17 @@ namespace tri {
                 }
                 //mouse picking
                 if(pickingAllowed){
-                    updateMousePicking(output->getAttachment((TextureAttachment)(COLOR + 1)), {viewportSize.x, viewportSize.y});
+                    Ref<Texture> texture = output->getAttachment((TextureAttachment)(COLOR + 1));
+                    if (texture) {
+                        if (ImGui::IsItemHovered()) {
+                            glm::vec2 pos = { 0, 0 };
+                            pos.x = ImGui::GetMousePos().x - ImGui::GetItemRectMin().x;
+                            pos.y = ImGui::GetMousePos().y - ImGui::GetItemRectMin().y;
+                            env->pipeline->getOrAddRenderPass("viewport")->addCallback([this, output, viewportSize, texture, pos]() {
+                                updateMousePicking(texture, { viewportSize.x, viewportSize.y }, pos);
+                            });
+                        }
+                    }
                 }
             }
 
@@ -199,38 +224,33 @@ namespace tri {
         ImGui::PopStyleVar(2);
     }
 
-    void ViewportWindow::updateMousePicking(Ref<Texture> texture, glm::vec2 viewportSize){
+    void ViewportWindow::updateMousePicking(Ref<Texture> texture, glm::vec2 viewportSize, glm::vec2 pos){
         if(texture){
-            if(ImGui::IsItemHovered()){
-                if(env->input->pressed(Input::MOUSE_BUTTON_LEFT)){
+            if(env->input->pressed(Input::MOUSE_BUTTON_LEFT)){
 
-                    glm::vec2 pos = {0, 0};
-                    pos.x = ImGui::GetMousePos().x - ImGui::GetItemRectMin().x;
-                    pos.y = ImGui::GetMousePos().y - ImGui::GetItemRectMin().y;
-                    pos /= viewportSize;
-                    pos *= glm::vec2(texture->getWidth(), texture->getHeight());
-                    pos.y = texture->getHeight() - pos.y;
+                pos /= viewportSize;
+                pos *= glm::vec2(texture->getWidth(), texture->getHeight());
+                pos.y = texture->getHeight() - pos.y;
 
 
-                    Color color = texture->getPixel(pos.x, pos.y);
-                    if(color.value != -1){
-                        color.a = 0;
-                    }
-                    EntityId id = color.value;
-
-                    bool control = env->input->down(Input::KEY_LEFT_CONTROL) || env->input->down(Input::KEY_RIGHT_CONTROL);
-                    if(!control){
-                        env->editor->selectionContext.unselectAll();
-                    }
-                    if(id != -1) {
-                        if(control && env->editor->selectionContext.isSelected(id)){
-                            env->editor->selectionContext.unselect(id);
-                        }else{
-                            env->editor->selectionContext.select(id);
-                        }
-                    }
-
+                Color color = texture->getPixel(pos.x, pos.y);
+                if(color.value != -1){
+                    color.a = 0;
                 }
+                EntityId id = color.value;
+
+                bool control = env->input->down(Input::KEY_LEFT_CONTROL) || env->input->down(Input::KEY_RIGHT_CONTROL);
+                if(!control){
+                    env->editor->selectionContext.unselectAll();
+                }
+                if(id != -1) {
+                    if(control && env->editor->selectionContext.isSelected(id)){
+                        env->editor->selectionContext.unselect(id);
+                    }else{
+                        env->editor->selectionContext.select(id);
+                    }
+                }
+
             }
         }
     }

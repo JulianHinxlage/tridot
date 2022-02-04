@@ -47,6 +47,7 @@ namespace tri {
         random = nullptr;
         runtime = nullptr;
         pipeline = nullptr;
+        renderThread = nullptr;
     }
 
     Environment* Environment::startup() {
@@ -69,7 +70,7 @@ namespace tri {
                 env->systems->startup();
                 env->modules->startup();
             });
-            env->signals->update.addCallback("systems", []() {
+            env->signals->update.addCallback("ModuleManager", []() {
                 env->modules->update();
             });
             env->signals->shutdown.addCallback("systems", []() {

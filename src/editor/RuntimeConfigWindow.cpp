@@ -20,9 +20,9 @@ namespace tri {
             alwaysOn = {
                 "Editor",
                 "Window",
-                "Imgui/begin",
-                "Imgui/end",
-                "Gizmos/begin",
+                "Gui begin",
+                "Gui end",
+                "Gizmos begin",
             };
 
             env->runtime->setActive("Physics", false, RuntimeMode::EDIT);

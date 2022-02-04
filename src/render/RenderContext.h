@@ -20,8 +20,6 @@ namespace tri {
         static void setBlend(bool enabled);
         static void setCull(bool enabled, bool front = false);
         static void flush(bool synchronous = false);
-    private:
-        static void *context;
     };
 
 }

@@ -7,6 +7,7 @@
 #include "entity/Scene.h"
 #include "Transform.h"
 #include "render/Window.h"
+#include "render/RenderPipeline.h"
 #include <glm/gtc/matrix_transform.hpp>
 
 namespace tri {
@@ -64,7 +65,8 @@ namespace tri {
 
             //frame buffer
             if (camera.output) {
-                camera.output->clear();
+                auto &step =env->pipeline->getOrAddRenderPass("clear")->addCommand(CLEAR);
+                step.frameBuffer = camera.output;
             }
         });
     }

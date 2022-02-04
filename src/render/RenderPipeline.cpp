@@ -6,6 +6,7 @@
 #include "engine/AssetManager.h"
 #include "RenderContext.h"
 #include "ShaderState.h"
+#include "RenderThread.h"
 
 namespace tri {
     
@@ -17,9 +18,17 @@ namespace tri {
         outputFrameBuffer->setAttachment({ COLOR });
         mainFrameBuffer->setAttachment({ COLOR });
 
-        addRenderPass("skybox");
-        addRenderPass("geometry");
-        auto postProcess = addRenderPass("post process");
+        getOrAddRenderPass("clear");
+
+        getOrAddRenderPass("skybox");
+        getOrAddRenderPass("geometry");
+        getOrAddRenderPass("viewport");
+        auto postProcess = getOrAddRenderPass("post process");
+
+        getOrAddRenderPass("gui end");
+        getOrAddRenderPass("window");
+        getOrAddRenderPass("gui begin");
+
 
         postProcess->active = false;
         auto& resize = postProcess->addCommand(RESIZE, true);
@@ -48,7 +57,6 @@ namespace tri {
     }
 
     RenderPipeline::RenderPipeline() {
-        renderThreadId = -1;
         width = 0;
         height = 0;
     }
@@ -71,39 +79,8 @@ namespace tri {
         quad->create(quadVertices, sizeof(quadVertices) / sizeof(quadVertices[0]), 
             quadIndices, sizeof(quadIndices) / sizeof(quadIndices[0]), 
             { {FLOAT, 3}, {FLOAT, 3} ,{FLOAT, 2} });
-
-        //render thread loop
-        running = true;
-        renderThreadId = env->threads->addThread([&]() {
-            while (running) {
-                //synchronize render thread to main thread
-                std::unique_lock<std::mutex> lock(mutex);
-                cv.notify_one();
-                cv.wait(lock);
-                cv.notify_one();
-
-                //runPipeline();
-            }
-        });
-
+           
         setupPipeline();
-    }
-
-    void RenderPipeline::update() {
-        //synchronize main thread to render thread
-        std::unique_lock<std::mutex> lock(mutex);
-        cv.notify_one();
-        cv.wait(lock);
-        cv.notify_one();
-
-        //run pipeline on main thread for now
-        runPipeline();
-    }
-
-    void RenderPipeline::shutdown() {
-        running = false;
-        cv.notify_all();
-        env->threads->jointThread(renderThreadId);
     }
 
     Ref<RenderPass> RenderPipeline::addRenderPass(const std::string& name) {
@@ -168,6 +145,10 @@ namespace tri {
         this->height = height;
     }
 
+    Ref<Mesh> RenderPipeline::getQuad() {
+        return quad;
+    }
+
     void RenderPipeline::replaceFrameBuffer(Ref<FrameBuffer> target, Ref<FrameBuffer> replacement) {
         for (auto& pass : renderPasses) {
             if (pass) {
@@ -196,63 +177,56 @@ namespace tri {
         }
     }
 
-    void RenderPipeline::runPipeline() {
-        //clear render pipeline
+    void RenderPipeline::execute() {
+
+        //copy pipeline into local buffer
+        env->renderThread->lock();
+        std::vector<Ref<RenderPass>> passes;
         for (auto& pass : renderPasses) {
-            if (pass) {
-                for (int i = 0; i < pass->steps.size(); i++) {
-                    auto& step = pass->steps[i];
-                    if (!step.fixed && !step.newThisFrame) {
-
-                        //move active flag to next frame draw call
-                        for (int j = 0; j < pass->steps.size(); j++) {
-                            auto& step2 = pass->steps[j];
-                            if (!step.name.empty()) {
-                                if (i != j && step.name == step2.name) {
-                                    if (!step2.fixed && step2.newThisFrame) {
-                                        step2.active = step.active;
-                                    }
-                                }
-                            }
-                        }
-
-                        pass->steps.erase(pass->steps.begin() + i);
-                        i--;
-                    }
-                }
-            }
+            passes.push_back(Ref<RenderPass>::make(*pass));
+            pass->steps.clear();
         }
+        env->renderThread->unlock();
 
         //execute render pipeline
-        for (auto& pass : renderPasses) {
+        for (auto& pass : passes) {
             if (pass && pass->active) {
                 TRI_PROFILE(pass->name);
 
                 for (auto& step : pass->steps) {
-                    if (step.active) {
+                    if (step.active && (step.fixed || step.newThisFrame)) {
                         if (step.type == RenderPassStep::DRAW_CALL) {
-                            runDrawCall(step);
-                        }else if (step.type == RenderPassStep::DRAW_COMMAND) {
-                            runDrawCommand(step);
-                        }else if (step.type == RenderPassStep::DRAW_CALLBACK) {
+                            executeDrawCall(step);
+                        }
+                        else if (step.type == RenderPassStep::DRAW_COMMAND) {
+                            executeRenderCommand(step);
+                        }
+                        else if (step.type == RenderPassStep::DRAW_CALLBACK) {
                             if (step.callback) {
                                 step.callback();
                             }
                         }
                     }
-                    step.newThisFrame = false;
-                }
-            }
-            else if (pass) {
-                for (auto& step : pass->steps) {
-                    step.newThisFrame = false;
                 }
             }
         }
 
+        env->renderThread->lock();
+        for (auto& pass : passes) {
+            if (pass) {
+                Ref<RenderPass> p = getRenderPass(pass->name);
+                for (auto& step : pass->steps) {
+                    if (step.fixed || step.newThisFrame) {
+                        step.newThisFrame = false;
+                        p->steps.push_back(step);
+                    }
+                }
+            }
+        }
+        env->renderThread->unlock();
     }
 
-    void RenderPipeline::runDrawCall(RenderPassStep& call) {
+    void RenderPipeline::executeDrawCall(RenderPassStep& call) {
         if (call.frameBuffer && call.frameBuffer->getId() != 0) {
             call.frameBuffer->bind();
         }
@@ -300,7 +274,7 @@ namespace tri {
         }
     }
 
-    void RenderPipeline::runDrawCommand(RenderPassStep& call) {
+    void RenderPipeline::executeRenderCommand(RenderPassStep& call) {
         switch (call.command) {
         case RenderCommand::NOOP:
             break;

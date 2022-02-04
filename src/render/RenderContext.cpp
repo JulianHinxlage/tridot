@@ -9,7 +9,7 @@
 
 namespace tri {
 
-    void *RenderContext::context = nullptr;
+    thread_local void *context = nullptr;
 
     void *RenderContext::create() {
         //init glfw
@@ -23,12 +23,12 @@ namespace tri {
         }
 
         //create context
-        GLFWwindow *context = glfwCreateWindow(1, 1, "", nullptr, (GLFWwindow*)RenderContext::context);
-        if(!context){
+        GLFWwindow *c = glfwCreateWindow(1, 1, "", nullptr, (GLFWwindow*)context);
+        if(!c){
             env->console->error("failed to create GLFW context");
             return nullptr;
         }
-        set(context);
+        set(c);
 
         //init glew
         static bool glewInited = false;
@@ -44,17 +44,17 @@ namespace tri {
         env->console->info("GLSL version: ", glGetString(GL_SHADING_LANGUAGE_VERSION));
         env->console->info("OpenGL vendor: ", glGetString(GL_VENDOR));
         env->console->info("OpenGL renderer: ", glGetString(GL_RENDERER));
-        return context;
+        return c;
     }
 
     void *RenderContext::get() {
         return context;
     }
 
-    void RenderContext::set(void *context) {
-        if(context != RenderContext::context){
-            glfwMakeContextCurrent((GLFWwindow*)context);
-            RenderContext::context = context;
+    void RenderContext::set(void *c) {
+        if(c != context){
+            glfwMakeContextCurrent((GLFWwindow*)c);
+            context = c;
         }
     }
 
