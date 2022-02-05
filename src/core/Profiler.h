@@ -7,6 +7,7 @@
 #include "pch.h"
 #include "System.h"
 #include "util/Clock.h"
+#include "tracy/Tracy.hpp"
 
 namespace tri {
 
@@ -59,11 +60,30 @@ namespace tri {
 }
 
 #ifdef TRI_DEBUG
-#define TRI_PROFILE(name) tri::impl::ProfileScope profileScope(name);
-#define TRI_PROFILE_PHASE(name) tri::impl::ProfilePhase profilePhase(name);
+    #if TRI_ENABLE_OWN_PROFILER
+        #define TRI_PROFILE(name) tri::impl::ProfileScope profileScope(name); ZoneScopedN(name);
+        #define TRI_PROFILE_NAME(name, size) tri::impl::ProfileScope profileScope(name); ZoneScoped; ZoneName(name, size);
+        #define TRI_PROFILE_PHASE(name) tri::impl::ProfilePhase profilePhase(name);
+        #define TRI_PROFILE_FUNC() TRI_PROFILE(__FUNCTION__) ZoneScoped;
+        #define TRI_PROFILE_THREAD(name) tracy::SetThreadName(name);
+        #define TRI_PROFILE_INFO(text, size) ZoneText(text, size)
+        #define TRI_PROFILE_FRAME env->profiler->nextFrame(); FrameMark;
+    #else
+        #define TRI_PROFILE(name) ZoneScopedN(name);
+        #define TRI_PROFILE_NAME(name, size) ZoneScoped; ZoneName(name, size);
+        #define TRI_PROFILE_PHASE(name) 
+        #define TRI_PROFILE_FUNC() ZoneScoped;
+        #define TRI_PROFILE_THREAD(name) tracy::SetThreadName(name);
+        #define TRI_PROFILE_INFO(text, size) ZoneText(text, size);
+        #define TRI_PROFILE_FRAME FrameMark;
+    #endif
 #else
-#define TRI_PROFILE(name)
-#define TRI_PROFILE_PHASE(name)
+    #define TRI_PROFILE(name)
+    #define TRI_PROFILE_NAME(name, size)
+    #define TRI_PROFILE_PHASE(name)
+    #define TRI_PROFILE_FUNC()
+    #define TRI_PROFILE_THREAD(name)
+    #define TRI_PROFILE_INFO(text, size)
+    #define TRI_PROFILE_FRAME
 #endif
-#define TRI_PROFILE_FUNC() TRI_PROFILE(__FUNCTION__)
 

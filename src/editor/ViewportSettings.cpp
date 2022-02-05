@@ -15,6 +15,7 @@ namespace tri{
         }
 
         void update() override{
+            TRI_PROFILE("Viewport Settings");
             bool runtime = env->runtime->getMode() != RuntimeMode::EDIT;
             if(ImGui::Checkbox("play", &runtime)) {
                 if (runtime) {

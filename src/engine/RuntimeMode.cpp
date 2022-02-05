@@ -32,6 +32,15 @@ namespace tri {
     
     void RuntimeMode::setMode(RuntimeMode::Mode mode) {
         if (mode != this->mode) {
+            TRI_PROFILE("setRuntimeMode");
+            if (mode == RUNTIME) {
+                TRI_PROFILE_INFO("runtime", 7);
+            }else if (mode == EDIT) {
+                TRI_PROFILE_INFO("edit", 4);
+            }
+            else if (mode == PAUSE) {
+                TRI_PROFILE_INFO("pause", 5);
+            }
             previousMode = this->mode;
             this->mode = mode;
 

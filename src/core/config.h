@@ -36,16 +36,6 @@
     #define TRI_API
 #endif
 
-//windows header
-#if TRI_WINDOWS
-    #include <windows.h>
-    #undef ERROR
-    #undef min
-    #undef max
-    #undef near
-    #undef far
-#endif
-
 //version
 #define TRI_VERSION_MAJOR 0
 #define TRI_VERSION_MINOR 1

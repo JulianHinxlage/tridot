@@ -22,6 +22,7 @@ namespace tri {
     }
 
     void PropertiesWindow::update() {
+        TRI_PROFILE("Properties");
         if(env->editor->selectionContext.getSelected().size() == 1){
             EntityId id = -1;
             for(EntityId id2 : env->editor->selectionContext.getSelected()){

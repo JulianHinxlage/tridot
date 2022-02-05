@@ -35,6 +35,7 @@ namespace tri {
         }
 
         void update() override {
+            TRI_PROFILE("Runtime Config");
             auto& observers = env->signals->update.getObservers();
             for (int i = 0; i < observers.size(); i++) {
                 auto& observer = observers[i];

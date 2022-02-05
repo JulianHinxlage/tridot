@@ -18,6 +18,7 @@ namespace tri {
         }
 
         void update() override {
+            TRI_PROFILE("Render Pipeline Window");
             for (auto& pass : env->pipeline->getRenderPasses()) {
                 if (pass) {
                     ImGui::PushID(pass->name.c_str());
@@ -30,7 +31,7 @@ namespace tri {
                             auto &step = pass->steps[i];
                             std::string str = step.name;
                             if (str.empty()) {
-                                str = std::string("draw call ") + std::to_string(i);
+                                str = std::string("step ") + std::to_string(i);
                             }
 
                             ImGui::PushID(str.c_str());

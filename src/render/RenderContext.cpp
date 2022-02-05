@@ -6,6 +6,7 @@
 #include "core/core.h"
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
+#include "tracy/TracyOpenGL.hpp"
 
 namespace tri {
 
@@ -40,10 +41,12 @@ namespace tri {
             glewInited = true;
         }
 
+        TracyGpuContext(c);
+
         env->console->info("OpenGL version: ", glGetString(GL_VERSION));
         env->console->info("GLSL version: ", glGetString(GL_SHADING_LANGUAGE_VERSION));
-        env->console->info("OpenGL vendor: ", glGetString(GL_VENDOR));
-        env->console->info("OpenGL renderer: ", glGetString(GL_RENDERER));
+        env->console->info("GPU vendor: ", glGetString(GL_VENDOR));
+        env->console->info("GPU: ", glGetString(GL_RENDERER));
         return c;
     }
 

@@ -25,3 +25,6 @@
 [submodule "extern/freealut"]
 	path = extern/freealut
 	url = https://github.com/vancegroup/freealut.git
+[submodule "extern/tracy"]
+	path = extern/tracy
+	url = https://github.com/wolfpld/tracy.git

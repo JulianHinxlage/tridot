@@ -76,6 +76,7 @@ namespace tri {
     }
 
     void ViewportWindow::update(){
+        TRI_PROFILE("Viewport");
         if(editorCameraId == -1){
             setupCamera();
         }
@@ -145,7 +146,9 @@ namespace tri {
             if (output) {
                 //draw image
                 if (output->getId() != 0) {
-                    ImGui::Image((ImTextureID)(size_t)output->getAttachment(TextureAttachment::COLOR)->getId(), viewportSize, ImVec2(0, 1), ImVec2(1, 0));
+                    if (output->getAttachment(TextureAttachment::COLOR)) {
+                        ImGui::Image((ImTextureID)(size_t)output->getAttachment(TextureAttachment::COLOR)->getId(), viewportSize, ImVec2(0, 1), ImVec2(1, 0));
+                    }
                 }
 
                 //draw selection overlay

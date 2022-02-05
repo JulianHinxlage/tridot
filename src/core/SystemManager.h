@@ -79,7 +79,7 @@ namespace tri {
             for (auto sys : systems) {
                 if (sys.second.system) {
                     if (sys.second.startupFlag == false) {
-                        TRI_PROFILE(sys.second.name);
+                        TRI_PROFILE_NAME(sys.second.name.c_str(), sys.second.name.size());
                         sys.second.startupFlag = true;
                         sys.second.system->startup();
                     }

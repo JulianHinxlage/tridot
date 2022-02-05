@@ -7,6 +7,9 @@
 #include "RenderContext.h"
 #include "ShaderState.h"
 #include "RenderThread.h"
+#include <GL/glew.h>
+#include <GLFW/glfw3.h>
+#include "tracy/TracyOpenGL.hpp"
 
 namespace tri {
     
@@ -18,6 +21,11 @@ namespace tri {
         outputFrameBuffer->setAttachment({ COLOR });
         mainFrameBuffer->setAttachment({ COLOR });
 
+        getOrAddRenderPass("gui end");
+        getOrAddRenderPass("window");
+        getOrAddRenderPass("gui begin");
+        getOrAddRenderPass("editor");
+
         getOrAddRenderPass("clear");
 
         getOrAddRenderPass("skybox");
@@ -25,9 +33,7 @@ namespace tri {
         getOrAddRenderPass("viewport");
         auto postProcess = getOrAddRenderPass("post process");
 
-        getOrAddRenderPass("gui end");
-        getOrAddRenderPass("window");
-        getOrAddRenderPass("gui begin");
+
 
 
         postProcess->active = false;
@@ -177,32 +183,74 @@ namespace tri {
         }
     }
 
-    void RenderPipeline::execute() {
+    void RenderPipeline::submitRenderPasses() {
+        TRI_PROFILE("submitRenderPasses");
 
-        //copy pipeline into local buffer
         env->renderThread->lock();
-        std::vector<Ref<RenderPass>> passes;
-        for (auto& pass : renderPasses) {
-            passes.push_back(Ref<RenderPass>::make(*pass));
-            pass->steps.clear();
-        }
-        env->renderThread->unlock();
 
-        //execute render pipeline
-        for (auto& pass : passes) {
+        //move active flag to next frame steps
+        for (auto& currentPass : currentRenderPasses) {
+            auto pass = getOrAddRenderPass(currentPass->name);
+            pass->active = currentPass->active;
+            for (int i = 0; i < currentPass->steps.size(); i++) {
+                auto& currentStep = currentPass->steps[i];
+                if (currentStep.name == "") {
+                    if (pass->steps.size() > i) {
+                        if (pass->steps[i].name == "") {
+                            pass->steps[i].active = currentStep.active;
+                        }
+                    }
+                }
+                else {
+                    for (auto& step : pass->steps) {
+                        if (currentStep.name == step.name) {
+                            step.active = currentStep.active;
+                        }
+                    }
+                }
+            }
+        }
+
+        //copy render passes to current render passes and clear render passes
+        int stepCount = 0;
+        currentRenderPasses.clear();
+        for (auto& pass : renderPasses) {
+            currentRenderPasses.push_back(Ref<RenderPass>::make(*pass));
+            for (int i = pass->steps.size() - 1; i >= 0; i--) {
+                stepCount++;
+                auto& step = pass->steps[i];
+                if (!step.fixed) {
+                    pass->steps.erase(pass->steps.begin() + i);
+                }
+            }
+        }
+
+        env->renderThread->unlock();
+    }
+
+    void RenderPipeline::execute() {
+        TRI_PROFILE("RenderPipeline");
+        TracyGpuZone("RenderPipeline");
+        for (auto& pass : currentRenderPasses) {
             if (pass && pass->active) {
-                TRI_PROFILE(pass->name);
+
+                TRI_PROFILE_NAME(pass->name.c_str(), pass->name.size());
 
                 for (auto& step : pass->steps) {
                     if (step.active && (step.fixed || step.newThisFrame)) {
+                        TRI_PROFILE_NAME(step.name.c_str(), step.name.size());
+
                         if (step.type == RenderPassStep::DRAW_CALL) {
+                            TracyGpuZone("DrawCall");
                             executeDrawCall(step);
                         }
                         else if (step.type == RenderPassStep::DRAW_COMMAND) {
+                            TracyGpuZone("RenderCommand");
                             executeRenderCommand(step);
                         }
                         else if (step.type == RenderPassStep::DRAW_CALLBACK) {
                             if (step.callback) {
+                                TracyGpuZone("Callback");
                                 step.callback();
                             }
                         }
@@ -210,20 +258,7 @@ namespace tri {
                 }
             }
         }
-
-        env->renderThread->lock();
-        for (auto& pass : passes) {
-            if (pass) {
-                Ref<RenderPass> p = getRenderPass(pass->name);
-                for (auto& step : pass->steps) {
-                    if (step.fixed || step.newThisFrame) {
-                        step.newThisFrame = false;
-                        p->steps.push_back(step);
-                    }
-                }
-            }
-        }
-        env->renderThread->unlock();
+        RenderContext::flush();
     }
 
     void RenderPipeline::executeDrawCall(RenderPassStep& call) {
@@ -263,6 +298,7 @@ namespace tri {
                 va = &quad->vertexArray;
             }
             if (va->getId() != 0) {
+                TracyGpuZone("Submit");
                 va->submit(-1, call.insatnceCount);
             }
 

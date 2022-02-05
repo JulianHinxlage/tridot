@@ -63,3 +63,4 @@ namespace tri {
 }
 
 extern TRI_API tri::Environment* env;
+extern TRI_API tri::Environment* environment;

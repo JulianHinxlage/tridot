@@ -54,7 +54,7 @@ int main(int argc, char* argv[]) {
 }
 
 #if TRI_WINDOWS
-INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR lpCmdLine, INT nCmdShow) {
+int __stdcall WinMain(void* hInstance, void *hPrevInstance, char *lpCmdLine, int nCmdShow) {
     return main(nCmdShow, (char**)lpCmdLine);
 }
 #endif

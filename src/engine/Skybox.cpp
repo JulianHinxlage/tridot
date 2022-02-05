@@ -29,6 +29,7 @@ namespace tri {
 
     void generateIrradianceMap(Skybox& skybox) {
         env->pipeline->getOrAddRenderPass("skybox")->addCallback([&]() {
+            TRI_PROFILE("Skybox generate irradiance map");
             Ref<Shader> shader = env->assets->get<Shader>("shaders/blur.glsl", true);
 
             Ref<FrameBuffer> frameBuffer1 = Ref<FrameBuffer>::make();
@@ -72,7 +73,6 @@ namespace tri {
     }
 
     TRI_UPDATE_CALLBACK("Skybox") {
-
         auto pass = env->pipeline->getOrAddRenderPass("skybox");
         pass->addCommand(CULL_OFF).name = "cull off";
         pass->addCommand(DEPTH_OFF).name = "depth off";

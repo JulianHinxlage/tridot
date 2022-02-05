@@ -13,6 +13,7 @@
 #include "ThreadPool.h"
 
 tri::Environment* env = tri::Environment::startup();
+tri::Environment* environment = tri::Environment::startup();
 
 namespace tri {
 

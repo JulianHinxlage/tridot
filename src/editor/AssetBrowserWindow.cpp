@@ -18,6 +18,7 @@ namespace tri {
         }
 
         void update() override {
+            TRI_PROFILE("Asset Browser");
             env->editor->gui.fileGui.browse([&](const std::string &file, int typeId){
                 if(typeId != -1) {
                     std::string path = env->assets->minimalFilePath(file);

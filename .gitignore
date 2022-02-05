@@ -1,7 +1,11 @@
+#build directories
 cmake-build-*/
-build/
-.idea/
-local/
-.vs/
 out*/
-install/
+build*/
+
+#IDE directories
+.idea/
+.vs/
+
+#local files
+local/

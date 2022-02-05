@@ -21,40 +21,64 @@ namespace tri {
         env->console->setVariable<int>("vsync", 1);
         env->console->setVariable<std::string>("log_file", "log.txt");
 
-        env->signals->preStartup.invoke();
-        for (auto& file : configFileList) {
-            if (!file.empty()) {
-                if (std::filesystem::exists(file)) {
-                    env->console->loadConfigFile(file);
-                    break;
+        {
+            TRI_PROFILE("preStartup");
+            env->signals->preStartup.invoke();
+        }
+        {
+            TRI_PROFILE("loadConfigFile")
+            for (auto& file : configFileList) {
+                if (!file.empty()) {
+                    if (std::filesystem::exists(file)) {
+                        env->console->loadConfigFile(file);
+                        break;
+                    }
                 }
             }
         }
 
         env->console->addLogFile(*env->console->getVariable<std::string>("log_file"), Console::Options(TRACE, true, true, false));
 
-        env->renderThread->launch([]() {
-            env->window->init(
-                    *env->console->getVariable<int>("resolution_x"),
-                    *env->console->getVariable<int>("resolution_y"),
-                    "Tridot Editor");
-            env->window->setBackgroundColor(Color(50, 50, 50));
+        {
+            TRI_PROFILE("launchRenderThread")
+            env->renderThread->useDedicatedThread = false;
+            env->renderThread->launch([]() {
+                env->window->init(
+                        *env->console->getVariable<int>("resolution_x"),
+                        *env->console->getVariable<int>("resolution_y"),
+                        "Tridot Editor");
+                env->window->setBackgroundColor(Color(50, 50, 50));
 
-            env->signals->startup.invokeProfile();
-        });
-        env->renderThread->synchronize();
+                {
+                    TRI_PROFILE("startup");
+                    env->signals->startup.invokeProfile();
+                }
+                {
+                    TRI_PROFILE("postStartup");
+                    env->signals->postStartup.invoke();
+                }
+            });
+        }
 
-        env->signals->postStartup.invoke();
     }
 
     void MainLoop::run() {
         while (env->window->isOpen()) {
             TRI_PROFILE_PHASE("update");
-            env->signals->preUpdate.invoke();
-            env->signals->update.invokeProfile();
-            env->signals->postUpdate.invoke();
+            {
+                TRI_PROFILE("preUpdate");
+                env->signals->preUpdate.invoke();
+            }
+            {
+                TRI_PROFILE("update");
+                env->signals->update.invokeProfile();
+            }
+            {
+                TRI_PROFILE("postUpdate");
+                env->signals->postUpdate.invoke();
+            }
             env->window->setVSync(*env->console->getVariable<int>("vsync"));
-            env->profiler->nextFrame();
+            TRI_PROFILE_FRAME;
         }
     }
 
@@ -62,9 +86,18 @@ namespace tri {
         {
             TRI_PROFILE_PHASE("shutdown");
             env->renderThread->addTask([]() {
-                env->signals->preShutdown.invoke();
-                env->signals->shutdown.invoke();
-                env->signals->postShutdown.invoke();
+                {
+                    TRI_PROFILE("preShutdown");
+                    env->signals->preShutdown.invoke();
+                }
+                {
+                    TRI_PROFILE("shutdown");
+                    env->signals->shutdown.invokeProfile();
+                }
+                {
+                    TRI_PROFILE("postShutdown");
+                    env->signals->postShutdown.invoke();
+                }
             });
             env->renderThread->synchronize();
             env->renderThread->terminate();

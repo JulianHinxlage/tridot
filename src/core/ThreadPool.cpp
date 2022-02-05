@@ -4,6 +4,7 @@
 
 #include "ThreadPool.h"
 #include "util/Clock.h"
+#include "core/Profiler.h"
 
 namespace tri {
 
@@ -168,6 +169,7 @@ namespace tri {
         running = true;
         taskId = -1;
         threadId = pool->addThread([this]() {
+            TRI_PROFILE_THREAD("Task Worker Thread");
             while (running) {
 
                 std::function<void()> function;

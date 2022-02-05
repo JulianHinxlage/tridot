@@ -12,6 +12,8 @@
 
 #if !TRI_WINDOWS
 #include <dlfcn.h>
+#else
+#include <windows.h>
 #endif
 
 namespace tri {

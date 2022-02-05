@@ -6,12 +6,13 @@
 
 #include "pch.h"
 #include "core/core.h"
+#include <barrier>
 
 namespace tri {
 
 	class RenderThread : public System {
 	public:
-		bool runOnMainThread;
+		bool useDedicatedThread;
 
 		RenderThread();
 		void update() override;
@@ -25,11 +26,11 @@ namespace tri {
 	private:
 		std::thread* thread;
 		std::mutex mutex;
-		std::mutex dataMutex;
-		std::condition_variable cv;
 		std::atomic_bool running;
+		std::barrier<> barrier;
 
 		std::vector<std::function<void()>> tasks;
+		std::vector<std::function<void()>> currentTasks;
 
 		void execute();
 	};

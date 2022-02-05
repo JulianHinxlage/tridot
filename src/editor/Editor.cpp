@@ -13,6 +13,7 @@
 #include "engine/AssetManager.h"
 #include "engine/EntityInfo.h"
 #include "engine/RuntimeMode.h"
+#include "render/RenderPipeline.h"
 #include <imgui/imgui.h>
 #include <imgui/imgui_internal.h>
 
@@ -104,8 +105,11 @@ namespace tri {
                     viewport.saveEditorCameraTransform();
                 }
                 env->signals->sceneEnd.invoke(env->scene);
-                env->scene->copy(*sceneBuffer);
-                sceneBuffer->clear();
+                {
+                    TRI_PROFILE("copyScene");
+                    env->scene->copy(*sceneBuffer);
+                    sceneBuffer->clear();
+                }
                 if (viewport.cameraMode == EDITOR_CAMERA) {
                     viewport.restoreEditorCameraTransform();
                 }
@@ -113,15 +117,21 @@ namespace tri {
             }
             else if (mode == RuntimeMode::RUNTIME) {
                 if (previous == RuntimeMode::EDIT) {
-                    sceneBuffer->clear();
-                    sceneBuffer->copy(*env->scene);
+                    {
+                        TRI_PROFILE("copyScene");
+                        sceneBuffer->clear();
+                        sceneBuffer->copy(*env->scene);
+                    }
                 }
                 env->signals->sceneBegin.invoke(env->scene);
             }
             else if (mode == RuntimeMode::PAUSE) {
                 if (previous == RuntimeMode::EDIT) {
-                    sceneBuffer->clear();
-                    sceneBuffer->copy(*env->scene);
+                    {
+                        TRI_PROFILE("copyScene");
+                        sceneBuffer->clear();
+                        sceneBuffer->copy(*env->scene);
+                    }
                 }
                 env->signals->sceneEnd.invoke(env->scene);
             }
@@ -138,7 +148,7 @@ namespace tri {
             for (auto &element : elements) {
                 if (element) {
                     if(element->isOpen || element->type == EditorElement::ALWAYS_OPEN){
-                        TRI_PROFILE(element->name.c_str());
+                        //TRI_PROFILE(element->name.c_str());
                         if (element->type == EditorElement::WINDOW || element->type == EditorElement::DEBUG_WINDOW) {
                             if (ImGui::Begin(element->name.c_str(), &element->isOpen)) {
                                 element->update();
@@ -157,8 +167,10 @@ namespace tri {
             if(control && env->input->pressed("Y")){
                 bool shift = env->input->down(Input::KEY_LEFT_SHIFT) || env->input->down(Input::KEY_RIGHT_SHIFT);
                 if(shift){
+                    TRI_PROFILE("redo");
                     undo.redo();
                 }else{
+                    TRI_PROFILE("undo");
                     undo.undo();
                 }
             }

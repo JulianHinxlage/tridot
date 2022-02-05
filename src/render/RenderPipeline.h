@@ -21,13 +21,14 @@ namespace tri {
         Ref<RenderPass> getOrAddRenderPass(const std::string &name);
         void removeRenderPass(const std::string& name);
         void activateRenderPass(const std::string& name, bool active = true);
-        const std::vector<Ref<RenderPass>>& getRenderPasses() { return renderPasses; }
+        const std::vector<Ref<RenderPass>>& getRenderPasses() { return currentRenderPasses; }
 
         void setInput(Ref<FrameBuffer> frameBuffer);
         void setOutput(Ref<FrameBuffer> frameBuffer);
         void setSize(uint32_t width, uint32_t height);
         Ref<Mesh> getQuad();
 
+        void submitRenderPasses();
         void execute();
 
     private:
@@ -37,6 +38,7 @@ namespace tri {
 
         Ref<Mesh> quad;
         std::vector<Ref<RenderPass>> renderPasses;
+        std::vector<Ref<RenderPass>> currentRenderPasses;
 
         uint32_t width;
         uint32_t height;

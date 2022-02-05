@@ -36,6 +36,7 @@ namespace tri {
         void setVSync(int value);
     private:
         int vsync;
+        int lastVsync = -1;
         Color backgroundColor;
         glm::vec2 size;
         glm::vec2 position;

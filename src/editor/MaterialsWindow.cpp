@@ -25,6 +25,7 @@ namespace tri {
         }
 
         void update() override{
+            TRI_PROFILE("Materials");
             int typeId = env->reflection->getTypeId<Material>();
             auto files = env->assets->getAssetList(typeId);
             bool hasFile = false;

@@ -167,6 +167,7 @@ namespace tri {
     }
 
     void Console::log(LogLevel level, const std::string &message) {
+        TRI_PROFILE("log");
         static std::mutex mutex;
         mutex.lock();
 
@@ -217,6 +218,7 @@ namespace tri {
 
 #if !TRI_DISTRIBUTION
         inputThreadId = env->threads->addThread([this]() {
+            TRI_PROFILE_THREAD("Console Input Thread");
             while (true) {
                 char c = getCharacter();
                 if (inputThreadId == -1) {

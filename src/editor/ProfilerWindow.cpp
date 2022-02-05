@@ -76,8 +76,11 @@ namespace tri {
         }
 
     };
+
+#if TRI_ENABLE_OWN_PROFILER
     TRI_STARTUP_CALLBACK("") {
         env->editor->addElement<ProfilerWindow>();
     }
+#endif
 
 }

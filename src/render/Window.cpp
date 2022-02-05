@@ -10,6 +10,7 @@
 #include "RenderPipeline.h"
 #include "GL/glew.h"
 #include "GLFW/glfw3.h"
+#include "tracy/TracyOpenGL.hpp"
 
 namespace tri {
 
@@ -91,18 +92,38 @@ namespace tri {
             if(context != nullptr) {
                 GLFWwindow *window = (GLFWwindow*)context;
                 bind();
-                glfwPollEvents();
+
+                {
+                    TRI_PROFILE("pollEvents");
+                    glfwPollEvents();
+                }
+
                 if (glfwWindowShouldClose(window)) {
                     clear();
                     return;
                 }
-                glfwSwapInterval(vsync);
+
+                if(vsync != lastVsync) {
+                    TRI_PROFILE("setSwapInterval");
+                    glfwSwapInterval(vsync);
+                    lastVsync = vsync;
+                }
+
                 {
-                    TRI_PROFILE("swap buffers");
+                    TRI_PROFILE("waitForGPU");
+                    TracyGpuZone("flush");
+                    RenderContext::flush(true);
+                }
+
+                {
+                    TRI_PROFILE("swapBuffers");
+                    TracyGpuZone("swapBuffers");
                     glfwSwapBuffers(window);
                 }
+                TracyGpuCollect;
                 {
                     TRI_PROFILE("clear");
+                    TracyGpuZone("clear");
                     glm::vec4 color = backgroundColor.vec();
                     glClearColor(color.r, color.g, color.b, color.a);
                     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

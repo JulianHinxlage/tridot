@@ -109,7 +109,7 @@ namespace tri {
                 auto& observer = observers[i];
                 if (observer.callback) {
                     if (observer.active) {
-                        TRI_PROFILE(observer.name.c_str());
+                        TRI_PROFILE_NAME(observer.name.c_str(), observer.name.size());
                         observer.callback(args...);
                     }
                 }

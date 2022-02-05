@@ -8,6 +8,7 @@
 #include "Window.h"
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
+#include "tracy/TracyOpenGL.hpp"
 
 namespace tri {
 
@@ -17,10 +18,10 @@ namespace tri {
 		env->signals->update.callbackOrder({ "Editor", "RenderThread" });
 	}
 
-	RenderThread::RenderThread() {
+	RenderThread::RenderThread() : barrier(2) {
 		thread = nullptr;
 		running = false;
-		runOnMainThread = false;
+		useDedicatedThread = true;
 	}
 
 	void RenderThread::update() {
@@ -30,7 +31,7 @@ namespace tri {
 	void RenderThread::terminate() {
 		running = false;
 		if (thread != nullptr) {
-			cv.notify_all();
+			barrier.arrive();
 			thread->join();
 			delete thread;
 		}
@@ -38,23 +39,27 @@ namespace tri {
 	}
 
 	void RenderThread::synchronize() {
-		if (!runOnMainThread) {
-			std::unique_lock<std::mutex> lock(mutex);
-			cv.notify_one();
-			cv.wait(lock);
-			cv.notify_one();
+		if (useDedicatedThread) {
+			TRI_PROFILE("waitForRenderThread");
+			barrier.arrive_and_wait();
+			currentTasks.swap(tasks);
+			tasks.clear();
+			barrier.arrive_and_wait();
 		}
 		else {
+			currentTasks.swap(tasks);
+			tasks.clear();
+			env->pipeline->submitRenderPasses();
 			execute();
 		}
 	}
 
 	void RenderThread::lock() {
-		dataMutex.lock();
+		mutex.lock();
 	}
 
 	void RenderThread::unlock() {
-		dataMutex.unlock();
+		mutex.unlock();
 	}
 
 	void RenderThread::addTask(const std::function<void()>& task) {
@@ -64,20 +69,23 @@ namespace tri {
 	void RenderThread::launch(const std::function<void()>& init) {
 		if (!running) {
 			running = true;
-			if (!runOnMainThread) {
+			if (useDedicatedThread) {
 				thread = new std::thread([&, init]() {
+					TRI_PROFILE_THREAD("Render Thread");
 					if (init) {
 						init();
 					}
+					barrier.arrive_and_wait();
 					while (running) {
-						std::unique_lock<std::mutex> lock(mutex);
-						cv.notify_one();
-						cv.wait(lock);
-						cv.notify_one();
+						barrier.arrive_and_wait();
+						env->pipeline->submitRenderPasses();
+						barrier.arrive_and_wait();
 
+						TRI_PROFILE("RenderThread");
 						execute();
 					}
 				});
+				barrier.arrive_and_wait();
 			}
 			else {
 				if (init) {
@@ -88,12 +96,13 @@ namespace tri {
 	}
 
 	void RenderThread::execute() {
-		for (auto& task : tasks) {
+		for (auto& task : currentTasks) {
 			if (task) {
-				task();
+				TRI_PROFILE("Task");
+				TracyGpuZone("Task");
+;				task();
 			}
 		}
-		tasks.clear();
 
 		env->pipeline->execute();
 	}

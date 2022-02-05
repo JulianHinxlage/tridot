@@ -64,7 +64,7 @@ namespace tri {
             }
 
             //frame buffer
-            if (camera.output) {
+            if (camera.active && camera.output) {
                 auto &step =env->pipeline->getOrAddRenderPass("clear")->addCommand(CLEAR);
                 step.frameBuffer = camera.output;
             }

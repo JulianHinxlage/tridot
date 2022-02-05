@@ -5,6 +5,7 @@
 #pragma once
 
 #include "System.h"
+#include "Profiler.h"
 
 namespace tri {
 
@@ -47,6 +48,7 @@ namespace tri {
 
         template<typename... T>
         void log(LogLevel level, const T ... t){
+            TRI_PROFILE("log");
             std::stringstream stream;
             ((stream << t), ...);
             log(level, stream.str());

@@ -17,6 +17,7 @@ namespace tri{
         }
 
         void update() override {
+            TRI_PROFILE("Statistics");
             ImGui::Text("%.2f fps", env->time->framesPerSecond);
             ImGui::Separator();
             

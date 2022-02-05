@@ -44,6 +44,7 @@ namespace tri {
         }
 
         void update() override {
+            TRI_PROFILE("Entities");
             control = env->input->down(Input::KEY_LEFT_CONTROL) || env->input->down(Input::KEY_RIGHT_CONTROL);
             shift = env->input->down(Input::KEY_LEFT_SHIFT) || env->input->down(Input::KEY_RIGHT_SHIFT);
 
