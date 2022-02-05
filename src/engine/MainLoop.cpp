@@ -95,6 +95,7 @@ namespace tri {
                 {
                     TRI_PROFILE("shutdown");
                     env->signals->shutdown.invokeProfile();
+                    env->profiler = nullptr;
                 }
                 {
                     TRI_PROFILE("postShutdown");
