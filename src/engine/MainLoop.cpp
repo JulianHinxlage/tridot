@@ -20,10 +20,11 @@ namespace tri {
         env->console->setVariable<int>("resolution_y", 1080);
         env->console->setVariable<int>("vsync", 1);
         env->console->setVariable<std::string>("log_file", "log.txt");
+        env->console->setVariable<bool>("use_render_thread", &env->renderThread->useDedicatedThread);
 
         {
             TRI_PROFILE("preStartup");
-            env->signals->preStartup.invoke();
+            env->signals->preStartup.invokeProfile();
         }
         {
             TRI_PROFILE("loadConfigFile")
@@ -40,8 +41,8 @@ namespace tri {
         env->console->addLogFile(*env->console->getVariable<std::string>("log_file"), Console::Options(TRACE, true, true, false));
 
         {
+            //performe startup on render thread due to render context issues
             TRI_PROFILE("launchRenderThread")
-            env->renderThread->useDedicatedThread = false;
             env->renderThread->launch([]() {
                 env->window->init(
                         *env->console->getVariable<int>("resolution_x"),
@@ -55,7 +56,7 @@ namespace tri {
                 }
                 {
                     TRI_PROFILE("postStartup");
-                    env->signals->postStartup.invoke();
+                    env->signals->postStartup.invokeProfile();
                 }
             });
         }
@@ -67,7 +68,7 @@ namespace tri {
             TRI_PROFILE_PHASE("update");
             {
                 TRI_PROFILE("preUpdate");
-                env->signals->preUpdate.invoke();
+                env->signals->preUpdate.invokeProfile();
             }
             {
                 TRI_PROFILE("update");
@@ -75,7 +76,7 @@ namespace tri {
             }
             {
                 TRI_PROFILE("postUpdate");
-                env->signals->postUpdate.invoke();
+                env->signals->postUpdate.invokeProfile();
             }
             env->window->setVSync(*env->console->getVariable<int>("vsync"));
             TRI_PROFILE_FRAME;
@@ -85,10 +86,11 @@ namespace tri {
     void MainLoop::shutdown() {
         {
             TRI_PROFILE_PHASE("shutdown");
+            //performe shutdown on render thread due to render context issues
             env->renderThread->addTask([]() {
                 {
                     TRI_PROFILE("preShutdown");
-                    env->signals->preShutdown.invoke();
+                    env->signals->preShutdown.invokeProfile();
                 }
                 {
                     TRI_PROFILE("shutdown");
@@ -96,11 +98,19 @@ namespace tri {
                 }
                 {
                     TRI_PROFILE("postShutdown");
-                    env->signals->postShutdown.invoke();
+                    env->signals->postShutdown.invokeProfile();
                 }
             });
             env->renderThread->synchronize();
             env->renderThread->terminate();
+
+#if TRACY_ENABLE
+            //close tracy connection
+            if (TracyIsConnected) {
+                tracy::GetProfiler().RequestShutdown();
+                while (!tracy::GetProfiler().HasShutdownFinished()) {}
+            }
+#endif
         }
         Environment::shutdown();
     }

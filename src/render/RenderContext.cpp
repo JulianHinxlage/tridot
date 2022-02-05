@@ -42,6 +42,7 @@ namespace tri {
         }
 
         TracyGpuContext(c);
+        TracyGpuContextName("GPU", 3);
 
         env->console->info("OpenGL version: ", glGetString(GL_VERSION));
         env->console->info("GLSL version: ", glGetString(GL_SHADING_LANGUAGE_VERSION));

@@ -45,7 +45,6 @@ namespace tri {
         void begin() {
             env->pipeline->getOrAddRenderPass("gui begin")->addCallback([&]() {
                 if (!inFrame && env->window->isOpen()) {
-                    //env->console->trace("gui begin");
                     ImGuiIO& io = ImGui::GetIO();
                     io.MouseWheel += (float)env->input->getMouseWheelDelta();
 
@@ -54,13 +53,12 @@ namespace tri {
                     ImGui::NewFrame();
                     inFrame = true;
                 }
-            });
+            }).name = "gui begin";
         }
 
         void end() {
             env->pipeline->getOrAddRenderPass("gui end")->addCallback([&]() {
                 if (inFrame && env->window->isOpen()) {
-                    //env->console->trace("gui end");
                     FrameBuffer::unbind();
                     ImGui::Render();
 
@@ -74,7 +72,7 @@ namespace tri {
                     }
                     inFrame = false;
                 }
-            });
+            }).name = "gui end";
         }
 
         void shutdown() override {

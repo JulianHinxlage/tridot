@@ -10,6 +10,10 @@ namespace tri {
         elementSize = 0;
         elementIndex = 0;
         updateIndex = 0;
+
+        backElementIndex = 0;
+        backUpdateIndex = 0;
+        useBackBuffer = false;
     }
 
     void BatchBuffer::init(uint32_t elementSize, BufferType type) {
@@ -29,16 +33,33 @@ namespace tri {
     }
 
     void BatchBuffer::update() {
-        if(elementIndex > updateIndex){
-            buffer->bind();
-            buffer->setData(data.data() + updateIndex * elementSize, (elementIndex - updateIndex) * elementSize, updateIndex * elementSize);
-            updateIndex = elementIndex;
+        if (useBackBuffer) {
+            if (backElementIndex > backUpdateIndex) {
+                buffer->bind();
+                buffer->setData(backData.data() + backUpdateIndex * elementSize, (backElementIndex - backUpdateIndex) * elementSize, backUpdateIndex * elementSize);
+                backUpdateIndex = backElementIndex;
+            }
+            useBackBuffer = false;
+        }
+        else {
+            if (elementIndex > updateIndex) {
+                buffer->bind();
+                buffer->setData(data.data() + updateIndex * elementSize, (elementIndex - updateIndex) * elementSize, updateIndex * elementSize);
+                updateIndex = elementIndex;
+            }
         }
     }
 
     void BatchBuffer::reset() {
         elementIndex = 0;
         updateIndex = 0;
+    }
+
+    void BatchBuffer::swapBuffers(){
+        data.swap(backData);
+        std::swap(elementIndex, backElementIndex);
+        std::swap(updateIndex, backUpdateIndex);
+        useBackBuffer = true;
     }
 
     void BatchBuffer::reserve(uint32_t elementCount) {

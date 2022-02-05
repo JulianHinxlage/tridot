@@ -18,11 +18,18 @@ namespace tri {
         uint32_t elementIndex;
         uint32_t updateIndex;
 
+        //swap back buffer
+        std::vector<uint8_t> backData;
+        uint32_t backElementIndex;
+        uint32_t backUpdateIndex;
+        bool useBackBuffer;
+
         BatchBuffer();
         void init(uint32_t elementSize, BufferType type = VERTEX_BUFFER);
         void *next();
         void update();
         void reset();
+        void swapBuffers();
         void reserve(uint32_t elementCount);
         uint32_t size();
     };

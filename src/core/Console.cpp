@@ -216,7 +216,7 @@ namespace tri {
             delayedCommands.clear();
         });
 
-#if !TRI_DISTRIBUTION
+#if !TRI_DISTRIBUTION && !TRI_WINDOWS
         inputThreadId = env->threads->addThread([this]() {
             TRI_PROFILE_THREAD("Console Input Thread");
             while (true) {

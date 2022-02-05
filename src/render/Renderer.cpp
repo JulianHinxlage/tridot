@@ -301,16 +301,24 @@ namespace tri {
 
         renderPass->addCallback([&]() {
             impl->lightBuffer->update();
-            impl->lightBuffer->reset();
             impl->environmentBuffer->update();
-            impl->environmentBuffer->reset();
         }).name = "environment";
+
+        impl->lightBuffer->swapBuffers();
+        impl->environmentBuffer->swapBuffers();
+        impl->lightBuffer->reset();
+        impl->environmentBuffer->reset();
 
         //instance shader
         for (auto& list : impl->batches) {
-            for (auto& batch : list) {
+            for (auto batch : list) {
                 if (batch && batch->instances) {
                     if (batch->instances->size() > 0) {
+
+                        TRI_PROFILE("submit");
+
+                        auto file = env->assets->getFile(batch->mesh);
+                        TRI_PROFILE_INFO(file.c_str(), file.size());
 
                         //set materials
                         for (auto& mat : batch->materials.assets) {
@@ -342,16 +350,19 @@ namespace tri {
                         }
                         batch->materials.reset();
 
-                        auto file = env->assets->getFile(batch->mesh);
 
                         //set instances
-                        renderPass->addCallback([&]() {
+                        renderPass->addCallback([batch]() {
                             batch->instances->update();
-                            batch->instances->reset();
-
                             batch->materialBuffer->update();
-                            batch->materialBuffer->reset();
                         }).name = "instances " + file;
+
+                        int instanceCount = batch->instances->size();
+                        batch->instances->swapBuffers();
+                        batch->materialBuffer->swapBuffers();
+                        batch->instances->reset();
+                        batch->materialBuffer->reset();
+
 
                         //set draw call
                         auto& step = renderPass->addDrawCall("mesh " + file);
@@ -359,7 +370,7 @@ namespace tri {
                         step.frameBuffer = frameBuffer;
                         step.mesh = batch->mesh;
                         step.vertexArray = batch->vertexArray.get();
-                        step.insatnceCount = batch->instances->size();
+                        step.insatnceCount = instanceCount;
 
 
                         //set textures

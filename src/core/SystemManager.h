@@ -90,6 +90,7 @@ namespace tri {
         void shutdown(){
             for (auto sys : systems) {
                 if (sys.second.system) {
+                    TRI_PROFILE_NAME(sys.second.name.c_str(), sys.second.name.size());
                     sys.second.system->shutdown();
                     env->signals->update.removeCallback(sys.second.updateCallbackId);
                     sys.second.system = nullptr;

@@ -211,7 +211,7 @@ namespace tri {
             }
         }
 
-        //copy render passes to current render passes and clear render passes
+        //copy passes to current passes and clear passes
         int stepCount = 0;
         currentRenderPasses.clear();
         for (auto& pass : renderPasses) {

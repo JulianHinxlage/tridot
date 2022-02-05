@@ -139,6 +139,7 @@ namespace tri {
     }
 
     void Editor::update() {
+        env->pipeline->getOrAddRenderPass("editor")->addCallback([&]() {
         if (!updated && ImGui::GetCurrentContext() && ImGui::GetCurrentContext()->WithinFrameScope) {
             updated = true;
             ImGui::DockSpaceOverViewport();
@@ -192,6 +193,7 @@ namespace tri {
                 }
             }
         }
+            });
     }
 
     void Editor::shutdown(){
