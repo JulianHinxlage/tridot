@@ -1,0 +1,6483 @@
+- id: 4
+  Camera:
+    forward: [-0.525221825, -0.534864426, -0.661862552]
+    up: [-0.332477063, 0.844937921, -0.418973684]
+    right: [0.783326864, 0, -0.621609986]
+    projection: ~
+    target: ~
+    output: ~
+    isPrimary: false
+    active: false
+    type: PERSPECTIVE
+    near: 0.00999999978
+    far: 1000
+    fieldOfView: 69.1159973
+    aspectRatio: 1.44313145
+  EntityInfo:
+    name: camera
+  Transform:
+    position: [4.79578114, 14.7721758, 6.32207155]
+    scale: [1, 1, 1]
+    rotation: [-0.564347267, -137.55928, 0]
+    parent: 4294967295
+  Light:
+    type: DIRECTIONAL_LIGHT
+    color: [255, 254, 254, 255]
+    intensity: 0.449999988
+    shadowMap: ~
+  EditorOnly: ~
+- id: 203
+  Camera:
+    forward: [-0.387687951, -0.707940698, -0.590357184]
+    up: [-0.388601929, 0.706273139, -0.591748893]
+    right: [0.835873067, 0, -0.548918426]
+    projection: ~
+    target: ~
+    output: ~
+    isPrimary: true
+    active: false
+    type: PERSPECTIVE
+    near: 0.00999999978
+    far: 1000
+    fieldOfView: 60
+    aspectRatio: 1.44313145
+  EntityInfo:
+    name: primary camera
+  Transform:
+    position: [5.49706316, 15.1747866, 7.2944417]
+    scale: [0.999997616, 1, 1.00000179]
+    rotation: [-0.78657639, 0.581071317, 0]
+    parent: 4294967295
+- id: 103
+  EntityInfo:
+    name: ambient light
+  Transform:
+    position: [0.193302348, 0.800970316, 1.34647191]
+    scale: [1, 1, 1]
+    rotation: [0, -0, 0]
+    parent: 4294967295
+  Light:
+    type: AMBIENT_LIGHT
+    color: [254, 255, 254, 255]
+    intensity: 0.310000002
+    shadowMap: ~
+- id: 20
+  EntityInfo:
+    name: directional light
+  Transform:
+    position: [-1.27199996, 0.405581743, 5.37699986]
+    scale: [0.999996483, 0.999998569, 0.999998093]
+    rotation: [-0.587146163, 0.73012358, 1.4914012]
+    parent: 4294967295
+  Light:
+    type: DIRECTIONAL_LIGHT
+    color: [255, 255, 255, 255]
+    intensity: 1.75999999
+    shadowMap: ~
+- id: 41
+  EntityInfo:
+    name: ground plane
+  MeshComponent:
+    mesh: models/cylinder.obj
+    material: materials/grass.mat
+    color: [255, 254, 254, 255]
+  RigidBody:
+    type: STATIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [0, -0.0500000007, 0]
+    scale: [300, 0.100000001, 300]
+    rotation: [0, -0, 0]
+    parent: 4294967295
+- id: 5
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-2.2888953e-05, 0.58742398, -1.15632492e-05]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 267
+  EntityInfo:
+    name: skybox
+  Skybox:
+    texture: textures/skybox/Night.png
+    useSky: true
+    useIBL: true
+    color: [254, 255, 254, 255]
+    intensity: 1
+  Transform:
+    position: [0, 0, 0]
+    scale: [1, 1, 1]
+    rotation: [0, 0, 0]
+    parent: 4294967295
+- id: 268
+  EntityInfo:
+    name: cubes
+- id: 70
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-2.2888953e-05, 0.58742398, 1.00998902]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 9
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-2.2888953e-05, 0.58742398, -1.01001215]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 71
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-2.2888953e-05, 0.58742398, -2.02001238]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 11
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-2.2888953e-05, 0.58742398, 2.01998925]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 72
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [1.00998068, 0.58742398, -1.15632492e-05]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 13
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [1.00998068, 0.58742398, -1.01001215]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 73
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [1.00998068, 0.58742398, 2.01998925]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 15
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [1.00998068, 0.58742398, 1.00998902]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 16
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [1.00998068, 0.58742398, -2.02001238]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 18
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [2.01998472, 0.58742398, -1.01001215]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 19
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [2.01998472, 0.58742398, 1.00998902]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 21
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [2.01998472, 0.58742398, -2.02001238]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 22
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [2.01998472, 0.58742398, -1.15632492e-05]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 23
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [2.01998472, 0.58742398, 2.01998925]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 24
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-1.01002347, 0.58742398, -1.01001215]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 25
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-1.01002347, 0.58742398, 1.00998902]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 26
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-1.01002347, 0.58742398, -2.02001238]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 27
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-1.01002347, 0.58742398, -1.15632492e-05]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 28
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-1.01002347, 0.58742398, 2.01998925]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 29
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-2.02002406, 0.58742398, -1.01001215]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 30
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-2.02002406, 0.58742398, 1.00998902]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 31
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-2.02002406, 0.58742398, -2.02001238]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 32
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-2.02002406, 0.58742398, -1.15632492e-05]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 33
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-2.02002406, 0.58742398, 2.01998925]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 34
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-2.28889348e-05, 1.59742403, -1.15632311e-05]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 35
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-2.28889348e-05, 1.59742403, -1.01001215]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 36
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-2.28889348e-05, 1.59742403, 2.01998925]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 37
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [1.00998068, 1.59742403, -1.01001215]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 38
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [1.00998068, 1.59742403, 1.00998902]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 39
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [1.00998068, 1.59742403, -2.02001238]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 40
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [2.01998472, 1.59742403, -1.01001215]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 42
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [2.01998472, 1.59742403, 1.00998902]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 43
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [2.01998472, 1.59742403, -2.02001238]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 44
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [2.01998472, 1.59742403, -1.15632311e-05]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 45
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [2.01998472, 1.59742403, 2.01998925]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 46
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-1.01002347, 1.59742403, -1.01001215]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 47
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-1.01002347, 1.59742403, 1.00998902]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 48
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-1.01002347, 1.59742403, -2.02001238]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 49
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-1.01002347, 1.59742403, -1.15632311e-05]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 50
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-1.01002347, 1.59742403, 2.01998925]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 51
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-2.02002406, 1.59742403, -1.01001215]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 52
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-2.02002406, 1.59742403, 1.00998902]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 53
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-2.02002406, 1.59742403, -2.02001238]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 54
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-2.02002406, 1.59742403, -1.15632311e-05]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 55
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-2.02002406, 1.59742403, 2.01998925]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 56
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-2.28889348e-05, 1.59742403, 1.00998902]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 57
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-2.28889348e-05, 1.59742403, -2.02001238]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 58
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [1.00998068, 1.59742403, -1.15632311e-05]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 59
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [1.00998068, 1.59742403, 2.01998925]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 60
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-2.28889112e-05, 2.60743165, -1.15632311e-05]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 61
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-2.28889112e-05, 2.60743165, -1.01001215]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 62
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-2.28889112e-05, 2.60743165, 2.01998925]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 63
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [1.00998068, 2.60743165, -1.01001215]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 64
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [1.00998068, 2.60743165, 1.00998902]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 65
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [1.00998068, 2.60743165, -2.02001238]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 66
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [2.01998472, 2.60743165, -1.01001215]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 67
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [2.01998472, 2.60743165, 1.00998902]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 68
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [2.01998472, 2.60743165, -2.02001238]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 69
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [2.01998472, 2.60743165, -1.15632311e-05]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 74
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [2.01998472, 2.60743165, 2.01998925]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 75
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-1.01002347, 2.60743165, -1.01001215]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 76
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-1.01002347, 2.60743165, 1.00998902]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 77
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-1.01002347, 2.60743165, -2.02001238]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 78
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-1.01002347, 2.60743165, -1.15632311e-05]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 79
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-1.01002347, 2.60743165, 2.01998925]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 80
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-2.02002406, 2.60743165, -1.01001215]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 81
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-2.02002406, 2.60743165, 1.00998902]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 82
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-2.02002406, 2.60743165, -2.02001238]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 83
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-2.02002406, 2.60743165, -1.15632311e-05]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 84
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-2.02002406, 2.60743165, 2.01998925]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 85
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-2.28889112e-05, 2.60743165, 1.00998902]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 86
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-2.28889112e-05, 2.60743165, -2.02001238]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 87
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [1.00998068, 2.60743165, -1.15632311e-05]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 88
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [1.00998068, 2.60743165, 2.01998925]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 89
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-2.28888657e-05, 3.61742878, -1.15632311e-05]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 90
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-2.28888657e-05, 3.61742878, -1.01001215]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 91
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-2.28888657e-05, 3.61742878, 2.01998925]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 92
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [1.00998068, 3.61742878, -1.01001215]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 93
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [1.00998068, 3.61742878, 1.00998902]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 94
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [1.00998068, 3.61742878, -2.02001238]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 95
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [2.01998472, 3.61742878, -1.01001215]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 96
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [2.01998472, 3.61742878, 1.00998902]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 97
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [2.01998472, 3.61742878, -2.02001238]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 98
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [2.01998472, 3.61742878, -1.15632311e-05]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 99
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [2.01998472, 3.61742878, 2.01998925]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 100
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-1.01002347, 3.61742878, -1.01001215]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 101
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-1.01002347, 3.61742878, 1.00998902]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 102
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-1.01002347, 3.61742878, -2.02001238]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 104
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-1.01002347, 3.61742878, -1.15632311e-05]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 105
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-1.01002347, 3.61742878, 2.01998925]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 106
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-2.02002406, 3.61742878, -1.01001215]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 107
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-2.02002406, 3.61742878, 1.00998902]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 108
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-2.02002406, 3.61742878, -2.02001238]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 109
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-2.02002406, 3.61742878, -1.15632311e-05]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 110
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-2.02002406, 3.61742878, 2.01998925]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 111
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-2.28888657e-05, 3.61742878, 1.00998902]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 112
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-2.28888657e-05, 3.61742878, -2.02001238]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 113
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [1.00998068, 3.61742878, -1.15632311e-05]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 114
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [1.00998068, 3.61742878, 2.01998925]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 115
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-2.2888853e-05, 4.62743664, -1.1563171e-05]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 116
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-2.2888853e-05, 4.62743664, -1.01001215]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 117
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-2.2888853e-05, 4.62743664, 2.01998925]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 118
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [1.00998068, 4.62743664, -1.01001215]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 119
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [1.00998068, 4.62743664, 1.00998902]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 120
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [1.00998068, 4.62743664, -2.02001238]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 121
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [2.01998472, 4.62743664, -1.01001215]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 122
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [2.01998472, 4.62743664, 1.00998902]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 123
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [2.01998472, 4.62743664, -2.02001238]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 124
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [2.01998472, 4.62743664, -1.1563171e-05]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 125
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [2.01998472, 4.62743664, 2.01998925]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 126
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-1.01002347, 4.62743664, -1.01001215]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 127
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-1.01002347, 4.62743664, 1.00998902]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 128
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-1.01002347, 4.62743664, -2.02001238]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 129
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-1.01002347, 4.62743664, -1.1563171e-05]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 130
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-1.01002347, 4.62743664, 2.01998925]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 131
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-2.02002406, 4.62743664, -1.01001215]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 132
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-2.02002406, 4.62743664, 1.00998902]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 133
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-2.02002406, 4.62743664, -2.02001238]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 134
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-2.02002406, 4.62743664, -1.1563171e-05]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 135
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-2.02002406, 4.62743664, 2.01998925]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 136
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-2.2888853e-05, 4.62743664, 1.00998902]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 137
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-2.2888853e-05, 4.62743664, -2.02001238]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 138
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [1.00998068, 4.62743664, -1.1563171e-05]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 139
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [1.00998068, 4.62743664, 2.01998925]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 140
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-2.28887948e-05, 5.63744116, -1.15631701e-05]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 141
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-2.28887948e-05, 5.63744116, -1.01001215]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 142
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-2.28887948e-05, 5.63744116, 2.01998925]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 143
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [1.00998068, 5.63744116, -1.01001215]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 144
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [1.00998068, 5.63744116, 1.00998902]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 145
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [1.00998068, 5.63744116, -2.02001238]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 146
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [2.01998472, 5.63744116, -1.01001215]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 147
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [2.01998472, 5.63744116, 1.00998902]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 148
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [2.01998472, 5.63744116, -2.02001238]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 149
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [2.01998472, 5.63744116, -1.15631701e-05]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 150
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [2.01998472, 5.63744116, 2.01998925]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 151
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-1.01002347, 5.63744116, -1.01001215]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 152
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-1.01002347, 5.63744116, 1.00998902]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 153
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-1.01002347, 5.63744116, -2.02001238]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 154
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-1.01002347, 5.63744116, -1.15631701e-05]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 155
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-1.01002347, 5.63744116, 2.01998925]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 156
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-2.02002406, 5.63744116, -1.01001215]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 157
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-2.02002406, 5.63744116, 1.00998902]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 158
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-2.02002406, 5.63744116, -2.02001238]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 159
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-2.02002406, 5.63744116, -1.15631701e-05]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 160
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-2.02002406, 5.63744116, 2.01998925]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 161
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-2.28887948e-05, 5.63744116, 1.00998902]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 162
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-2.28887948e-05, 5.63744116, -2.02001238]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 163
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [1.00998068, 5.63744116, -1.15631701e-05]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 164
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [1.00998068, 5.63744116, 2.01998925]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 165
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-2.28887584e-05, 6.64742994, -1.15631528e-05]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 166
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-2.28887584e-05, 6.64742994, -1.01001215]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 167
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-2.28887584e-05, 6.64742994, 2.01998925]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 168
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [1.00998068, 6.64742994, -1.01001215]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 169
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [1.00998068, 6.64742994, 1.00998902]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 170
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [1.00998068, 6.64742994, -2.02001238]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 171
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [2.01998472, 6.64742994, -1.01001215]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 172
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [2.01998472, 6.64742994, 1.00998902]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 173
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [2.01998472, 6.64742994, -2.02001238]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 174
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [2.01998472, 6.64742994, -1.15631528e-05]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 175
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [2.01998472, 6.64742994, 2.01998925]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 176
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-1.01002347, 6.64742994, -1.01001215]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 177
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-1.01002347, 6.64742994, 1.00998902]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 178
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-1.01002347, 6.64742994, -2.02001238]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 179
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-1.01002347, 6.64742994, -1.15631528e-05]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 180
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-1.01002347, 6.64742994, 2.01998925]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 181
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-2.02002406, 6.64742994, -1.01001215]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 182
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-2.02002406, 6.64742994, 1.00998902]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 183
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-2.02002406, 6.64742994, -2.02001238]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 184
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-2.02002406, 6.64742994, -1.15631528e-05]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 185
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-2.02002406, 6.64742994, 2.01998925]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 186
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-2.28887584e-05, 6.64742994, 1.00998902]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 187
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-2.28887584e-05, 6.64742994, -2.02001238]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 188
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [1.00998068, 6.64742994, -1.15631528e-05]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 189
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [1.00998068, 6.64742994, 2.01998925]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 190
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-2.28887548e-05, 7.65743971, -1.15631474e-05]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 191
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-2.28887548e-05, 7.65743971, -1.01001215]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 192
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-2.28887548e-05, 7.65743971, 2.01998925]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 193
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [1.00998068, 7.65743971, -1.01001215]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 194
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [1.00998068, 7.65743971, 1.00998902]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 195
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [1.00998068, 7.65743971, -2.02001238]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 196
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [2.01998472, 7.65743971, -1.01001215]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 197
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [2.01998472, 7.65743971, 1.00998902]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 198
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [2.01998472, 7.65743971, -2.02001238]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 199
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [2.01998472, 7.65743971, -1.15631474e-05]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 200
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [2.01998472, 7.65743971, 2.01998925]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 201
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-1.01002347, 7.65743971, -1.01001215]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 204
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-1.01002347, 7.65743971, 1.00998902]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 205
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-1.01002347, 7.65743971, -2.02001238]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 206
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-1.01002347, 7.65743971, -1.15631474e-05]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 207
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-1.01002347, 7.65743971, 2.01998925]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 208
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-2.02002406, 7.65743971, -1.01001215]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 209
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-2.02002406, 7.65743971, 1.00998902]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 210
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-2.02002406, 7.65743971, -2.02001238]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 211
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-2.02002406, 7.65743971, -1.15631474e-05]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 212
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-2.02002406, 7.65743971, 2.01998925]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 213
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-2.28887548e-05, 7.65743971, 1.00998902]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 214
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-2.28887548e-05, 7.65743971, -2.02001238]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 215
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [1.00998068, 7.65743971, -1.15631474e-05]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 216
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [1.00998068, 7.65743971, 2.01998925]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 217
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-2.28887111e-05, 8.66745186, -1.15631383e-05]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 218
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-2.28887111e-05, 8.66745186, -1.01001215]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 219
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-2.28887111e-05, 8.66745186, 2.01998925]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 220
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [1.00998068, 8.66745186, -1.01001215]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 221
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [1.00998068, 8.66745186, 1.00998902]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 222
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [1.00998068, 8.66745186, -2.02001238]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 223
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [2.01998472, 8.66745186, -1.01001215]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 224
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [2.01998472, 8.66745186, 1.00998902]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 225
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [2.01998472, 8.66745186, -2.02001238]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 226
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [2.01998472, 8.66745186, -1.15631383e-05]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 227
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [2.01998472, 8.66745186, 2.01998925]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 228
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-1.01002347, 8.66745186, -1.01001215]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 229
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-1.01002347, 8.66745186, 1.00998902]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 230
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-1.01002347, 8.66745186, -2.02001238]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 231
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-1.01002347, 8.66745186, -1.15631383e-05]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 232
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-1.01002347, 8.66745186, 2.01998925]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 233
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-2.02002406, 8.66745186, -1.01001215]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 234
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-2.02002406, 8.66745186, 1.00998902]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 235
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-2.02002406, 8.66745186, -2.02001238]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 236
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-2.02002406, 8.66745186, -1.15631383e-05]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 237
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-2.02002406, 8.66745186, 2.01998925]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 238
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-2.28887111e-05, 8.66745186, 1.00998902]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 239
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-2.28887111e-05, 8.66745186, -2.02001238]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 240
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [1.00998068, 8.66745186, -1.15631383e-05]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 241
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [1.00998068, 8.66745186, 2.01998925]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 242
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-2.28887056e-05, 9.67743301, -1.15631383e-05]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 243
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-2.28887056e-05, 9.67743301, -1.01001215]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 244
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-2.28887056e-05, 9.67743301, 2.01998925]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 245
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [1.00998068, 9.67743301, -1.01001215]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 246
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [1.00998068, 9.67743301, 1.00998902]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 247
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [1.00998068, 9.67743301, -2.02001238]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 248
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [2.01998472, 9.67743301, -1.01001215]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 249
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [2.01998472, 9.67743301, 1.00998902]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 250
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [2.01998472, 9.67743301, -2.02001238]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 251
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [2.01998472, 9.67743301, -1.15631383e-05]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 252
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [2.01998472, 9.67743301, 2.01998925]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 253
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-1.01002347, 9.67743301, -1.01001215]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 254
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-1.01002347, 9.67743301, 1.00998902]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 255
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-1.01002347, 9.67743301, -2.02001238]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 256
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-1.01002347, 9.67743301, -1.15631383e-05]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 257
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-1.01002347, 9.67743301, 2.01998925]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 258
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-2.02002406, 9.67743301, -1.01001215]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 259
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-2.02002406, 9.67743301, 1.00998902]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 260
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-2.02002406, 9.67743301, -2.02001238]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 261
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-2.02002406, 9.67743301, -1.15631383e-05]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 262
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-2.02002406, 9.67743301, 2.01998925]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 263
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-2.28887056e-05, 9.67743301, 1.00998902]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 264
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [-2.28887056e-05, 9.67743301, -2.02001238]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 265
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [1.00998068, 9.67743301, -1.15631383e-05]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 266
+  EntityInfo:
+    name: cube
+  MeshComponent:
+    mesh: models/cube.obj
+    material: materials/wood.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: BOX
+    size: [1, 1, 1]
+  Transform:
+    position: [1.00998068, 9.67743301, 2.01998925]
+    scale: [0.989802778, 0.989802778, 0.989802778]
+    rotation: [0, -0, 0]
+    parent: 268
+- id: 269
+  EntityInfo:
+    name: ball
+  MeshComponent:
+    mesh: models/sphere.obj
+    material: materials/brick.mat
+    color: [255, 255, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 75
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: SPHERE
+    size: [1, 1, 1]
+  Transform:
+    position: [0, 20, 0]
+    scale: [2.5, 2.5, 2.5]
+    rotation: [0, -0, 0]
+    parent: 4294967295
+- id: 270
+  EntityInfo:
+    name: point light
+  MeshComponent:
+    mesh: models/sphere.obj
+    material: ~
+    color: [74, 75, 255, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: SPHERE
+    size: [1, 1, 1]
+  Transform:
+    position: [-1.50036097, 10.3853769, 1.45960438]
+    scale: [0.439999998, 0.439999998, 0.439999998]
+    rotation: [0, -0, 0]
+    parent: 4294967295
+  Light:
+    type: POINT_LIGHT
+    color: [28, 0, 255, 255]
+    intensity: 8.78999996
+    shadowMap: ~
+- id: 271
+  EntityInfo:
+    name: point light
+  MeshComponent:
+    mesh: models/sphere.obj
+    material: ~
+    color: [255, 73, 73, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: SPHERE
+    size: [1, 1, 1]
+  Transform:
+    position: [-0.00988426805, 10.385438, -1.48978627]
+    scale: [0.439999998, 0.439999998, 0.439999998]
+    rotation: [0, -0, 0]
+    parent: 4294967295
+  Light:
+    type: POINT_LIGHT
+    color: [255, 0, 0, 255]
+    intensity: 5
+    shadowMap: ~
+- id: 272
+  EntityInfo:
+    name: point light
+  MeshComponent:
+    mesh: models/sphere.obj
+    material: ~
+    color: [83, 255, 73, 255]
+  RigidBody:
+    type: DYNAMIC
+    velocity: [0, 0, 0]
+    angular: [0, 0, 0]
+    mass: 1
+    friction: 1
+    restitution: 0
+    linearDamping: 0
+    angularDamping: 0
+    enablePhysics: true
+  Collider:
+    type: SPHERE
+    size: [1, 1, 1]
+  Transform:
+    position: [1.47622252, 10.385438, 1.4873476]
+    scale: [0.439999998, 0.439999998, 0.439999998]
+    rotation: [0, -0, 0]
+    parent: 4294967295
+  Light:
+    type: POINT_LIGHT
+    color: [7, 255, 0, 255]
+    intensity: 8.78999996
+    shadowMap: ~

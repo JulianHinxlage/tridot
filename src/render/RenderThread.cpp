@@ -77,7 +77,10 @@ namespace tri {
 					}
 					barrier.arrive_and_wait();
 					while (running) {
-						barrier.arrive_and_wait();
+						{
+							TRI_PROFILE("waitForMainThread");
+							barrier.arrive_and_wait();
+						}
 						env->pipeline->submitRenderPasses();
 						barrier.arrive_and_wait();
 

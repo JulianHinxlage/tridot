@@ -1,0 +1,26 @@
+color: [255, 254, 254, 255]
+mapping: SCALE_TRI_PLANAR
+roughness: 1
+metallic: 0
+normalMapFactor: 1
+texture: textures/Wood049_1K_Color.jpg
+normalMap: textures/Wood049_1K_Normal.jpg
+roughnessMap: textures/Wood049_1K_Roughness.jpg
+metallicMap: ~
+ambientOcclusionMap: ~
+displacementMap: ~
+shader: ~
+offset: [0, 0]
+scale: [1, 1]
+textureOffset: [0, 0]
+textureScale: [0.5, 0.5]
+normalMapOffset: [0, 0]
+normalMapScale: [0.5, 0.5]
+roughnessMapOffset: [0, 0]
+roughnessMapScale: [0.5, 0.5]
+metallicMapOffset: [0, 0]
+metallicMapScale: [1, 1]
+ambientOcclusionMapOffset: [0, 0]
+ambientOcclusionMapScale: [1, 1]
+displacementMapOffset: [0, 0]
+displacementMapScale: [1, 1]
