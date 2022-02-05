@@ -1,6 +1,6 @@
 vsync 1
 shadows 0
-use_render_thread 0
+use_render_thread 1
 asset_directory ../res/
 asset_directory ./
 asset_directory ../local/data/

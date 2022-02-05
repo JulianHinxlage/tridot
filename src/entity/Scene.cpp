@@ -5,6 +5,7 @@
 #include "Scene.h"
 #include "engine/Serializer.h"
 #include "engine/AssetManager.h"
+#include "engine/RuntimeMode.h"
 
 namespace tri {
 
@@ -242,6 +243,12 @@ namespace tri {
     void Scene::loadMainScene(const std::string &file) {
         env->assets->unload(file);
         env->assets->get<Scene>(file, false, nullptr, [](Ref<Asset> asset){
+            if (env->editor) {
+                if (env->runtime->getMode() == RuntimeMode::RUNTIME
+                    || env->runtime->getMode() == RuntimeMode::PAUSE) {
+                    env->runtime->setMode(RuntimeMode::EDIT);
+                }
+            }
             env->scene->swap(*(Scene*)asset.get());
             env->signals->sceneLoad.invoke(env->scene);
             //env->assets->unload(env->scene->file);
