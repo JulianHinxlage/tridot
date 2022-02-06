@@ -29,6 +29,7 @@ namespace tri {
         getOrAddRenderPass("clear");
 
         getOrAddRenderPass("skybox");
+        getOrAddRenderPass("shadow");
         getOrAddRenderPass("geometry");
         getOrAddRenderPass("viewport");
         auto postProcess = getOrAddRenderPass("post process");

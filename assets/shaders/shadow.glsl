@@ -10,25 +10,10 @@ layout (location=7) in vec4 iColor;
 layout (location=8) in float iTextureIndex;
 layout (location=9) in vec4 iId;
 
-out vec3 fPosition;
-out vec3 fNormal;
-out vec4 fColor;
-out vec2 fTexCoords;
-out vec4 fId;
-flat out float fTextureIndex;
-
-layout(std140) uniform uEnvironment {
-    mat4 projection;
-    vec3 cameraPosition;
-    int align1;
-    int lightCount;
-    float environmentMapIntensity;
-    int environmentMapIndex;
-    int irradianceMapIndex;
-};
+uniform mat4 uProjection;
 
 void main(){
-    gl_Position = projection * iTransform * vec4(vPosition, 1.0);
+    gl_Position = uProjection * iTransform * vec4(vPosition, 1.0);
 }
 
 #type fragment

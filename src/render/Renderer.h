@@ -40,7 +40,8 @@ namespace tri {
         void resetScene();
 
     private:
-        Ref<RenderPass> renderPass;
+        Ref<RenderPass> geometryPass;
+        Ref<RenderPass> shadowPass;
         Ref<Mesh> defaultMesh;
         Ref<Texture> defaultTexture;
         Ref<Shader> defaultShader;
@@ -49,6 +50,8 @@ namespace tri {
 
         class Impl;
         Ref<Impl> impl;
+
+        void updateShadowMaps();
     };
 
 }

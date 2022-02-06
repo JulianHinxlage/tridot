@@ -9,6 +9,8 @@
 #include "ShaderState.h"
 #include "engine/AssetManager.h"
 #include "RenderThread.h"
+#include <glm/ext/matrix_transform.hpp>
+#include <glm/ext/matrix_clip_space.hpp>
 
 namespace tri {
 
@@ -125,14 +127,18 @@ namespace tri {
             AssetList<Texture> textures;
             AssetList<Material> materials;
             Ref<BatchBuffer> materialBuffer;
+            int instanceCount = 0;
         };
 
         std::vector<std::vector<Ref<Batch>>> batches;
         Ref<BatchBuffer> lightBuffer;
+        std::vector<Light> lights;
+        std::vector<glm::mat4> lightProjections;
         Ref<BatchBuffer> environmentBuffer;
         EnvironmentData environment;
         Ref<Texture> radianceMap;
         Ref<Texture> irradianceMap;
+        bool shadowsEnabled = true;
 
         void startup() {
             lightBuffer = Ref<BatchBuffer>::make();
@@ -140,6 +146,8 @@ namespace tri {
 
             environmentBuffer = Ref<BatchBuffer>::make();
             environmentBuffer->init(sizeof(EnvironmentData), UNIFORM_BUFFER);
+
+            env->console->setVariable("shadows", &shadowsEnabled);
         }
 
         Batch *getBatch(Mesh* mesh, Shader* shader) {
@@ -186,7 +194,8 @@ namespace tri {
     };
 
     void Renderer::startup() {
-        renderPass = env->pipeline->getOrAddRenderPass("geometry");
+        geometryPass = env->pipeline->getOrAddRenderPass("geometry");
+        shadowPass = env->pipeline->getOrAddRenderPass("shadow");
         
         Image image;
         image.init(1, 1, 4, 8);
@@ -222,13 +231,51 @@ namespace tri {
 
     void Renderer::submit(const glm::vec3& position, const glm::vec3 direction, Light& light) {
         LightData* l = (LightData*)impl->lightBuffer->next();
-        l->color = light.color.vec();
-        l->direction = direction;
-        l->position = position;
-        l->intensity = light.intensity;
-        l->projection = glm::mat4(1);
-        l->shadowMapIndex = -1;
         l->type = (int)light.type;
+        l->position = position;
+        l->direction = direction;
+        l->intensity = light.intensity;
+        l->color = light.color.vec();
+        l->shadowMapIndex = -1;
+
+        if (impl->shadowsEnabled) {
+            if (light.shadowMap.get() == nullptr && light.type == DIRECTIONAL_LIGHT) {
+                light.shadowMap = Ref<FrameBuffer>::make();
+                env->renderThread->addTask([shadowMap = light.shadowMap]() {
+                    Ref<Texture> depth = Ref<Texture>::make();
+                    depth->create(2048, 2048, DEPTH32, false);
+                    depth->setMagMin(false, false);
+                    depth->setWrap(false, false);
+                    depth->setBorderColor(Color::white);
+                    shadowMap->setAttachment({ DEPTH, Color(0) }, depth);
+                    shadowMap->resize(2048, 2048);
+                });
+            }
+
+            if (light.type == DIRECTIONAL_LIGHT) {
+                float near = 1.0f;
+                float far = 100.0f;
+                float size = 20.0f;
+                glm::mat4 projection = glm::ortho(-size, size, -size, size, near, far);
+                glm::mat4 view = glm::lookAt(position - direction, position, { 0, 1, 0 });
+                l->projection = projection * view;
+            }
+            else {
+                l->projection = glm::mat4(1);
+            }
+
+            if (light.type == DIRECTIONAL_LIGHT) {
+                if (light.shadowMap) {
+                    l->shadowMapIndex = 30 - impl->lights.size();
+                    shadowPass->addCallback([shadowMap = light.shadowMap, index = l->shadowMapIndex]() {
+                        shadowMap->getAttachment(DEPTH)->bind(index);
+                    }).name = "bind shadow map";
+                }
+            }
+        }
+
+        impl->lights.push_back(light);
+        impl->lightProjections.push_back(l->projection);
     }
     
     void Renderer::setEnvironMap(Ref<Texture> radianceMap, Ref<Texture> irradianceMap, float intensity) {
@@ -267,7 +314,7 @@ namespace tri {
     }
 
     void Renderer::update() {
-        renderPass->addCommand(DEPTH_ON).name = "depth on";
+        geometryPass->addCommand(DEPTH_ON).name = "depth on";
 
         //set environment
         EnvironmentData* e = (EnvironmentData*)impl->environmentBuffer->next();
@@ -276,7 +323,7 @@ namespace tri {
 
         if (impl->radianceMap) {
             e->radianceMapIndex = 0;
-            renderPass->addCallback([radianceMap = impl->radianceMap]() {
+            geometryPass->addCallback([radianceMap = impl->radianceMap]() {
                 radianceMap->bind(30);
             }).name = "bind radiance map";
         }
@@ -285,7 +332,7 @@ namespace tri {
         }
         if (impl->irradianceMap) {
             e->irradianceMapIndex = 1;
-            renderPass->addCallback([irradianceMap = impl->irradianceMap]() {
+            geometryPass->addCallback([irradianceMap = impl->irradianceMap]() {
                 irradianceMap->bind(31);
             }).name = "bind irradiance map";
         }
@@ -299,7 +346,8 @@ namespace tri {
         impl->radianceMap = nullptr;
         impl->irradianceMap = nullptr;
 
-        renderPass->addCallback([&]() {
+
+        geometryPass->addCallback([&]() {
             impl->lightBuffer->update();
             impl->environmentBuffer->update();
         }).name = "environment";
@@ -309,13 +357,17 @@ namespace tri {
         impl->lightBuffer->reset();
         impl->environmentBuffer->reset();
 
+        if (impl->shadowsEnabled) {
+            updateShadowMaps();
+        }
+
+        TRI_PROFILE("geometry");
+
         //instance shader
         for (auto& list : impl->batches) {
             for (auto batch : list) {
                 if (batch && batch->instances) {
                     if (batch->instances->size() > 0) {
-
-                        TRI_PROFILE("submit");
 
                         auto file = env->assets->getFile(batch->mesh);
                         TRI_PROFILE_INFO(file.c_str(), file.size());
@@ -352,12 +404,12 @@ namespace tri {
 
 
                         //set instances
-                        renderPass->addCallback([batch]() {
+                        geometryPass->addCallback([batch]() {
                             batch->instances->update();
                             batch->materialBuffer->update();
                         }).name = "instances " + file;
 
-                        int instanceCount = batch->instances->size();
+                        batch->instanceCount = batch->instances->size();
                         batch->instances->swapBuffers();
                         batch->materialBuffer->swapBuffers();
                         batch->instances->reset();
@@ -365,12 +417,12 @@ namespace tri {
 
 
                         //set draw call
-                        auto& step = renderPass->addDrawCall("mesh " + file);
+                        auto& step = geometryPass->addDrawCall("mesh " + file);
                         step.shader = batch->shader;
                         step.frameBuffer = frameBuffer;
                         step.mesh = batch->mesh;
                         step.vertexArray = batch->vertexArray.get();
-                        step.insatnceCount = instanceCount;
+                        step.insatnceCount = batch->instanceCount;
 
 
                         //set textures
@@ -400,6 +452,48 @@ namespace tri {
 
     void Renderer::shutdown() {
 
+    }
+
+    void Renderer::updateShadowMaps() {
+        TRI_PROFILE("shadowMaps");
+
+        Ref<Shader> shader = env->assets->get<Shader>("shaders/shadow.glsl");
+        if (shader->getId() == 0) {
+            return;
+        }
+        for (int i = 0; i < impl->lights.size(); i++) {
+            auto& light = impl->lights[i];
+            if (light.type != DIRECTIONAL_LIGHT) {
+                continue;
+            }
+
+            auto &command = shadowPass->addCommand(CLEAR);
+            command.name = "clear shadow map";
+            command.frameBuffer = light.shadowMap;
+
+            for (auto& list : impl->batches) {
+                for (auto& batch : list) {
+                    if (batch) {
+                        
+                        auto file = env->assets->getFile(batch->mesh);
+                        TRI_PROFILE_INFO(file.c_str(), file.size());
+
+                        auto& call = shadowPass->addDrawCall("shadow map " + file);
+                        call.shader = shader;
+                        call.frameBuffer = light.shadowMap;
+                        call.shaderState = Ref<ShaderState>::make();
+                        call.shaderState->set("uProjection", impl->lightProjections[i]);
+
+                        call.mesh = batch->mesh;
+                        call.vertexArray = batch->vertexArray.get();
+                        call.insatnceCount = batch->instanceCount;
+                    }
+                }
+            }
+        }
+
+        impl->lights.clear();
+        impl->lightProjections.clear();
     }
 
 }
