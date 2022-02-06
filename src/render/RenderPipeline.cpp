@@ -7,6 +7,7 @@
 #include "RenderContext.h"
 #include "ShaderState.h"
 #include "RenderThread.h"
+#include "Renderer.h"
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include "tracy/TracyOpenGL.hpp"
@@ -214,18 +215,22 @@ namespace tri {
 
         //copy passes to current passes and clear passes
         int stepCount = 0;
+        int drawCallCount = 0;
         currentRenderPasses.clear();
         for (auto& pass : renderPasses) {
             currentRenderPasses.push_back(Ref<RenderPass>::make(*pass));
             for (int i = pass->steps.size() - 1; i >= 0; i--) {
-                stepCount++;
                 auto& step = pass->steps[i];
+                stepCount++;
+                if (step.type == RenderPassStep::DRAW_CALL) {
+                    drawCallCount++;
+                }
                 if (!step.fixed) {
                     pass->steps.erase(pass->steps.begin() + i);
                 }
             }
         }
-
+        env->renderer->drawCallCount = drawCallCount;
         env->renderThread->unlock();
     }
 

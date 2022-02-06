@@ -315,11 +315,13 @@ namespace tri {
 
     void Renderer::update() {
         geometryPass->addCommand(DEPTH_ON).name = "depth on";
+        geometryPass->addCommand(BLEND_ON).name = "blend on";
 
         //set environment
         EnvironmentData* e = (EnvironmentData*)impl->environmentBuffer->next();
         *e = impl->environment;
         e->lightCount = impl->lightBuffer->size();
+        lightCount = e->lightCount;
 
         if (impl->radianceMap) {
             e->radianceMapIndex = 0;
@@ -363,11 +365,22 @@ namespace tri {
 
         TRI_PROFILE("geometry");
 
+        shaderCount = 0;
+        meshCount = 0;
+        instanceCount = 0;
+
+        int meshCounter = 0;
+        int materialCounter = 0;
+
         //instance shader
         for (auto& list : impl->batches) {
+            if (list.size() > 0) {
+                shaderCount++;
+            }
             for (auto batch : list) {
                 if (batch && batch->instances) {
                     if (batch->instances->size() > 0) {
+                        meshCounter++;
 
                         auto file = env->assets->getFile(batch->mesh);
                         TRI_PROFILE_INFO(file.c_str(), file.size());
@@ -375,6 +388,8 @@ namespace tri {
                         //set materials
                         for (auto& mat : batch->materials.assets) {
                             if (mat != nullptr) {
+                                materialCounter++;
+
                                 MaterialData* m = (MaterialData*)batch->materialBuffer->next();
                                 m->texture = batch->textures.getIndex(mat->texture.get());
                                 m->normalMap = batch->textures.getIndex(mat->normalMap.get());
@@ -415,6 +430,7 @@ namespace tri {
                         batch->instances->reset();
                         batch->materialBuffer->reset();
 
+                        instanceCount += batch->instanceCount;
 
                         //set draw call
                         auto& step = geometryPass->addDrawCall("mesh " + file);
@@ -443,6 +459,8 @@ namespace tri {
                     }
                 }
             }
+            meshCount = std::max(meshCount, meshCounter);
+            materialCount = std::max(materialCount, materialCounter);
         }
     }
 
