@@ -189,13 +189,29 @@ namespace tri {
                     }
                 }
             }
+
+            int typeId = descriptors.size();
+            for (int i = 0; i < descriptors.size(); i++) {
+                auto& desc = descriptors[i];
+                if (descriptors[i] == nullptr) {
+                    typeId = i;
+                    break;
+                }
+            }
+
             std::shared_ptr<TypeDescriptorT<T>> desc = std::make_shared<TypeDescriptorT<T>>();
             desc->hashCode = hashCode;
-            desc->typeId = (int)descriptors.size();
+            desc->typeId = typeId;
             desc->size = sizeof(T);
             desc->name = typeid(T).name();
             descriptorsByName[desc->name] = desc.get();
-            descriptors.push_back(desc);
+            if (typeId >= descriptors.size()) {
+                desc->typeId = descriptors.size();
+                descriptors.push_back(desc);
+            }
+            else {
+                descriptors[typeId] = desc;
+            }
             return desc->typeId;
         }
 

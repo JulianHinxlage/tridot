@@ -66,13 +66,13 @@ namespace tri {
 
     bool Scene::removeEntity(EntityId id) {
         if (entityPool.remove(id)) {
+            env->signals->entityRemove.invoke(id, this);
             for (auto& pool : pools) {
                 if (pool) {
                     pool->remove(id);
                 }
             }
             freeList.insert(id);
-            env->signals->entityRemove.invoke(id, this);
             return true;
         }
         else {

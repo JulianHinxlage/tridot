@@ -23,9 +23,38 @@ namespace tri {
                 "Gui begin",
                 "Gui end",
                 "Gizmos begin",
+                "RenderThread",
             };
 
             env->runtime->setActive("Physics", false, RuntimeMode::EDIT);
+
+            std::vector<std::string> activeInEdit = {
+                "HierarchySystem",
+                "SignalManager",
+                "Console",
+                "Reflection",
+                "ModuleManager",
+                "Profiler",
+                "ThreadPool",
+                "AssetManager",
+                "Camera",
+                "Input",
+                "MeshComponent",
+                "Serializer",
+                "Time",
+                "Scene",
+                "Renderer",
+                "Imgui",
+                "Skybox",
+                "Skybox",
+                "Random",
+                "RuntimeMode",
+                "RenderPipeline",
+            };
+
+            for (auto& name : activeInEdit) {
+                env->runtime->setActive(name, true, RuntimeMode::EDIT);
+            }
 
             env->signals->runtimeModeChanged.addCallback("Runtime Config", [&]() {
                 for (auto& c : alwaysOn) {

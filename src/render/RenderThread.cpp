@@ -103,7 +103,7 @@ namespace tri {
 			if (task) {
 				TRI_PROFILE("Task");
 				TracyGpuZone("Task");
-;				task();
+				task();
 			}
 		}
 

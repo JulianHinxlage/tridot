@@ -119,6 +119,7 @@ namespace tri {
     }
 
     void HierarchySystem::startup() {
+        env->signals->update.callbackOrder({ "Scene", "HierarchySystem", "Camera"});
         env->signals->entityRemove.addCallback([&](EntityId id, Scene *scene){
             if(scene == env->scene){
                 for(auto &child : getChildren(id)){

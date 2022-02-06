@@ -20,6 +20,26 @@ namespace tri {
         env->signals->preShutdown.addCallback("RuntimeMode", [&]() {
             setMode(SHUTDOWN);
         });
+        env->signals->update.onAddCallback([&](const std::string &name) {
+            if (mode == EDIT || mode == PAUSE) {
+                env->signals->update.setActiveCallback(name, false);
+            }
+            else {
+                env->signals->update.setActiveCallback(name, true);
+            }
+            if (mode == PAUSE) {
+                for (auto& c : callbacks[EDIT]) {
+                    if (c.name == name) {
+                        env->signals->update.setActiveCallback(c.name, c.active);
+                    }
+                }
+            }
+            for (auto& c : callbacks[mode]) {
+                if (c.name == name) {
+                    env->signals->update.setActiveCallback(c.name, c.active);
+                }
+            }
+        });
     }
 
     RuntimeMode::Mode RuntimeMode::getMode() {
@@ -45,7 +65,7 @@ namespace tri {
             this->mode = mode;
 
             if (mode == EDIT || mode == PAUSE) {
-                env->signals->update.setActiveAll(true);
+                env->signals->update.setActiveAll(false);
             }
             else {
                 env->signals->update.setActiveAll(true);

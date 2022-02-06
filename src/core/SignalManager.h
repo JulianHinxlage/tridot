@@ -43,6 +43,11 @@ namespace tri {
             int id = nextId++;
             int index = checkDependencies(name);
             observers.insert(observers.begin() + index, {callback, name, id, true, false});
+            for (auto& onAdd : addCallbacks) {
+                if (onAdd) {
+                    onAdd(name);
+                }
+            }
             return id;
         }
 
@@ -177,12 +182,17 @@ namespace tri {
             }
         }
 
+        void onAddCallback(const std::function<void(const std::string&)>& callback) {
+            addCallbacks.push_back(callback);
+        }
+
     private:
         std::vector<Observer> observers;
         std::vector<std::function<void()>> eventBuffer;
         std::unordered_map<std::string, std::vector<std::string>> dependencies;
         int nextId;
         bool handledFlag;
+        std::vector<std::function<void(const std::string&)>> addCallbacks;
 
         //returns the index where an observer should be based on the defined dependencies
         int checkDependencies(const std::string &name){

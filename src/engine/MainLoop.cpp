@@ -53,6 +53,7 @@ namespace tri {
                 {
                     TRI_PROFILE("startup");
                     env->signals->startup.invokeProfile();
+                    env->signals->startup.setActiveAll(false);
                 }
                 {
                     TRI_PROFILE("postStartup");
@@ -66,6 +67,11 @@ namespace tri {
     void MainLoop::run() {
         while (env->window->isOpen()) {
             TRI_PROFILE_PHASE("update");
+
+            //invoke new startup signal callbacks
+            env->signals->startup.invoke();
+            env->signals->startup.setActiveAll(false);
+
             {
                 TRI_PROFILE("preUpdate");
                 env->signals->preUpdate.invokeProfile();

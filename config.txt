@@ -4,6 +4,6 @@ use_render_thread 0
 asset_directory ../assets/
 asset_directory ../local/data/
 asset_directory ./
-scene_load autosave.scene
 resolution_x 1920
 resolution_y 1080
+scene_load autosave.scene

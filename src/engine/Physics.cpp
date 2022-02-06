@@ -247,6 +247,14 @@ namespace tri {
 				removeRigidBody(id, rb, c, t);
 			});
 		});
+		env->signals->entityRemove.addCallback("Physics", [this](EntityId id, Scene* scene) {
+			if (scene->hasComponents<RigidBody, Collider, Transform>(id)) {
+				RigidBody& rb = scene->getComponent<RigidBody>(id);
+				Collider& c = scene->getComponent<Collider>(id);
+				Transform& t = scene->getComponent<Transform>(id);
+				removeRigidBody(id, rb, c, t);
+			}
+		});
 	}
 
 	void Physics::update() {
