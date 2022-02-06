@@ -93,10 +93,24 @@ namespace tri::impl {
 #define TRI_REGISTER_TYPE(type) TRI_REGISTER_TYPE_NAME(type, type)
 
 #define TRI_REGISTER_COMPONENT_NAME(type, name) namespace{ static tri::impl::TypeRegisterer<type> TRI_UNIQUE_IDENTIFIER(_tri_register_component)(#name, true);}
-#define TRI_REGISTER_COMPONENT(type) TRI_REGISTER_COMPONENT_NAME(type, type)
 #define TRI_REGISTER_COMPONENT_UPDATE(type, func) TRI_UPDATE_CALLBACK(#type) { env->scene->view<type>().each([](type &c){ c.update(); }); }
+#define TRI_REGISTER_COMPONENT(type) TRI_REGISTER_COMPONENT_NAME(type, type)
+#define TRI_REGISTER_COMPONENT_1(type, m1) TRI_REGISTER_COMPONENT(type) TRI_REGISTER_MEMBER(type, m1)
+#define TRI_REGISTER_COMPONENT_2(type, m1, m2) TRI_REGISTER_COMPONENT_1(type, m1) TRI_REGISTER_MEMBER(type, m2)
+#define TRI_REGISTER_COMPONENT_3(type, m1, m2, m3) TRI_REGISTER_COMPONENT_2(type, m1, m2) TRI_REGISTER_MEMBER(type, m3)
+#define TRI_REGISTER_COMPONENT_4(type, m1, m2, m3, m4) TRI_REGISTER_COMPONENT_3(type, m1, m2, m3) TRI_REGISTER_MEMBER(type, m4)
+#define TRI_REGISTER_COMPONENT_5(type, m1, m2, m3, m4, m5) TRI_REGISTER_COMPONENT_4(type, m1, m2, m3, m4) TRI_REGISTER_MEMBER(type, m5)
+#define TRI_REGISTER_COMPONENT_6(type, m1, m2, m3, m4, m5, m6) TRI_REGISTER_COMPONENT_5(type, m1, m2, m3, m4, m5) TRI_REGISTER_MEMBER(type, m6)
+#define TRI_REGISTER_COMPONENT_7(type, m1, m2, m3, m4, m5, m6, m7) TRI_REGISTER_COMPONENT_6(type, m1, m2, m3, m4, m5, m6) TRI_REGISTER_MEMBER(type, m7)
+#define TRI_REGISTER_COMPONENT_8(type, m1, m2, m3, m4, m5, m6, m7, m8) TRI_REGISTER_COMPONENT_7(type, m1, m2, m3, m4, m5, m6, m7) TRI_REGISTER_MEMBER(type, m8)
 
 #define TRI_REGISTER_MEMBER(type, memberName) TRI_REGISTER_CALLBACK(){tri::Environment::startup(); env->reflection->registerMember<type, decltype(type::memberName)>(#memberName, offsetof(type, memberName));}
 #define TRI_REGISTER_MEMBER_RANGE(type, memberName, min, max) TRI_REGISTER_CALLBACK(){tri::Environment::startup(); env->reflection->registerMember<type, decltype(type::memberName)>(#memberName, offsetof(type, memberName), min, max);}
 #define TRI_REGISTER_CONSTANT(type, name) TRI_REGISTER_CALLBACK(){tri::Environment::startup(); env->reflection->registerConstant<type>(#name, (int)type::name);}
-
+#define TRI_REGISTER_CONSTANT_2(type, n1, n2) TRI_REGISTER_CONSTANT(type, n1), TRI_REGISTER_CONSTANT(type, n2)
+#define TRI_REGISTER_CONSTANT_3(type, n1, n2, n3) TRI_REGISTER_CONSTANT_2(type, n1, n2), TRI_REGISTER_CONSTANT(type, n3)
+#define TRI_REGISTER_CONSTANT_4(type, n1, n2, n3, n4) TRI_REGISTER_CONSTANT_3(type, n1, n2, n3), TRI_REGISTER_CONSTANT(type, n4)
+#define TRI_REGISTER_CONSTANT_5(type, n1, n2, n3, n4, n5) TRI_REGISTER_CONSTANT_4(type, n1, n2, n3, n4), TRI_REGISTER_CONSTANT(type, n5)
+#define TRI_REGISTER_CONSTANT_6(type, n1, n2, n3, n4, n5, n6) TRI_REGISTER_CONSTANT_5(type, n1, n2, n3, n4, n5), TRI_REGISTER_CONSTANT(type, n6)
+#define TRI_REGISTER_CONSTANT_7(type, n1, n2, n3, n4, n5, n6, n7) TRI_REGISTER_CONSTANT_6(type, n1, n2, n3, n4, n5, n6), TRI_REGISTER_CONSTANT(type, n7)
+#define TRI_REGISTER_CONSTANT_8(type, n1, n2, n3, n4, n5, n6, n7, n8) TRI_REGISTER_CONSTANT_7(type, n1, n2, n3, n4, n5, n6, n7), TRI_REGISTER_CONSTANT(type, n8)
