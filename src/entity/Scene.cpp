@@ -129,6 +129,23 @@ namespace tri {
         }
     }
 
+    void* Scene::getPendingComponent(int typeId, EntityId id) {
+        for (int i = pendingOperations.size() - 1; i >= 0; i--) {
+            auto& op = pendingOperations[i];
+            if (op.id != id) {
+                break;
+            }
+            if (op.isPending) {
+                if (op.isAddOperation) {
+                    if (op.typeId == typeId) {
+                        return op.component.get();
+                    }
+                }
+            }
+        }
+        return nullptr;
+    }
+
     EntitySignatureBitmap& Scene::getSignature(EntityId id) {
         return *(EntitySignatureBitmap*)entityPool.getElementById(id);
     }

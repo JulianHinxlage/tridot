@@ -78,10 +78,28 @@ namespace tri {
             }
         }
 
+        template<typename Component>
+        Component* getPendingComponent(EntityId id) {
+            static int typeId = env->reflection->getTypeId<Component>();
+            return (Component*)getPendingComponent(typeId, id);
+        }
+
+        template<typename Component>
+        Component& getOrAddPendingComponent(EntityId id) {
+            Component *comp = getPendingComponent<Component>(id);
+            if (comp) {
+                return *comp;
+            }
+            else {
+                return addComponent<Component>(id);
+            }
+        }
+
         void* addComponent(int typeId, EntityId id);
         void* getComponent(int typeId, EntityId id);
         bool hasComponent(int typeId, EntityId id);
         bool removeComponent(int typeId, EntityId id);
+        void* getPendingComponent(int typeId, EntityId id);
 
         EntitySignatureBitmap& getSignature(EntityId id);
         ComponentPool* getComponentPool(int typeId);
