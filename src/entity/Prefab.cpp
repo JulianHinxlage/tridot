@@ -7,6 +7,8 @@
 #include "engine/Transform.h"
 
 namespace tri {
+    
+    TRI_REGISTER_ASSET(Prefab);
 
     Prefab::Prefab(){
 

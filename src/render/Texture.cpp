@@ -9,6 +9,8 @@
 
 namespace tri {
 
+    TRI_REGISTER_ASSET(Texture);
+
     Texture::Texture() {
         id = 0;
         slot = -1;

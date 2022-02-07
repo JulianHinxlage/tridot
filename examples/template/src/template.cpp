@@ -28,7 +28,8 @@ namespace tri {
 
         }
     };
-    TRI_REGISTER_COMPONENT_3(TemplateComponent, x, y, z);
+    TRI_REGISTER_COMPONENT(TemplateComponent);
+    TRI_REGISTER_MEMBER_3(TemplateComponent, x, y, z);
     TRI_REGISTER_COMPONENT_UPDATE(TemplateComponent, update);
 
 }

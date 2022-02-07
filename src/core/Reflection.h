@@ -6,6 +6,7 @@
 
 #include "pch.h"
 #include "System.h"
+#include "util/Ref.h"
 
 namespace tri {
 
@@ -25,7 +26,7 @@ namespace tri {
         public:                                                                    \
             static constexpr bool value = sizeof(test<T>(0)) == sizeof(yes_type);  \
         };
-#define has_member(type, name)  tridot::impl::has_member_##name<type>::value
+#define has_member(type, name)  tri::impl::has_member_##name<type>::value
 
         define_has_member(update);
         define_has_member(startup);
@@ -37,10 +38,21 @@ namespace tri {
     public:
         class TypeDescriptor;
 
+        enum TypeFlags {
+            NONE = 0,
+            COMPONENT = 1,
+            ASSET = 2,
+            NOT_SERIALIZED = 4,
+            HIDDEN_IN_EDITOR = 8,
+            REFERENCE = 16,
+            VECTOR = 32,
+        };
+
         class MemberDescriptor {
         public:
             std::string name;
             int offset;
+            TypeFlags flags;
             TypeDescriptor* type;
             void *minValue;
             void *maxValue;
@@ -55,15 +67,18 @@ namespace tri {
         class TypeDescriptor {
         public:
             std::string name;
+            std::string group;
             int size;
+            TypeFlags flags;
             std::vector<MemberDescriptor> member;
             std::vector<ConstantDescriptor> constants;
             int typeId;
-            bool isComponent;
+            TypeDescriptor* baseType;
+
 
             template<typename T>
             bool isType() const {
-                return hashCode == (int)typeid(T).hash_code();
+                return hashCode == typeid(T).hash_code();
             }
 
             virtual void construct(void* ptr) const = 0;
@@ -81,8 +96,9 @@ namespace tri {
 
         private:
             friend class Reflection;
-            int hashCode;
+            size_t hashCode;
             bool initFlag = false;
+            size_t vectorHashCode = 0;
         };
 
         template<typename T>
@@ -114,18 +130,17 @@ namespace tri {
         }
 
         template<typename T>
-        int registerType(const std::string &name, bool isComponent = false) {
-            TypeDescriptor* desc = descriptors[getTypeId<T>()].get();
-            descriptorsByName.erase(desc->name);
-            desc->name = name;
-            descriptorsByName[desc->name] = desc;
-            desc->isComponent = isComponent;
-            desc->hashCode = typeid(T).hash_code();
-            return desc->typeId;
+        int registerType(const std::string &name, const std::string &group = "", TypeFlags flags = NONE) {
+            int typeId = registerTypeImpl<T>(name, group, flags);
+            if ((flags & ASSET) && !(flags & REFERENCE)) {
+                int refTypeId = registerTypeImpl<Ref<T>>("Ref<" + name +  ">", group, (TypeFlags)(flags | REFERENCE));
+                descriptors[refTypeId]->baseType = descriptors[typeId].get();
+            }
+            return typeId;
         }
 
         template<typename T>
-        void registerMember(int typeId, const std::string& name, int offset, T min = T(), T max = T()) {
+        void registerMember(int typeId, const std::string& name, int offset, TypeFlags flags = NONE, T min = T(), T max = T()) {
             if (typeId >= 0 && typeId < descriptors.size()) {
                 TypeDescriptor* desc = descriptors[typeId].get();
                 TypeDescriptor* memberDesc = descriptors[getTypeId<T>()].get();
@@ -135,16 +150,28 @@ namespace tri {
                     }
                 }
                 if(min == T() && max == T()) {
-                    desc->member.push_back({name, offset, memberDesc, nullptr, nullptr});
+                    MemberDescriptor& member = desc->member.emplace_back();
+                    member.name = name;
+                    member.offset = offset;
+                    member.type = memberDesc;
+                    member.flags = flags;
+                    member.minValue = nullptr;
+                    member.maxValue = nullptr;
                 }else {
-                    desc->member.push_back({name, offset, memberDesc, new T(min), new T(max)});
+                    MemberDescriptor& member = desc->member.emplace_back();
+                    member.name = name;
+                    member.offset = offset;
+                    member.type = memberDesc;
+                    member.flags = flags;
+                    member.minValue = new T(min);
+                    member.maxValue = new T(max);
                 }
             }
         }
 
         template<typename T, typename MemberType>
-        void registerMember(const std::string& name, int offset, MemberType min = MemberType(), MemberType max = MemberType()) {
-            registerMember<MemberType>(getTypeId<T>(), name, offset, min, max);
+        void registerMember(const std::string& name, int offset, TypeFlags flags = NONE, MemberType min = MemberType(), MemberType max = MemberType()) {
+            registerMember<MemberType>(getTypeId<T>(), name, offset, flags, min, max);
         }
 
         void registerConstant(int typeId, const std::string& name, int value) {
@@ -181,7 +208,7 @@ namespace tri {
 
         template<typename T>
         int getNewTypeId() {
-            int hashCode = (int)typeid(T).hash_code();
+            size_t hashCode = typeid(T).hash_code();
             for (auto &desc : descriptors) {
                 if (desc) {
                     if (desc->hashCode == hashCode) {
@@ -204,6 +231,7 @@ namespace tri {
             desc->typeId = typeId;
             desc->size = sizeof(T);
             desc->name = typeid(T).name();
+            desc->flags = NONE;
             descriptorsByName[desc->name] = desc.get();
             if (typeId >= descriptors.size()) {
                 desc->typeId = descriptors.size();
@@ -212,6 +240,34 @@ namespace tri {
             else {
                 descriptors[typeId] = desc;
             }
+            return desc->typeId;
+        }
+
+        template<typename T>
+        int registerTypeImpl(const std::string& name, const std::string& group = "", TypeFlags flags = NONE) {
+            TypeDescriptor* desc = descriptors[getTypeId<T>()].get();
+            descriptorsByName.erase(desc->name);
+            desc->name = name;
+            desc->group = group;
+            desc->flags = flags;
+            desc->hashCode = typeid(T).hash_code();
+            desc->vectorHashCode = typeid(std::vector<T>).hash_code();
+            desc->baseType = nullptr;
+            descriptorsByName[desc->name] = desc;
+
+            for (auto& d : descriptors) {
+                if (d) {
+                    if (d->vectorHashCode == desc->hashCode) {
+                        desc->flags = (TypeFlags)(desc->flags | VECTOR);
+                        desc->baseType = d.get();
+                    }
+                    if (desc->vectorHashCode == d->hashCode) {
+                        d->flags = (TypeFlags)(d->flags | VECTOR);
+                        d->baseType = desc;
+                    }
+                }
+            }
+
             return desc->typeId;
         }
 

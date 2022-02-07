@@ -172,19 +172,41 @@ namespace tri {
                     env->editor->selectionContext.select(id);
                 }
 
-                for (auto& desc : env->reflection->getDescriptors()) {
-                    if (desc && desc->isComponent) {
-                        if (!desc->isType<Transform>() && !desc->isType<EntityInfo>() && !desc->isType<NoHierarchyUpdate>()) {
-                            if (ImGui::MenuItem(desc->name.c_str(), nullptr, nullptr)) {
-                                EntityId id = env->editor->entityOperations.addEntity();
-                                env->scene->addComponents(id, Transform(), EntityInfo());
-                                env->scene->addComponent(desc->typeId, id);
-                                env->editor->selectionContext.unselectAll();
-                                env->editor->selectionContext.select(id);
+                if (ImGui::BeginMenu("Components")) {
+                    for (auto& desc : env->reflection->getDescriptors()) {
+                        if (desc && (desc->flags & Reflection::COMPONENT)) {
+                            if (!desc->isType<EntityInfo>() && !desc->isType<NoHierarchyUpdate>()) {
+
+                                if (desc->group.empty()) {
+                                    if (ImGui::MenuItem(desc->name.c_str(), nullptr, nullptr)) {
+                                        EntityId id = env->editor->entityOperations.addEntity();
+                                        env->scene->addComponents(id, Transform(), EntityInfo());
+                                        env->scene->addComponent(desc->typeId, id);
+                                        env->editor->selectionContext.unselectAll();
+                                        env->editor->selectionContext.select(id);
+                                    }
+                                }
+                                else {
+                                    if (ImGui::BeginMenu(desc->group.c_str())) {
+                                        if (ImGui::MenuItem(desc->name.c_str(), nullptr, nullptr)) {
+                                            EntityId id = env->editor->entityOperations.addEntity();
+                                            env->scene->addComponents(id, Transform(), EntityInfo());
+                                            env->scene->addComponent(desc->typeId, id);
+                                            env->editor->selectionContext.unselectAll();
+                                            env->editor->selectionContext.select(id);
+                                        }
+                                        ImGui::EndMenu();
+                                    }
+                                }
+
+
                             }
                         }
                     }
+                    ImGui::EndMenu();
                 }
+
+
 
                 ImGui::EndPopup();
             }

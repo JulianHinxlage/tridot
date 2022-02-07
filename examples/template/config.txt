@@ -6,5 +6,5 @@ asset_directory ../data/
 asset_directory ./
 resolution_x 1920
 resolution_y 1080
-module_load template
+module_load Template
 scene_load template.scene

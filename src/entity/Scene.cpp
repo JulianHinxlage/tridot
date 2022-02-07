@@ -9,6 +9,8 @@
 
 namespace tri {
 
+    TRI_REGISTER_ASSET(Scene);
+
     TRI_REGISTER_SYSTEM_INSTANCE(Scene, env->scene);
 
     Scene::Scene() {

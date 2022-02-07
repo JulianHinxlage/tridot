@@ -37,9 +37,12 @@ namespace tri{
         env->console->addCommand("print_types", []() {
             for (auto& desc : env->reflection->getDescriptors()) {
                 if (desc) {
-                    env->console->info("type ", desc->name, ": size = ", desc->size, ", typeId = ", desc->typeId);
+                    env->console->info("type ", desc->name, ": size = ", desc->size, ", typeId = ", desc->typeId, ", flags = ", desc->flags);
+                    if (desc->baseType) {
+                        env->console->info(" base: ", desc->baseType->name);
+                    }
                     for (auto& m : desc->member) {
-                        env->console->info(" member ", m.name, ": type = ", m.type->name, ", offset = ", m.offset);
+                        env->console->info(" member ", m.name, ": type = ", m.type->name, ", offset = ", m.offset, ", flags = ", m.flags);
                     }
                     for (auto& c : desc->constants) {
                         env->console->info(" constant: ", c.name, " = ", c.value);

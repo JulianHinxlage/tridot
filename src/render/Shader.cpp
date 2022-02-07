@@ -9,6 +9,8 @@
 #include <fstream>
 
 namespace tri {
+    
+    TRI_REGISTER_ASSET(Shader);
 
     Shader::Shader() {
         id = 0;

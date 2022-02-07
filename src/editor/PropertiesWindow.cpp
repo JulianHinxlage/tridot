@@ -67,7 +67,7 @@ namespace tri {
         }
         if(ImGui::BeginPopup("add")){
             for(auto &desc : env->reflection->getDescriptors()){
-                if(desc && desc->isComponent) {
+                if(desc && (desc->flags & Reflection::COMPONENT) && !(desc->flags & Reflection::HIDDEN_IN_EDITOR)) {
 
                     bool canAdd = false;
                     for(EntityId id : env->editor->selectionContext.getSelected()){
@@ -78,15 +78,31 @@ namespace tri {
                     }
 
                     if (canAdd) {
-                        if (ImGui::MenuItem(desc->name.c_str())) {
 
-                            for(EntityId id : env->editor->selectionContext.getSelected()){
-                                if (!env->scene->hasComponent(desc->typeId, id)) {
-                                    void *comp = env->editor->entityOperations.addComponent(desc->typeId, id);
+                        if (desc->group.empty()) {
+                            if (ImGui::MenuItem(desc->name.c_str())) {
+                                for (EntityId id : env->editor->selectionContext.getSelected()) {
+                                    if (!env->scene->hasComponent(desc->typeId, id)) {
+                                        void* comp = env->editor->entityOperations.addComponent(desc->typeId, id);
+                                    }
                                 }
+                                ImGui::CloseCurrentPopup();
                             }
-                            ImGui::CloseCurrentPopup();
                         }
+                        else {
+                            if (ImGui::BeginMenu(desc->group.c_str())) {
+                                if (ImGui::MenuItem(desc->name.c_str())) {
+                                    for (EntityId id : env->editor->selectionContext.getSelected()) {
+                                        if (!env->scene->hasComponent(desc->typeId, id)) {
+                                            void* comp = env->editor->entityOperations.addComponent(desc->typeId, id);
+                                        }
+                                    }
+                                    ImGui::CloseCurrentPopup();
+                                }
+                                ImGui::EndMenu();
+                            }
+                        }
+
                     }
 
                 }
@@ -97,7 +113,7 @@ namespace tri {
 
     void PropertiesWindow::updateMultipleEntities(){
         for(auto &desc : env->reflection->getDescriptors()) {
-            if(desc){
+            if(desc && !(desc->flags & Reflection::HIDDEN_IN_EDITOR)){
                 void *comp = nullptr;
                 EntityId editId;
                 for(EntityId id : env->editor->selectionContext.getSelected()){
@@ -219,7 +235,7 @@ namespace tri {
             env->editor->gui.textInput("name", info.name);
         }
         for(auto &desc : env->reflection->getDescriptors()){
-            if(desc){
+            if(desc && !(desc->flags & Reflection::HIDDEN_IN_EDITOR)){
                 if(env->scene->hasComponent(desc->typeId, id)) {
                     if(desc->typeId != env->reflection->getTypeId<EntityInfo>()) {
                         ImGui::PushID(desc->name.c_str());

@@ -57,11 +57,13 @@ namespace tri {
         }
         if(!drawHeader || ImGui::TreeNodeEx(desc->name.c_str())) {
             for(auto &m : desc->member){
-                void *ptr = (uint8_t*)data + m.offset;
-                if(m.type->constants.size() > 0){
-                    drawConstants(m.type->typeId, ptr, m.name.c_str());
-                }else{
-                    drawMember(m.type->typeId, ptr, m.name.c_str(), m.minValue, m.maxValue, true);
+                if (!(m.flags & Reflection::HIDDEN_IN_EDITOR)) {
+                    void *ptr = (uint8_t*)data + m.offset;
+                    if(m.type->constants.size() > 0){
+                        drawConstants(m.type->typeId, ptr, m.name.c_str());
+                    }else{
+                        drawMember(m.type->typeId, ptr, m.name.c_str(), m.minValue, m.maxValue, true);
+                    }
                 }
             }
             if(drawHeader){

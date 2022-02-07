@@ -17,7 +17,7 @@ else()
 endif()
 
 #tridot
-project(tridot)
+project(Tridot)
 file(GLOB_RECURSE SOURCES src/core/*.cpp src/entity/*.cpp src/engine/*.cpp src/render/*.cpp)
 file(GLOB_RECURSE HEADERS src/core/*.h src/entity/*.h src/engine/*.h src/render/*.h)
 file(GLOB IMGUI_SOURCES extern/imgui/*.cpp extern/imgui/backends/imgui_impl_glfw.cpp extern/imgui/backends/imgui_impl_opengl3.cpp)
@@ -49,16 +49,16 @@ endif()
 target_include_directories(${PROJECT_NAME} PUBLIC extern extern/glm extern/glfw/include extern/glew/include extern/yaml-cpp/include extern/bullet3/src extern/imgui)
 
 #launcher
-project(tridot-launcher)
+project(TridotLauncher)
 file(GLOB_RECURSE SOURCES src/launcher/*.cpp)
 add_executable(${PROJECT_NAME} ${SOURCES})
 target_include_directories(${PROJECT_NAME} PUBLIC src src/launcher)
-target_link_libraries(${PROJECT_NAME} PUBLIC tridot)
+target_link_libraries(${PROJECT_NAME} PUBLIC Tridot)
 
 #editor
-project(tridot-editor)
+project(TridotEditor)
 file(GLOB_RECURSE SOURCES src/editor/*.cpp)
 file(GLOB_RECURSE HEADERS src/editor/*.h)
 add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS})
 target_include_directories(${PROJECT_NAME} PUBLIC src src/editor)
-target_link_libraries(${PROJECT_NAME} PUBLIC tridot)
+target_link_libraries(${PROJECT_NAME} PUBLIC Tridot)

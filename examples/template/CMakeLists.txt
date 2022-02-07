@@ -1,6 +1,6 @@
 
 set(TRIDOT_DIRECTORY "../..")
-set(TRIDOT_PROJECT_NAME "template")
+set(TRIDOT_PROJECT_NAME "Template")
 set(TRIDOT_BUILD_FROM_SOURCE true)
 set(TRIDOT_BUILD_INPLACE false)
 
@@ -30,12 +30,12 @@ project(${TRIDOT_PROJECT_NAME})
 file(GLOB_RECURSE SOURCES src/*)
 add_library(${PROJECT_NAME} SHARED ${SOURCES})
 target_include_directories(${PROJECT_NAME} PUBLIC src ${TRIDOT_DIRECTORY}/src)
-target_link_libraries(${PROJECT_NAME} PUBLIC tridot)
+target_link_libraries(${PROJECT_NAME} PUBLIC Tridot)
 add_custom_command(
     TARGET ${PROJECT_NAME} PRE_LINK
     COMMAND ${CMAKE_COMMAND} -E touch "${TRIDOT_PROJECT_NAME}.dll"
-    COMMAND ${CMAKE_COMMAND} -E rename "${TRIDOT_PROJECT_NAME}.dll" "junk-${TRIDOT_PROJECT_NAME}.dll"
+    COMMAND ${CMAKE_COMMAND} -E rename "${TRIDOT_PROJECT_NAME}.dll" "junk_${TRIDOT_PROJECT_NAME}.dll"
 )
 
-add_dependencies(tridot-editor ${TRIDOT_PROJECT_NAME})
-add_dependencies(tridot-launcher ${TRIDOT_PROJECT_NAME})
+add_dependencies(TridotEditor ${TRIDOT_PROJECT_NAME})
+add_dependencies(TridotLauncher ${TRIDOT_PROJECT_NAME})

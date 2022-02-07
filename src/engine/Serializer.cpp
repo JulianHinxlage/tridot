@@ -37,8 +37,10 @@ namespace tri {
         if(desc && desc->member.size() > 0){
             out << YAML::Value << YAML::BeginMap;
             for(auto &m : desc->member){
-                out << YAML::Key << m.name;
-                serializeType(out, m.type->typeId, (uint8_t*)data + m.offset);
+                if (!(m.flags & Reflection::NOT_SERIALIZED)) {
+                    out << YAML::Key << m.name;
+                    serializeType(out, m.type->typeId, (uint8_t*)data + m.offset);
+                }
             }
             out << YAML::EndMap;
         }else{
@@ -89,8 +91,10 @@ namespace tri {
                     }
                 }
                 else {
-                    out << YAML::Key << desc->name;
-                    serializeType(out, desc->typeId, scene.getComponent(desc->typeId, id));
+                    if (!(desc->flags & Reflection::NOT_SERIALIZED)) {
+                        out << YAML::Key << desc->name;
+                        serializeType(out, desc->typeId, scene.getComponent(desc->typeId, id));
+                    }
                 }
             }
         }

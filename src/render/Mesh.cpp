@@ -10,6 +10,8 @@
 
 namespace tri {
 
+    TRI_REGISTER_ASSET(Mesh);
+
     Mesh::Mesh() {
         boundingMin = {-0.5, -0.5, -0.5};
         boundingMax = {+0.5, +0.5, +0.5};
