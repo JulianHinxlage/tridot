@@ -41,9 +41,12 @@ namespace tri {
                 freeList.erase(hint);
             }
             else if (hint < (EntityId)entityPool.size()) {
-                hint = -1;
+                if (entityPool.has(hint)) {
+                    hint = -1;
+                }
             }
         }
+
         if (hint == -1) {
             if (freeList.empty()) {
                 hint = entityPool.size();
@@ -62,6 +65,17 @@ namespace tri {
         }
         entityPool.add(hint);
         getSignature(hint) = 0;
+
+        //todo: fix components existing if entity is not
+        for (int i = 0; i < pools.size(); i++) {
+            auto& pool = pools[i];
+            if (pool) {
+                if (pool->has(hint)) {
+                    pool->remove(hint);
+                }
+            }
+        }
+
         env->signals->entityCreate.invoke(hint, this);
         return hint;
     }

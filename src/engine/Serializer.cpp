@@ -266,7 +266,6 @@ namespace tri {
         S_VALUE(float)
         S_VALUE(double)
         S_VALUE(int)
-        S_VALUE(uint32_t)
         S_VALUE(bool)
         S_VALUE(std::string)
 
@@ -275,13 +274,19 @@ namespace tri {
         S_FLOW(glm::vec4, v.x << v.y << v.z << v.w);
         S_FLOW(Color, (int)v.r << (int)v.g << (int)v.b << (int)v.a);
 
-
         D_VALUE(float)
         D_VALUE(double)
         D_VALUE(int)
-        D_VALUE(uint32_t)
         D_VALUE(bool)
         D_VALUE(std::string)
+
+        setSerializationFunction<EntityId>([](YAML::Emitter& out, EntityId& v) {
+            out << *(int*)&v;
+        });
+        setDeserializationFunction<EntityId>([](YAML::Node& in, EntityId& v) {
+            int i = in.as<int>(-1);
+            v = *(EntityId*)&i;
+        });
 
         setDeserializationFunction<glm::vec2>([](YAML::Node &in, glm::vec2 &v){
             v.x = in[0].as<float>(0);
@@ -324,7 +329,8 @@ namespace tri {
             }
         });
         env->signals->typeUnregister.addCallback("Seriaizer", [this](int typeId) {
-            
+            unsetSerializationFunction(typeId);
+            unsetDeserializationFunction(typeId);
         });
     }
 

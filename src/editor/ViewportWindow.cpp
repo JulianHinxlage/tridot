@@ -211,14 +211,9 @@ namespace tri {
                 env->editor->selectionContext.unselectAll();
                 env->editor->selectionContext.select(id);
 
-                Transform *t;
-                if(env->scene->hasComponent<Transform>(id)){
-                    t = &env->scene->getComponent<Transform>(id);
-                }else{
-                    t = &env->scene->addComponent<Transform>(id);
-                }
-                t->position = pos;
-                t->parent = -1;
+                Transform &t = env->scene->getOrAddPendingComponent<Transform>(id);
+                t.position = pos;
+                t.parent = -1;
             }
 
         }
