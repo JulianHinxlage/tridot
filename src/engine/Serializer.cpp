@@ -197,6 +197,18 @@ namespace tri {
         deserializationFunctions[typeId] = func;
     }
 
+    void Serializer::unsetSerializationFunction(int typeId) {
+        if (serializationFunctions.size() > typeId) {
+            serializationFunctions[typeId] = nullptr;
+        }
+    }
+
+    void Serializer::unsetDeserializationFunction(int typeId) {
+        if (deserializationFunctions.size() > typeId) {
+            deserializationFunctions[typeId] = nullptr;
+        }
+    }
+
     template<typename T>
     void defineAssetFunctions(Serializer &serializer){
         serializer.setSerializationFunction<Ref<T>>([](YAML::Emitter &out, Ref<T> &v){
@@ -210,6 +222,38 @@ namespace tri {
         serializer.setDeserializationFunction<Ref<T>>([](YAML::Node &in, Ref<T> &v){
             if(!in.IsNull()){
                 v = env->assets->get<T>(in.as<std::string>(""));
+            }
+        });
+    }
+
+    void defineVectorFunctions(Serializer& serializer, int typeId) {
+        serializer.setSerializationFunction(typeId, [&, typeId](YAML::Emitter& out, void *v) {
+            auto *desc = env->reflection->getType(typeId);
+            if (desc && desc->baseType) {
+                if (desc->flags & Reflection::VECTOR) {
+                    int size = desc->vectorSize(v);
+                    out << YAML::BeginSeq;
+                    for (int i = 0; i < size; i++) {
+                        serializer.serializeType(out, desc->baseType->typeId, desc->vectorGet(v, i));
+                    }
+                    out << YAML::EndSeq;
+                }
+            }
+        });
+        serializer.setDeserializationFunction(typeId, [&, typeId](YAML::Node& in, void* v) {
+            auto* desc = env->reflection->getType(typeId);
+            if (desc && desc->baseType) {
+                if (desc->flags & Reflection::VECTOR) {
+                    int i = 0;
+                    desc->vectorClear(v);
+                    for (auto iter : in) {
+                        desc->vectorInsert(v, i, nullptr);
+                        void *ptr = desc->vectorGet(v, i);
+                        i++;
+                        serializer.deserializeType(iter, desc->baseType->typeId, ptr);
+                    }
+
+                }
             }
         });
     }
@@ -267,6 +311,21 @@ namespace tri {
         defineAssetFunctions<Shader>(*this);
         defineAssetFunctions<Prefab>(*this);
 
+        for (auto &desc : env->reflection->getDescriptors()) {
+            if (desc && (desc->flags & Reflection::VECTOR)) {
+                defineVectorFunctions(*this, desc->typeId);
+            }
+        }
+        env->signals->typeRegister.addCallback("Seriaizer", [this](int typeId) {
+            for (auto& desc : env->reflection->getDescriptors()) {
+                if (desc && (desc->flags & Reflection::VECTOR)) {
+                    defineVectorFunctions(*this, desc->typeId);
+                }
+            }
+        });
+        env->signals->typeUnregister.addCallback("Seriaizer", [this](int typeId) {
+            
+        });
     }
 
     void Serializer::serializePrefab(YAML::Emitter &out, Prefab &prefab) {

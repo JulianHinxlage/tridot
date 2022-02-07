@@ -44,12 +44,14 @@ namespace tri {
             });
         }
 
+        void setSerializationFunction(int typeId, const std::function<void(YAML::Emitter&, void*)>& func);
+        void setDeserializationFunction(int typeId, const std::function<void(YAML::Node&, void*)>& func);
+        void unsetSerializationFunction(int typeId);
+        void unsetDeserializationFunction(int typeId);
+
         void startup() override;
 
     private:
-        void setSerializationFunction(int typeId, const std::function<void(YAML::Emitter &, void*)> &func);
-        void setDeserializationFunction(int typeId, const std::function<void(YAML::Node &, void*)> &func);
-
         std::vector<std::function<void(YAML::Emitter &, void*)>> serializationFunctions;
         std::vector<std::function<void(YAML::Node &, void*)>> deserializationFunctions;
     };

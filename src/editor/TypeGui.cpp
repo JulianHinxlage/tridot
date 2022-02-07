@@ -44,6 +44,12 @@ namespace tri {
         typeFunctions[typeId] = func;
     }
 
+    void TypeGui::unsetTypeFunction(int typeId) {
+        if (typeFunctions.size() > typeId) {
+            typeFunctions[typeId] = nullptr;
+        }
+    }
+
     void TypeGui::drawMember(int typeId, void *data, const char *label, void *min, void *max, bool drawHeader, bool useFunction) {
         if(useFunction && typeFunctions.size() > typeId){
             if(typeFunctions[typeId]){
@@ -134,6 +140,64 @@ namespace tri {
         });
     }
 
+    void addVectorTypeFunction(int typeId) {
+        auto* desc = env->reflection->getType(typeId);
+        if (desc->baseType) {
+            env->editor->gui.typeGui.setTypeFunction(typeId, [typeId](const char* label, void* v, void* min, void* max) {
+                auto* desc = env->reflection->getType(typeId);
+                if (desc && desc->baseType) {
+                    if (desc->flags & Reflection::VECTOR) {
+                        if (ImGui::TreeNodeEx(label)) {
+
+                            int size = desc->vectorSize(v);
+                            for (int i = 0; i < size; i++) {
+                                void* data = desc->vectorGet(v, i);
+
+                                ImGui::PushID(i);
+                                if (ImGui::Button("-")) {
+                                    desc->vectorErase(v, i);
+                                    ImGui::PopID();
+                                    continue;
+                                }
+
+                                ImGui::SameLine();
+                                if (ImGui::Button("+")) {
+                                    desc->vectorInsert(v, i, nullptr);
+                                }
+
+                                ImGui::SameLine();
+                                std::string indexStr = std::to_string(i);
+                                env->editor->gui.typeGui.drawMember(desc->baseType->typeId, data, std::to_string(i).c_str(), nullptr, nullptr, false);
+
+                                ImGui::PopID();
+                            }
+
+                            if (ImGui::Button("+")) {
+                                desc->vectorInsert(v, size, nullptr);
+                            }
+
+                            ImGui::SameLine();
+                            if (ImGui::Button("+5")) {
+                                for (int i = 0; i < 5; i++) {
+                                    desc->vectorInsert(v, size, nullptr);
+                                }
+                            }
+
+                            ImGui::SameLine();
+                            if (ImGui::Button("clear")) {
+                                desc->vectorClear(v);
+                            }
+
+                            ImGui::TreePop();
+                        }
+
+
+                    }
+                }
+            });
+        }
+    }
+
     TRI_STARTUP_CALLBACK("TypeGui"){
         env->editor->gui.typeGui.setTypeFunction<float>([](const char *label, float &v, float *min, float *max){
             if(min != nullptr && max != nullptr){
@@ -161,6 +225,12 @@ namespace tri {
         env->editor->gui.typeGui.setTypeFunction<bool>([](const char *label, bool &v, bool *min, bool *max){
             ImGui::Checkbox(label, &v);
         });
+        env->editor->gui.typeGui.setTypeFunction<EntityId>([](const char* label, EntityId& v, EntityId* min, EntityId* max) {
+            int i = v;
+            ImGui::InputInt(label, &i, 0);
+            v = i;
+        });
+
         env->editor->gui.typeGui.setTypeFunction<std::string>([](const char *label, std::string &v, std::string *min, std::string *max){
             env->editor->gui.textInput(label, v);
         });
@@ -193,6 +263,22 @@ namespace tri {
         addAssetTypeFunction<Shader>();
         addAssetTypeFunction<Texture>();
         addAssetTypeFunction<Prefab>();
+
+        for (auto &desc : env->reflection->getDescriptors()) {
+            if (desc->flags & Reflection::VECTOR) {
+                addVectorTypeFunction(desc->typeId);
+            }
+        }
+        env->signals->typeRegister.addCallback("TypeGui", [](int typeId) {
+            for (auto& desc : env->reflection->getDescriptors()) {
+                if (desc->flags & Reflection::VECTOR) {
+                    addVectorTypeFunction(desc->typeId);
+                }
+            }
+        });
+        env->signals->typeUnregister.addCallback("TypeGui", [](int typeId) {
+            env->editor->gui.typeGui.unsetTypeFunction(typeId);
+        });
 
         env->editor->gui.typeGui.setTypeFunction<Ref<FrameBuffer>>([](const char *label, Ref<FrameBuffer> &v, Ref<FrameBuffer> *min, Ref<FrameBuffer> *max) {
             if(v){
