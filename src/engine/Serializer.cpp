@@ -247,10 +247,12 @@ namespace tri {
                     int i = 0;
                     desc->vectorClear(v);
                     for (auto iter : in) {
-                        desc->vectorInsert(v, i, nullptr);
-                        void *ptr = desc->vectorGet(v, i);
-                        i++;
-                        serializer.deserializeType(iter, desc->baseType->typeId, ptr);
+                        if (iter) {
+                            desc->vectorInsert(v, i, nullptr);
+                            void *ptr = desc->vectorGet(v, i);
+                            i++;
+                            serializer.deserializeType(iter, desc->baseType->typeId, ptr);
+                        }
                     }
 
                 }

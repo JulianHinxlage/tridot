@@ -8,6 +8,7 @@
 #include "EditorElement.h"
 #include "EditorCamera.h"
 #include "entity/Scene.h"
+#include "entity/Prefab.h"
 
 namespace tri {
 
@@ -21,9 +22,9 @@ namespace tri {
     public:
         EntityId editorCameraId;
         EditorCamera editorCamera;
-        Ref<Scene> sceneBuffer;
         EditorCameraMode cameraMode;
-        Transform editorCameraTransformBuffer;
+        Prefab editorCameraBuffer;
+        Ref<Scene> sceneBuffer;
         Ref<FrameBuffer> selectionOverlay;
 
         void startup();
@@ -32,8 +33,8 @@ namespace tri {
         void update() override;
         void updateMousePicking(Ref<Texture> texture, glm::vec2 viewportSize, glm::vec2 pos);
         void updateSelectionOverlay(Transform& cameraTransform, Camera& camera, glm::vec2 viewportSize);
-        void saveEditorCameraTransform();
-        void restoreEditorCameraTransform();
+        void saveEditorCamera();
+        void restoreEditorCamera();
     };
 
 }

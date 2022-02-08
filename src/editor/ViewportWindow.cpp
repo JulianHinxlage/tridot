@@ -296,20 +296,18 @@ namespace tri {
         RenderContext::setBlend(true);
     }
 
-    void ViewportWindow::saveEditorCameraTransform() {
+    void ViewportWindow::saveEditorCamera() {
         if(editorCameraId != -1){
-            if(env->scene->hasComponent<Transform>(editorCameraId)){
-                Transform &t = env->scene->getComponent<Transform>(editorCameraId);
-                editorCameraTransformBuffer = t;
-            }
+            editorCameraBuffer.copyEntity(editorCameraId, env->scene);
         }
     }
 
-    void ViewportWindow::restoreEditorCameraTransform() {
+    void ViewportWindow::restoreEditorCamera() {
         if(editorCameraId != -1){
-            if(env->scene->hasComponent<Transform>(editorCameraId)){
-                Transform &t = env->scene->getComponent<Transform>(editorCameraId);
-                t = editorCameraTransformBuffer;
+            for (auto& comp : editorCameraBuffer.getComponents()) {
+                if (env->scene->hasComponent(comp.getTypeId(), editorCameraId)) {
+                    comp.get(env->scene->getComponent(comp.getTypeId(), editorCameraId));
+                }
             }
         }
     }

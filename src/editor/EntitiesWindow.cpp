@@ -6,6 +6,9 @@
 #include "entity/Scene.h"
 #include "engine/Input.h"
 #include "engine/EntityInfo.h"
+#include "engine/MeshComponent.h"
+#include "engine/RigidBody.h"
+#include "engine/AssetManager.h"
 #include <imgui.h>
 
 namespace tri {
@@ -206,6 +209,51 @@ namespace tri {
                     ImGui::EndMenu();
                 }
 
+                if (ImGui::BeginMenu("Physics")) {
+                    if (ImGui::MenuItem("Box")) {
+                        RigidBody rb;
+                        rb.type = RigidBody::DYNAMIC;
+                        EntityId id = env->scene->addEntity(
+                            EntityInfo("Box"),
+                            Transform(),
+                            Collider(),
+                            rb,
+                            MeshComponent(env->assets->get<Mesh>("models/cube.obj"))
+                        );
+                        env->editor->undo.entityAdded(id);
+                        env->editor->selectionContext.unselectAll();
+                        env->editor->selectionContext.select(id);
+                    }
+                    if (ImGui::MenuItem("Ball")) {
+                        RigidBody rb;
+                        rb.type = RigidBody::DYNAMIC;
+                        EntityId id = env->scene->addEntity(
+                            EntityInfo("Ball"),
+                            Transform(),
+                            Collider(Collider::SPHERE),
+                            rb,
+                            MeshComponent(env->assets->get<Mesh>("models/sphere.obj"))
+                        );
+                        env->editor->undo.entityAdded(id);
+                        env->editor->selectionContext.unselectAll();
+                        env->editor->selectionContext.select(id);
+                    }
+                    if (ImGui::MenuItem("Static Box")) {
+                        RigidBody rb;
+                        rb.type = RigidBody::STATIC;
+                        EntityId id = env->scene->addEntity(
+                            EntityInfo("STatic Box"),
+                            Transform(),
+                            Collider(),
+                            rb,
+                            MeshComponent(env->assets->get<Mesh>("models/cube.obj"))
+                        );
+                        env->editor->undo.entityAdded(id);
+                        env->editor->selectionContext.unselectAll();
+                        env->editor->selectionContext.select(id);
+                    }
+                    ImGui::EndMenu();
+                }
 
 
                 ImGui::EndPopup();

@@ -102,7 +102,7 @@ namespace tri {
 
             if (mode == RuntimeMode::EDIT || (mode == RuntimeMode::SHUTDOWN && previous != RuntimeMode::EDIT)) {
                 if (viewport.cameraMode == EDITOR_CAMERA) {
-                    viewport.saveEditorCameraTransform();
+                    viewport.saveEditorCamera();
                 }
                 env->signals->sceneEnd.invoke(env->scene);
                 {
@@ -111,7 +111,7 @@ namespace tri {
                     sceneBuffer->clear();
                 }
                 if (viewport.cameraMode == EDITOR_CAMERA) {
-                    viewport.restoreEditorCameraTransform();
+                    viewport.restoreEditorCamera();
                 }
                 env->signals->sceneLoad.invoke(env->scene);
             }

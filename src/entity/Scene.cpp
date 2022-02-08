@@ -65,6 +65,7 @@ namespace tri {
         }
         entityPool.add(hint);
         getSignature(hint) = 0;
+        freeList.erase(hint);
 
         //todo: fix components existing if entity is not
         for (int i = 0; i < pools.size(); i++) {

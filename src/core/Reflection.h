@@ -15,6 +15,10 @@ namespace tri {
         template<class T, class U> struct has_equal_impl<T, U, decltype((bool)(std::declval<T>() == std::declval<U>()), void())> : std::true_type {};
         template<class T, class U> struct has_equal : has_equal_impl<T, U, void> {};
 
+        template <typename T> struct is_vector : std::false_type { };
+        template <typename T, typename Alloc> struct is_vector<std::vector<T, Alloc>> : std::true_type {};
+
+
 #define define_has_member(name)                                                    \
         template <typename T>                                                      \
         class has_member_##name                                                    \
@@ -104,9 +108,6 @@ namespace tri {
             friend class Reflection;
             size_t hashCode;
             bool initFlag = false;
-            size_t vectorHashCode = 0;
-
-            virtual std::shared_ptr<TypeDescriptor> createVectorDescriptor() const { return nullptr; }
         };
 
         template<typename T>
@@ -162,12 +163,16 @@ namespace tri {
                 member.offset = offset;
                 member.type = memberDesc;
                 member.flags = flags;
-                if(min == T() && max == T()) {
-                    member.minValue = nullptr;
-                    member.maxValue = nullptr;
-                }else {
-                    member.minValue = new T(min);
-                    member.maxValue = new T(max);
+
+                member.minValue = nullptr;
+                member.maxValue = nullptr;
+                if constexpr (!impl::is_vector<T>::value) {
+                    if constexpr (std::is_copy_constructible<T>::value) {
+                        if(!(min == T() && max == T())) {
+                            member.minValue = new T(min);
+                            member.maxValue = new T(max);
+                        }
+                    }
                 }
             }
         }
@@ -231,72 +236,47 @@ namespace tri {
                 }
             }
 
-            //create new descriptor
-            std::shared_ptr<TypeDescriptorT<T>> desc = std::make_shared<TypeDescriptorT<T>>();
+            std::shared_ptr<TypeDescriptor> desc;
+            if constexpr (impl::is_vector<T>::value) {
+                //create new vector descriptor
+                desc = std::make_shared<VectorDescriptorT<T::value_type>>();
+                desc->baseType = descriptors[getTypeId<T::value_type>()].get();
+                desc->flags = VECTOR;
+            }
+            else {
+                //create new descriptor
+                desc = std::make_shared<TypeDescriptorT<T>>();
+                desc->baseType = nullptr;
+                desc->flags = NONE;
+            }
+
+            //determin final typeId
+            while (typeId >= descriptors.size() || descriptors[typeId] != nullptr) {
+               typeId = descriptors.size();
+               descriptors.push_back(nullptr);
+            }
+
             desc->hashCode = hashCode;
             desc->typeId = typeId;
             desc->size = sizeof(T);
             desc->name = typeid(T).name();
-            desc->flags = NONE;
-            desc->vectorHashCode = typeid(std::vector<T>).hash_code();
-            desc->baseType = nullptr;
             descriptorsByName[desc->name] = desc.get();
-            if (typeId >= descriptors.size()) {
-                desc->typeId = (int)descriptors.size();
-                descriptors.push_back(desc);
-            }
-            else {
-                descriptors[typeId] = desc;
-            }
+            descriptors[typeId] = desc;
 
-
-
-            //check if a vector type to base type connection can be made
-            for (auto& desc2 : descriptors) {
-                if (desc2) {
-                    if (desc2->vectorHashCode == desc->hashCode) {
-                        //update descriptor to vector descriptor
-                        desc->flags = (TypeFlags)(desc->flags | VECTOR);
-                        desc->baseType = desc2.get();
-                        std::shared_ptr<TypeDescriptor> vDesc = desc2->createVectorDescriptor();
-                        if (vDesc != nullptr) {
-                            *vDesc = *desc;
-                            descriptorsByName[vDesc->name] = vDesc.get();
-                            descriptors[vDesc->typeId] = vDesc;
-                            return vDesc->typeId;
-                        }
-                    }
-                    if (desc->vectorHashCode == desc2->hashCode) {
-                        //update descriptor to vector descriptor
-                        desc2->flags = (TypeFlags)(desc2->flags | VECTOR);
-                        desc2->baseType = desc.get();
-                        std::shared_ptr<TypeDescriptor> vDesc = desc->createVectorDescriptor();
-                        if (vDesc != nullptr) {
-                            *vDesc = *desc2;
-                            descriptorsByName[vDesc->name] = vDesc.get();
-                            descriptors[vDesc->typeId] = vDesc;
-                            return desc->typeId;
-                        }
-                    }
-                }
-            }
-
-
-            return desc->typeId;
+            return typeId;
         }
 
         template<typename T>
         int registerTypeImpl(const std::string& name, const std::string& group = "", TypeFlags flags = NONE) {
-            TypeDescriptor* desc = descriptors[getTypeId<T>()].get();
+            int typeId = getTypeId<T>();
+            TypeDescriptor* desc = descriptors[typeId].get();
             descriptorsByName.erase(desc->name);
             desc->name = name;
             desc->group = group;
             desc->flags = (TypeFlags)(desc->flags | flags);
             desc->hashCode = typeid(T).hash_code();
-            desc->vectorHashCode = typeid(std::vector<T>).hash_code();
-            desc->baseType = nullptr;
             descriptorsByName[desc->name] = desc;
-            return desc->typeId;
+            return typeId;
         }
 
         void update() override;
@@ -326,20 +306,34 @@ namespace tri {
                 }
             }
             bool equals(void* v1, void* v2) const override {
-                if constexpr (impl::has_equal<T, T>()) {
-                    return *(T*)v1 == *(T*)v2;
+                if constexpr (impl::is_vector<T>::value) {
+                    if constexpr (impl::has_equal<T, T>()) {
+                        if constexpr (impl::has_equal<T::value_type, T::value_type>()) {
+                            return *(T*)v1 == *(T*)v2;
+                        }
+                    }
                 }
                 else {
-                    return false;
+                    if constexpr (impl::has_equal<T, T>()) {
+                        return *(T*)v1 == *(T*)v2;
+                    }
                 }
+                return false;
             }
             bool hasEquals() const override {
-                if constexpr (impl::has_equal<T, T>()) {
-                    return true;
+                if constexpr (impl::is_vector<T>::value) {
+                    if constexpr (impl::has_equal<T, T>()) {
+                        if constexpr (impl::has_equal<T::value_type, T::value_type>()) {
+                            return true;
+                        }
+                    }
                 }
                 else {
-                    return false;
+                    if constexpr (impl::has_equal<T, T>()) {
+                        return true;
+                    }
                 }
+                return false;
             }
             void swap(void* v1, void* v2) const override {
                 std::swap(*(T*)v1, *(T*)v2);
@@ -386,13 +380,8 @@ namespace tri {
                     }
                 }
             }
-
-            std::shared_ptr<TypeDescriptor> createVectorDescriptor() const override {
-                return std::make_shared<VectorDescriptorT<T>>();
-            }
-
         };
-
+        
         template<typename E>
         class VectorDescriptorT : public TypeDescriptor {
         public:
@@ -476,7 +465,6 @@ namespace tri {
                 return ((T*)ptr)->size();
             }
             virtual void* vectorGet(void* ptr, int index) const {
-                //return ((T*)ptr)->data();
                 return &(E&)(*(((T*)ptr)->begin() + index));
             }
             virtual void vectorInsert(void* ptr, int index, void* elementPtr) const {
@@ -494,7 +482,7 @@ namespace tri {
                 return ((T*)ptr)->clear();
             }
         };
-
+        
     };
 
 }

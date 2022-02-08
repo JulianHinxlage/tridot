@@ -151,13 +151,18 @@ namespace tri {
 
                             int size = desc->vectorSize(v);
                             for (int i = 0; i < size; i++) {
-                                void* data = desc->vectorGet(v, i);
+
+                                int indentStartValue = ImGui::GetCursorPosX();
+
 
                                 ImGui::PushID(i);
                                 if (ImGui::Button("-")) {
                                     desc->vectorErase(v, i);
-                                    ImGui::PopID();
-                                    continue;
+                                    size--;
+                                    if (i >= size) {
+                                        ImGui::PopID();
+                                        break;
+                                    }
                                 }
 
                                 ImGui::SameLine();
@@ -167,7 +172,16 @@ namespace tri {
 
                                 ImGui::SameLine();
                                 std::string indexStr = std::to_string(i);
-                                env->editor->gui.typeGui.drawMember(desc->baseType->typeId, data, std::to_string(i).c_str(), nullptr, nullptr, false);
+
+                                int indentValue = ImGui::GetCursorPosX() - indentStartValue;
+                                ImGui::Indent(indentValue);
+
+                                void* data = desc->vectorGet(v, i);
+                                if (env->reflection->getType(desc->baseType->typeId)) {
+                                    env->editor->gui.typeGui.drawMember(desc->baseType->typeId, data, std::to_string(i).c_str(), nullptr, nullptr, false);
+                                }
+
+                                ImGui::Unindent(indentValue);
 
                                 ImGui::PopID();
                             }

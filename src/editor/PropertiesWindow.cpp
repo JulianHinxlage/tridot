@@ -301,7 +301,9 @@ namespace tri {
             if (ImGui::MenuItem("Delete")) {
                 env->editor->undo.beginAction();
                 for(EntityId id : env->editor->selectionContext.getSelected()){
-                    env->editor->entityOperations.removeComponent(typeId, id);
+                    if (env->scene->hasComponent(typeId, id)) {
+                        env->editor->entityOperations.removeComponent(typeId, id);
+                    }
                 }
                 env->editor->undo.endAction();
             }
