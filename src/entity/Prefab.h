@@ -10,6 +10,7 @@
 
 namespace tri {
 
+    //used to create pre-defined entities with a given set of components
     class Prefab : public Asset {
     public:
         Prefab();
@@ -54,7 +55,7 @@ namespace tri {
 
         template<typename... Components>
         Prefab& addChild(const Components&... comps) {
-            children.push_back(std::make_shared<Prefab>(comps...));
+            children.push_back(Ref<Prefab>::make(comps...));
             return *children.back().get();
         }
 
@@ -63,14 +64,14 @@ namespace tri {
         void operator=(const Prefab& prefab);
         void clear();
         std::vector<ComponentBuffer> &getComponents(){return comps;}
-        std::vector<std::shared_ptr<Prefab>> &getChildren(){return children;}
+        std::vector<Ref<Prefab>> &getChildren(){return children;}
 
         bool load(const std::string &file) override;
         bool save(const std::string &file) override;
 
     private:
         std::vector<ComponentBuffer> comps;
-        std::vector<std::shared_ptr<Prefab>> children;
+        std::vector<Ref<Prefab>> children;
     };
 
 }

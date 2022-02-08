@@ -15,7 +15,23 @@ namespace tri {
         set(typeId);
     }
 
-    void ComponentBuffer::set(int typeId, void *ptr) {
+    ComponentBuffer::ComponentBuffer(const ComponentBuffer& buffer) {
+        operator=(buffer);
+    }
+
+    ComponentBuffer::ComponentBuffer(ComponentBuffer&& buffer)
+        : typeId(buffer.typeId), data(std::move(buffer.data)) {}
+    
+    ComponentBuffer::~ComponentBuffer() {
+        clear();
+    }
+
+    void ComponentBuffer::operator=(const ComponentBuffer& buffer) {
+        set(buffer.typeId, buffer.data.data());
+    }
+
+    void ComponentBuffer::set(int typeId, const void *ptr) {
+        clear();
         this->typeId = typeId;
         auto *desc = env->reflection->getType(typeId);
         if (desc) {
@@ -49,6 +65,12 @@ namespace tri {
     }
 
     void ComponentBuffer::clear() {
+        auto* desc = env->reflection->getType(typeId);
+        if (desc) {
+            if (data.size() == desc->size) {
+                desc->destruct(data.data());
+            }
+        }
         typeId = -1;
         data.clear();
     }

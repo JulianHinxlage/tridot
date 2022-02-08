@@ -16,6 +16,10 @@
 
 namespace tri {
 
+    //flag component for entities that should only be loaded in the editor
+    class EditorOnly {};
+    TRI_REGISTER_TYPE(EditorOnly);
+
     class Editor : public System {
     public:
         SelectionContext selectionContext;

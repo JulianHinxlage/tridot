@@ -13,7 +13,12 @@ namespace tri {
     public:
         ComponentBuffer();
         ComponentBuffer(int typeId);
-        void set(int typeId, void *ptr = nullptr);
+        ComponentBuffer(const ComponentBuffer &buffer);
+        ComponentBuffer(ComponentBuffer &&buffer);
+        ~ComponentBuffer();
+        void operator=(const ComponentBuffer& buffer);
+        
+        void set(int typeId, const void *ptr = nullptr);
         void *get();
         void get(void *ptr);
         int getTypeId();

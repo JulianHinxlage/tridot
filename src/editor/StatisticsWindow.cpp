@@ -27,21 +27,21 @@ namespace tri{
 
             ImGui::Separator();
             ImGui::Text("rendering:");
-            ImGui::Text("%i instances", env->renderer->instanceCount);
-            ImGui::Text("%i draw calls", env->renderer->drawCallCount);
-            ImGui::Text("%i shaders", env->renderer->shaderCount);
-            ImGui::Text("%i materials", env->renderer->materialCount);
-            ImGui::Text("%i meshes", env->renderer->meshCount);
-            ImGui::Text("%i lights", env->renderer->lightCount);
-            ImGui::Text("%i cameras", env->renderer->cameraCount);
+            ImGui::Text("%i instances", env->renderer->stats.instanceCount);
+            ImGui::Text("%i draw calls", env->renderer->stats.drawCallCount);
+            ImGui::Text("%i shaders", env->renderer->stats.shaderCount);
+            ImGui::Text("%i materials", env->renderer->stats.materialCount);
+            ImGui::Text("%i meshes", env->renderer->stats.meshCount);
+            ImGui::Text("%i lights", env->renderer->stats.lightCount);
+            ImGui::Text("%i cameras", env->renderer->stats.cameraCount);
 
-            env->renderer->drawCallCount = 0;
-            env->renderer->instanceCount = 0;
-            env->renderer->meshCount = 0;
-            env->renderer->materialCount = 0;
-            env->renderer->shaderCount = 0;
-            env->renderer->lightCount = 0;
-            env->renderer->cameraCount = 0;
+            env->renderer->stats.drawCallCount = 0;
+            env->renderer->stats.instanceCount = 0;
+            env->renderer->stats.meshCount = 0;
+            env->renderer->stats.materialCount = 0;
+            env->renderer->stats.shaderCount = 0;
+            env->renderer->stats.lightCount = 0;
+            env->renderer->stats.cameraCount = 0;
         }
     };
 

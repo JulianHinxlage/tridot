@@ -224,9 +224,14 @@ namespace tri {
         impl->startup();
     }
 
-    void Renderer::beginScene(glm::mat4& projection, glm::vec3 position) {
+    void Renderer::setCamera(glm::mat4& projection, glm::vec3 position, Ref<FrameBuffer> frameBuffer) {
         impl->environment.projection = projection;
         impl->environment.cameraPosition = position;
+        this->frameBuffer = frameBuffer;
+    }
+
+    void Renderer::setRenderPass(const Ref<RenderPass>& pass) {
+        currentPass = pass;
     }
 
     void Renderer::submit(const glm::vec3& position, const glm::vec3 direction, Light& light) {
@@ -309,23 +314,56 @@ namespace tri {
         }   
     }
 
-    void Renderer::drawScene(Ref<FrameBuffer> frameBuffer) {
-        this->frameBuffer = frameBuffer;
+    void Renderer::submitDirect(const glm::mat4& transform, const glm::vec3& position, Mesh* mesh, Shader* shader, Texture* texture, Color color) {
+        if (!mesh) {
+            mesh = defaultMesh.get();
+        }
+        if (mesh->vertexArray.getId() != 0) {
+            if (!shader) {
+                shader = env->assets->get<Shader>("shaders/base.glsl").get();
+            }
+            if (shader->getId() != 0) {
+                if (!texture) {
+                    texture = defaultTexture.get();
+                }
+
+                RenderPass* pass = currentPass.get();
+                if (!pass) {
+                    pass = geometryPass.get();
+                }
+
+                auto &call = pass->addDrawCall("direct");
+                call.shader = shader;
+                call.mesh = mesh;
+                call.textures.push_back(texture);
+                call.frameBuffer = frameBuffer;
+
+                Ref<ShaderState> shaderState = Ref<ShaderState>::make();
+                shaderState->set("uColor", color.vec());
+                shaderState->set("uProjection", impl->environment.projection);
+                shaderState->set("uTransform", transform);
+                call.shaderState = shaderState;
+            }
+        }
     }
 
     void Renderer::update() {
-        geometryPass->addCommand(DEPTH_ON).name = "depth on";
-        geometryPass->addCommand(BLEND_ON).name = "blend on";
+        if (currentPass == nullptr) {
+            currentPass = geometryPass;
+            currentPass->addCommand(DEPTH_ON).name = "depth on";
+            currentPass->addCommand(BLEND_ON).name = "blend on";
+        }
+
 
         //set environment
         EnvironmentData* e = (EnvironmentData*)impl->environmentBuffer->next();
         *e = impl->environment;
         e->lightCount = impl->lightBuffer->size();
-        lightCount = e->lightCount;
+        stats.lightCount = e->lightCount;
 
         if (impl->radianceMap) {
             e->radianceMapIndex = 0;
-            geometryPass->addCallback([radianceMap = impl->radianceMap]() {
+            currentPass->addCallback([radianceMap = impl->radianceMap]() {
                 radianceMap->bind(30);
             }).name = "bind radiance map";
         }
@@ -334,7 +372,7 @@ namespace tri {
         }
         if (impl->irradianceMap) {
             e->irradianceMapIndex = 1;
-            geometryPass->addCallback([irradianceMap = impl->irradianceMap]() {
+            currentPass->addCallback([irradianceMap = impl->irradianceMap]() {
                 irradianceMap->bind(31);
             }).name = "bind irradiance map";
         }
@@ -349,7 +387,7 @@ namespace tri {
         impl->irradianceMap = nullptr;
 
 
-        geometryPass->addCallback([&]() {
+        currentPass->addCallback([&]() {
             impl->lightBuffer->update();
             impl->environmentBuffer->update();
         }).name = "environment";
@@ -365,9 +403,9 @@ namespace tri {
 
         TRI_PROFILE("geometry");
 
-        shaderCount = 0;
-        meshCount = 0;
-        instanceCount = 0;
+        stats.shaderCount = 0;
+        stats.meshCount = 0;
+        stats.instanceCount = 0;
 
         int meshCounter = 0;
         int materialCounter = 0;
@@ -375,7 +413,7 @@ namespace tri {
         //instance shader
         for (auto& list : impl->batches) {
             if (list.size() > 0) {
-                shaderCount++;
+                stats.shaderCount++;
             }
             for (auto batch : list) {
                 if (batch && batch->instances) {
@@ -419,7 +457,7 @@ namespace tri {
 
 
                         //set instances
-                        geometryPass->addCallback([batch]() {
+                        currentPass->addCallback([batch]() {
                             batch->instances->update();
                             batch->materialBuffer->update();
                         }).name = "instances " + file;
@@ -430,10 +468,10 @@ namespace tri {
                         batch->instances->reset();
                         batch->materialBuffer->reset();
 
-                        instanceCount += batch->instanceCount;
+                        stats.instanceCount += batch->instanceCount;
 
                         //set draw call
-                        auto& step = geometryPass->addDrawCall("mesh " + file);
+                        auto& step = currentPass->addDrawCall("mesh " + file);
                         step.shader = batch->shader;
                         step.frameBuffer = frameBuffer;
                         step.mesh = batch->mesh;
@@ -459,13 +497,10 @@ namespace tri {
                     }
                 }
             }
-            meshCount = std::max(meshCount, meshCounter);
-            materialCount = std::max(materialCount, materialCounter);
+            stats.meshCount = std::max(stats.meshCount, meshCounter);
+            stats.materialCount = std::max(stats.materialCount, materialCounter);
         }
-    }
-
-    void Renderer::resetScene() {
-
+        currentPass = nullptr;
     }
 
     void Renderer::shutdown() {

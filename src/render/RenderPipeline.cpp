@@ -25,14 +25,13 @@ namespace tri {
         getOrAddRenderPass("gui end");
         getOrAddRenderPass("window");
         getOrAddRenderPass("gui begin");
-        getOrAddRenderPass("editor");
-
         getOrAddRenderPass("clear");
-
+        getOrAddRenderPass("editor");
         getOrAddRenderPass("skybox");
         getOrAddRenderPass("shadow");
         getOrAddRenderPass("geometry");
         getOrAddRenderPass("viewport");
+        getOrAddRenderPass("outlines");
         auto postProcess = getOrAddRenderPass("post process");
 
 
@@ -50,7 +49,7 @@ namespace tri {
             step.shader = env->assets->get<Shader>("shaders/blur.glsl");
             step.shaderState = Ref<ShaderState>::make();
             step.shaderState->set("steps", 10);
-            step.shaderState->set("spread", glm::vec2(1.0f / 2000, 0.0f));
+            step.shaderState->set("spread", glm::vec2(1, 0.0f));
         }
         {
             auto& step = postProcess->addDrawCall("vblur", true);
@@ -59,7 +58,7 @@ namespace tri {
             step.shader = env->assets->get<Shader>("shaders/blur.glsl");
             step.shaderState = Ref<ShaderState>::make();
             step.shaderState->set("steps", 10);
-            step.shaderState->set("spread", glm::vec2(0.0f, 1.0f / 2000));
+            step.shaderState->set("spread", glm::vec2(0.0f, 1));
         }
 
     }
@@ -230,7 +229,7 @@ namespace tri {
                 }
             }
         }
-        env->renderer->drawCallCount = drawCallCount;
+        env->renderer->stats.drawCallCount = drawCallCount;
         env->renderThread->unlock();
     }
 

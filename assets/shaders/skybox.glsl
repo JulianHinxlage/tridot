@@ -27,8 +27,10 @@ uniform samplerCube uTextures[32];
 uniform vec4 uColor = vec4(1);
 
 out vec4 oColor;
+out vec4 oId;
 
 void main(){
     vec3 v = fPosition;
     oColor = texture(uTextures[0], vec3(v.x, -v.z, v.y)) * uColor;
+    oId = vec4(1, 1, 1, 1);
 }

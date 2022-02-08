@@ -21,15 +21,21 @@ namespace tri {
     class ViewportWindow : public EditorElement {
     public:
         EntityId editorCameraId;
+        EntityId drawCameraId;
+        glm::vec2 viewportSize;
+        glm::vec2 viewportPosition;
+        bool isHovered;
+
         EditorCamera editorCamera;
         EditorCameraMode cameraMode;
         Prefab editorCameraBuffer;
         Ref<Scene> sceneBuffer;
         Ref<FrameBuffer> selectionOverlay;
+        Ref<FrameBuffer> selectionOverlay2;
 
         void startup();
         void setupFrameBuffer(Camera &cam, bool idBuffer);
-        void setupCamera();
+        void setupEditorCamera();
         void update() override;
         void updateMousePicking(Ref<Texture> texture, glm::vec2 viewportSize, glm::vec2 pos);
         void updateSelectionOverlay(Transform& cameraTransform, Camera& camera, glm::vec2 viewportSize);

@@ -2,7 +2,6 @@ cmake_minimum_required(VERSION 3.0)
 set(CMAKE_CXX_STANDARD 20)
 
 #general settings
-#set(CMAKE_UNITY_BUILD ON)
 if(WIN32)
     set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
     set(LIBRARY_OUTPUT_PATH ${CMAKE_CURRENT_BINARY_DIR})
@@ -15,12 +14,15 @@ else()
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
     add_link_options(-no-pie)
 endif()
+#set(CMAKE_UNITY_BUILD ON)
+set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+set(CMAKE_FOLDER Libs)
 
 #tridot
 project(Tridot)
-file(GLOB_RECURSE SOURCES src/core/*.cpp src/entity/*.cpp src/engine/*.cpp src/render/*.cpp)
-file(GLOB_RECURSE HEADERS src/core/*.h src/entity/*.h src/engine/*.h src/render/*.h)
-file(GLOB IMGUI_SOURCES extern/imgui/*.cpp extern/imgui/backends/imgui_impl_glfw.cpp extern/imgui/backends/imgui_impl_opengl3.cpp)
+file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS src/core/*.cpp src/entity/*.cpp src/engine/*.cpp src/render/*.cpp)
+file(GLOB_RECURSE HEADERS CONFIGURE_DEPENDS src/core/*.h src/entity/*.h src/engine/*.h src/render/*.h)
+file(GLOB IMGUI_SOURCES CONFIGURE_DEPENDS extern/imgui/*.cpp extern/imgui/backends/imgui_impl_glfw.cpp extern/imgui/backends/imgui_impl_opengl3.cpp)
 add_library(${PROJECT_NAME} SHARED ${SOURCES} ${HEADERS} ${IMGUI_SOURCES} extern/imguizmo/ImGuizmo.cpp extern/tracy/TracyClient.cpp)
 target_precompile_headers(${PROJECT_NAME} PUBLIC src/pch.h)
 target_include_directories(${PROJECT_NAME} PUBLIC src)
@@ -50,15 +52,19 @@ target_include_directories(${PROJECT_NAME} PUBLIC extern extern/glm extern/glfw/
 
 #launcher
 project(TridotLauncher)
-file(GLOB_RECURSE SOURCES src/launcher/*.cpp)
+file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS src/launcher/*.cpp)
 add_executable(${PROJECT_NAME} ${SOURCES})
 target_include_directories(${PROJECT_NAME} PUBLIC src src/launcher)
 target_link_libraries(${PROJECT_NAME} PUBLIC Tridot)
 
 #editor
 project(TridotEditor)
-file(GLOB_RECURSE SOURCES src/editor/*.cpp)
-file(GLOB_RECURSE HEADERS src/editor/*.h)
+file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS src/editor/*.cpp)
+file(GLOB_RECURSE HEADERS CONFIGURE_DEPENDS src/editor/*.h)
 add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS})
 target_include_directories(${PROJECT_NAME} PUBLIC src src/editor)
 target_link_libraries(${PROJECT_NAME} PUBLIC Tridot)
+
+#folders
+set_target_properties(Tridot TridotEditor TridotLauncher PROPERTIES FOLDER Tridot)
+set_target_properties(glfw uninstall PROPERTIES FOLDER Libs)

@@ -21,10 +21,11 @@ void main(){
 in vec2 fTexCoords;
 
 uniform sampler2D uTextures[32];
+uniform vec4 uColor = vec4(1);
 
 out vec4 oColor;
 out vec4 oId;
 
 void main(){
-    oColor = texture(uTextures[0], fTexCoords);
+    oColor = texture(uTextures[0], fTexCoords) * uColor;
 }

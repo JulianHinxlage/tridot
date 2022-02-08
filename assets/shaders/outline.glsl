@@ -21,17 +21,20 @@ void main(){
 in vec2 fTexCoords;
 
 uniform sampler2D uTextures[32];
-uniform int steps = 10;
-uniform vec2 spread = vec2(1, 0);
+uniform vec4 uColor = vec4(1);
+uniform int steps = 2;
 
 out vec4 oColor;
 out vec4 oId;
 
-void main(){
+void main() {
+    vec4 color;
     vec2 texSize = textureSize(uTextures[0], 0);
-    vec4 color = vec4(0);
     for(int i = -steps; i <= steps; i++){
-        color += texture(uTextures[0], clamp(fTexCoords.xy + i * spread * (1.0 / texSize), 0.0f, 0.999f));
+        for(int j = -steps; j <= steps; j++){
+            color += texture(uTextures[0], clamp(fTexCoords.xy + vec2(i, j) * (1.0 / texSize), 0.0f, 0.999f));
+        }
     }
-    oColor = color / (steps * 2 + 1);
+    color /= (steps * 2 + 1) * (steps * 2 + 1);
+    oColor = vec4(uColor.xyz, color.a == 1 ? 0 : (color.a == 0 ? 0 : 1 ));
 }

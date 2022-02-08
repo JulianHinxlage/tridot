@@ -23,7 +23,7 @@ namespace tri {
     TRI_UPDATE_CALLBACK("MeshComponent") {
         env->scene->view<Camera, Transform>().each([](Camera& camera, Transform &cameraTransform) {
             if (camera.active) {
-                env->renderer->cameraCount++;
+                env->renderer->stats.cameraCount++;
 
                 //frame buffer
                 if(!env->editor){
@@ -48,7 +48,7 @@ namespace tri {
                     env->renderer->submit(position, direction, light);
                 });
 
-                env->renderer->beginScene(camera.projection, cameraTransform.position);
+                env->renderer->setCamera(camera.projection, cameraTransform.position, camera.output);
 
                 env->scene->view<Skybox>().each([](Skybox& skybox) {
                     if (skybox.useIBL && skybox.irradianceMap.get() != nullptr) {
@@ -64,8 +64,6 @@ namespace tri {
                     });
                 }
 
-                env->renderer->drawScene(camera.output);
-                env->renderer->resetScene();
             }
             if(env->editor || !camera.isPrimary){
                 camera.active = false;

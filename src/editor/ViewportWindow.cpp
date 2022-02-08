@@ -20,11 +20,9 @@
 #include "engine/RuntimeMode.h"
 #include "render/RenderThread.h"
 #include "render/RenderPipeline.h"
+#include "render/ShaderState.h"
 #include <imgui/imgui.h>
 #include <glm/gtc/matrix_transform.hpp>
-
-class EditorOnly{};
-TRI_REGISTER_TYPE(EditorOnly);
 
 namespace tri {
 
@@ -32,6 +30,9 @@ namespace tri {
         name = "Viewport";
         type = ELEMENT;
         editorCameraId = -1;
+        drawCameraId = -1;
+        isHovered = false;
+        viewportSize = { 0, 0 };
         cameraMode = EDITOR_CAMERA;
 
         env->signals->sceneLoad.addCallback([&](Scene *scene){
@@ -56,7 +57,7 @@ namespace tri {
         }
     }
 
-    void ViewportWindow::setupCamera(){
+    void ViewportWindow::setupEditorCamera(){
         //search for camera in scene
         editorCameraId = -1;
         env->scene->view<Camera, EditorOnly>().each([&](EntityId id, Camera &cam, EditorOnly &){
@@ -65,6 +66,7 @@ namespace tri {
             }
         });
 
+        //create editor camera
         if(editorCameraId == -1){
             editorCameraId = env->scene->addEntity(EditorOnly(), EntityInfo());
             Transform& t = env->scene->addComponent<Transform>(editorCameraId);
@@ -78,142 +80,107 @@ namespace tri {
     void ViewportWindow::update(){
         TRI_PROFILE("Viewport");
         if(editorCameraId == -1){
-            setupCamera();
+            setupEditorCamera();
         }
 
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
         ImGui::PushStyleVar(ImGuiStyleVar_ChildBorderSize, 0);
         if (ImGui::Begin(name.c_str(), &isOpen)) {
-            //get camera
-            Ref<FrameBuffer> output = nullptr;
-            ImVec2 viewportSize = ImGui::GetContentRegionAvail();
-            ImVec2 viewportPosition = ImGui::GetCursorPos();
-            Camera *cam = nullptr;
-            Transform *camTransform = nullptr;
-            env->scene->view<Camera, Transform>().each([&](EntityId id, Camera& camera, Transform &transform) {
 
-                //select camera based on options
-                if (env->runtime->getMode() == RuntimeMode::RUNTIME || env->runtime->getMode() == RuntimeMode::PAUSE) {
-                    if(cameraMode == EDITOR_CAMERA){
-                        if (id == editorCameraId) {
-                            output = camera.output;
-                            cam = &camera;
-                            camTransform = &transform;
-                        }
-                    }else{
+            //determin camera to show
+            drawCameraId = editorCameraId;
+            if (env->runtime->getMode() == RuntimeMode::RUNTIME || env->runtime->getMode() == RuntimeMode::PAUSE) {
+                if (cameraMode != EDITOR_CAMERA) {
+                    env->scene->view<Camera>().each([&](EntityId id, Camera& camera) {
                         if (camera.isPrimary) {
-                            output = camera.output;
-                            cam = &camera;
-                            camTransform = &transform;
+                            drawCameraId = id;
+                        }
+                    });
+                }
+            }
+
+            glm::vec2 oldSize = viewportSize;
+            viewportSize = { ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y };
+            viewportPosition = { ImGui::GetCursorPos().x, ImGui::GetCursorPos().y };
+
+            if (env->scene->hasComponents<Camera, Transform>(drawCameraId)) {
+                Camera& camera = env->scene->getComponent<Camera>(drawCameraId);
+                Transform& transform = env->scene->getComponent<Transform>(drawCameraId);
+                Ref<FrameBuffer> output = camera.output;
+                camera.active = true;
+                if (viewportSize.y != 0) {
+                    camera.aspectRatio = viewportSize.x / viewportSize.y;
+                }
+
+                if (output && output->getId() != 0) {
+                    //draw rendered image to viewport
+                    if (output->getAttachment(TextureAttachment::COLOR)) {
+                        ImGui::Image((ImTextureID)(size_t)output->getAttachment(TextureAttachment::COLOR)->getId(), ImVec2(oldSize.x, oldSize.y), ImVec2(0, 1), ImVec2(1, 0));
+                    }
+                    isHovered = ImGui::IsWindowHovered();
+
+                    //set render pipeline size and output
+                    env->pipeline->setSize(viewportSize.x, viewportSize.y);
+                    env->pipeline->setOutput(output);
+
+                    //editor camera
+                    if (cameraMode != FIXED_PRIMARY_CAMERA || env->runtime->getMode() == RuntimeMode::EDIT) {
+                        if (isHovered) {
+                            editorCamera.update(camera, transform);
+                        }
+                    }
+
+                    //gizmos
+                    bool pickingAllowed = true;
+                    if (env->editor->gizmos.updateGizmo(transform, camera, viewportPosition, viewportSize)) {
+                        pickingAllowed = false;
+                    }
+
+                    //mouse picking
+                    if (pickingAllowed) {
+                        Ref<Texture> texture = output->getAttachment((TextureAttachment)(COLOR + 1));
+                        if (texture) {
+                            if (ImGui::IsItemHovered()) {
+                                glm::vec2 pos = { 0, 0 };
+                                pos.x = ImGui::GetMousePos().x - ImGui::GetItemRectMin().x;
+                                pos.y = ImGui::GetMousePos().y - ImGui::GetItemRectMin().y;
+                                env->pipeline->getOrAddRenderPass("viewport")->addCallback([this, texture, pos]() {
+                                    updateMousePicking(texture, viewportSize, pos);
+                                });
+                            }
+                        }
+                    }
+
+                    //dragging prefabs in
+                    std::string file = env->editor->gui.dragDropTarget(env->reflection->getTypeId<Prefab>());
+                    if (!file.empty()) {
+                        Ref<Prefab> prefab = env->assets->get<Prefab>(file, true);
+
+                        glm::vec3 pos;
+                        pos = transform.position + camera.forward * 2.0f;
+
+                        EntityId id = prefab->createEntity(env->scene);
+                        env->editor->undo.entityAdded(id);
+                        env->editor->selectionContext.unselectAll();
+                        env->editor->selectionContext.select(id);
+
+                        Transform& t = env->scene->getOrAddPendingComponent<Transform>(id);
+                        t.position = pos;
+                        t.parent = -1;
+                    }
+
+                    //draw selection overlay
+                    if (env->editor->selectionContext.getSelected().size() > 0) {
+                        updateSelectionOverlay(transform, camera, glm::vec2(viewportSize.x, viewportSize.y));
+                        if (selectionOverlay) {
+                            ImGui::SetCursorPos(ImVec2(viewportPosition.x, viewportPosition.y));
+                            ImGui::Image((ImTextureID)(size_t)selectionOverlay->getAttachment(TextureAttachment::COLOR)->getId(), ImVec2(viewportSize.x, viewportSize.y), ImVec2(0, 1), ImVec2(1, 0));
                         }
                     }
                 }
                 else {
-                    if (id == editorCameraId) {
-                        output = camera.output;
-                        cam = &camera;
-                        camTransform = &transform;
-                    }
+                    setupFrameBuffer(camera, true);
                 }
-
-                env->pipeline->getOrAddRenderPass("viewport")->addCallback([this, id, viewportSize]() {
-                    if (env->scene->hasComponent<Camera>(id)) {
-                        Camera& camera = env->scene->getComponent<Camera>(id);
-                        if (camera.output) {
-                            if (camera.output->getSize() != glm::vec2(viewportSize.x, viewportSize.y)) {
-                                camera.output->resize(viewportSize.x, viewportSize.y);
-                                camera.aspectRatio = viewportSize.x / viewportSize.y;
-                            }
-                        }
-                        else {
-                            setupFrameBuffer(camera, true);
-                        }
-                    }
-                });
-            });
-
-            if(cam){
-                cam->active = true;
-            }
-
-            if (output) {
-                env->pipeline->getOrAddRenderPass("viewport")->addCallback([output, viewportSize]() {
-                    env->pipeline->setSize(viewportSize.x, viewportSize.y);
-                    env->pipeline->setOutput(output);
-                });
-            }
-
-            if (output) {
-                //draw image
-                if (output->getId() != 0) {
-                    if (output->getAttachment(TextureAttachment::COLOR)) {
-                        ImGui::Image((ImTextureID)(size_t)output->getAttachment(TextureAttachment::COLOR)->getId(), viewportSize, ImVec2(0, 1), ImVec2(1, 0));
-                    }
-                }
-
-                //draw selection overlay
-                /*if (env->editor->selectionContext.getSelected().size() > 0) {
-                    if (cam && camTransform) {
-                        env->pipeline->getOrAddRenderPass("viewport")->addCallback([this, viewportSize, camTransform, &cam]() {
-                            updateSelectionOverlay(*camTransform, *cam, glm::vec2(viewportSize.x, viewportSize.y));
-                        });
-                        if (selectionOverlay) {
-                            ImGui::SetCursorPos(viewportPosition);
-                            ImGui::Image((ImTextureID)(size_t)selectionOverlay->getAttachment(TextureAttachment::COLOR)->getId(), viewportSize, ImVec2(0, 1), ImVec2(1, 0));
-                        }
-                    }
-                }*/
-
-                bool pickingAllowed = true;
-                //gizmos
-                if(cam && camTransform){
-                    if(env->editor->gizmos.updateGizmo(*camTransform, *cam, {viewportPosition.x, viewportPosition.y}, {viewportSize.x, viewportSize.y})){
-                        pickingAllowed = false;
-                    }
-                }
-                //mouse picking
-                if(pickingAllowed){
-                    Ref<Texture> texture = output->getAttachment((TextureAttachment)(COLOR + 1));
-                    if (texture) {
-                        if (ImGui::IsItemHovered()) {
-                            glm::vec2 pos = { 0, 0 };
-                            pos.x = ImGui::GetMousePos().x - ImGui::GetItemRectMin().x;
-                            pos.y = ImGui::GetMousePos().y - ImGui::GetItemRectMin().y;
-                            env->pipeline->getOrAddRenderPass("viewport")->addCallback([this, output, viewportSize, texture, pos]() {
-                                updateMousePicking(texture, { viewportSize.x, viewportSize.y }, pos);
-                            });
-                        }
-                    }
-                }
-            }
-
-            //editor camera
-            if(cam && camTransform) {
-                if(cameraMode != FIXED_PRIMARY_CAMERA || env->runtime->getMode() == RuntimeMode::EDIT) {
-                    if (ImGui::IsWindowHovered()) {
-                        editorCamera.update(*cam, *camTransform);
-                    }
-                }
-            }
-
-            //dragging prefabs in
-            std::string file = env->editor->gui.dragDropTarget(env->reflection->getTypeId<Prefab>());
-            if(!file.empty()){
-                Ref<Prefab> prefab = env->assets->get<Prefab>(file, true);
-
-                glm::vec3 pos;
-                if(cam && camTransform){
-                    pos = camTransform->position + cam->forward;
-                }
-
-                EntityId id = prefab->createEntity(env->scene);
-                env->editor->undo.entityAdded(id);
-                env->editor->selectionContext.unselectAll();
-                env->editor->selectionContext.select(id);
-
-                Transform &t = env->scene->getOrAddPendingComponent<Transform>(id);
-                t.position = pos;
-                t.parent = -1;
             }
 
         }
@@ -242,58 +209,77 @@ namespace tri {
                     env->editor->selectionContext.unselectAll();
                 }
                 if(id != -1) {
-                    if(control && env->editor->selectionContext.isSelected(id)){
-                        env->editor->selectionContext.unselect(id);
-                    }else{
-                        env->editor->selectionContext.select(id);
+                    if (env->scene->hasEntity(id)) {
+                        if(control && env->editor->selectionContext.isSelected(id)){
+                            env->editor->selectionContext.unselect(id);
+                        }else{
+                            env->editor->selectionContext.select(id);
+                        }
                     }
                 }
-
             }
         }
     }
 
-    void ViewportWindow::updateSelectionOverlay(Transform &cameraTransform, Camera &camera, glm::vec2 viewportSize){
-        if (!selectionOverlay) {
-            selectionOverlay = selectionOverlay.make();
-            selectionOverlay->resize(viewportSize.x, viewportSize.y);
-            selectionOverlay->setAttachment({ COLOR, Color::transparent });
-        }
-        else {
-            if (selectionOverlay->getSize() != viewportSize) {
+    void ViewportWindow::updateSelectionOverlay(Transform &cameraTransform, Camera &camera, glm::vec2 viewportSize) {
+        auto pass = env->pipeline->getOrAddRenderPass("outlines");
+
+        pass->addCallback([&, viewportSize]() {
+            if (!selectionOverlay) {
+                selectionOverlay = selectionOverlay.make();
                 selectionOverlay->resize(viewportSize.x, viewportSize.y);
+                selectionOverlay->setAttachment({ COLOR, Color::transparent });
             }
-        }
-        
-        selectionOverlay->clear();
-
-        env->renderer->beginScene(camera.projection, cameraTransform.position);
-        for (auto id : env->editor->selectionContext.getSelected()) {
-            if (env->scene->hasComponent<Transform>(id)) {
-                if (env->scene->hasComponent<MeshComponent>(id)) {
-                    Transform& transform = env->scene->getComponent<Transform>(id);
-                    MeshComponent& mesh = env->scene->getComponent<MeshComponent>(id);
-                    env->renderer->submit(transform.getMatrix() * glm::scale(glm::mat4(1), glm::vec3(1, 1, 1) * 1.05f), transform.position, mesh.mesh.get(), nullptr, Color(255, 128, 0));
+            else {
+                if (selectionOverlay->getSize() != viewportSize) {
+                    selectionOverlay->resize(viewportSize.x, viewportSize.y);
                 }
             }
-        }
-        env->renderer->drawScene(selectionOverlay);
-        env->renderer->resetScene();
+            selectionOverlay->clear();
 
-        RenderContext::setBlend(false);
-        env->renderer->beginScene(camera.projection, cameraTransform.position);
-        for (auto id : env->editor->selectionContext.getSelected()) {
-            if (env->scene->hasComponent<Transform>(id)) {
-                if (env->scene->hasComponent<MeshComponent>(id)) {
-                    Transform& transform = env->scene->getComponent<Transform>(id);
-                    MeshComponent& mesh = env->scene->getComponent<MeshComponent>(id);
-                    env->renderer->submit(transform.getMatrix(), transform.position, mesh.mesh.get(), nullptr, Color::transparent);
+
+            if (!selectionOverlay2) {
+                selectionOverlay2 = selectionOverlay2.make();
+                selectionOverlay2->resize(viewportSize.x, viewportSize.y);
+                selectionOverlay2->setAttachment({ COLOR, Color::transparent });
+            }
+            else {
+                if (selectionOverlay2->getSize() != viewportSize) {
+                    selectionOverlay2->resize(viewportSize.x, viewportSize.y);
                 }
             }
+            selectionOverlay2->clear();
+        }).name = "prepare frame buffer";
+
+        if (!selectionOverlay || !selectionOverlay2) {
+            return;
         }
-        env->renderer->drawScene(selectionOverlay);
-        env->renderer->resetScene();
-        RenderContext::setBlend(true);
+
+        pass->addCommand(BLEND_OFF).name = "blend off";
+        pass->addCommand(DEPTH_OFF).name = "depth off";
+
+        env->renderer->setCamera(camera.projection, cameraTransform.position, selectionOverlay2);
+        env->renderer->setRenderPass(pass);
+
+
+        for (auto id : env->editor->selectionContext.getSelected()) {
+            if (env->scene->hasComponents<Transform, MeshComponent>(id)) {
+                Transform& transform = env->scene->getComponent<Transform>(id);
+                MeshComponent& mesh = env->scene->getComponent<MeshComponent>(id);
+
+                env->renderer->submitDirect(transform.getMatrix() * glm::scale(glm::mat4(1), glm::vec3(1, 1, 1) * 1.00f), transform.position, mesh.mesh.get(), nullptr, nullptr, Color(255, 128, 0));
+            }
+        }
+        env->renderer->setRenderPass(nullptr);
+
+
+        auto& call = pass->addDrawCall("outline shader");
+        call.shader = env->assets->get<Shader>("shaders/outline.glsl");
+        call.frameBuffer = selectionOverlay;
+        call.textures.push_back(selectionOverlay2->getAttachment(COLOR));
+        call.shaderState = Ref<ShaderState>::make();
+        call.shaderState->set("uColor", Color(255, 128, 0).vec());
+        call.shaderState->set("steps", 1);
     }
 
     void ViewportWindow::saveEditorCamera() {

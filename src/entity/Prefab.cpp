@@ -23,8 +23,7 @@ namespace tri {
             return data;
         }
         else {
-            comps.push_back({typeId});
-            ComponentBuffer& comp = comps.back();
+            ComponentBuffer& comp = comps.emplace_back(typeId);
             return comp.get();
         }
     }
@@ -61,9 +60,8 @@ namespace tri {
         }
         for(auto &child : getChildren()){
             EntityId childId = child->createEntity(scene);
-            scene->update();
-            if(scene->hasComponent<Transform>(childId)){
-                scene->getComponent<Transform>(childId).parent = id;
+            if (Transform* t = scene->getPendingComponent<Transform>(childId)) {
+                t->parent = id;
             }
         }
         return id;
@@ -87,7 +85,7 @@ namespace tri {
         comps = prefab.comps;
         children.resize(prefab.children.size());
         for (int i = 0; i < children.size(); i++) {
-            children[i] = std::make_shared<Prefab>(*prefab.children[i]);
+            children[i] = Ref<Prefab>::make(*prefab.children[i]);
         }
     }
 

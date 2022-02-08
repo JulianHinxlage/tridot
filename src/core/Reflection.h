@@ -89,7 +89,7 @@ namespace tri {
             virtual void destruct(void* ptr) const = 0;
             virtual void* alloc() const = 0;
             virtual void free(void* ptr) const = 0;
-            virtual void copy(void* from, void* to) const = 0;
+            virtual void copy(const void* from, void* to) const = 0;
             virtual bool equals(void* v1, void* v2) const = 0;
             virtual bool hasEquals() const = 0;
             virtual void swap(void* v1, void* v2) const = 0;
@@ -300,7 +300,7 @@ namespace tri {
             void free(void* ptr) const override {
                 delete (T*)ptr;
             }
-            void copy(void* from, void* to) const override {
+            void copy(const void* from, void* to) const override {
                 if constexpr (std::is_copy_constructible<T>::value) {
                     new ((T*)to) T(*(T*)from);
                 }
@@ -403,7 +403,7 @@ namespace tri {
             void free(void* ptr) const override {
                 delete (T*)ptr;
             }
-            void copy(void* from, void* to) const override {
+            void copy(const void* from, void* to) const override {
                 if constexpr (std::is_copy_constructible<T>::value) {
                     new ((T*)to) T(*(T*)from);
                 }

@@ -17,7 +17,6 @@ namespace tri {
     TRI_REGISTER_MEMBER(Camera, up);
     TRI_REGISTER_MEMBER(Camera, right);
     TRI_REGISTER_MEMBER(Camera, projection);
-    TRI_REGISTER_MEMBER(Camera, target);
     TRI_REGISTER_MEMBER(Camera, output);
     TRI_REGISTER_MEMBER(Camera, isPrimary);
     TRI_REGISTER_MEMBER(Camera, active);
@@ -36,7 +35,6 @@ namespace tri {
         up = { 0, 1, 0 };
         right = { 1, 0, 0 };
         projection = glm::mat4(1);
-        target = nullptr;
         output = nullptr;
         this->isPrimary = isPrimary;
         this->type = type;
@@ -65,8 +63,10 @@ namespace tri {
 
             //frame buffer
             if (camera.active && camera.output) {
-                auto &step =env->pipeline->getOrAddRenderPass("clear")->addCommand(CLEAR);
+                auto &step = env->pipeline->getOrAddRenderPass("clear")->addCommand(CLEAR);
                 step.frameBuffer = camera.output;
+                auto& step2 = env->pipeline->getOrAddRenderPass("clear")->addCommand(RESIZE);
+                step2.frameBuffer = camera.output;
             }
         });
     }

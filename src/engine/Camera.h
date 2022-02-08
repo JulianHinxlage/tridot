@@ -18,10 +18,6 @@ namespace tri {
         glm::vec3 right;
         glm::mat4 projection;
 
-        //direct geometry output
-        Ref<FrameBuffer> target;
-
-        //output after other passes
         Ref<FrameBuffer> output;
 
         bool isPrimary;
