@@ -110,12 +110,6 @@ namespace tri {
                 }
 
                 {
-                    TRI_PROFILE("waitForGPU");
-                    TracyGpuZone("flush");
-                    RenderContext::flush(true);
-                }
-
-                {
                     TRI_PROFILE("swapBuffers");
                     TracyGpuZone("swapBuffers");
                     glfwSwapBuffers(window);

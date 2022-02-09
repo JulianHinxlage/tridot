@@ -29,6 +29,7 @@ namespace tri {
     class RuntimeMode;
     class RenderPipeline;
     class RenderThread;
+    class JobSystem;
 
     class TRI_API Environment {
     public:
@@ -55,6 +56,7 @@ namespace tri {
         RuntimeMode* runtime;
         RenderPipeline* pipeline;
         RenderThread* renderThread;
+        JobSystem* jobSystem;
 
         static Environment* startup();
         static void shutdown();

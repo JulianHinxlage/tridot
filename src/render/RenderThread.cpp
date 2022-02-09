@@ -21,7 +21,7 @@ namespace tri {
 	RenderThread::RenderThread() : barrier(2) {
 		thread = nullptr;
 		running = false;
-		useDedicatedThread = true;
+		useDedicatedThread = false;
 	}
 
 	void RenderThread::update() {
@@ -40,7 +40,7 @@ namespace tri {
 
 	void RenderThread::synchronize() {
 		if (useDedicatedThread) {
-			TRI_PROFILE("waitForRenderThread");
+			ZoneScopedNC("waitForRenderThread", tracy::Color::Gray30);
 			barrier.arrive_and_wait();
 			currentTasks.swap(tasks);
 			tasks.clear();
@@ -78,7 +78,7 @@ namespace tri {
 					barrier.arrive_and_wait();
 					while (running) {
 						{
-							TRI_PROFILE("waitForMainThread");
+							ZoneScopedNC("waitForMainThread", tracy::Color::Gray30);
 							barrier.arrive_and_wait();
 						}
 						env->pipeline->submitRenderPasses();

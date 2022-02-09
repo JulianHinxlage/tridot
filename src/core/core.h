@@ -12,6 +12,7 @@
 #include "Profiler.h"
 #include "SignalManager.h"
 #include "ThreadPool.h"
+#include "JobSystem.h"
 #include <glm/glm.hpp>
 
 namespace tri::impl {

@@ -9,13 +9,25 @@ namespace tri {
     ComponentPool::ComponentPool(int typeId, int elementSize){
         elements.elementSize = elementSize;
         elements.typeId = typeId;
+        mutex = Ref<Lock>::make();
+#ifdef TRACY_ENABLE
+        std::string name = env->reflection->getType(typeId)->name;
+        mutex->mutex.CustomName(name.c_str(), name.size());
+#endif
     }
 
     ComponentPool::ComponentPool(const ComponentPool& pool){
         copy(pool);
+        mutex = Ref<Lock>::make();
+#ifdef TRACY_ENABLE
+        std::string name = env->reflection->getType(elements.typeId)->name;
+        mutex->mutex.CustomName(name.c_str(), name.size());
+#endif
     }
 
     ComponentPool::~ComponentPool(){
+        lock();
+        unlock();
         clear();
     }
 

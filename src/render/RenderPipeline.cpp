@@ -189,6 +189,7 @@ namespace tri {
 
         env->renderThread->lock();
 
+        /*
         //move active flag to next frame steps
         for (auto& currentPass : currentRenderPasses) {
             auto pass = getOrAddRenderPass(currentPass->name);
@@ -210,7 +211,7 @@ namespace tri {
                     }
                 }
             }
-        }
+        }*/
 
         //copy passes to current passes and clear passes
         int stepCount = 0;

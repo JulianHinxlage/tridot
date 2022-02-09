@@ -258,7 +258,12 @@ namespace tri {
 	}
 
 	void Physics::update() {
+		env->scene->getComponentPool<RigidBody>()->lock();
+		env->scene->getComponentPool<Collider>()->lock();
+		env->scene->getComponentPool<Transform>()->lock();
+
 		impl->tick();
+
 		env->scene->view<RigidBody, Collider, Transform>().each([this](EntityId id, RigidBody &rigidBody, Collider &collider, Transform &transform) {
 			if (!rigidBody.enablePhysics) {
 				float dt = env->time->deltaTime;
@@ -329,6 +334,10 @@ namespace tri {
 				}
 			}
 		});
+
+		env->scene->getComponentPool<RigidBody>()->unlock();
+		env->scene->getComponentPool<Collider>()->unlock();
+		env->scene->getComponentPool<Transform>()->unlock();
 	}
 
 	void Physics::rayCast(glm::vec3 from, glm::vec3 to, bool firstOnly, std::function<void(const glm::vec3& pos, EntityId id)> callback) {

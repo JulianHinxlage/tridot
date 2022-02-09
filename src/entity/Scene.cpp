@@ -200,8 +200,11 @@ namespace tri {
         entityPool.copy(from.entityPool);
         pools.resize(from.pools.size());
         for (int i = 0; i < pools.size(); i++) {
-            if (from.pools[i]) {
-                pools[i] = std::make_shared<ComponentPool>(*from.pools[i]);
+            auto& pool = from.pools[i];
+            if (pool) {
+                pool->lock();
+                pool->unlock();
+                pools[i] = std::make_shared<ComponentPool>(*pool);
             }
         }
     }

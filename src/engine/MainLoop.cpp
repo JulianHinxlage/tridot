@@ -8,6 +8,8 @@
 #include "render/Window.h"
 #include "render/RenderThread.h"
 #include "render/RenderContext.h"
+#include "core/JobSystem.h"
+#include "entity/Scene.h"
 
 namespace tri {
 
@@ -21,6 +23,7 @@ namespace tri {
         env->console->setVariable<int>("vsync", 1);
         env->console->setVariable<std::string>("log_file", "log.txt");
         env->console->setVariable<bool>("use_render_thread", &env->renderThread->useDedicatedThread);
+        env->console->setVariable<bool>("use_job_threads", &env->jobSystem->enableMultiThreading);
 
         {
             TRI_PROFILE("preStartup");
@@ -78,7 +81,13 @@ namespace tri {
             }
             {
                 TRI_PROFILE("update");
-                env->signals->update.invokeProfile();
+                //env->signals->update.invokeProfile();
+                {
+                    TRI_PROFILE("Scene");
+                    env->scene->update();
+                }
+                env->jobSystem->update();
+                env->renderThread->update();
             }
             {
                 TRI_PROFILE("postUpdate");

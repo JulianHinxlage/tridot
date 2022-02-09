@@ -92,6 +92,10 @@ namespace tri {
             env->console->warning("module ", file, " already loaded");
             return modules[file].module;
         }
+
+        TRI_PROFILE("loadModule");
+        TRI_PROFILE_INFO(file.c_str(), file.size());
+
 #if TRI_WINDOWS
         void* handle = (void*)LoadLibrary(file.c_str());
 #else
@@ -162,6 +166,9 @@ namespace tri {
         if (module) {
             for (auto it = modules.begin(); it != modules.end();) {
                 if (it->second.module == module) {
+                    TRI_PROFILE("unloadModule");
+                    TRI_PROFILE_INFO(it->second.file.c_str(), it->second.file.size());
+
                     it->second.module->shutdown();
                     env->signals->update.removeCallback(it->second.updateCallbackId);
                     env->signals->moduleUnload.invoke(it->second.module);

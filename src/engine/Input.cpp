@@ -175,9 +175,14 @@ namespace tri {
             position = m;
         }
         if(window){
-            env->renderThread->addTask([window, position]() {
+            if (env->renderThread->useDedicatedThread) {
+                env->renderThread->addTask([window, position]() {
+                    glfwSetCursorPos(window, position.x, position.y);
+                });
+            }
+            else {
                 glfwSetCursorPos(window, position.x, position.y);
-            });
+            }
         }
     }
 

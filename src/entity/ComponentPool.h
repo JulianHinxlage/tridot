@@ -13,6 +13,28 @@ namespace tri {
     public:
         static const uint32_t pageSizeBits = 8;
 
+        class Lock {
+        public:
+            TracyLockable(std::mutex, mutex);
+        };
+        Ref<Lock> mutex;
+        size_t lockId;
+
+        void lock() {
+            size_t id = std::hash<std::thread::id>{}(std::this_thread::get_id());
+            if (id != lockId) {
+                mutex->mutex.lock();
+                lockId = id;
+            }
+        }
+        void unlock() {
+            size_t id = std::hash<std::thread::id>{}(std::this_thread::get_id());
+            if (id == lockId) {
+                lockId = 0;
+                mutex->mutex.unlock();
+            }
+        }
+
         ComponentPool(int typeId = 0, int elementSize = 1);
         ComponentPool(const ComponentPool &pool);
         ~ComponentPool();

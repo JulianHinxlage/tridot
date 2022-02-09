@@ -12,6 +12,8 @@ namespace tri {
 
     TRI_STARTUP_CALLBACK("ComponentCache") {
         env->signals->typeRegister.addCallback("ComponentCache", [](int typeId) {
+            TRI_PROFILE("UncacheComponentData");
+            TRI_PROFILE_INFO(env->reflection->getType(typeId)->name.c_str(), env->reflection->getType(typeId)->name.size());
             if (env->editor) {
                 env->scene->view<ComponentCache>().each([&](EntityId id, ComponentCache& cache) {
                     if (cache.isCached(typeId)) {
@@ -25,6 +27,8 @@ namespace tri {
             }
         });
         env->signals->typeUnregister.addCallback("ComponentCache", [](int typeId) {
+            TRI_PROFILE("CacheComponentData");
+            TRI_PROFILE_INFO(env->reflection->getType(typeId)->name.c_str(), env->reflection->getType(typeId)->name.size());
             if (env->editor) {
                 auto* pool = env->scene->getComponentPool(typeId);
                 if (pool) {

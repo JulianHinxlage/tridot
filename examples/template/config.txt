@@ -1,6 +1,7 @@
 vsync 1
 shadows 0
 use_render_thread 0
+use_job_threads 0
 asset_directory ../../../assets/
 asset_directory ../data/
 asset_directory ./

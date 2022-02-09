@@ -31,6 +31,9 @@ namespace tri {
 
         template<typename Func>
         void each(const Func& func) {
+
+            (scene->getComponentPool<Components>()->lock(), ...);
+
             if constexpr (sizeof...(Components) == 1) {
                 //single component iteration
                 poolIteration<Components...>(func);
@@ -46,6 +49,9 @@ namespace tri {
                 bool done = (((pool == scene->getComponentPool<Components>()) ? poolIteration<Components>(func) : false) || ...);
                 TRI_ASSERT(done, "no proper component pool found");
             }
+
+            (scene->getComponentPool<Components>()->unlock(), ...);
+
         }
 
     private:

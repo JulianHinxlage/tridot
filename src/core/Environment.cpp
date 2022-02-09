@@ -49,6 +49,7 @@ namespace tri {
         runtime = nullptr;
         pipeline = nullptr;
         renderThread = nullptr;
+        jobSystem = nullptr;
     }
 
     Environment* Environment::startup() {
