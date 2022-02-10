@@ -20,7 +20,6 @@ namespace tri {
         void startup();
 
     private:
-        void directory(const std::string &directory, const std::string &searchDirectory);
         void directoryMenu(const std::string &directory);
         void newFileBox(const std::string &directory);
 
@@ -36,6 +35,26 @@ namespace tri {
         std::string inputBuffer;
         std::function<void(const std::string &)> selectCallback;
         std::function<void(const std::string &, int)> fileMenuCallback;
+
+        class DirectoryNode {
+        public:
+            std::string name;
+            std::string path;
+            std::string extension;
+            bool isFile;
+            bool shouldUpdate;
+            std::vector<DirectoryNode> directories;
+            std::vector<DirectoryNode> files;
+
+            DirectoryNode(const std::string &path = "");
+            void update();
+        };
+        DirectoryNode rootNode;
+        DirectoryNode updateRootNode;
+        std::mutex mutex;
+        bool updatingTree;
+
+        void browse(DirectoryNode& node);
     };
 
 }

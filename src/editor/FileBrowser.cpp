@@ -10,6 +10,7 @@
 #include "engine/AssetManager.h"
 #include "entity/Prefab.h"
 #include "core/util/StrUtil.h"
+#include "engine/Time.h"
 #include <imgui.h>
 #include <imgui_internal.h>
 
@@ -26,6 +27,7 @@ namespace tri {
         fileMenuCallback = nullptr;
         canSelectFiles = false;
         newFileIsDirectory = false;
+        updatingTree = false;
     }
 
     void FileBrowser::startup() {
@@ -57,23 +59,6 @@ namespace tri {
         this->fileTypeId = fileTypeId;
         this->selectCallback = selectCallback;
         openWindow = true;
-    }
-
-    void FileBrowser::browse(const std::function<void(const std::string &, int)> &fileMenuCallback) {
-        this->fileMenuCallback = fileMenuCallback;
-        for(auto &dir : env->assets->getSearchDirectories()){
-            std::string name = std::filesystem::path(dir).parent_path().filename().string();
-            if(ImGui::TreeNode(name.c_str())){
-                directoryMenu(dir);
-                newFileBox(dir);
-                if (std::filesystem::exists(dir)) {
-                    directory(dir, dir);
-                }
-                ImGui::TreePop();
-            }else{
-                directoryMenu(dir);
-            }
-        }
     }
 
     void FileBrowser::update() {
@@ -123,47 +108,40 @@ namespace tri {
             ImGui::EndPopup();
         }
     }
+    
+    void FileBrowser::browse(const std::function<void(const std::string &, int)> &fileMenuCallback) {
+        this->fileMenuCallback = fileMenuCallback;
+        mutex.lock();
+        browse(rootNode);
+        mutex.unlock();
 
-    void FileBrowser::directory(const std::string &directory, const std::string &searchDirectory) {
-        for(auto &entry : std::filesystem::directory_iterator(directory)){
-            std::string path = StrUtil::replace(entry.path().string(), "\\", "/");
-            std::string filename = StrUtil::replace(entry.path().filename().string(), "\\", "/");
-            if(entry.is_directory()){
-                if(ImGui::TreeNode(filename.c_str())){
-                    directoryMenu(path);
-                    newFileBox(path);
-                    this->directory(path, searchDirectory);
-                    ImGui::TreePop();
-                }
-                else{
-                    directoryMenu(path);
-                }
-            }
-        }
-        for(auto &entry : std::filesystem::directory_iterator(directory)){
-            std::string path = StrUtil::replace(entry.path().string(), "\\", "/");
-            std::string filename = StrUtil::replace(entry.path().filename().string(), "\\", "/");
-            std::string extension = StrUtil::replace(entry.path().extension().string(), "\\", "/");
-            if(entry.is_regular_file()){
-                if(canSelectFiles) {
-                    //selectable files
-                    if (ImGui::Selectable(filename.c_str(),
-                        selectedFile == path, ImGuiSelectableFlags_DontClosePopups)) {
-                        if (fileTypeId == -1 || getFileAssociation(extension) == fileTypeId) {
-                            selectedFile = path;
+        if ((env->time->frameTicks(5) || rootNode.directories.size() != env->assets->getSearchDirectories().size()) && !updatingTree) {
+            updatingTree = true;
+            env->threads->addTask([&]() {
+                TRI_PROFILE("updateDirectoryTree");
+                updateRootNode = rootNode;
+                for (auto& dir : env->assets->getSearchDirectories()) {
+                    bool exists = false;
+                    for (auto& node : updateRootNode.directories) {
+                        if (dir == node.path) {
+                            node.update();
+                            exists = true;
+                            break;
                         }
                     }
-                }else {
-                    //file with context menu
-                    if(ImGui::TreeNodeEx(filename.c_str(), ImGuiTreeNodeFlags_Leaf)){
-                        ImGui::TreePop();
-                    }
-                    if (fileMenuCallback) {
-                        fileMenuCallback(path, getFileAssociation(extension));
+                    if (!exists) {
+                        updateRootNode.directories.emplace_back(dir);
+                        updateRootNode.directories.back().update();
                     }
                 }
-            }
+                mutex.lock();
+                rootNode = updateRootNode;
+                updateRootNode.directories.clear();
+                mutex.unlock();
+                updatingTree = false;
+            });
         }
+
     }
 
     void FileBrowser::directoryMenu(const std::string &directory) {
@@ -200,6 +178,90 @@ namespace tri {
                 newFileDirectory = "";
             }
             ImGui::PopID();
+        }
+    }
+
+    FileBrowser::DirectoryNode::DirectoryNode(const std::string& path) {
+        auto p = std::filesystem::path(path);
+        isFile = !std::filesystem::is_directory(p);
+        this->path = StrUtil::replace(p.string(), "\\", "/");
+        if (path.size() > 0 && path.back() == '/') {
+            this->name = StrUtil::replace(p.parent_path().filename().string(), "\\", "/");
+        }
+        else {
+            this->name = StrUtil::replace(p.filename().string(), "\\", "/");
+        }
+        this->extension = StrUtil::replace(p.extension().string(), "\\", "/");
+        shouldUpdate = true;
+    }
+
+    void FileBrowser::DirectoryNode::update() {
+        if (!isFile && shouldUpdate) {
+            files.clear();
+            auto oldDirectories = directories;
+            directories.clear();
+
+            for (auto& entry : std::filesystem::directory_iterator(path)) {
+                if (entry.is_directory()) {
+
+                    bool shouldAdd = true;
+                    for (auto& dir : oldDirectories) {
+                        if (dir.path == entry.path().string()) {
+                            if (!dir.shouldUpdate) {
+                                directories.push_back(dir);
+                                shouldAdd = false;
+                                break;
+                            }
+                        }
+                    }
+                    if (shouldAdd) {
+                        directories.emplace_back(entry.path().string());
+                        directories.back().update();
+                    }
+                }
+                else {
+                    files.emplace_back(entry.path().string());
+                    files.back().update();
+                }
+            }
+        }
+    }
+
+    void FileBrowser::browse(FileBrowser::DirectoryNode &node) {
+        for (auto& n : node.directories) {
+            if (ImGui::TreeNode(n.name.c_str())) {
+                n.shouldUpdate = true;
+                directoryMenu(n.path);
+                newFileBox(n.path);
+                if (std::filesystem::exists(n.path)) {
+                    browse(n);
+                }
+                ImGui::TreePop();
+            }
+            else {
+                n.shouldUpdate = false;
+                directoryMenu(n.path);
+            }
+        }
+        for (auto& n : node.files) {
+            if (canSelectFiles) {
+                //selectable files
+                if (ImGui::Selectable(n.name.c_str(),
+                    selectedFile == n.path, ImGuiSelectableFlags_DontClosePopups)) {
+                    if (fileTypeId == -1 || getFileAssociation(n.extension) == fileTypeId) {
+                        selectedFile = n.path;
+                    }
+                }
+            }
+            else {
+                //file with context menu
+                if (ImGui::TreeNodeEx(n.name.c_str(), ImGuiTreeNodeFlags_Leaf)) {
+                    ImGui::TreePop();
+                }
+                if (fileMenuCallback) {
+                    fileMenuCallback(n.path, getFileAssociation(n.extension));
+                }
+            }
         }
     }
 
