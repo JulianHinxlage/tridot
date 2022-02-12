@@ -87,7 +87,7 @@ namespace tri {
     }
 
     void Window::update() {
-        env->pipeline->getOrAddRenderPass("window")->addCallback([&]() {
+        env->renderPipeline->getPass("window")->addCallback("update", [&]() {
 
             if(context != nullptr) {
                 GLFWwindow *window = (GLFWwindow*)context;

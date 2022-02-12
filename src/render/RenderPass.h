@@ -14,6 +14,10 @@
 
 namespace tri {
 
+    class RenderPassDrawCall;
+    class RenderPassDrawCommand;
+    class RenderPassDrawCallback;
+
     enum RenderCommand {
         NOOP,
         CLEAR,
@@ -26,42 +30,57 @@ namespace tri {
         CULL_OFF,
     };
 
-    class RenderPassStep {
+    class RenderPass {
     public:
         enum Type {
+            NODE,
             DRAW_CALL,
             DRAW_COMMAND,
             DRAW_CALLBACK,
         };
 
+        Type type = NODE;
         std::string name;
-        bool active = true;
-        bool fixed = true;
-        bool newThisFrame = true;
+        bool active;
+        bool newThisFrame;
+        bool fixed;
+        std::vector<Ref<RenderPass>> subPasses;
 
-        Type type = DRAW_CALL;
-        Ref<Mesh> mesh;
-        VertexArray *vertexArray;
-        int insatnceCount = -1;
-        Ref<Shader> shader;
-        Ref<ShaderState> shaderState;
-        Ref<FrameBuffer> frameBuffer;
-        std::vector<Ref<Texture>> textures;
-        std::vector<Ref<Buffer>> buffers;
-
-        std::function<void()> callback;
-        RenderCommand command = NOOP;
+        Ref<RenderPassDrawCall> addDrawCall(const std::string& name, bool fixed = false);
+        Ref<RenderPassDrawCommand> addCommand(const std::string& name, RenderCommand command, bool fixed = false);
+        Ref<RenderPassDrawCallback> addCallback(const std::string &name, const std::function<void()> &callback, bool fixed = false);
+        Ref<RenderPass> getPass(const std::string& name, bool fixed = false);
+        void removetPass(const std::string& name);
+        virtual void execute();
     };
 
-    class RenderPass {
+    class RenderPassDrawCall : public RenderPass {
     public:
-        std::string name;
-        bool active = true;
-        std::vector<RenderPassStep> steps;
+        Mesh *mesh;
+        VertexArray* vertexArray;
+        Shader *shader;
+        Ref<ShaderState> shaderState;
+        FrameBuffer *frameBuffer;
+        int instanceCount = -1;
+        std::vector<Texture*> textures;
+        std::vector<Buffer*> buffers;
+    
+        virtual void execute() override;
+    };
 
-        RenderPassStep& addDrawCall(const std::string& name = "", bool fixed = false);
-        RenderPassStep& addCommand(RenderCommand command, bool fixed = false);
-        RenderPassStep& addCallback(const std::function<void()>& callback, bool fixed = false);
+    class RenderPassDrawCommand : public RenderPass {
+    public:
+        RenderCommand command = NOOP;
+        FrameBuffer* frameBuffer;
+    
+        virtual void execute() override;
+    };
+
+    class RenderPassDrawCallback : public RenderPass {
+    public:
+        std::function<void()> callback;
+    
+        virtual void execute() override;
     };
 
 }

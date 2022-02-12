@@ -11,14 +11,22 @@ namespace tri{
 
     class StatisticsWindow : public EditorElement {
     public:
+        float fps;
+
         void startup() {
             name = "Statistics";
             type = DEBUG_WINDOW;
+            fps = 0;
         }
 
         void update() override {
             TRI_PROFILE("Statistics");
-            ImGui::Text("%.2f fps", env->time->framesPerSecond);
+
+            if (env->time->frameTicks(0.5)) {
+                fps = env->time->framesPerSecond;
+            }
+
+            ImGui::Text("%.2f fps", fps);
             ImGui::Separator();
             
             ImGui::Text("entities:");

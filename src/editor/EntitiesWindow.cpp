@@ -183,7 +183,7 @@ namespace tri {
                                 if (desc->group.empty()) {
                                     if (ImGui::MenuItem(desc->name.c_str(), nullptr, nullptr)) {
                                         EntityId id = env->editor->entityOperations.addEntity();
-                                        env->scene->addComponents(id, Transform(), EntityInfo());
+                                        env->scene->addComponents(id, Transform(), EntityInfo(desc->name));
                                         env->scene->addComponent(desc->typeId, id);
                                         env->editor->selectionContext.unselectAll();
                                         env->editor->selectionContext.select(id);
@@ -193,7 +193,7 @@ namespace tri {
                                     if (ImGui::BeginMenu(desc->group.c_str())) {
                                         if (ImGui::MenuItem(desc->name.c_str(), nullptr, nullptr)) {
                                             EntityId id = env->editor->entityOperations.addEntity();
-                                            env->scene->addComponents(id, Transform(), EntityInfo());
+                                            env->scene->addComponents(id, Transform(), EntityInfo(desc->name));
                                             env->scene->addComponent(desc->typeId, id);
                                             env->editor->selectionContext.unselectAll();
                                             env->editor->selectionContext.select(id);
@@ -242,7 +242,7 @@ namespace tri {
                         RigidBody rb;
                         rb.type = RigidBody::STATIC;
                         EntityId id = env->scene->addEntity(
-                            EntityInfo("STatic Box"),
+                            EntityInfo("Static Box"),
                             Transform(),
                             Collider(),
                             rb,

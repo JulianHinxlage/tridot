@@ -20,11 +20,11 @@ namespace tri {
         type = ALWAYS_OPEN;
 
         env->signals->update.addCallback("Gizmos begin", [](){
-            env->pipeline->getOrAddRenderPass("gui begin")->addCallback([]() {
+            env->renderPipeline->getPass("gui begin")->addCallback("gizmos begin", []() {
                 if(env->window->isOpen() && ImGui::GetCurrentContext()->WithinFrameScope){
                     ImGuizmo::BeginFrame();
                 }
-            }).name = "gizmos begin";
+            });
         });
         env->signals->update.callbackOrder({"Gui begin", "Gizmos begin", "Editor"});
 

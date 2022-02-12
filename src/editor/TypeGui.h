@@ -24,8 +24,8 @@ namespace tri {
         bool anyTypeChange(int typeId, void *v1, void *v2);
         void setTypeFunction(int typeId, const std::function<void(const char*, void*, void*, void*)>& func);
         void unsetTypeFunction(int typeId);
-    private:
         void drawConstants(int typeId, void *data, const char *label);
+    private:
 
         std::vector<std::function<void(const char *, void*, void*, void*)>> typeFunctions;
     };

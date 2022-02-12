@@ -47,7 +47,7 @@ namespace tri {
         physics = nullptr;
         random = nullptr;
         runtime = nullptr;
-        pipeline = nullptr;
+        renderPipeline = nullptr;
         renderThread = nullptr;
         jobSystem = nullptr;
     }

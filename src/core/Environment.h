@@ -54,7 +54,7 @@ namespace tri {
         Physics *physics;
         Random* random;
         RuntimeMode* runtime;
-        RenderPipeline* pipeline;
+        RenderPipeline* renderPipeline;
         RenderThread* renderThread;
         JobSystem* jobSystem;
 

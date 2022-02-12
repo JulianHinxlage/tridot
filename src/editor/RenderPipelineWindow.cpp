@@ -19,62 +19,58 @@ namespace tri {
 
         void update() override {
             TRI_PROFILE("Render Pipeline Window");
-            for (auto& pass : env->pipeline->getRenderPasses()) {
-                if (pass) {
-                    ImGui::PushID(pass->name.c_str());
-                    if (ImGui::Checkbox("", &pass->active)) {}
-                    ImGui::PopID();
-                    ImGui::SameLine();
-
-                    if (ImGui::TreeNodeEx(pass->name.c_str())) {
-                        for (int i = 0; i < pass->steps.size(); i++) {
-                            auto &step = pass->steps[i];
-                            std::string str = step.name;
-                            if (str.empty()) {
-                                str = std::string("step ") + std::to_string(i);
-                            }
-
-                            ImGui::PushID(str.c_str());
-                            if (ImGui::Checkbox("", &step.active)) {}
-                            ImGui::PopID();
-                            ImGui::SameLine();
-
-                            if (ImGui::TreeNodeEx(str.c_str())) {
-                                env->editor->gui.typeGui.drawType(env->reflection->getTypeId<RenderPassStep>(), &step, false);
-
-                                if (step.textures.size() > 0) {
-                                    if (ImGui::TreeNodeEx("textures")) {
-                                        for (int i = 0; i < step.textures.size(); i++) {
-                                            std::string str = std::string("texture ") + std::to_string(i);
-                                            if (ImGui::TreeNodeEx(str.c_str())) {
-                                                auto& texture = step.textures[i];
-                                                float aspect = 0;
-                                                if (texture->getHeight() != 0) {
-                                                    aspect = (float)texture->getWidth() / (float)texture->getHeight();
-                                                }
-                                                ImGui::Image((void*)(size_t)texture->getId(), ImVec2(200 * aspect, 200), ImVec2(0, 1), ImVec2(1, 0));
-                                                ImGui::TreePop();
-                                            }
-                                        }
-                                        ImGui::TreePop();
-                                    }
-                                }
-
-                                ImGui::TreePop();
-                            }
-                        }
-                        ImGui::TreePop();
-                    }
-                }
-                else {
-                    if (ImGui::TreeNodeEx("<null>", ImGuiTreeNodeFlags_Leaf)) {
-                        ImGui::TreePop();
-                    }
-                }
+            
+            auto& passes = env->renderPipeline->getRootPass()->subPasses;
+            for (int i = 0; i < passes.size(); i++) {
+                updatePass(passes[i].get(), i);
             }
         }
 
+        void updatePass(RenderPass *pass, int index) {
+            std::string name = pass->name;
+            if (name.empty()) {
+                name = std::string("step ") + std::to_string(index);
+            }
 
+            ImGui::PushID(name.c_str());
+            if (ImGui::Checkbox("", &pass->active)) {}
+            ImGui::PopID();
+            ImGui::SameLine();
+
+            if (ImGui::TreeNodeEx(name.c_str())) {
+                for (int i = 0; i < pass->subPasses.size(); i++) {
+                    auto subPass = pass->subPasses[i];
+                    updatePass(subPass.get(), i);
+                }
+
+                if (pass->type != RenderPass::NODE) {
+                    env->editor->gui.typeGui.drawConstants(env->reflection->getTypeId<RenderPass::Type>(), &pass->type, "type");
+                }
+
+                if (pass->type == RenderPass::DRAW_CALL) {
+                    RenderPassDrawCall* call = (RenderPassDrawCall*)pass;
+
+                    Ref<Mesh> mesh(call->mesh);
+                    env->editor->gui.typeGui.drawMember(env->reflection->getTypeId<Ref<Mesh>>(), &mesh, "mesh", nullptr, nullptr, false);
+
+                    Ref<Shader> shader(call->shader);
+                    env->editor->gui.typeGui.drawMember(env->reflection->getTypeId<Ref<Shader>>(), &shader, "shader", nullptr, nullptr, false);
+
+                    env->editor->gui.typeGui.drawMember(env->reflection->getTypeId<int>(), &call->instanceCount, "instanceCount", nullptr, nullptr, false);
+
+                    Ref<FrameBuffer> frameBuffer(call->frameBuffer);
+                    env->editor->gui.typeGui.drawMember(env->reflection->getTypeId<Ref<FrameBuffer>>(), &frameBuffer, "frameBuffer", nullptr, nullptr, false);
+
+                    env->editor->gui.typeGui.drawMember(env->reflection->getTypeId<Ref<ShaderState>>(), &call->shaderState, "shaderState", nullptr, nullptr, false);
+                }
+                else if (pass->type == RenderPass::DRAW_COMMAND) {
+                    env->editor->gui.typeGui.drawType(env->reflection->getTypeId<RenderPassDrawCommand>(), pass, false);
+                }
+
+                ImGui::TreePop();
+            }
+
+        }
     };
 
     TRI_STARTUP_CALLBACK("") {

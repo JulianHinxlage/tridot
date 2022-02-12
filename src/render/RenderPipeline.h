@@ -13,40 +13,27 @@ namespace tri {
     class RenderPipeline : public System {
     public:
         RenderPipeline();
-
         void startup() override;
 
-        Ref<RenderPass> addRenderPass(const std::string &name);
-        Ref<RenderPass> getRenderPass(const std::string& name);
-        Ref<RenderPass> getOrAddRenderPass(const std::string &name);
-        void removeRenderPass(const std::string& name);
-        void activateRenderPass(const std::string& name, bool active = true);
-        const std::vector<Ref<RenderPass>>& getRenderPasses() { return currentRenderPasses; }
+        Ref<RenderPass> getPass(const std::string& name, bool fixed = true);
+        void removePass(const std::string& name);
 
-        void setInput(Ref<FrameBuffer> frameBuffer);
-        void setOutput(Ref<FrameBuffer> frameBuffer);
         void setSize(uint32_t width, uint32_t height);
-        Ref<Mesh> getQuad();
+        uint32_t getHeight() { return height; }
+        uint32_t getWidth() { return width; }
+        Ref<Mesh> getQuad() { return quad; }
 
         void submitRenderPasses();
         void execute();
+        Ref<RenderPass> getRootPass() { return executeRootPass; }
 
     private:
-        Ref<FrameBuffer> mainFrameBuffer;
-        Ref<FrameBuffer> inputFrameBuffer;
-        Ref<FrameBuffer> outputFrameBuffer;
+        Ref<RenderPass> rootPass;
+        Ref<RenderPass> executeRootPass;
 
         Ref<Mesh> quad;
-        std::vector<Ref<RenderPass>> renderPasses;
-        std::vector<Ref<RenderPass>> currentRenderPasses;
-
         uint32_t width;
         uint32_t height;
-
-        void setupPipeline();
-        void replaceFrameBuffer(Ref<FrameBuffer> target, Ref<FrameBuffer> replacement);
-        void executeDrawCall(RenderPassStep& step);
-        void executeRenderCommand(RenderPassStep& step);
     };
 
 }

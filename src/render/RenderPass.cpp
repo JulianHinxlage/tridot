@@ -6,13 +6,20 @@
 #include "RenderPass.h"
 #include "core/core.h"
 #include "RenderThread.h"
+#include "RenderContext.h"
+#include "ShaderState.h"
+#include "RenderPipeline.h"
+#include <GL/glew.h>
+#include <GLFW/glfw3.h>
+#include "tracy/TracyOpenGL.hpp"
 
 namespace tri {
 
-    TRI_REGISTER_TYPE(RenderPassStep::Type);
-    TRI_REGISTER_CONSTANT(RenderPassStep::Type, DRAW_CALL);
-    TRI_REGISTER_CONSTANT(RenderPassStep::Type, DRAW_COMMAND);
-    TRI_REGISTER_CONSTANT(RenderPassStep::Type, DRAW_CALLBACK);
+    TRI_REGISTER_TYPE(RenderPass::Type);
+    TRI_REGISTER_CONSTANT(RenderPass::Type, NODE);
+    TRI_REGISTER_CONSTANT(RenderPass::Type, DRAW_CALL);
+    TRI_REGISTER_CONSTANT(RenderPass::Type, DRAW_COMMAND);
+    TRI_REGISTER_CONSTANT(RenderPass::Type, DRAW_CALLBACK);
 
     TRI_REGISTER_TYPE(RenderCommand);
     TRI_REGISTER_CONSTANT(RenderCommand, NOOP);
@@ -25,44 +32,204 @@ namespace tri {
     TRI_REGISTER_CONSTANT(RenderCommand, CULL_ON);
     TRI_REGISTER_CONSTANT(RenderCommand, CULL_OFF);
 
-    TRI_REGISTER_TYPE(RenderPassStep);
-    TRI_REGISTER_MEMBER(RenderPassStep, type);
-    TRI_REGISTER_MEMBER(RenderPassStep, mesh);
-    TRI_REGISTER_MEMBER(RenderPassStep, shader);
-    TRI_REGISTER_MEMBER(RenderPassStep, command);
-    TRI_REGISTER_MEMBER(RenderPassStep, shaderState);
-    TRI_REGISTER_MEMBER(RenderPassStep, frameBuffer);
-    TRI_REGISTER_MEMBER(RenderPassStep, textures);
-    TRI_REGISTER_MEMBER(RenderPassStep, buffers);
+    TRI_REGISTER_TYPE(RenderPass);
+    TRI_REGISTER_MEMBER(RenderPass, type);
+    TRI_REGISTER_MEMBER(RenderPass, subPasses);
 
-    RenderPassStep& RenderPass::addDrawCall(const std::string& name, bool fixed) {
-        env->renderThread->lock();
-        steps.emplace_back();
-        steps.back().type = RenderPassStep::DRAW_CALL;
-        steps.back().name = name;
-        steps.back().fixed = fixed;
-        env->renderThread->unlock();
-        return steps.back();
+    TRI_REGISTER_TYPE(RenderPassDrawCall);
+    TRI_REGISTER_MEMBER(RenderPassDrawCall, mesh);
+    TRI_REGISTER_MEMBER(RenderPassDrawCall, vertexArray);
+    TRI_REGISTER_MEMBER(RenderPassDrawCall, shader);
+    TRI_REGISTER_MEMBER(RenderPassDrawCall, shaderState);
+    TRI_REGISTER_MEMBER(RenderPassDrawCall, frameBuffer);
+    TRI_REGISTER_MEMBER(RenderPassDrawCall, instanceCount);
+    TRI_REGISTER_MEMBER(RenderPassDrawCall, textures);
+    TRI_REGISTER_MEMBER(RenderPassDrawCall, buffers);
+
+    TRI_REGISTER_TYPE(RenderPassDrawCommand);
+    TRI_REGISTER_MEMBER(RenderPassDrawCommand, command);
+    TRI_REGISTER_MEMBER(RenderPassDrawCommand, frameBuffer);
+
+    TRI_REGISTER_TYPE(RenderPassDrawCallback);
+
+    Ref<RenderPassDrawCall> RenderPass::addDrawCall(const std::string& name, bool fixed) {
+        Ref<RenderPassDrawCall> pass = Ref<RenderPassDrawCall>::make();
+        pass->name = name;
+        pass->type = DRAW_CALL;
+        pass->newThisFrame = true;
+        pass->active = true;
+        pass->fixed = fixed;
+        subPasses.push_back((Ref<RenderPass>)pass);
+        return pass;
     }
 
-    RenderPassStep& RenderPass::addCommand(RenderCommand command, bool fixed) {
-        env->renderThread->lock();
-        steps.emplace_back();
-        steps.back().type = RenderPassStep::DRAW_COMMAND;
-        steps.back().command = command;
-        steps.back().fixed = fixed;
-        env->renderThread->unlock();
-        return steps.back();
+    Ref<RenderPassDrawCommand> RenderPass::addCommand(const std::string& name, RenderCommand command, bool fixed) {
+        Ref<RenderPassDrawCommand> pass = Ref<RenderPassDrawCommand>::make();
+        pass->name = name;
+        pass->type = DRAW_COMMAND;
+        pass->newThisFrame = true;
+        pass->active = true;
+        pass->fixed = fixed;
+        pass->command = command;
+        subPasses.push_back((Ref<RenderPass>)pass);
+        return pass;
     }
 
-    RenderPassStep& RenderPass::addCallback(const std::function<void()>& callback, bool fixed) {
-        env->renderThread->lock();
-        steps.emplace_back();
-        steps.back().type = RenderPassStep::DRAW_CALLBACK;
-        steps.back().callback = callback;
-        steps.back().fixed = fixed;
-        env->renderThread->unlock();
-        return steps.back();
+    Ref<RenderPassDrawCallback> RenderPass::addCallback(const std::string& name, const std::function<void()>& callback, bool fixed) {
+        Ref<RenderPassDrawCallback> pass = Ref<RenderPassDrawCallback>::make();
+        pass->name = name;
+        pass->type = DRAW_CALLBACK;
+        pass->newThisFrame = true;
+        pass->active = true;
+        pass->fixed = fixed;
+        pass->callback = callback;
+        subPasses.push_back((Ref<RenderPass>)pass);
+        return pass;
+    }
+
+    Ref<RenderPass> RenderPass::getPass(const std::string& name, bool fixed) {
+        for (auto& pass : subPasses) {
+            if (pass && pass->name == name) {
+                return pass;
+            }
+        }
+        Ref<RenderPass> pass = Ref<RenderPass>::make();
+        pass->name = name;
+        pass->type = NODE;
+        pass->newThisFrame = true;
+        pass->active = true;
+        pass->fixed = fixed;
+        subPasses.push_back((Ref<RenderPass>)pass);
+        return pass;
+    }
+
+    void RenderPass::removetPass(const std::string& name) {
+        for (int i = 0; i < subPasses.size(); i++) {
+            auto& pass = subPasses[i];
+            if (pass && pass->name == name) {
+                subPasses.erase(subPasses.begin() + i);
+                return;
+            }
+        }
+    }
+
+    void RenderPass::execute() {
+        if (active) {
+            for (auto& pass : subPasses) {
+                if (pass) {
+                    TRI_PROFILE_NAME(pass->name.c_str(), pass->name.size());
+                    pass->execute();
+                }
+            }
+        }
+    }
+
+    void RenderPassDrawCall::execute() {
+        if (active) {
+            TracyGpuZone("drawCall");
+
+            if (frameBuffer && frameBuffer->getId() != 0) {
+                frameBuffer->bind();
+            }
+            else {
+                FrameBuffer::unbind();
+            }
+            if (shader && shader->getId() != 0) {
+                shader->bind();
+                if (shaderState) {
+                    shaderState->apply(shader);
+                }
+
+                if (textures.size() > 0) {
+                    int slots[30];
+                    for (int i = 0; i < 30; i++) {
+                        slots[i] = i;
+                        if (textures.size() > i) {
+                            if (textures[i]) {
+                                textures[i]->bind(i);
+                            }
+                        }
+                    }
+                    shader->set("uTextures", slots, 30);
+                }
+
+                VertexArray* va = nullptr;
+                if (mesh) {
+                    va = &mesh->vertexArray;
+                }
+                if (vertexArray) {
+                    va = vertexArray;
+                }
+                if (va == nullptr) {
+                    va = &env->renderPipeline->getQuad()->vertexArray;
+                }
+                if (va->getId() != 0) {
+                    TracyGpuZone("Submit");
+                    va->submit(-1, instanceCount);
+                }
+
+                for (auto& tex : textures) {
+                    if (tex) {
+                        tex->unbind();
+                    }
+                }
+            }
+            RenderPass::execute();
+        }
+    }
+
+    void RenderPassDrawCommand::execute() {
+        if (active) {
+            TracyGpuZone("drawCommand");
+
+            switch (command) {
+            case RenderCommand::NOOP:
+                break;
+            case RenderCommand::CLEAR:
+                if (frameBuffer) {
+                    frameBuffer->clear();
+                }
+                break;
+            case RenderCommand::RESIZE:
+                if (frameBuffer) {
+                    frameBuffer->resize(env->renderPipeline->getWidth(), env->renderPipeline->getHeight());
+                }
+                break;
+            case RenderCommand::DEPTH_ON:
+                RenderContext::setDepth(true);
+                break;
+            case RenderCommand::DEPTH_OFF:
+                RenderContext::setDepth(false);
+                break;
+            case RenderCommand::BLEND_ON:
+                RenderContext::setBlend(true);
+                break;
+            case RenderCommand::BLEND_OFF:
+                RenderContext::setBlend(false);
+                break;
+            case RenderCommand::CULL_ON:
+                RenderContext::setCull(true);
+                break;
+            case RenderCommand::CULL_OFF:
+                RenderContext::setCull(false);
+                break;
+            default:
+                break;
+            }
+
+            RenderPass::execute();
+        }
+    }
+
+    void RenderPassDrawCallback::execute() {
+        if (active) {
+            TracyGpuZone("drawCallback");
+
+            if (callback) {
+                callback();
+            }
+            RenderPass::execute();
+        }
     }
 
 }

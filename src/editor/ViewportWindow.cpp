@@ -120,8 +120,7 @@ namespace tri {
                     isHovered = ImGui::IsWindowHovered();
 
                     //set render pipeline size and output
-                    env->pipeline->setSize(viewportSize.x, viewportSize.y);
-                    env->pipeline->setOutput(output);
+                    env->renderPipeline->setSize(viewportSize.x, viewportSize.y);
 
                     //editor camera
                     if (cameraMode != FIXED_PRIMARY_CAMERA || env->runtime->getMode() == RuntimeMode::EDIT) {
@@ -144,7 +143,7 @@ namespace tri {
                                 glm::vec2 pos = { 0, 0 };
                                 pos.x = ImGui::GetMousePos().x - ImGui::GetItemRectMin().x;
                                 pos.y = ImGui::GetMousePos().y - ImGui::GetItemRectMin().y;
-                                env->pipeline->getOrAddRenderPass("viewport")->addCallback([this, texture, pos]() {
+                                env->renderPipeline->getPass("viewport")->addCallback("mouse picking", [this, texture, pos]() {
                                     updateMousePicking(texture, viewportSize, pos);
                                 });
                             }
@@ -222,9 +221,9 @@ namespace tri {
     }
 
     void ViewportWindow::updateSelectionOverlay(Transform &cameraTransform, Camera &camera, glm::vec2 viewportSize) {
-        auto pass = env->pipeline->getOrAddRenderPass("outlines");
+        auto pass = env->renderPipeline->getPass("outlines");
 
-        pass->addCallback([&, viewportSize]() {
+        pass->addCallback("prepare frame buffer", [&, viewportSize]() {
             if (!selectionOverlay) {
                 selectionOverlay = selectionOverlay.make();
                 selectionOverlay->resize(viewportSize.x, viewportSize.y);
@@ -249,14 +248,14 @@ namespace tri {
                 }
             }
             selectionOverlay2->clear();
-        }).name = "prepare frame buffer";
+        });
 
         if (!selectionOverlay || !selectionOverlay2) {
             return;
         }
 
-        pass->addCommand(BLEND_OFF).name = "blend off";
-        pass->addCommand(DEPTH_OFF).name = "depth off";
+        pass->addCommand("blend off", BLEND_OFF);
+        pass->addCommand("depth off", DEPTH_OFF);
 
         env->renderer->setCamera(camera.projection, cameraTransform.position, selectionOverlay2);
         env->renderer->setRenderPass(pass);
@@ -273,13 +272,13 @@ namespace tri {
         env->renderer->setRenderPass(nullptr);
 
 
-        auto& call = pass->addDrawCall("outline shader");
-        call.shader = env->assets->get<Shader>("shaders/outline.glsl");
-        call.frameBuffer = selectionOverlay;
-        call.textures.push_back(selectionOverlay2->getAttachment(COLOR));
-        call.shaderState = Ref<ShaderState>::make();
-        call.shaderState->set("uColor", Color(255, 128, 0).vec());
-        call.shaderState->set("steps", 1);
+        auto call = pass->addDrawCall("outline shader");
+        call->shader = env->assets->get<Shader>("shaders/outline.glsl").get();
+        call->frameBuffer = selectionOverlay.get();
+        call->textures.push_back(selectionOverlay2->getAttachment(COLOR).get());
+        call->shaderState = Ref<ShaderState>::make();
+        call->shaderState->set("uColor", Color(255, 128, 0).vec());
+        call->shaderState->set("steps", 1);
     }
 
     void ViewportWindow::saveEditorCamera() {

@@ -63,10 +63,8 @@ namespace tri {
 
             //frame buffer
             if (camera.active && camera.output) {
-                auto &step = env->pipeline->getOrAddRenderPass("clear")->addCommand(CLEAR);
-                step.frameBuffer = camera.output;
-                auto& step2 = env->pipeline->getOrAddRenderPass("clear")->addCommand(RESIZE);
-                step2.frameBuffer = camera.output;
+                env->renderPipeline->getPass("clear")->addCommand("clear", CLEAR)->frameBuffer = camera.output.get();
+                env->renderPipeline->getPass("clear")->addCommand("resize", RESIZE)->frameBuffer = camera.output.get();
             }
         });
     }

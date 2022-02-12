@@ -12,6 +12,8 @@
 #include <imgui/imgui.h>
 #include <imgui/backends/imgui_impl_glfw.h>
 #include <imgui/backends/imgui_impl_opengl3.h>
+#include <GL/glew.h>
+#include <glfw/glfw3.h>
 
 namespace tri {
 
@@ -23,8 +25,9 @@ namespace tri {
             IMGUI_CHECKVERSION();
             ImGui::CreateContext();
             ImGuiIO& io = ImGui::GetIO();
+#if TRI_WINDOWS
             //io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
-
+#endif
             ImGui::StyleColorsDark();
             ImGui_ImplGlfw_InitForOpenGL((GLFWwindow*)RenderContext::get(), true);
             ImGui_ImplOpenGL3_Init("#version 330");
@@ -43,7 +46,7 @@ namespace tri {
         }
 
         void begin() {
-            env->pipeline->getOrAddRenderPass("gui begin")->addCallback([&]() {
+            env->renderPipeline->getPass("gui begin")->addCallback("gui begin", [&]() {
                 if (!inFrame && env->window->isOpen()) {
                     ImGuiIO& io = ImGui::GetIO();
                     io.MouseWheel += (float)env->input->getMouseWheelDelta();
@@ -53,11 +56,11 @@ namespace tri {
                     ImGui::NewFrame();
                     inFrame = true;
                 }
-            }).name = "gui begin";
+            });
         }
 
         void end() {
-            env->pipeline->getOrAddRenderPass("gui end")->addCallback([&]() {
+            env->renderPipeline->getPass("gui end")->addCallback("gui end", [&]() {
                 if (inFrame && env->window->isOpen()) {
                     FrameBuffer::unbind();
                     ImGui::Render();
@@ -67,17 +70,19 @@ namespace tri {
                         ImGui_ImplOpenGL3_RenderDrawData(data);
                     }
                     if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
-                        ImGui::UpdatePlatformWindows();
+                        GLFWwindow* context = glfwGetCurrentContext();
                         ImGui::RenderPlatformWindowsDefault();
+                        ImGui::UpdatePlatformWindows();
+                        glfwMakeContextCurrent(context);
                     }
                     inFrame = false;
                 }
-            }).name = "gui end";
+            });
         }
 
         void shutdown() override {
-            env->signals->update.removeCallback("Imgui/begin");
-            env->signals->update.removeCallback("Imgui/end");
+            env->signals->update.removeCallback("Gui begin");
+            env->signals->update.removeCallback("Gui end");
 
             ImGui_ImplOpenGL3_Shutdown();
             ImGui_ImplGlfw_Shutdown();

@@ -117,6 +117,7 @@ namespace tri {
                     env->signals->postShutdown.invokeProfile();
                 }
             });
+            env->renderThread->executeRenderPipeline = false;
             env->renderThread->synchronize();
             env->renderThread->terminate();
 

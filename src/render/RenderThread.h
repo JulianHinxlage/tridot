@@ -13,6 +13,7 @@ namespace tri {
 	class RenderThread : public System {
 	public:
 		bool useDedicatedThread;
+		bool executeRenderPipeline;
 
 		RenderThread();
 		void update() override;

@@ -39,7 +39,6 @@ namespace tri {
                 buffer->setData(backData.data() + backUpdateIndex * elementSize, (backElementIndex - backUpdateIndex) * elementSize, backUpdateIndex * elementSize);
                 backUpdateIndex = backElementIndex;
             }
-            useBackBuffer = false;
         }
         else {
             if (elementIndex > updateIndex) {

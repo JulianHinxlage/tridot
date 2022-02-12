@@ -51,6 +51,11 @@ namespace tri {
             ImGui::PushStyleColor(ImGuiCol_TitleBgActive, ImVec4(0.238, 0.238, 0.238, 1));
             ImGui::PushStyleColor(ImGuiCol_DragDropTarget, ImVec4(0.0, 0.32, 1.0, 1));
 
+            std::string fontFile = env->assets->searchFile("");
+            if (!fontFile.empty()) {
+                ImGui::GetIO().Fonts->AddFontFromFileTTF(fontFile.c_str(), 16);
+            }
+
             //set editor layout/config file
             const char *configFile = "editor.ini";
             if (!std::filesystem::exists(configFile)) {
@@ -139,10 +144,12 @@ namespace tri {
     }
 
     void Editor::update() {
-        env->pipeline->getOrAddRenderPass("editor")->addCallback([&]() {
+        env->renderPipeline->getPass("editor")->addCallback("editor", [&]() {
         if (!updated && ImGui::GetCurrentContext() && ImGui::GetCurrentContext()->WithinFrameScope) {
             updated = true;
             ImGui::DockSpaceOverViewport();
+            //ImGui::Begin("Dockspace");
+            //ImGui::DockSpace(0);
             updateMenuBar();
 
             //windows
@@ -192,8 +199,10 @@ namespace tri {
                     env->runtime->setMode(RuntimeMode::RUNTIME);
                 }
             }
+
+            //ImGui::End();
         }
-            });
+        });
     }
 
     void Editor::shutdown(){
@@ -455,7 +464,7 @@ namespace tri {
         }
     };
     TRI_STARTUP_CALLBACK("") {
-        //env->editor->addElement<ImguiDemo>();
+        env->editor->addElement<ImguiDemo>();
     }
 
 }

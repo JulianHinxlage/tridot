@@ -22,6 +22,7 @@ namespace tri {
 		thread = nullptr;
 		running = false;
 		useDedicatedThread = false;
+		executeRenderPipeline = true;
 	}
 
 	void RenderThread::update() {
@@ -49,7 +50,7 @@ namespace tri {
 		else {
 			currentTasks.swap(tasks);
 			tasks.clear();
-			env->pipeline->submitRenderPasses();
+			env->renderPipeline->submitRenderPasses();
 			execute();
 		}
 	}
@@ -81,7 +82,7 @@ namespace tri {
 							ZoneScopedNC("waitForMainThread", tracy::Color::Gray30);
 							barrier.arrive_and_wait();
 						}
-						env->pipeline->submitRenderPasses();
+						env->renderPipeline->submitRenderPasses();
 						barrier.arrive_and_wait();
 
 						TRI_PROFILE("RenderThread");
@@ -107,7 +108,9 @@ namespace tri {
 			}
 		}
 
-		env->pipeline->execute();
+		if (executeRenderPipeline) {
+			env->renderPipeline->execute();
+		}
 	}
 
 }
