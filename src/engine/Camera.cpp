@@ -60,6 +60,7 @@ namespace tri {
             }else if (camera.type == Camera::ORTHOGRAPHIC) {
                 camera.projection = glm::ortho(-transform.scale.x * camera.aspectRatio, transform.scale.x * camera.aspectRatio, -transform.scale.y, transform.scale.y, camera.near, camera.far) * glm::inverse(t);
             }
+            camera.transform = transform.getMatrix();
 
             //frame buffer
             if (camera.active && camera.output) {

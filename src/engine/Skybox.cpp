@@ -78,7 +78,7 @@ namespace tri {
         pass->addCommand("depth off", DEPTH_OFF);
 
         int skyboxIndex = 0;
-        env->scene->view<Camera, Transform>().each([&](Camera& camera, Transform& cameraTransform) {
+        env->scene->view<Camera>().each([&](Camera& camera) {
             if (camera.active) {
                 env->scene->view<Skybox>().each([&](Skybox& skybox) {
 
@@ -97,10 +97,10 @@ namespace tri {
                                     step->shaderState = Ref<ShaderState>::make();
 
                                     Transform transform;
-                                    transform.decompose(cameraTransform.getMatrix());
+                                    transform.decompose(camera.transform);
                                     transform.scale = { 1, 1, 1 };
                                     transform.rotation = { 0, 0, 0 };
-
+                                    
                                     step->shaderState->set("uProjection", camera.projection);
                                     step->shaderState->set("uTransform", transform.calculateLocalMatrix());
                                     step->shaderState->set("uColor", skybox.color.vec());
