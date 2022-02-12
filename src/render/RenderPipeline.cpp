@@ -90,12 +90,11 @@ namespace tri {
             }
         };
         setActive(rootPass, executeRootPass);
-
-
+        
         //copy passes to current passes and clear passes
         int drawCallCount = 0;
         int instanceCount = 0;
-        executeRootPass->subPasses.clear();
+        executeRootPass = Ref<RenderPass>::make(*rootPass);
         std::function<void(Ref<RenderPass>)> clear = [&](Ref<RenderPass> pass) {
             for (int i = pass->subPasses.size() - 1; i >= 0; i--) {
                 auto& subPass = pass->subPasses[i];
@@ -106,16 +105,15 @@ namespace tri {
                         instanceCount += count;
                     }
                 }
-                if (!subPass->fixed) {
-                    pass->subPasses.erase(pass->subPasses.begin() + i);
-                }
                 clear(subPass);
+                if (!subPass->fixed) {
+                    if (subPass->type != RenderPass::NODE) {
+                        pass->subPasses.erase(pass->subPasses.begin() + i);
+                    }
+                }
             }
         };
-        for (auto& pass : rootPass->subPasses) {
-            executeRootPass->subPasses.push_back(Ref<RenderPass>::make(*pass));
-            clear(pass);
-        }
+        clear(rootPass);
 
         env->renderer->stats.drawCallCount = drawCallCount;
         env->renderer->stats.instanceCount = instanceCount;

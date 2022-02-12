@@ -116,45 +116,51 @@ namespace tri {
         int irradianceMapIndex;
     };
 
-    class Renderer::Impl {
+    class Batch {
     public:
-        class Batch {
-        public:
-            Mesh* mesh = nullptr;
-            Shader* shader = nullptr;
-            Ref<VertexArray> vertexArray;
-            Ref<BatchBuffer> instances;
-            AssetList<Texture> textures;
-            AssetList<Material> materials;
-            Ref<BatchBuffer> materialBuffer;
-            int instanceCount = 0;
-        };
+        Mesh* mesh = nullptr;
+        Shader* shader = nullptr;
+        Ref<VertexArray> vertexArray;
+        Ref<BatchBuffer> instances;
+        AssetList<Texture> textures;
+        AssetList<Material> materials;
+        Ref<BatchBuffer> materialBuffer;
+        int instanceCount = 0;
+    };
 
+    class BatchList {
+    public:
         std::vector<std::vector<Ref<Batch>>> batches;
         Ref<BatchBuffer> lightBuffer;
         std::vector<Light> lights;
         std::vector<glm::mat4> lightProjections;
+
         Ref<BatchBuffer> environmentBuffer;
         EnvironmentData environment;
         Ref<Texture> radianceMap;
         Ref<Texture> irradianceMap;
-        bool shadowsEnabled = true;
 
-        void startup() {
+        Ref<RenderPass> renderPass;
+        std::string renderPassName;
+        Ref<FrameBuffer> frameBuffer;
+        bool needsUpdate = true;
+
+        void init(Ref<RenderPass> renderPass) {
             lightBuffer = Ref<BatchBuffer>::make();
             lightBuffer->init(sizeof(LightData), UNIFORM_BUFFER);
 
             environmentBuffer = Ref<BatchBuffer>::make();
             environmentBuffer->init(sizeof(EnvironmentData), UNIFORM_BUFFER);
 
-            env->console->setVariable("shadows", &shadowsEnabled);
+            this->renderPass = renderPass;
+            renderPassName = renderPass->name;
         }
 
-        Batch *getBatch(Mesh* mesh, Shader* shader) {
+        Batch* getBatch(Mesh* mesh, Shader* shader) {
             if (batches.size() > shader->getId()) {
                 auto& list = batches[shader->getId()];
                 if (list.size() > mesh->vertexArray.getId()) {
-                    Batch *batch = list[mesh->vertexArray.getId()].get();
+                    Batch* batch = list[mesh->vertexArray.getId()].get();
                     if (batch) {
                         return batch;
                     }
@@ -178,7 +184,7 @@ namespace tri {
                 batch->instances = Ref<BatchBuffer>::make();
                 batch->instances->init(sizeof(InstanceData));
 
-                batch->materialBuffer= Ref<BatchBuffer>::make();
+                batch->materialBuffer = Ref<BatchBuffer>::make();
                 batch->materialBuffer->init(sizeof(MaterialData), UNIFORM_BUFFER);
 
                 batch->vertexArray = Ref<VertexArray>::make(batch->mesh->vertexArray);
@@ -187,9 +193,188 @@ namespace tri {
                     {UINT8, 4, true}, //color
                     {FLOAT, 1}, //material index
                     {UINT8, 4, true}, //id
-                }, 1);
-            });
+                    }, 1);
+                });
             return batch.get();
+        }
+
+        void update(Renderer::Statistics &stats) {
+            //set environment
+            EnvironmentData* e = (EnvironmentData*)environmentBuffer->next();
+            *e = environment;
+            e->lightCount = lightBuffer->size();
+            stats.lightCount = e->lightCount;
+
+            if (radianceMap) {
+                e->radianceMapIndex = 0;
+                renderPass->addCallback("bind radiance map", [radianceMap = radianceMap]() {
+                    radianceMap->bind(30);
+                });
+            }
+            else {
+                e->radianceMapIndex = -1;
+            }
+            if (irradianceMap) {
+                e->irradianceMapIndex = 1;
+                renderPass->addCallback("bind irradiance map", [irradianceMap = irradianceMap]() {
+                    irradianceMap->bind(31);
+                });
+            }
+            else {
+                e->irradianceMapIndex = -1;
+            }
+
+            environment.radianceMapIndex = -1;
+            environment.irradianceMapIndex = -1;
+            environment.environmentMapIntensity = 0;
+            radianceMap = nullptr;
+            irradianceMap = nullptr;
+
+
+            renderPass->addCallback("environment", [&]() {
+                environmentBuffer->update();
+            });
+
+            environmentBuffer->swapBuffers();
+            environmentBuffer->reset();
+
+
+            renderPass->addCallback("lights", [&]() {
+                lightBuffer->update();
+            });
+            lightBuffer->swapBuffers();
+            lightBuffer->reset();
+
+            TRI_PROFILE_NAME(renderPass->name.c_str(), renderPass->name.size());
+
+
+
+            //instance shader
+            for (auto& list : batches) {
+                int meshCounter = 0;
+                int materialCounter = 0;
+                if (list.size() > 0) {
+                    stats.shaderCount++;
+                }
+
+                for (auto batch : list) {
+                    if (batch && batch->instances) {
+                        if (batch->instances->size() > 0) {
+                            meshCounter++;
+
+                            auto file = env->assets->getFile(batch->mesh);
+                            TRI_PROFILE_INFO(file.c_str(), file.size());
+
+                            //set materials
+                            for (auto& mat : batch->materials.assets) {
+                                if (mat != nullptr) {
+                                    materialCounter++;
+
+                                    MaterialData* m = (MaterialData*)batch->materialBuffer->next();
+                                    m->texture = batch->textures.getIndex(mat->texture.get());
+                                    m->normalMap = batch->textures.getIndex(mat->normalMap.get());
+                                    m->roughnessMap = batch->textures.getIndex(mat->roughnessMap.get());
+                                    m->metallicMap = batch->textures.getIndex(mat->metallicMap.get());
+                                    m->ambientOcclusionMap = batch->textures.getIndex(mat->ambientOcclusionMap.get());
+
+                                    m->color = mat->color.vec();
+                                    m->mapping = (int)mat->mapping;
+                                    m->roughness = mat->roughness;
+                                    m->metallic = mat->metallic;
+                                    m->normalMapFactor = mat->normalMapFactor;
+
+                                    m->textureOffset = mat->textureOffset + mat->offset;
+                                    m->textureScale = mat->textureScale * mat->scale;
+                                    m->normalMapOffset = mat->normalMapOffset + mat->offset;
+                                    m->normalMapScale = mat->normalMapScale * mat->scale;
+                                    m->roughnessMapOffset = mat->roughnessMapOffset + mat->offset;
+                                    m->roughnessMapScale = mat->roughnessMapScale * mat->scale;
+                                    m->metallicMapOffset = mat->metallicMapOffset + mat->offset;
+                                    m->metallicMapScale = mat->metallicMapScale * mat->scale;
+                                    m->ambientOcclusionMapOffset = mat->ambientOcclusionMapOffset + mat->offset;
+                                    m->ambientOcclusionMapScale = mat->ambientOcclusionMapScale * mat->scale;
+                                }
+                            }
+                            batch->materials.reset();
+
+
+                            //set instances
+                            renderPass->addCallback("instances " + file, [batch]() {
+                                batch->instances->update();
+                                batch->materialBuffer->update();
+                            });
+
+                            batch->instanceCount = batch->instances->size();
+                            batch->instances->swapBuffers();
+                            batch->materialBuffer->swapBuffers();
+                            batch->instances->reset();
+                            batch->materialBuffer->reset();
+
+                            stats.instanceCount += batch->instanceCount;
+
+                            //set draw call
+                            auto step = renderPass->addDrawCall("mesh " + file);
+                            step->shader = batch->shader;
+                            step->frameBuffer = frameBuffer.get();
+                            step->mesh = batch->mesh;
+                            step->vertexArray = batch->vertexArray.get();
+                            step->instanceCount = batch->instanceCount;
+
+
+                            //set textures
+                            for (auto& tex : batch->textures.assets) {
+                                if (tex != nullptr) {
+                                    step->textures.push_back(tex);
+                                }
+                            }
+                            batch->textures.reset();
+
+                            step->shaderState = Ref<ShaderState>::make();
+                            step->shaderState->set("uMaterials", batch->materialBuffer->buffer.get());
+                            step->shaderState->set("uLights", lightBuffer->buffer.get());
+                            step->shaderState->set("uEnvironment", environmentBuffer->buffer.get());
+
+                            int cubeTextures[2] = { 30, 31 };
+                            step->shaderState->set("uCubeTextures", cubeTextures, 2);
+                        }
+                    }
+                }
+
+                stats.meshCount = std::max(stats.meshCount, meshCounter);
+                stats.materialCount = std::max(stats.materialCount, materialCounter);
+            }
+        }
+    };
+
+    class Renderer::Impl {
+    public:
+        std::vector<Ref<BatchList>> batchLists;
+        BatchList *list;
+        bool shadowsEnabled = true;
+
+        void startup() {
+            env->console->setVariable("shadows", &shadowsEnabled);
+            setPass(env->renderPipeline->getPass("geometry"));
+        }
+
+        Batch *getBatch(Mesh* mesh, Shader* shader) {
+            return list->getBatch(mesh, shader);
+        }
+
+        void setPass(Ref<RenderPass> pass) {
+            env->console->trace("renderPass: ", pass->name, " addr:", pass.get());
+
+            for (auto& batchList : batchLists) {
+                if (batchList && batchList->renderPassName == pass->name) {
+                    list = batchList.get();
+                    list->needsUpdate = true;
+                    list->renderPass = pass;
+                    return;
+                }
+            }
+            auto batchList = batchLists.emplace_back(Ref<BatchList>::make());
+            batchList->init(pass);
+            list = batchList.get();
         }
     };
 
@@ -225,17 +410,24 @@ namespace tri {
     }
 
     void Renderer::setCamera(glm::mat4& projection, glm::vec3 position, Ref<FrameBuffer> frameBuffer) {
-        impl->environment.projection = projection;
-        impl->environment.cameraPosition = position;
+        impl->list->environment.projection = projection;
+        impl->list->environment.cameraPosition = position;
         this->frameBuffer = frameBuffer;
+        impl->list->frameBuffer = frameBuffer;
     }
 
     void Renderer::setRenderPass(const Ref<RenderPass>& pass) {
         currentPass = pass;
+        if (!pass) {
+            impl->setPass(geometryPass);
+        }
+        else {
+            impl->setPass(pass);
+        }
     }
 
     void Renderer::submit(const glm::vec3& position, const glm::vec3 direction, Light& light) {
-        LightData* l = (LightData*)impl->lightBuffer->next();
+        LightData* l = (LightData*)impl->list->lightBuffer->next();
         l->type = (int)light.type;
         l->position = position;
         l->direction = direction;
@@ -271,7 +463,7 @@ namespace tri {
 
             if (light.type == DIRECTIONAL_LIGHT) {
                 if (light.shadowMap) {
-                    l->shadowMapIndex = 30 - impl->lights.size();
+                    l->shadowMapIndex = 30 - impl->list->lights.size();
                     shadowPass->addCallback("bind shadow map", [shadowMap = light.shadowMap, index = l->shadowMapIndex]() {
                         shadowMap->getAttachment(DEPTH)->bind(index);
                     });
@@ -279,14 +471,14 @@ namespace tri {
             }
         }
 
-        impl->lights.push_back(light);
-        impl->lightProjections.push_back(l->projection);
+        impl->list->lights.push_back(light);
+        impl->list->lightProjections.push_back(l->projection);
     }
     
     void Renderer::setEnvironMap(Ref<Texture> radianceMap, Ref<Texture> irradianceMap, float intensity) {
-        impl->environment.environmentMapIntensity = intensity;
-        impl->radianceMap = radianceMap;
-        impl->irradianceMap = irradianceMap;
+        impl->list->environment.environmentMapIntensity = intensity;
+        impl->list->radianceMap = radianceMap;
+        impl->list->irradianceMap = irradianceMap;
     }
     
     void Renderer::submit(const glm::mat4& transform, const glm::vec3& position, Mesh* mesh, Material* material, Color color, uint32_t id) {
@@ -302,7 +494,7 @@ namespace tri {
         }
         if (mesh->vertexArray.getId() != 0) {
             if (shader->getId() != 0) {
-                Impl::Batch *batch = impl->getBatch(mesh, shader);
+                Batch *batch = impl->getBatch(mesh, shader);
                 if (batch->instances) {
                     InstanceData *i = (InstanceData*)batch->instances->next();
                     i->transform = transform;
@@ -312,6 +504,27 @@ namespace tri {
                 }
             }
         }   
+    }
+
+    void Renderer::submit(const glm::mat4& transform, const glm::vec3& position, Mesh* mesh, Shader* shader, Texture* texture, Color color, uint32_t id) {
+        if (!mesh) {
+            mesh = defaultMesh.get();
+        }
+        if (!shader) {
+            shader = defaultShader.get();
+        }
+        if (mesh->vertexArray.getId() != 0) {
+            if (shader->getId() != 0) {
+                Batch* batch = impl->getBatch(mesh, shader);
+                if (batch->instances) {
+                    InstanceData* i = (InstanceData*)batch->instances->next();
+                    i->transform = transform;
+                    i->materialIndex = batch->textures.getIndex(texture);
+                    i->color = color;
+                    i->id = id;
+                }
+            }
+        }
     }
 
     void Renderer::submitDirect(const glm::mat4& transform, const glm::vec3& position, Mesh* mesh, Shader* shader, Texture* texture, Color color) {
@@ -332,7 +545,7 @@ namespace tri {
                     pass = geometryPass.get();
                 }
 
-                auto call = pass->addDrawCall("direct");
+                auto call = geometryPass->addDrawCall("direct");
                 call->shader = shader;
                 call->mesh = mesh;
                 call->textures.push_back(texture);
@@ -340,7 +553,7 @@ namespace tri {
 
                 Ref<ShaderState> shaderState = Ref<ShaderState>::make();
                 shaderState->set("uColor", color.vec());
-                shaderState->set("uProjection", impl->environment.projection);
+                shaderState->set("uProjection", impl->list->environment.projection);
                 shaderState->set("uTransform", transform);
                 call->shaderState = shaderState;
             }
@@ -348,159 +561,24 @@ namespace tri {
     }
 
     void Renderer::update() {
-        if (currentPass == nullptr) {
-            currentPass = geometryPass;
-            currentPass->addCommand("depth on", DEPTH_ON);
-            currentPass->addCommand("blend on", BLEND_ON);
-        }
-
-
-        //set environment
-        EnvironmentData* e = (EnvironmentData*)impl->environmentBuffer->next();
-        *e = impl->environment;
-        e->lightCount = impl->lightBuffer->size();
-        stats.lightCount = e->lightCount;
-
-        if (impl->radianceMap) {
-            e->radianceMapIndex = 0;
-            currentPass->addCallback("bind radiance map", [radianceMap = impl->radianceMap]() {
-                radianceMap->bind(30);
-            });
-        }
-        else {
-            e->radianceMapIndex = -1;
-        }
-        if (impl->irradianceMap) {
-            e->irradianceMapIndex = 1;
-            currentPass->addCallback("bind irradiance map", [irradianceMap = impl->irradianceMap]() {
-                irradianceMap->bind(31);
-            });
-        }
-        else {
-            e->irradianceMapIndex = -1;
-        }
-
-        impl->environment.radianceMapIndex = -1;
-        impl->environment.irradianceMapIndex = -1;
-        impl->environment.environmentMapIntensity = 0;
-        impl->radianceMap = nullptr;
-        impl->irradianceMap = nullptr;
-
-
-        currentPass->addCallback("environment", [&]() {
-            impl->lightBuffer->update();
-            impl->environmentBuffer->update();
-        });
-
-        impl->lightBuffer->swapBuffers();
-        impl->environmentBuffer->swapBuffers();
-        impl->lightBuffer->reset();
-        impl->environmentBuffer->reset();
-
-        if (impl->shadowsEnabled) {
-            updateShadowMaps();
-        }
-
-        TRI_PROFILE("geometry");
-
         stats.shaderCount = 0;
         stats.meshCount = 0;
         stats.instanceCount = 0;
 
-        int meshCounter = 0;
-        int materialCounter = 0;
-
-        //instance shader
-        for (auto& list : impl->batches) {
-            if (list.size() > 0) {
-                stats.shaderCount++;
-            }
-            for (auto batch : list) {
-                if (batch && batch->instances) {
-                    if (batch->instances->size() > 0) {
-                        meshCounter++;
-
-                        auto file = env->assets->getFile(batch->mesh);
-                        TRI_PROFILE_INFO(file.c_str(), file.size());
-
-                        //set materials
-                        for (auto& mat : batch->materials.assets) {
-                            if (mat != nullptr) {
-                                materialCounter++;
-
-                                MaterialData* m = (MaterialData*)batch->materialBuffer->next();
-                                m->texture = batch->textures.getIndex(mat->texture.get());
-                                m->normalMap = batch->textures.getIndex(mat->normalMap.get());
-                                m->roughnessMap = batch->textures.getIndex(mat->roughnessMap.get());
-                                m->metallicMap = batch->textures.getIndex(mat->metallicMap.get());
-                                m->ambientOcclusionMap = batch->textures.getIndex(mat->ambientOcclusionMap.get());
-
-                                m->color = mat->color.vec();
-                                m->mapping = (int)mat->mapping;
-                                m->roughness = mat->roughness;
-                                m->metallic = mat->metallic;
-                                m->normalMapFactor = mat->normalMapFactor;
-
-                                m->textureOffset = mat->textureOffset + mat->offset;
-                                m->textureScale = mat->textureScale * mat->scale;
-                                m->normalMapOffset = mat->normalMapOffset + mat->offset;
-                                m->normalMapScale = mat->normalMapScale * mat->scale;
-                                m->roughnessMapOffset = mat->roughnessMapOffset + mat->offset;
-                                m->roughnessMapScale = mat->roughnessMapScale * mat->scale;
-                                m->metallicMapOffset = mat->metallicMapOffset + mat->offset;
-                                m->metallicMapScale = mat->metallicMapScale * mat->scale;
-                                m->ambientOcclusionMapOffset = mat->ambientOcclusionMapOffset + mat->offset;
-                                m->ambientOcclusionMapScale = mat->ambientOcclusionMapScale * mat->scale;
-                            }
-                        }
-                        batch->materials.reset();
-
-
-                        //set instances
-                        currentPass->addCallback("instances " + file, [batch]() {
-                            batch->instances->update();
-                            batch->materialBuffer->update();
-                        });
-
-                        batch->instanceCount = batch->instances->size();
-                        batch->instances->swapBuffers();
-                        batch->materialBuffer->swapBuffers();
-                        batch->instances->reset();
-                        batch->materialBuffer->reset();
-
-                        stats.instanceCount += batch->instanceCount;
-
-                        //set draw call
-                        auto step = currentPass->addDrawCall("mesh " + file);
-                        step->shader = batch->shader;
-                        step->frameBuffer = frameBuffer.get();
-                        step->mesh = batch->mesh;
-                        step->vertexArray = batch->vertexArray.get();
-                        step->instanceCount = batch->instanceCount;
-
-
-                        //set textures
-                        for (auto& tex : batch->textures.assets) {
-                            if (tex != nullptr) {
-                                step->textures.push_back(tex);
-                            }
-                        }
-                        batch->textures.reset();
-
-                        step->shaderState = Ref<ShaderState>::make();
-                        step->shaderState->set("uMaterials", batch->materialBuffer->buffer.get());
-                        step->shaderState->set("uLights", impl->lightBuffer->buffer.get());
-                        step->shaderState->set("uEnvironment", impl->environmentBuffer->buffer.get());
-
-                        int cubeTextures[2] = { 30, 31 };
-                        step->shaderState->set("uCubeTextures", cubeTextures, 2);
-                    }
+        for (auto& list : impl->batchLists) {
+            if (list && list->needsUpdate) {
+                if (list->renderPass == geometryPass) {
+                    list->renderPass->addCommand("depth on", DEPTH_ON);
+                    list->renderPass->addCommand("blend on", BLEND_ON);
                 }
+                if (impl->shadowsEnabled && list->renderPass == geometryPass) {
+                    updateShadowMaps();
+                }
+                list->update(stats);
+                list->needsUpdate = false;
             }
-            stats.meshCount = std::max(stats.meshCount, meshCounter);
-            stats.materialCount = std::max(stats.materialCount, materialCounter);
         }
-        currentPass = nullptr;
+        setRenderPass(nullptr);
     }
 
     void Renderer::shutdown() {
@@ -514,15 +592,15 @@ namespace tri {
         if (shader->getId() == 0) {
             return;
         }
-        for (int i = 0; i < impl->lights.size(); i++) {
-            auto& light = impl->lights[i];
+        for (int i = 0; i < impl->list->lights.size(); i++) {
+            auto& light = impl->list->lights[i];
             if (light.type != DIRECTIONAL_LIGHT) {
                 continue;
             }
 
             shadowPass->addCommand("clear shadow map", CLEAR)->frameBuffer = light.shadowMap.get();
 
-            for (auto& list : impl->batches) {
+            for (auto& list : impl->list->batches) {
                 for (auto& batch : list) {
                     if (batch) {
                         
@@ -533,7 +611,7 @@ namespace tri {
                         call->shader = shader.get();
                         call->frameBuffer = light.shadowMap.get();
                         call->shaderState = Ref<ShaderState>::make();
-                        call->shaderState->set("uProjection", impl->lightProjections[i]);
+                        call->shaderState->set("uProjection", impl->list->lightProjections[i]);
 
                         call->mesh = batch->mesh;
                         call->vertexArray = batch->vertexArray.get();
@@ -543,8 +621,8 @@ namespace tri {
             }
         }
 
-        impl->lights.clear();
-        impl->lightProjections.clear();
+        impl->list->lights.clear();
+        impl->list->lightProjections.clear();
     }
 
 }

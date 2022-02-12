@@ -52,6 +52,39 @@ namespace tri {
 
     TRI_REGISTER_TYPE(RenderPassDrawCallback);
 
+    RenderPass::RenderPass() {
+        type = NODE;
+        name = "";
+        active = true;
+        newThisFrame = true;
+        fixed = false;
+    }
+
+    RenderPass::RenderPass(const RenderPass& renderPass) {
+        type = renderPass.type;
+        name = renderPass.name;
+        active = renderPass.active;
+        newThisFrame = renderPass.newThisFrame;
+        fixed = renderPass.fixed;
+
+        subPasses.resize(renderPass.subPasses.size());
+        for (int i = 0; i < subPasses.size(); i++) {
+            auto pass = renderPass.subPasses[i];
+            if (pass->type == NODE) {
+                subPasses[i] = Ref<RenderPass>::make(*pass);
+            }
+            else if (pass->type == DRAW_CALL) {
+                subPasses[i] = (Ref<RenderPass>)Ref<RenderPassDrawCall>::make(*(RenderPassDrawCall*)pass.get());
+            }
+            else if (pass->type == DRAW_COMMAND) {
+                subPasses[i] = (Ref<RenderPass>)Ref<RenderPassDrawCommand>::make(*(RenderPassDrawCommand*)pass.get());
+            }
+            else if (pass->type == DRAW_CALLBACK) {
+                subPasses[i] = (Ref<RenderPass>)Ref<RenderPassDrawCallback>::make(*(RenderPassDrawCallback*)pass.get());
+            }
+        }
+    }
+
     Ref<RenderPassDrawCall> RenderPass::addDrawCall(const std::string& name, bool fixed) {
         Ref<RenderPassDrawCall> pass = Ref<RenderPassDrawCall>::make();
         pass->name = name;
@@ -87,10 +120,19 @@ namespace tri {
         return pass;
     }
 
-    Ref<RenderPass> RenderPass::getPass(const std::string& name, bool fixed) {
-        for (auto& pass : subPasses) {
+    Ref<RenderPass> RenderPass::getPass(const std::string& name, bool fixed, bool resetPosition) {
+        for (int i = 0; i < subPasses.size(); i++) {
+            auto& pass = subPasses[i];
             if (pass && pass->name == name) {
-                return pass;
+                if (resetPosition) {
+                    Ref<RenderPass> p = pass;
+                    subPasses.erase(subPasses.begin() + i);
+                    subPasses.push_back(p);
+                    return p;
+                }
+                else {
+                    return pass;
+                }
             }
         }
         Ref<RenderPass> pass = Ref<RenderPass>::make();
@@ -122,6 +164,26 @@ namespace tri {
                 }
             }
         }
+    }
+
+    RenderPassDrawCall::RenderPassDrawCall() {
+        mesh = nullptr;
+        vertexArray = nullptr;
+        shader = nullptr;
+        shaderState = nullptr;
+        frameBuffer = nullptr;
+        instanceCount = -1;
+    }
+
+    RenderPassDrawCall::RenderPassDrawCall(const RenderPassDrawCall& call) {
+        mesh = call.mesh;
+        vertexArray = call.vertexArray;
+        shader = call.shader;
+        shaderState = Ref<ShaderState>::make(*call.shaderState);
+        frameBuffer = call.frameBuffer;
+        instanceCount = call.instanceCount;
+        textures = call.textures;
+        buffers = call.buffers;
     }
 
     void RenderPassDrawCall::execute() {

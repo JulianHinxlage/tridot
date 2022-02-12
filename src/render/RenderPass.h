@@ -46,10 +46,13 @@ namespace tri {
         bool fixed;
         std::vector<Ref<RenderPass>> subPasses;
 
+        RenderPass();
+        RenderPass(const RenderPass& renderPass);
+
         Ref<RenderPassDrawCall> addDrawCall(const std::string& name, bool fixed = false);
         Ref<RenderPassDrawCommand> addCommand(const std::string& name, RenderCommand command, bool fixed = false);
         Ref<RenderPassDrawCallback> addCallback(const std::string &name, const std::function<void()> &callback, bool fixed = false);
-        Ref<RenderPass> getPass(const std::string& name, bool fixed = false);
+        Ref<RenderPass> getPass(const std::string& name, bool fixed = false, bool resetPosition = false);
         void removetPass(const std::string& name);
         virtual void execute();
     };
@@ -64,6 +67,9 @@ namespace tri {
         int instanceCount = -1;
         std::vector<Texture*> textures;
         std::vector<Buffer*> buffers;
+
+        RenderPassDrawCall();
+        RenderPassDrawCall(const RenderPassDrawCall &call);
     
         virtual void execute() override;
     };
