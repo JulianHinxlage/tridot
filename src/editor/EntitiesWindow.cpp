@@ -361,6 +361,8 @@ namespace tri {
                     }
                 }
 
+                ImGui::TextDisabled("id: %i", id);
+
                 ImGui::EndPopup();
             }
         }

@@ -9,6 +9,7 @@
 #include "Transform.h"
 #include "Camera.h"
 #include "Skybox.h"
+#include "render/RenderPipeline.h"
 #include "core/core.h"
 
 namespace tri {
@@ -21,7 +22,16 @@ namespace tri {
     TRI_REGISTER_TYPE(Color);
 
     TRI_UPDATE_CALLBACK("MeshComponent") {
-        env->scene->view<Camera, Transform>().each([](Camera& camera, Transform &cameraTransform) {
+
+        int cameraCount = 0;
+        env->scene->view<Camera, Transform>().each([&](Camera& camera, Transform& cameraTransform) {
+            if (camera.active) {
+                cameraCount++;
+            }
+        });
+
+        int cameraIndex = 0;
+        env->scene->view<Camera, Transform>().each([&](Camera& camera, Transform &cameraTransform) {
             if (camera.active) {
                 env->renderer->stats.cameraCount++;
 
@@ -35,6 +45,11 @@ namespace tri {
                             }
                         }
                     }
+                }
+
+                if (cameraCount > 1) {
+                    std::string passName = "Camera " + std::to_string(cameraIndex++);
+                    env->renderer->setRenderPass(env->renderPipeline->getPass("geometry")->getPass(passName));
                 }
 
                 //lights
@@ -70,6 +85,7 @@ namespace tri {
             }
         });
 
+        env->renderer->setRenderPass(nullptr);
     }
 
 }

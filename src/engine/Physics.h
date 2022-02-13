@@ -21,7 +21,6 @@ namespace tri {
 		void contacts(RigidBody& rigidBody, std::function<void(const glm::vec3& pos, EntityId id)> callback);
 
 	private:
-		int threadId;
 		class Impl;
 		Ref<Impl> impl;
 

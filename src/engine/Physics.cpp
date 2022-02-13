@@ -185,6 +185,10 @@ namespace tri {
 		btDefaultMotionState* motionState = new btDefaultMotionState(bodyTransform);
 		btRigidBody::btRigidBodyConstructionInfo info(mass, motionState, shape, localInertia);
 		btRigidBody* body = new btRigidBody(info);
+		if (rigidBody.type == RigidBody::KINEMATIC) {
+			body->setCollisionFlags(body->getCollisionFlags() | btCollisionObject::CF_KINEMATIC_OBJECT);
+		}
+
 		body->setFriction(rigidBody.friction);
 		body->setRestitution(rigidBody.restitution);
 		body->setRollingFriction(rigidBody.friction / 100);
@@ -231,9 +235,6 @@ namespace tri {
 	void Physics::startup(){
 		impl = impl.make();
 		impl->init();
-		threadId = env->threads->addThread([this]() {
-			//impl->tick();
-		});
 
 		env->signals->sceneBegin.addCallback("Physics", [this](Scene* scene) {
 			TRI_PROFILE("addRigidBodies");
@@ -262,6 +263,28 @@ namespace tri {
 		env->scene->getComponentPool<Collider>()->lock();
 		env->scene->getComponentPool<Transform>()->lock();
 
+		env->scene->view<RigidBody, Collider, Transform>().each([this](EntityId id, RigidBody& rigidBody, Collider& collider, Transform& transform) {
+			if (rigidBody.reference) {
+				btRigidBody* body = (btRigidBody*)rigidBody.reference;
+				if (transform.position != rigidBody.lastPosition) {
+					body->getWorldTransform().setOrigin(conv(transform.position));
+					body->setActivationState(ACTIVE_TAG);
+				}
+				if (transform.rotation != rigidBody.lastRotation) {
+					body->getWorldTransform().setRotation(convQuaternion(transform.rotation));
+					body->setActivationState(ACTIVE_TAG);
+				}
+				if (rigidBody.velocity != rigidBody.lastVelocity) {
+					body->setLinearVelocity(conv(rigidBody.velocity));
+					body->setActivationState(ACTIVE_TAG);
+				}
+				if (rigidBody.angular != rigidBody.lastAngular) {
+					body->setAngularVelocity(conv(rigidBody.angular));
+					body->setActivationState(ACTIVE_TAG);
+				}
+			}
+		});
+
 		impl->tick();
 
 		env->scene->view<RigidBody, Collider, Transform>().each([this](EntityId id, RigidBody &rigidBody, Collider &collider, Transform &transform) {
@@ -282,56 +305,24 @@ namespace tri {
 				addRigidBody(id, rigidBody, collider, transform);
 			}
 			else {
-				if (rigidBody.mass == 0) {
-					btRigidBody* body = (btRigidBody*)rigidBody.reference;
-					if (transform.position != rigidBody.lastPosition) {
-						body->getWorldTransform().setOrigin(conv(transform.position));
-						rigidBody.lastPosition = transform.position;
-					}
-					if (transform.rotation != rigidBody.lastRotation) {
-						body->getWorldTransform().setRotation(convQuaternion(transform.rotation));
-						rigidBody.lastRotation = transform.rotation;
-					}
+				btRigidBody* body = (btRigidBody*)rigidBody.reference;
+				btTransform bodyTransform;
+				if (body->getMotionState()) {
+					body->getMotionState()->getWorldTransform(bodyTransform);
 				}
 				else {
-					btRigidBody* body = (btRigidBody*)rigidBody.reference;
-					btTransform bodyTransform;
-					if (body->getMotionState()) {
-						body->getMotionState()->getWorldTransform(bodyTransform);
-					}
-					else {
-						bodyTransform = body->getWorldTransform();
-					}
-					glm::vec3 position = conv(bodyTransform.getOrigin());
-					glm::vec3 rotation = convQuaternion(bodyTransform.getRotation());
-					glm::vec3 velocity = conv(body->getLinearVelocity());
-					glm::vec3 angular = conv(body->getAngularVelocity());
-
-					if (rigidBody.lastVelocity != rigidBody.velocity) {
-						body->setActivationState(ACTIVE_TAG);
-					}
-
-					transform.position = position + (transform.position - rigidBody.lastPosition);
-					transform.rotation = rotation + (transform.rotation - rigidBody.lastRotation);
-					rigidBody.velocity = velocity + (rigidBody.velocity - rigidBody.lastVelocity);
-					rigidBody.angular = angular + (rigidBody.angular - rigidBody.lastAngular);
-
-					bodyTransform.setOrigin(conv(transform.position));
-					bodyTransform.setRotation(convQuaternion(transform.rotation));
-					if (body->getMotionState()) {
-						body->getMotionState()->setWorldTransform(bodyTransform);
-					}
-					else {
-						body->setWorldTransform(bodyTransform);
-					}
-					body->setLinearVelocity(conv(rigidBody.velocity));
-					body->setAngularVelocity(conv(rigidBody.angular));
-
-					rigidBody.lastPosition = transform.position;
-					rigidBody.lastRotation = transform.rotation;
-					rigidBody.lastVelocity = rigidBody.velocity;
-					rigidBody.lastAngular = rigidBody.angular;
+					bodyTransform = body->getWorldTransform();
 				}
+
+				transform.position = conv(bodyTransform.getOrigin());
+				transform.rotation = convQuaternion(bodyTransform.getRotation());
+				rigidBody.velocity = conv(body->getLinearVelocity());
+				rigidBody.angular = conv(body->getAngularVelocity());
+
+				rigidBody.lastPosition = transform.position;
+				rigidBody.lastRotation = transform.rotation;
+				rigidBody.lastVelocity = rigidBody.velocity;
+				rigidBody.lastAngular = rigidBody.angular;
 			}
 		});
 

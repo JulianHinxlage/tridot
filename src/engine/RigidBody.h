@@ -14,6 +14,7 @@ namespace tri {
 		enum Type {
 			STATIC,
 			DYNAMIC,
+			KINEMATIC,
 		};
 		Type type = STATIC;
 

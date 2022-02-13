@@ -99,6 +99,12 @@ namespace tri {
                 }
             }
 
+            env->scene->view<Camera>().each([&](EntityId id, Camera& camera) {
+                if (!camera.output) {
+                    setupFrameBuffer(camera, true);
+                }
+            });
+
             glm::vec2 oldSize = viewportSize;
             viewportSize = { ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y };
             viewportPosition = { ImGui::GetCursorPos().x, ImGui::GetCursorPos().y };
@@ -132,6 +138,10 @@ namespace tri {
                     //gizmos
                     bool pickingAllowed = true;
                     if (env->editor->gizmos.updateGizmo(transform, camera, viewportPosition, viewportSize)) {
+                        pickingAllowed = false;
+                    }
+
+                    if (env->runtime->getMode() == RuntimeMode::RUNTIME && cameraMode == FIXED_PRIMARY_CAMERA) {
                         pickingAllowed = false;
                     }
 

@@ -81,22 +81,26 @@ namespace tri {
 
                         if (desc->group.empty()) {
                             if (ImGui::MenuItem(desc->name.c_str())) {
+                                env->editor->undo.beginAction();
                                 for (EntityId id : env->editor->selectionContext.getSelected()) {
                                     if (!env->scene->hasComponent(desc->typeId, id)) {
                                         void* comp = env->editor->entityOperations.addComponent(desc->typeId, id);
                                     }
                                 }
+                                env->editor->undo.endAction();
                                 ImGui::CloseCurrentPopup();
                             }
                         }
                         else {
                             if (ImGui::BeginMenu(desc->group.c_str())) {
                                 if (ImGui::MenuItem(desc->name.c_str())) {
+                                    env->editor->undo.beginAction();
                                     for (EntityId id : env->editor->selectionContext.getSelected()) {
                                         if (!env->scene->hasComponent(desc->typeId, id)) {
                                             void* comp = env->editor->entityOperations.addComponent(desc->typeId, id);
                                         }
                                     }
+                                    env->editor->undo.endAction();
                                     ImGui::CloseCurrentPopup();
                                 }
                                 ImGui::EndMenu();
