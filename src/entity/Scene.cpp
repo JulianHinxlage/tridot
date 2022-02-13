@@ -279,6 +279,12 @@ namespace tri {
 
     void Scene::loadMainScene(const std::string &file) {
         env->assets->unload(file);
+        if (env->editor) {
+            if (env->runtime->getMode() == RuntimeMode::RUNTIME
+                || env->runtime->getMode() == RuntimeMode::PAUSE) {
+                env->runtime->setMode(RuntimeMode::EDIT);
+            }
+        }
         env->assets->get<Scene>(file, false, nullptr, [](Ref<Asset> asset){
             if (env->editor) {
                 if (env->runtime->getMode() == RuntimeMode::RUNTIME

@@ -116,6 +116,8 @@ namespace tri {
         int irradianceMapIndex;
     };
 
+    //collection of all instances with the same shader mesh combination
+    //includes buffers for instances, textures and materials
     class Batch {
     public:
         Mesh* mesh = nullptr;
@@ -128,18 +130,66 @@ namespace tri {
         int instanceCount = 0;
     };
 
+    //a list of instance submit calls to be sorted
+    class DrawList {
+    public:
+        class Entry {
+        public:
+            InstanceData instance;
+            glm::vec3 position;
+            Material* material;
+            Texture* texture;
+            Shader *shader;
+            Mesh *mesh;
+        };
+
+        class Key {
+        public:
+            uint64_t key;
+            int entryIndex;
+
+            bool operator<(const Key& key) {
+                return this->key < key.key;
+            }
+        };
+
+        std::vector<Entry> entries;
+        std::vector<Key> keys;
+
+        void sort() {
+            std::sort(keys.begin(), keys.end());
+        }
+
+        void clear() {
+            entries.clear();
+            keys.clear();
+        }
+    };
+
+    //a list of batches for all shader mesh combinations
+    //includes buffers for light, environment, render pass and frame buffer
     class BatchList {
     public:
+        AssetList<Shader> shaders;
+        AssetList<Mesh> meshes;
         std::vector<std::vector<Ref<Batch>>> batches;
+
+        //lights
         Ref<BatchBuffer> lightBuffer;
         std::vector<Light> lights;
         std::vector<glm::mat4> lightProjections;
 
+        //environments
         Ref<BatchBuffer> environmentBuffer;
         EnvironmentData environment;
         Ref<Texture> radianceMap;
         Ref<Texture> irradianceMap;
 
+        DrawList drawList;
+
+        //the batch list will take the ligths and environment from the parent
+        BatchList *parentBatchList;
+        
         Ref<RenderPass> renderPass;
         std::string renderPassName;
         Ref<FrameBuffer> frameBuffer;
@@ -154,6 +204,7 @@ namespace tri {
 
             this->renderPass = renderPass;
             renderPassName = renderPass->name;
+            parentBatchList = nullptr;
         }
 
         Batch* getBatch(Mesh* mesh, Shader* shader) {
@@ -343,44 +394,116 @@ namespace tri {
                 stats.meshCount = std::max(stats.meshCount, meshCounter);
                 stats.materialCount = std::max(stats.materialCount, materialCounter);
             }
+
+            lights.clear();
+            lightProjections.clear();
+        }
+
+        void submit(const glm::mat4& transform, const glm::vec3& position, Mesh* mesh, Shader *shader, Material* material, Color color, uint32_t id) {
+            Batch* batch = getBatch(mesh, shader);
+            if (batch->instances) {
+                InstanceData* i = (InstanceData*)batch->instances->next();
+                i->transform = transform;
+                i->materialIndex = batch->materials.getIndex(material);
+                i->color = color;
+                i->id = id;
+            }
+        }
+
+        void submitDrawList(const glm::mat4& transform, const glm::vec3& position, Mesh* mesh, Shader* shader, Material* material, Color color, uint32_t id) {
+            auto& i = drawList.entries.emplace_back();
+            i.instance.transform = transform;
+            i.instance.color = color;
+            i.instance.id = id;
+            i.instance.materialIndex = -1;
+            
+            i.position = position;
+            i.material = material;
+            i.shader = shader;
+            i.mesh = mesh;
+            i.texture = nullptr;
+
+            bool opaque = material->isOpaque() && color.a == 255;
+            uint32_t depth = glm::length(environment.cameraPosition - position) / 0.0001;
+            depth = std::min(depth, (uint32_t)(1 << 24) - 1);
+
+            uint64_t key;
+            key = 0;
+            //key |= ((uint64_t)layer & 0x3f) << 58;
+            key |= (uint64_t)!opaque << 57;
+            if (opaque) {
+                key |= ((uint64_t)meshes.getIndex(mesh) & 0xffff) << 40;
+                key |= ((uint64_t)shaders.getIndex(material->shader.get()) & 0xffff) << 24;
+                key |= ((uint64_t)depth & 0xffffff) << 0;
+            }
+            else {
+                key |= ((uint64_t)-depth & 0xffffff) << 32;
+                key |= ((uint64_t)meshes.getIndex(mesh) & 0xffff) << 16;
+                key |= ((uint64_t)shaders.getIndex(material->shader.get()) & 0xffff) << 0;
+            }
+
+
+            auto& keyEntry = drawList.keys.emplace_back();
+            keyEntry.entryIndex = drawList.entries.size() - 1;
+            keyEntry.key = key;
+        }
+
+        void updateDrawList() {
+            TRI_PROFILE("updateDrawList")
+            {
+                TRI_PROFILE("sort")
+                drawList.sort();
+            }
+            for (auto& key : drawList.keys) {
+                auto &entry = drawList.entries[key.entryIndex];
+                submit(entry.instance.transform, entry.position, entry.mesh, entry.shader, entry.material, entry.instance.color, entry.instance.id);
+            }
+            drawList.clear();
+            meshes.reset();
+            shaders.reset();
         }
     };
 
     class Renderer::Impl {
     public:
         std::vector<Ref<BatchList>> batchLists;
-        BatchList *list;
+        BatchList* current;
+        BatchList *currentTransparency;
         bool shadowsEnabled = true;
+        bool drawListSortingEnabled = true;
+        bool transparencyPassEnabled = true;
 
         void startup() {
             env->console->setVariable("shadows", &shadowsEnabled);
-            setPass(env->renderPipeline->getPass("geometry"));
+            env->console->setVariable("draw_list_sorting", &drawListSortingEnabled);
+            env->console->setVariable("transparency_pass", &transparencyPassEnabled);
         }
 
         Batch *getBatch(Mesh* mesh, Shader* shader) {
-            return list->getBatch(mesh, shader);
+            return current->getBatch(mesh, shader);
         }
 
         void setPass(Ref<RenderPass> pass) {
-            env->console->trace("renderPass: ", pass->name, " addr:", pass.get());
-
             for (auto& batchList : batchLists) {
                 if (batchList && batchList->renderPassName == pass->name) {
-                    list = batchList.get();
-                    list->needsUpdate = true;
-                    list->renderPass = pass;
+                    current = batchList.get();
+                    current->needsUpdate = true;
+                    current->renderPass = pass;
                     return;
                 }
             }
             auto batchList = batchLists.emplace_back(Ref<BatchList>::make());
             batchList->init(pass);
-            list = batchList.get();
+            current = batchList.get();
         }
     };
 
     void Renderer::startup() {
         geometryPass = env->renderPipeline->getPass("geometry");
         shadowPass = env->renderPipeline->getPass("shadow");
+
+        opaquePass = geometryPass->getPass("opaque");
+        transparencyPass = geometryPass->getPass("transparency");
         
         Image image;
         image.init(1, 1, 4, 8);
@@ -407,27 +530,37 @@ namespace tri {
 
         impl = Ref<Impl>::make();
         impl->startup();
+        setRenderPass(transparencyPass);
+        impl->currentTransparency = impl->current;
+        setRenderPass(geometryPass);
+        impl->currentTransparency->parentBatchList = impl->current;
     }
 
     void Renderer::setCamera(glm::mat4& projection, glm::vec3 position, Ref<FrameBuffer> frameBuffer) {
-        impl->list->environment.projection = projection;
-        impl->list->environment.cameraPosition = position;
+        impl->current->environment.projection = projection;
+        impl->current->environment.cameraPosition = position;
         this->frameBuffer = frameBuffer;
-        impl->list->frameBuffer = frameBuffer;
+        impl->current->frameBuffer = frameBuffer;
     }
 
     void Renderer::setRenderPass(const Ref<RenderPass>& pass) {
-        currentPass = pass;
-        if (!pass) {
-            impl->setPass(geometryPass);
+        if (!pass || pass == geometryPass) {
+            currentPass = geometryPass;
+            if (impl->transparencyPassEnabled) {
+                impl->setPass(opaquePass);
+            }
+            else {
+                impl->setPass(currentPass);
+            }
         }
         else {
+            currentPass = pass;
             impl->setPass(pass);
         }
     }
 
     void Renderer::submit(const glm::vec3& position, const glm::vec3 direction, Light& light) {
-        LightData* l = (LightData*)impl->list->lightBuffer->next();
+        LightData* l = (LightData*)impl->current->lightBuffer->next();
         l->type = (int)light.type;
         l->position = position;
         l->direction = direction;
@@ -463,7 +596,8 @@ namespace tri {
 
             if (light.type == DIRECTIONAL_LIGHT) {
                 if (light.shadowMap) {
-                    l->shadowMapIndex = 30 - impl->list->lights.size();
+                    //todo: this should not be done here, move it into update
+                    l->shadowMapIndex = 30 - impl->current->lights.size();
                     shadowPass->addCallback("bind shadow map", [shadowMap = light.shadowMap, index = l->shadowMapIndex]() {
                         shadowMap->getAttachment(DEPTH)->bind(index);
                     });
@@ -471,14 +605,14 @@ namespace tri {
             }
         }
 
-        impl->list->lights.push_back(light);
-        impl->list->lightProjections.push_back(l->projection);
+        impl->current->lights.push_back(light);
+        impl->current->lightProjections.push_back(l->projection);
     }
     
     void Renderer::setEnvironMap(Ref<Texture> radianceMap, Ref<Texture> irradianceMap, float intensity) {
-        impl->list->environment.environmentMapIntensity = intensity;
-        impl->list->radianceMap = radianceMap;
-        impl->list->irradianceMap = irradianceMap;
+        impl->current->environment.environmentMapIntensity = intensity;
+        impl->current->radianceMap = radianceMap;
+        impl->current->irradianceMap = irradianceMap;
     }
     
     void Renderer::submit(const glm::mat4& transform, const glm::vec3& position, Mesh* mesh, Material* material, Color color, uint32_t id) {
@@ -494,14 +628,35 @@ namespace tri {
         }
         if (mesh->vertexArray.getId() != 0) {
             if (shader->getId() != 0) {
-                Batch *batch = impl->getBatch(mesh, shader);
-                if (batch->instances) {
-                    InstanceData *i = (InstanceData*)batch->instances->next();
-                    i->transform = transform;
-                    i->materialIndex = batch->materials.getIndex(material);
-                    i->color = color;
-                    i->id = id;
+
+                if (impl->transparencyPassEnabled && currentPass == geometryPass) {
+                    bool opaque = material->isOpaque() && color.a == 255;
+                    if (opaque) {
+                        if (impl->drawListSortingEnabled) {
+                            impl->current->submitDrawList(transform, position, mesh, shader, material, color, id);
+                        }
+                        else {
+                            impl->current->submit(transform, position, mesh, shader, material, color, id);
+                        }
+                    }
+                    else {
+                        if (impl->drawListSortingEnabled) {
+                            impl->currentTransparency->submitDrawList(transform, position, mesh, shader, material, color, id);
+                        }
+                        else {
+                            impl->currentTransparency->submit(transform, position, mesh, shader, material, color, id);
+                        }
+                    }
                 }
+                else {
+                    if (impl->drawListSortingEnabled) {
+                        impl->current->submitDrawList(transform, position, mesh, shader, material, color, id);
+                    }
+                    else {
+                        impl->current->submit(transform, position, mesh, shader, material, color, id);
+                    }
+                }
+
             }
         }   
     }
@@ -553,7 +708,7 @@ namespace tri {
 
                 Ref<ShaderState> shaderState = Ref<ShaderState>::make();
                 shaderState->set("uColor", color.vec());
-                shaderState->set("uProjection", impl->list->environment.projection);
+                shaderState->set("uProjection", impl->current->environment.projection);
                 shaderState->set("uTransform", transform);
                 call->shaderState = shaderState;
             }
@@ -567,17 +722,47 @@ namespace tri {
 
         for (auto& list : impl->batchLists) {
             if (list && list->needsUpdate) {
+                
+                if (list->parentBatchList) {
+                    list->environment = list->parentBatchList->environment;
+                    list->lights = list->parentBatchList->lights;
+                    list->lightProjections = list->parentBatchList->lightProjections;
+                    list->frameBuffer = list->parentBatchList->frameBuffer;
+                    list->irradianceMap = list->parentBatchList->irradianceMap;
+                    list->radianceMap = list->parentBatchList->radianceMap;
+                }
+
                 if (list->renderPass == geometryPass) {
                     list->renderPass->addCommand("depth on", DEPTH_ON);
                     list->renderPass->addCommand("blend on", BLEND_ON);
+                }else if (list->renderPass == opaquePass) {
+                    list->renderPass->addCommand("depth on", DEPTH_ON);
+                    list->renderPass->addCommand("blend on", BLEND_ON);
+                }else if (list->renderPass == transparencyPass) {
+                    list->renderPass->addCommand("depth on", DEPTH_ON);
+                    list->renderPass->addCommand("blend on", BLEND_ON);
                 }
-                if (impl->shadowsEnabled && list->renderPass == geometryPass) {
+                
+
+                if (impl->drawListSortingEnabled) {
+                    list->updateDrawList();
+                }
+
+                if (impl->shadowsEnabled && (list->renderPass == geometryPass || list->renderPass == opaquePass)) {
+                    impl->current = list.get();
                     updateShadowMaps();
                 }
+
                 list->update(stats);
                 list->needsUpdate = false;
             }
         }
+        
+        //set needsUpdate for transparency pass
+        if (impl->transparencyPassEnabled) {
+            setRenderPass(transparencyPass);
+        }
+
         setRenderPass(nullptr);
     }
 
@@ -592,15 +777,15 @@ namespace tri {
         if (shader->getId() == 0) {
             return;
         }
-        for (int i = 0; i < impl->list->lights.size(); i++) {
-            auto& light = impl->list->lights[i];
+        for (int i = 0; i < impl->current->lights.size(); i++) {
+            auto& light = impl->current->lights[i];
             if (light.type != DIRECTIONAL_LIGHT) {
                 continue;
             }
 
             shadowPass->addCommand("clear shadow map", CLEAR)->frameBuffer = light.shadowMap.get();
 
-            for (auto& list : impl->list->batches) {
+            for (auto& list : impl->current->batches) {
                 for (auto& batch : list) {
                     if (batch) {
                         
@@ -611,7 +796,7 @@ namespace tri {
                         call->shader = shader.get();
                         call->frameBuffer = light.shadowMap.get();
                         call->shaderState = Ref<ShaderState>::make();
-                        call->shaderState->set("uProjection", impl->list->lightProjections[i]);
+                        call->shaderState->set("uProjection", impl->current->lightProjections[i]);
 
                         call->mesh = batch->mesh;
                         call->vertexArray = batch->vertexArray.get();
@@ -621,8 +806,6 @@ namespace tri {
             }
         }
 
-        impl->list->lights.clear();
-        impl->list->lightProjections.clear();
     }
 
 }

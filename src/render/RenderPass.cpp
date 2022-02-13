@@ -175,7 +175,8 @@ namespace tri {
         instanceCount = -1;
     }
 
-    RenderPassDrawCall::RenderPassDrawCall(const RenderPassDrawCall& call) {
+    RenderPassDrawCall::RenderPassDrawCall(const RenderPassDrawCall& call)
+        : RenderPass(call) {
         mesh = call.mesh;
         vertexArray = call.vertexArray;
         shader = call.shader;

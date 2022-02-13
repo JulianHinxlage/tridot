@@ -48,6 +48,8 @@ namespace tri {
     private:
         Ref<RenderPass> geometryPass;
         Ref<RenderPass> shadowPass;
+        Ref<RenderPass> transparencyPass;
+        Ref<RenderPass> opaquePass;
         Ref<RenderPass> currentPass;
         Ref<Mesh> defaultMesh;
         Ref<Texture> defaultTexture;
