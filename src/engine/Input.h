@@ -191,6 +191,8 @@ namespace tri {
         std::unordered_map<Button, State> buttons;
         float wheel;
         float wheelUpdate;
+        glm::vec2 mousePosition;
+        glm::vec2 mousePositionUpdate;
     };
 
 }

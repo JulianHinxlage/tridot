@@ -27,6 +27,8 @@ namespace tri {
     }
 
     void Input::update() {
+        env->renderThread->addTask([&]() {
+
         GLFWwindow* window = (GLFWwindow*)env->window->getContext();
         if(!window){
             return;
@@ -62,8 +64,22 @@ namespace tri {
             }
         }
 
+        //mouse position
+        if (window) {
+            double x = 0;
+            double y = 0;
+            glfwGetCursorPos(window, &x, &y);
+            mousePosition = { x, y };
+            if (mousePositionUpdate != glm::vec2(0, 0)) {
+                glfwSetCursorPos(window, mousePositionUpdate.x, mousePositionUpdate.y);
+                mousePositionUpdate = { 0, 0 };
+            }
+        }
+
         wheel = wheelUpdate;
         wheelUpdate = 0;
+
+        });
     }
 
     Input::State Input::get(Input::Key key) {
@@ -131,27 +147,18 @@ namespace tri {
     }
 
     glm::vec2 Input::getMousePosition(bool screenSpace) {
-        GLFWwindow* window = (GLFWwindow*)env->window->getContext();
-        double x = 0;
-        double y = 0;
-        if(window){
-            glfwGetCursorPos(window, &x, &y);
-        }
-        glm::vec2 m = {x, y};
-
-        if(screenSpace) {
-            int width = 0;
-            int height = 0;
-            if(window){
-                glfwGetWindowSize(window, &width, &height);
-            }
-            m.x /= (float) width;
-            m.y /= (float) height;
+        if (screenSpace) {
+            glm::vec2 m = mousePosition;
+            m.x /= env->window->getSize().x;
+            m.y /= env->window->getSize().y;
             m.y = 1.0f - m.y;
             m *= 2.0f;
             m -= glm::vec2(1, 1);
+            return m;
         }
-        return m;
+        else {
+            return mousePosition;
+        }
     }
 
     float Input::getMouseWheelDelta() {
@@ -159,30 +166,17 @@ namespace tri {
     }
 
     void Input::setMousePosition(glm::vec2 position, bool screenSpace) {
-        GLFWwindow* window = (GLFWwindow*)env->window->getContext();
-        if(screenSpace){
-            int width = 0;
-            int height = 0;
-            if(window){
-                glfwGetWindowSize(window, &width, &height);
-            }
+        if (screenSpace) {
             glm::vec2 m = position;
             m += glm::vec2(1, 1);
             m /= 2.0f;
             m.y = 1.0f - m.y;
-            m.y *= (float)height;
-            m.x *= (float)width;
-            position = m;
+            m.x *= env->window->getSize().x;
+            m.y *= env->window->getSize().y;
+            mousePositionUpdate = m;
         }
-        if(window){
-            if (env->renderThread->useDedicatedThread) {
-                env->renderThread->addTask([window, position]() {
-                    glfwSetCursorPos(window, position.x, position.y);
-                });
-            }
-            else {
-                glfwSetCursorPos(window, position.x, position.y);
-            }
+        else {
+            mousePositionUpdate = position;
         }
     }
 

@@ -51,6 +51,7 @@ namespace tri {
 
 	class Physics::Impl {
 	public:
+		glm::vec3 lastGravity;
 		btDynamicsWorld* world;
 		btBroadphaseInterface* broadphase;
 		btCollisionDispatcher* dispatcher;
@@ -61,13 +62,14 @@ namespace tri {
 		std::vector<btCollisionShape*> shapes;
 		std::vector<btRigidBody*> bodies;
 
-		void init() {
+		void init(glm::vec3 gravity = {0, -9.81, 0}) {
 			collisionConfiguration = new btDefaultCollisionConfiguration();
 			dispatcher = new btCollisionDispatcher(collisionConfiguration);
 			broadphase = new btDbvtBroadphase();
 			solver = new btSequentialImpulseConstraintSolver();
 			world = new btDiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfiguration);
-			world->setGravity(btVector3(0, -9.81, 0));
+			lastGravity = gravity;
+			world->setGravity(conv(lastGravity));
 			clock.reset();
 		}
 
@@ -234,7 +236,7 @@ namespace tri {
 
 	void Physics::startup(){
 		impl = impl.make();
-		impl->init();
+		impl->init(gravity);
 
 		env->signals->sceneBegin.addCallback("Physics", [this](Scene* scene) {
 			TRI_PROFILE("addRigidBodies");
@@ -262,6 +264,11 @@ namespace tri {
 		env->scene->getComponentPool<RigidBody>()->lock();
 		env->scene->getComponentPool<Collider>()->lock();
 		env->scene->getComponentPool<Transform>()->lock();
+
+		if (gravity != impl->lastGravity) {
+			impl->lastGravity = gravity;
+			impl->world->setGravity(conv(impl->lastGravity));
+		}
 
 		env->scene->view<RigidBody, Collider, Transform>().each([this](EntityId id, RigidBody& rigidBody, Collider& collider, Transform& transform) {
 			if (rigidBody.reference) {

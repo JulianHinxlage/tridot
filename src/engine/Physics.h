@@ -14,6 +14,8 @@ namespace tri {
 
 	class Physics : public System {
 	public:
+		glm::vec3 gravity = { 0, -9.81, 0 };
+
 		virtual void update() override;
 		virtual void startup() override;
 
