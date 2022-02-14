@@ -99,4 +99,30 @@ namespace tri {
         }
     }
 
+    bool RuntimeMode::getActive(const std::string& callback, Mode mode) {
+        bool active = false;
+        if (mode == EDIT || mode == PAUSE) {
+            active = false;
+        }
+        else {
+            active = true;
+        }
+        if (mode == PAUSE) {
+            for (auto& c : callbacks[EDIT]) {
+                if (c.name == callback) {
+                    active = c.active;
+                    break;
+                }
+            }
+        }
+        for (auto& c : callbacks[mode]) {
+            if (c.name == callback) {
+                active = c.active;
+                break;
+            }
+        }
+        return active;
+    }
+
+
 }

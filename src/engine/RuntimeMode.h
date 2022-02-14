@@ -23,16 +23,17 @@ namespace tri {
         Mode getPreviousMode();
         void setMode(Mode mode);
         void setActive(const std::string &callback, bool active, Mode mode);
-    
-    private:
-        Mode mode = STARTUP;
-        Mode previousMode = STARTUP;
+        bool getActive(const std::string& callback, Mode mode);
 
+    private:
         class Callback {
         public:
             std::string name;
             bool active;
         };
+
+        Mode mode = STARTUP;
+        Mode previousMode = STARTUP;
         std::unordered_map<Mode, std::vector<Callback>> callbacks;
     };
 
