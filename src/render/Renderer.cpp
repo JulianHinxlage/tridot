@@ -197,10 +197,12 @@ namespace tri {
 
         void init(Ref<RenderPass> renderPass) {
             lightBuffer = Ref<BatchBuffer>::make();
-            lightBuffer->init(sizeof(LightData), UNIFORM_BUFFER);
-
             environmentBuffer = Ref<BatchBuffer>::make();
-            environmentBuffer->init(sizeof(EnvironmentData), UNIFORM_BUFFER);
+
+            env->renderThread->addTask([&]() {
+                lightBuffer->init(sizeof(LightData), UNIFORM_BUFFER);
+                environmentBuffer->init(sizeof(EnvironmentData), UNIFORM_BUFFER);
+            });
 
             this->renderPass = renderPass;
             renderPassName = renderPass->name;
@@ -250,6 +252,8 @@ namespace tri {
         }
 
         void update(Renderer::Statistics &stats) {
+            if (!environmentBuffer->buffer) { return; }
+
             //set environment
             EnvironmentData* e = (EnvironmentData*)environmentBuffer->next();
             *e = environment;
@@ -287,14 +291,12 @@ namespace tri {
             });
 
             environmentBuffer->swapBuffers();
-            environmentBuffer->reset();
 
 
             renderPass->addCallback("lights", [&]() {
                 lightBuffer->update();
             });
             lightBuffer->swapBuffers();
-            lightBuffer->reset();
 
             TRI_PROFILE_NAME(renderPass->name.c_str(), renderPass->name.size());
 
@@ -358,8 +360,6 @@ namespace tri {
                             batch->instanceCount = batch->instances->size();
                             batch->instances->swapBuffers();
                             batch->materialBuffer->swapBuffers();
-                            batch->instances->reset();
-                            batch->materialBuffer->reset();
 
                             stats.instanceCount += batch->instanceCount;
 

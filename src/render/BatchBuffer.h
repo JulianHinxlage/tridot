@@ -23,6 +23,7 @@ namespace tri {
         uint32_t backElementIndex;
         uint32_t backUpdateIndex;
         bool useBackBuffer;
+        bool swapOnUpdate;
 
         BatchBuffer();
         void init(uint32_t elementSize, BufferType type = VERTEX_BUFFER);
