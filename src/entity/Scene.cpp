@@ -18,12 +18,14 @@ namespace tri {
         entityPool = ComponentPool(env->reflection->getTypeId<EntitySignatureBitmap>(), sizeof(EntitySignatureBitmap));
         pendingOperationsEnabled = true;
         addPendingOperations = true;
+        maxCurrentEntityId = 0;
     }
 
     Scene::Scene(const Scene& scene) {
         file = "";
         pendingOperationsEnabled = true;
         addPendingOperations = true;
+        maxCurrentEntityId = 0;
         copy(scene);
     }
 
@@ -36,49 +38,52 @@ namespace tri {
     }
 
     EntityId Scene::addEntityHinted(EntityId hint) {
+        EntityId id = hint;
         if (hint != -1) {
-            if (freeList.find(hint) != freeList.end()) {
-                freeList.erase(hint);
-            }
-            else if (hint < (EntityId)entityPool.size()) {
-                if (entityPool.has(hint)) {
-                    hint = -1;
-                }
-            }
-        }
-
-        if (hint == -1) {
-            if (freeList.empty()) {
-                hint = entityPool.size();
+            //check if hint id is available
+            if (freeList.contains(id)) {
+                freeList.erase(id);
             }
             else {
-                for (EntityId id : freeList) {
-                    hint = id;
+                if (id >= maxCurrentEntityId) {
+                    for (EntityId i = maxCurrentEntityId; i < id; i++) {
+                        freeList.insert(i);
+                    }
+                    maxCurrentEntityId = id + 1;
+                }
+                else {
+                    //requested hint id not available
+                    id = -1;
+                }
+            }
+        }
+        if (id == -1) {
+            if (freeList.empty()) {
+                id = maxCurrentEntityId++;
+            }
+            else {
+                //get id from free list
+                for (EntityId freeId : freeList) {
+                    id = freeId;
                     break;
                 }
-                freeList.erase(hint);
+                freeList.erase(id);
             }
         }
-        //todo: keep track of free ids if entities are created with a hint
-        while(entityPool.has(hint)){
-            hint++;
-        }
-        entityPool.add(hint);
-        getSignature(hint) = 0;
-        freeList.erase(hint);
 
-        //todo: fix components existing if entity is not
-        for (int i = 0; i < pools.size(); i++) {
-            auto& pool = pools[i];
+        TRI_ASSERT(!entityPool.has(id), "entity id already in use");
+#if TRI_DEBUG
+        for (auto& pool : pools) {
             if (pool) {
-                if (pool->has(hint)) {
-                    pool->remove(hint);
-                }
+                TRI_ASSERT(!pool->has(id), "entity has already a component attached");
             }
         }
+#endif
 
-        env->signals->entityCreate.invoke(hint, this);
-        return hint;
+        entityPool.add(id);
+        getSignature(id) = 0;
+        env->signals->entityCreate.invoke(id, this);
+        return id;
     }
 
     bool Scene::removeEntity(EntityId id) {
@@ -89,7 +94,16 @@ namespace tri {
                     pool->remove(id);
                 }
             }
-            freeList.insert(id);
+            if (id == maxCurrentEntityId - 1) {
+                maxCurrentEntityId--;
+                while (freeList.contains(maxCurrentEntityId - 1)) {
+                    maxCurrentEntityId--;
+                    freeList.erase(maxCurrentEntityId);
+                }
+            }
+            else {
+                freeList.insert(id);
+            }
             return true;
         }
         else {
@@ -186,6 +200,7 @@ namespace tri {
         entityPool.clear();
         freeList.clear();
         pendingOperations.clear();
+        maxCurrentEntityId = 0;
     }
 
     void Scene::clearComponent(int typeId) {
@@ -197,7 +212,10 @@ namespace tri {
     void Scene::copy(const Scene &from) {
         file = from.file;
         freeList = from.freeList;
+        maxCurrentEntityId = from.maxCurrentEntityId;
         entityPool.copy(from.entityPool);
+        
+        pools.clear();
         pools.resize(from.pools.size());
         for (int i = 0; i < pools.size(); i++) {
             auto& pool = from.pools[i];
@@ -214,6 +232,7 @@ namespace tri {
         pools.swap(scene.pools);
         entityPool.swap(scene.entityPool);
         std::swap(file, scene.file);
+        std::swap(maxCurrentEntityId, scene.maxCurrentEntityId);
     }
 
     void Scene::update() {

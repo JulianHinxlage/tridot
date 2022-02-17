@@ -148,6 +148,7 @@ namespace tri {
         std::vector<std::shared_ptr<ComponentPool>> pools;
         ComponentPool entityPool;
         std::unordered_set<EntityId> freeList;
+        EntityId maxCurrentEntityId;
 
         class PendingOperation {
         public:

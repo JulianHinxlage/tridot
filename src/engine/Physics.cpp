@@ -261,10 +261,6 @@ namespace tri {
 	}
 
 	void Physics::update() {
-		env->scene->getComponentPool<RigidBody>()->lock();
-		env->scene->getComponentPool<Collider>()->lock();
-		env->scene->getComponentPool<Transform>()->lock();
-
 		if (gravity != impl->lastGravity) {
 			impl->lastGravity = gravity;
 			impl->world->setGravity(conv(impl->lastGravity));
@@ -291,6 +287,10 @@ namespace tri {
 				}
 			}
 		});
+
+		env->scene->getComponentPool<RigidBody>()->lock();
+		env->scene->getComponentPool<Collider>()->lock();
+		env->scene->getComponentPool<Transform>()->lock();
 
 		impl->tick();
 

@@ -22,6 +22,7 @@ namespace tri {
 		addJob("Hierarchy", { "HierarchySystem" });
 		addJob("Window and GUI", { "Gui end", "Window", "Gui begin", "Gizmos begin", "Editor"});
 		addJob("Physics", { "Physics" });
+		setJobThreading("Physics", false);
 		addJob("Render Submit", { "Camera", "Skybox", "MeshComponent", "Renderer" });
 
 		initNewJobs();
@@ -50,6 +51,7 @@ namespace tri {
 		}
 
 		if (enableMultiThreading) {
+
 			if (oldStartBarrier) {
 				oldStartBarrier->arrive_and_wait();
 				{
@@ -64,6 +66,12 @@ namespace tri {
 				{
 					ZoneScopedNC("waitForJobs", tracy::Color::Gray30);
 					endBarrier->arrive_and_wait();
+				}
+			}
+
+			for (auto job : jobs) {
+				if (job && job->useSingleThreading) {
+					job->update();
 				}
 			}
 
@@ -109,6 +117,12 @@ namespace tri {
 		}
 	}
 
+	void JobSystem::setJobThreading(const std::string& jobName, bool multiThreadingEnabled) {
+		if (auto job = getJob(jobName)) {
+			job->useSingleThreading = !multiThreadingEnabled;
+		}
+	}
+
 	void JobSystem::initNewJobs() {
 		if (enableMultiThreading) {
 			if (!startBarrier || barrierSize != jobs.size() + 1) {
@@ -127,7 +141,7 @@ namespace tri {
 						TRI_PROFILE_THREAD(profileName.c_str());
 						while (running) {
 							startBarrier->arrive_and_wait();
-							if (running) {
+							if (running && !job->useSingleThreading) {
 								job->update();
 							}
 							endBarrier->arrive_and_wait();

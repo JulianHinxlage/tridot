@@ -24,6 +24,7 @@ namespace tri {
 
 		void addJob(const std::string& jobName, const std::vector<std::string> &updateCallbacks);
 		void addJobExclusion(const std::string& jobName, const std::vector<std::string>& exclusions);
+		void setJobThreading(const std::string& jobName, bool multiThreadingEnabled);
 
 	private:
 		class Job {
@@ -31,13 +32,14 @@ namespace tri {
 			std::string name;
 			std::vector<std::string> updateCallbacks;
 			std::vector<std::string> jobExclusions;
+			bool useSingleThreading;
 			int threadId;
 			bool isDefaultJob;
 			bool initFlag;
 			std::mutex mutex;
 			JobSystem* system;
 
-			Job(const std::string& name, const std::vector<std::string>& updateCallbacks) : name(name), updateCallbacks(updateCallbacks), threadId(-1), isDefaultJob(false), initFlag(false) {}
+			Job(const std::string& name, const std::vector<std::string>& updateCallbacks) : name(name), updateCallbacks(updateCallbacks), useSingleThreading(false), threadId(-1), isDefaultJob(false), initFlag(false) {}
 			void update();
 		};
 
