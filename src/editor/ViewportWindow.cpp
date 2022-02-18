@@ -269,6 +269,10 @@ namespace tri {
 
         Ref<Shader> shader = env->assets->get<Shader>("shaders/mesh.glsl");
 
+        if (!outlineMaterial) {
+            outlineMaterial = Ref<Material>::make();
+        }
+
         env->renderer->setRenderPass(pass->getPass("outline geometry", false, true));
         env->renderer->setCamera(camera.projection, cameraTransform.position, selectionOverlay2);
         for (auto id : env->editor->selectionContext.getSelected()) {
@@ -276,7 +280,8 @@ namespace tri {
                 Transform& transform = env->scene->getComponent<Transform>(id);
                 MeshComponent& mesh = env->scene->getComponent<MeshComponent>(id);
 
-                env->renderer->submit(transform.getMatrix() * glm::scale(glm::mat4(1), glm::vec3(1, 1, 1) * 1.00f), transform.position, mesh.mesh.get(), shader.get(), nullptr, Color(255, 128, 0));
+                outlineMaterial->shader = shader;
+                env->renderer->submit(transform.getMatrix() * glm::scale(glm::mat4(1), glm::vec3(1, 1, 1) * 1.00f), transform.position, mesh.mesh.get(), outlineMaterial.get(), Color(255, 128, 0));
             }
         }
         env->renderer->setRenderPass(nullptr);

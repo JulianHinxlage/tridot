@@ -77,6 +77,34 @@ namespace tri {
             env->console->trace("window moved: x = ", x, ", y = ", y);
         });
 
+        if (!fullscreen) {
+            //set window pos and size to fit monitor
+            int x = 0;
+            int y = 0;
+            int w = 0;
+            int h = 0;
+
+            int l = 0;
+            int r = 0;
+            int t = 0;
+            int b = 0;
+
+            glfwGetMonitorWorkarea(glfwGetPrimaryMonitor(), &x, &y, &w, &h);
+            glfwGetWindowFrameSize(window, &l, &t, &r, &b);
+
+            if ((h - t) < height) {
+                height = h - t;
+            }
+            if (w < width) {
+                width = w;
+            }
+            x = (w - width) / 2;
+            y = t + ((h - t) - height) / 2;
+
+            glfwSetWindowSize(window, width, height);
+            glfwSetWindowPos(window, x, y);
+        }
+
         //set initial size and position
         int x = 0;
         int y = 0;

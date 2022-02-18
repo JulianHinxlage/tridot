@@ -9,6 +9,7 @@
 #include "EditorCamera.h"
 #include "entity/Scene.h"
 #include "entity/Prefab.h"
+#include "render/Material.h"
 
 namespace tri {
 
@@ -32,6 +33,7 @@ namespace tri {
         Ref<Scene> sceneBuffer;
         Ref<FrameBuffer> selectionOverlay;
         Ref<FrameBuffer> selectionOverlay2;
+        Ref<Material> outlineMaterial;
 
         void startup();
         void setupFrameBuffer(Camera &cam, bool idBuffer);

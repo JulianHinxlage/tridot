@@ -311,7 +311,7 @@ namespace tri {
                 }
 
                 for (auto batch : list) {
-                    if (batch && batch->instances) {
+                    if (batch && batch->instances && batch->materialBuffer) {
                         if (batch->instances->size() > 0) {
                             meshCounter++;
 
