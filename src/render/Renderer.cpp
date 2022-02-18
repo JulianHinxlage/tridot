@@ -560,6 +560,8 @@ namespace tri {
     }
 
     void Renderer::submit(const glm::vec3& position, const glm::vec3 direction, Light& light) {
+        if (!impl->current->lightBuffer || !impl->current->lightBuffer->buffer) { return; }
+
         LightData* l = (LightData*)impl->current->lightBuffer->next();
         l->type = (int)light.type;
         l->position = position;

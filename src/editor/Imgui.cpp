@@ -61,6 +61,7 @@ namespace tri {
 
         void end() {
             env->renderPipeline->getPass("gui end")->addCallback("gui end", [&]() {
+                env->input->allowInputs = !ImGui::GetIO().WantTextInput;
                 if (inFrame && env->window->isOpen()) {
                     FrameBuffer::unbind();
                     ImGui::Render();

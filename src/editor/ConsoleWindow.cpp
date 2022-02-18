@@ -59,11 +59,11 @@ namespace tri {
             if (ImGui::InputTextWithHint("", "command", inputBuffer.data(), inputBuffer.size(), ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CallbackAlways, [](ImGuiInputTextCallbackData* data){
                 std::string command = consoleWindow->inputBuffer.c_str();
                 bool change = false;
-                if(env->input->pressed(Input::KEY_TAB)){
+                if(ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Tab))){
                     command = env->console->autoCompleteCommand(command);
                     change = true;
                 }
-                if(env->input->pressed(Input::KEY_UP)){
+                if(ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_UpArrow))){
                     consoleWindow->commandIndex--;
                     if(consoleWindow->commandIndex < 0){
                         consoleWindow->commandIndex = 0;
@@ -76,7 +76,7 @@ namespace tri {
                         change = true;
                     }
                 }
-                if(env->input->pressed(Input::KEY_DOWN)){
+                if(ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_DownArrow))){
                     consoleWindow->commandIndex++;
                     if(consoleWindow->commandIndex > consoleWindow->commands.size()){
                         consoleWindow->commandIndex = consoleWindow->commands.size();

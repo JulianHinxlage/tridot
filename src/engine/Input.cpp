@@ -16,6 +16,7 @@ namespace tri {
     Input::Input() {
         wheel = 0;
         wheelUpdate = 0;
+        allowInputs = true;
     }
 
     void Input::startup() {
@@ -36,7 +37,7 @@ namespace tri {
         for(auto &key : keys){
             key.second.pressed = false;
             key.second.released = false;
-            if(glfwGetKey(window, key.first) == GLFW_PRESS){
+            if(allowInputs && glfwGetKey(window, key.first) == GLFW_PRESS){
                 if(!key.second.down){
                     key.second.pressed = true;
                 }
@@ -51,7 +52,7 @@ namespace tri {
         for(auto &button : buttons){
             button.second.pressed = false;
             button.second.released = false;
-            if(glfwGetMouseButton(window, button.first) == GLFW_PRESS){
+            if(allowInputs && glfwGetMouseButton(window, button.first) == GLFW_PRESS){
                 if(!button.second.down){
                     button.second.pressed = true;
                 }
@@ -76,7 +77,12 @@ namespace tri {
             }
         }
 
-        wheel = wheelUpdate;
+        if (allowInputs) {
+            wheel = wheelUpdate;
+        }
+        else {
+            wheel = 0;
+        }
         wheelUpdate = 0;
 
         });

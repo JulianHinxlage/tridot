@@ -157,6 +157,8 @@ namespace tri {
             bool down = false;
         };
 
+        bool allowInputs;
+
         Input();
 
         void update() override;
