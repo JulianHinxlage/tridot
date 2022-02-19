@@ -80,7 +80,7 @@ namespace tri {
         int skyboxIndex = 0;
         env->scene->view<Camera>().each([&](Camera& camera) {
             if (camera.active) {
-                env->scene->view<Skybox>().each([&](Skybox& skybox) {
+                env->scene->view<Skybox>().each([&](EntityId id, Skybox& skybox) {
 
                     if (skybox.texture) {
                         if (skybox.texture->getId() != 0) {
@@ -100,6 +100,9 @@ namespace tri {
                                     transform.decompose(camera.transform);
                                     transform.scale = { 1, 1, 1 };
                                     transform.rotation = { 0, 0, 0 };
+                                    if (env->scene->hasComponent<Transform>(id)) {
+                                        transform.rotation = env->scene->getComponent<Transform>(id).rotation;
+                                    }
                                     
                                     step->shaderState->set("uProjection", camera.projection);
                                     step->shaderState->set("uTransform", transform.calculateLocalMatrix());

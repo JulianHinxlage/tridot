@@ -15,6 +15,7 @@ namespace tri {
     Mesh::Mesh() {
         boundingMin = {-0.5, -0.5, -0.5};
         boundingMax = {+0.5, +0.5, +0.5};
+        changeCounter = 0;
     }
 
     bool Mesh::loadActivate() {
@@ -46,6 +47,7 @@ namespace tri {
             vertexData.insert(vertexData.begin(), vertices, vertices + vertexCount);
             indexData.insert(indexData.begin(), indices, indices + indexCount);
         }
+        changeCounter++;
     }
 
     std::vector<std::string> split(const std::string &str, char delimiter = ' '){

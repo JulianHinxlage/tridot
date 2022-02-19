@@ -121,6 +121,7 @@ namespace tri {
     class Batch {
     public:
         Mesh* mesh = nullptr;
+        int meshChangeCounter = 0;
         Shader* shader = nullptr;
         Ref<VertexArray> vertexArray;
         Ref<BatchBuffer> instances;
@@ -173,6 +174,7 @@ namespace tri {
         AssetList<Shader> shaders;
         AssetList<Mesh> meshes;
         std::vector<std::vector<Ref<Batch>>> batches;
+        std::vector<Ref<Batch>> batchesToRemove;
 
         //lights
         Ref<BatchBuffer> lightBuffer;
@@ -214,7 +216,7 @@ namespace tri {
                 auto& list = batches[shader->getId()];
                 if (list.size() > mesh->vertexArray.getId()) {
                     Batch* batch = list[mesh->vertexArray.getId()].get();
-                    if (batch) {
+                    if (batch && batch->meshChangeCounter == mesh->changeCounter) {
                         return batch;
                     }
                 }
@@ -230,10 +232,12 @@ namespace tri {
 
             //create batch
             Ref<Batch> batch = Ref<Batch>::make();
+            batchesToRemove.push_back(batches[shader->getId()][mesh->vertexArray.getId()]);
             batches[shader->getId()][mesh->vertexArray.getId()] = batch;
             batch->mesh = mesh;
+            batch->meshChangeCounter = mesh->changeCounter;
             batch->shader = shader;
-            env->renderThread->addTask([batch]() {
+            env->renderThread->addTask([batch, this]() {
                 batch->instances = Ref<BatchBuffer>::make();
                 batch->instances->init(sizeof(InstanceData));
 
@@ -247,7 +251,9 @@ namespace tri {
                     {FLOAT, 1}, //material index
                     {UINT8, 4, true}, //id
                     }, 1);
-                });
+
+                batchesToRemove.clear();
+            });
             return batch.get();
         }
 

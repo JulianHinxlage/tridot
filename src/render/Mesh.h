@@ -26,6 +26,7 @@ namespace tri {
         VertexArray vertexArray;
         glm::vec3 boundingMin;
         glm::vec3 boundingMax;
+        int changeCounter;
     private:
         std::vector<float> vertexData;
         std::vector<int> indexData;
