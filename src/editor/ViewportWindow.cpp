@@ -79,6 +79,11 @@ namespace tri {
 
     void ViewportWindow::update(){
         TRI_PROFILE("Viewport");
+        
+        if (!env->scene->hasEntity(editorCameraId) || !env->scene->hasComponents<EditorOnly, Camera>(editorCameraId)) {
+            editorCameraId = -1;
+        }
+        
         if(editorCameraId == -1){
             setupEditorCamera();
         }
@@ -163,7 +168,7 @@ namespace tri {
                     //dragging prefabs in
                     std::string file = env->editor->gui.dragDropTarget(env->reflection->getTypeId<Prefab>());
                     if (!file.empty()) {
-                        Ref<Prefab> prefab = env->assets->get<Prefab>(file, true);
+                        Ref<Prefab> prefab = env->assets->get<Prefab>(file, AssetManager::SYNCHRONOUS);
 
                         glm::vec3 pos;
                         pos = transform.position + camera.forward * 2.0f;

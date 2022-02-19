@@ -50,6 +50,13 @@ namespace tri {
 			}
 		}
 
+		for (auto& task : tasks) {
+			if (task) {
+				task();
+			}
+		}
+		tasks.clear();
+
 		if (enableMultiThreading) {
 
 			if (oldStartBarrier) {
@@ -159,6 +166,10 @@ namespace tri {
 				}
 			}
 		}
+	}
+
+	void JobSystem::addTask(const std::function<void()>& task) {
+		tasks.push_back(task);
 	}
 
 	JobSystem::Job *JobSystem::getJob(const std::string& jobName) {

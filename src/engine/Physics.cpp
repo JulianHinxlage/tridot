@@ -238,12 +238,6 @@ namespace tri {
 		impl = impl.make();
 		impl->init(gravity);
 
-		env->signals->sceneBegin.addCallback("Physics", [this](Scene* scene) {
-			TRI_PROFILE("addRigidBodies");
-			env->scene->view<RigidBody, Collider, Transform>().each([this](EntityId id, RigidBody& rb, Collider &c, Transform& t) {
-				addRigidBody(id, rb, c, t);
-			});
-		});
 		env->signals->sceneEnd.addCallback("Physics", [this](Scene* scene) {
 			TRI_PROFILE("removeRigidBodies");
 			env->scene->view<RigidBody, Collider, Transform>().each([this](EntityId id, RigidBody& rb, Collider& c, Transform& t) {

@@ -30,7 +30,7 @@ namespace tri {
     void generateIrradianceMap(Skybox& skybox) {
         env->renderPipeline->getPass("skybox")->addCallback("generate irradiance map", [&]() {
             TRI_PROFILE("Skybox generate irradiance map");
-            Ref<Shader> shader = env->assets->get<Shader>("shaders/blur.glsl", true);
+            Ref<Shader> shader = env->assets->get<Shader>("shaders/blur.glsl", AssetManager::SYNCHRONOUS);
 
             Ref<FrameBuffer> frameBuffer1 = Ref<FrameBuffer>::make();
             Ref<FrameBuffer> frameBuffer2 = Ref<FrameBuffer>::make();

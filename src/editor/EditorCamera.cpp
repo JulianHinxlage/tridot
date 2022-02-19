@@ -65,11 +65,17 @@ namespace tri {
         glm::vec2 mousePosition = env->input->getMousePosition();
         if(env->input->pressed(Input::MOUSE_BUTTON_RIGHT)){
             startMousePosition = mousePosition;
+            hasStarMousePosition = true;
         }
         if(env->input->pressed(Input::MOUSE_BUTTON_MIDDLE)){
             startMousePosition = mousePosition;
+            hasStarMousePosition = true;
         }
         if(env->input->down(Input::MOUSE_BUTTON_RIGHT)){
+            if (!hasStarMousePosition) {
+                startMousePosition = mousePosition;
+                hasStarMousePosition = true;
+            }
             if(camera.type == Camera::PERSPECTIVE) {
                 //lock around
                 glm::vec2 delta = mousePosition - startMousePosition;
@@ -80,6 +86,10 @@ namespace tri {
             }
         }
         if(env->input->down(Input::MOUSE_BUTTON_MIDDLE)){
+            if (!hasStarMousePosition) {
+                startMousePosition = mousePosition;
+                hasStarMousePosition = true;
+            }
             //pan move
             glm::vec2 delta = mousePosition - startMousePosition;
             transform.position += delta.y * camera.up * 0.001f * speed * transform.scale.y;

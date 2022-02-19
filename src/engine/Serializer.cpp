@@ -210,7 +210,7 @@ namespace tri {
     }
 
     template<typename T>
-    void defineAssetFunctions(Serializer &serializer){
+    void defineAssetFunctions(Serializer &serializer, AssetManager::Options options = AssetManager::NONE){
         serializer.setSerializationFunction<Ref<T>>([](YAML::Emitter &out, Ref<T> &v){
             std::string file = env->assets->getFile(v);
             if(file == ""){
@@ -219,9 +219,9 @@ namespace tri {
                 out << file;
             }
         });
-        serializer.setDeserializationFunction<Ref<T>>([](YAML::Node &in, Ref<T> &v){
+        serializer.setDeserializationFunction<Ref<T>>([options](YAML::Node &in, Ref<T> &v){
             if(!in.IsNull()){
-                v = env->assets->get<T>(in.as<std::string>(""));
+                v = env->assets->get<T>(in.as<std::string>(""), options);
             }
         });
     }
@@ -317,6 +317,7 @@ namespace tri {
         defineAssetFunctions<Material>(*this);
         defineAssetFunctions<Shader>(*this);
         defineAssetFunctions<Prefab>(*this);
+        defineAssetFunctions<Scene>(*this, AssetManager::DO_NOT_LOAD);
 
         for (auto &desc : env->reflection->getDescriptors()) {
             if (desc && (desc->flags & Reflection::VECTOR)) {

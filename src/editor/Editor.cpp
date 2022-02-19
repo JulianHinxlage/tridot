@@ -279,18 +279,18 @@ namespace tri {
         if (control && env->input->pressed("S")) {
             if(shift){
                 env->editor->gui.fileGui.openBrowseWindow("Save", "Save Scene", env->reflection->getTypeId<Scene>(), [](const std::string &file){
-                    env->assets->unload(file);
                     env->scene->file = file;
                     Ref<Scene> buffer(true);
                     buffer->copy(*env->scene);
+                    env->assets->setOptions(buffer->file, AssetManager::NO_RELOAD_ONCE);
                     env->threads->addThread([buffer](){
                         buffer->save(buffer->file);
                     });
                 });
             }else{
-                env->assets->unload(env->scene->file);
                 Ref<Scene> buffer(true);
                 buffer->copy(*env->scene);
+                env->assets->setOptions(buffer->file, AssetManager::NO_RELOAD_ONCE);
                 env->threads->addThread([buffer](){
                     buffer->save(buffer->file);
                 });

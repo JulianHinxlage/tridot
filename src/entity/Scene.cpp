@@ -6,6 +6,7 @@
 #include "engine/Serializer.h"
 #include "engine/AssetManager.h"
 #include "engine/RuntimeMode.h"
+#include "render/RenderThread.h"
 
 namespace tri {
 
@@ -164,7 +165,7 @@ namespace tri {
         for (int i = pendingOperations.size() - 1; i >= 0; i--) {
             auto& op = pendingOperations[i];
             if (op.id != id) {
-                break;
+                continue;
             }
             if (op.isPending) {
                 if (op.isAddOperation) {
@@ -297,24 +298,46 @@ namespace tri {
     }
 
     void Scene::loadMainScene(const std::string &file) {
-        env->assets->unload(file);
-        if (env->editor) {
-            if (env->runtime->getMode() == RuntimeMode::RUNTIME
-                || env->runtime->getMode() == RuntimeMode::PAUSE) {
-                env->runtime->setMode(RuntimeMode::EDIT);
-            }
-        }
-        env->assets->get<Scene>(file, false, nullptr, [](Ref<Asset> asset){
+        //this sould be solved differently
+        env->jobSystem->addTask([file]() {
+
+            env->assets->unload(file);
+            RuntimeMode::Mode mode = env->runtime->getMode();
             if (env->editor) {
-                if (env->runtime->getMode() == RuntimeMode::RUNTIME
-                    || env->runtime->getMode() == RuntimeMode::PAUSE) {
+                if (mode == RuntimeMode::RUNTIME || mode == RuntimeMode::PAUSE) {
                     env->runtime->setMode(RuntimeMode::EDIT);
                 }
             }
-            env->scene->swap(*(Scene*)asset.get());
-            env->signals->sceneLoad.invoke(env->scene);
-            //env->assets->unload(env->scene->file);
-            return true;
+            env->assets->get<Scene>(file, AssetManager::NONE, nullptr, [file, mode](Ref<Asset> asset) {
+
+                env->jobSystem->addTask([asset, file, mode]() {
+                    if (env->editor) {
+                        RuntimeMode::Mode currentMode = env->runtime->getMode();
+                        if (currentMode == RuntimeMode::RUNTIME || currentMode == RuntimeMode::PAUSE) {
+                            env->runtime->setMode(RuntimeMode::EDIT);
+                        }
+                    }
+
+                    env->signals->sceneEnd.invoke(env->scene);
+                    env->scene->swap(*(Scene*)asset.get());
+                    env->signals->sceneLoad.invoke(env->scene);
+                    env->signals->sceneBegin.invoke(env->scene);
+
+                    env->renderThread->addTask([file, asset, mode]() {
+                        (*(Scene*)asset.get()).clear();
+
+                        env->jobSystem->addTask([mode]() {
+                            if (env->editor) {
+                                if (mode == RuntimeMode::RUNTIME || mode == RuntimeMode::PAUSE) {
+                                    env->runtime->setMode(mode);
+                                }
+                            }
+                        });
+                    });
+
+                });
+                return true;
+            });
         });
     }
 

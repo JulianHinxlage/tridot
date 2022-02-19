@@ -31,8 +31,11 @@ namespace tri {
         };
 
         enum Options {
-            NO_RELOAD = 1 << 0,
-            NO_RELOAD_ONCE = 1 << 1,
+            NONE = 0,
+            SYNCHRONOUS = 1 << 0,
+            NO_RELOAD = 1 << 1,
+            NO_RELOAD_ONCE = 1 << 2,
+            DO_NOT_LOAD = 1 << 3,
         };
 
         AssetManager();
@@ -47,14 +50,14 @@ namespace tri {
         //get an asset by file name
         //the asset is loaded asynchronous if not specified otherwise
         template<typename T>
-        Ref<T> get(const std::string &file, bool synchronous = false,
+        Ref<T> get(const std::string &file, Options options = NONE,
             const std::function<bool(Ref<Asset>)> &preLoad = nullptr, const std::function<bool(Ref<Asset>)> &postLoad = nullptr){
-            return std::static_pointer_cast<T>(get(env->reflection->getTypeId<T>(), file, synchronous, preLoad, postLoad));
+            return std::static_pointer_cast<T>(get(env->reflection->getTypeId<T>(), file, options, preLoad, postLoad));
         }
 
         //get an asset by file name
         //the asset is loaded asynchronous if not specified otherwise
-        Ref<Asset> get(int typeId, const std::string &file, bool synchronous = false,
+        Ref<Asset> get(int typeId, const std::string &file, Options options = NONE,
             const std::function<bool(Ref<Asset>)> &preLoad = nullptr, const std::function<bool(Ref<Asset>)> &postLoad = nullptr);
 
         template<typename T>
@@ -99,8 +102,10 @@ namespace tri {
 
         std::vector<int> threadIds;
         bool running;
-        std::mutex mutex;
+        std::mutex wakeMutex;
         std::condition_variable wakeCondition;
+        std::mutex dataMutex;
+
 
         bool load(AssetRecord &record);
         bool loadActivate(AssetRecord &record);

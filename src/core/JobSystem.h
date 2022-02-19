@@ -26,6 +26,8 @@ namespace tri {
 		void addJobExclusion(const std::string& jobName, const std::vector<std::string>& exclusions);
 		void setJobThreading(const std::string& jobName, bool multiThreadingEnabled);
 
+		void addTask(const std::function<void()> &task);
+
 	private:
 		class Job {
 		public:
@@ -49,6 +51,9 @@ namespace tri {
 		Ref<std::barrier<>> endBarrier;
 		Ref<std::barrier<>> oldStartBarrier;
 		int barrierSize;
+
+		std::vector<std::function<void()>> tasks;
+
 
 		void initNewJobs();
 		Job *getJob(const std::string &jobName);

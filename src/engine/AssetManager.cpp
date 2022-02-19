@@ -74,7 +74,7 @@ namespace tri {
         return minimalPath;
     }
 
-    Ref<Asset> AssetManager::get(int typeId, const std::string &file, bool synchronous,
+    Ref<Asset> AssetManager::get(int typeId, const std::string &file, Options options,
         const std::function<bool(Ref<Asset>)> &preLoad, const std::function<bool(Ref<Asset>)> &postLoad) {
         std::string minimalPath = minimalFilePath(file);
         auto x = assets.find(minimalPath);
@@ -103,8 +103,9 @@ namespace tri {
         record.previousTimeStamp = 0;
         record.preLoad = preLoad;
         record.postLoad = postLoad;
+        record.options = options;
 
-        if(synchronous || !asynchronousEnabled){
+        if((record.options & SYNCHRONOUS) || !asynchronousEnabled) {
             load(record);
             loadActivate(record);
         }else{
@@ -140,6 +141,7 @@ namespace tri {
     }
 
     void AssetManager::unload(const std::string &file) {
+        std::unique_lock<std::mutex> lock(dataMutex);
         std::string minimalPath = minimalFilePath(file);
         for (auto &iter : assets) {
             auto &record = iter.second;
@@ -152,6 +154,7 @@ namespace tri {
     }
 
     void AssetManager::unloadAllUnused() {
+        std::unique_lock<std::mutex> lock(dataMutex);
         bool change = true;
         while(change) {
             change = false;
@@ -202,7 +205,7 @@ namespace tri {
                     }
 
                     if (!processed) {
-                        std::unique_lock<std::mutex> lock(mutex);
+                        std::unique_lock<std::mutex> lock(wakeMutex);
                         wakeCondition.wait(lock);
                     }
                 }
@@ -212,6 +215,7 @@ namespace tri {
 
     void AssetManager::update() {
         env->renderThread->addTask([&]() {
+            std::unique_lock<std::mutex> lock(dataMutex);
             Clock clock;
             for(auto &iter : assets) {
                 auto &record = iter.second;
@@ -273,7 +277,7 @@ namespace tri {
 
     bool AssetManager::load(AssetManager::AssetRecord &record) {
         bool processed = false;
-        if (record.status & UNLOADED) {
+        if (record.status & UNLOADED && !(record.options & DO_NOT_LOAD)) {
             if (!(record.status & FAILED_TO_LOAD)) {
                 if(!(record.status & SHOULD_NOT_LOAD)) {
 
@@ -317,7 +321,7 @@ namespace tri {
 
     bool AssetManager::loadActivate(AssetManager::AssetRecord &record) {
         bool processed = false;
-        if (record.status & UNLOADED) {
+        if (record.status & UNLOADED && !(record.options & DO_NOT_LOAD)) {
             if (!(record.status & FAILED_TO_LOAD)) {
                 if(!(record.status & SHOULD_NOT_LOAD)) {
 
@@ -334,19 +338,20 @@ namespace tri {
                         processed = true;
                     }
 
+                    std::string file = record.file;
                     if ((record.status & STATE_ACTIVATED) && !(record.status & STATE_POST_LOADED)) {
                         if (record.postLoad == nullptr || record.postLoad(record.asset)) {
                             record.status = (Status) (record.status | STATE_POST_LOADED);
                             record.status = (Status) (record.status | LOADED);
                             record.status = (Status) (record.status & ~(int) UNLOADED);
                             if(record.previousTimeStamp != 0){
-                                env->console->debug("reloaded asset: ", record.file);
+                                env->console->debug("reloaded asset: ", file);
                             }else{
-                                env->console->debug("loaded asset: ", record.file);
+                                env->console->debug("loaded asset: ", file);
                             }
                         } else {
                             record.status = (Status) (record.status | FAILED_TO_LOAD);
-                            env->console->warning("failed to load asset: ", record.file);
+                            env->console->warning("failed to load asset: ", file);
                         }
                         processed = true;
                     }
@@ -372,7 +377,7 @@ namespace tri {
         for (auto& iter : assets) {
             auto& record = iter.second;
             if (typeId == -1 || record.typeId == typeId) {
-                if (!((record.status & LOADED) || (record.status & FAILED_TO_LOAD))) {
+                if (!((record.status & LOADED) || (record.status & FAILED_TO_LOAD) || (record.options & DO_NOT_LOAD))) {
                     return true;
                 }
             }

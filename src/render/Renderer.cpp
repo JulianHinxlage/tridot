@@ -397,6 +397,7 @@ namespace tri {
 
             lights.clear();
             lightProjections.clear();
+            frameBuffer = nullptr;
         }
 
         void submit(const glm::mat4& transform, const glm::vec3& position, Mesh* mesh, Shader *shader, Material* material, Color color, uint32_t id) {
@@ -766,6 +767,7 @@ namespace tri {
         }
 
         setRenderPass(nullptr);
+        frameBuffer = nullptr;
     }
 
     void Renderer::shutdown() {

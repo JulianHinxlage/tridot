@@ -98,8 +98,8 @@ namespace tri {
     }
 
     template<typename T>
-    void addAssetTypeFunction(){
-        env->editor->gui.typeGui.setTypeFunction<Ref<T>>([](const char *label, Ref<T> &v, Ref<T> *min, Ref<T> *max){
+    void addAssetTypeFunction(AssetManager::Options options = AssetManager::NONE){
+        env->editor->gui.typeGui.setTypeFunction<Ref<T>>([options](const char *label, Ref<T> &v, Ref<T> *min, Ref<T> *max){
             bool hasFile = false;
             std::string name = "<none>";
             if(v){
@@ -118,12 +118,12 @@ namespace tri {
                 }
                 for(auto &file : env->assets->getAssetList(typeId)){
                     if(ImGui::Selectable(file.c_str(), name == file)){
-                        v = env->assets->get<T>(file);
+                        v = env->assets->get<T>(file, options);
                     }
                 }
                 if(ImGui::Selectable("...", false)){
                     env->editor->gui.fileGui.openBrowseWindow("Open", std::string("Open ") + env->reflection->getType<T>()->name, typeId, [&](const std::string &file){
-                        v = env->assets->get<T>(file);
+                        v = env->assets->get<T>(file, options);
                     });
                 }
                 ImGui::EndCombo();
@@ -132,7 +132,7 @@ namespace tri {
             //drag/drop
             std::string file = env->editor->gui.dragDropTarget(typeId);
             if(file != ""){
-                v = env->assets->get<T>(file);
+                v = env->assets->get<T>(file, options);
             }
             if(hasFile){
                 env->editor->gui.dragDropSource(typeId, name);
@@ -277,6 +277,7 @@ namespace tri {
         addAssetTypeFunction<Shader>();
         addAssetTypeFunction<Texture>();
         addAssetTypeFunction<Prefab>();
+        addAssetTypeFunction<Scene>(AssetManager::DO_NOT_LOAD);
 
         for (auto &desc : env->reflection->getDescriptors()) {
             if (desc->flags & Reflection::VECTOR) {
