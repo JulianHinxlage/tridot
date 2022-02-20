@@ -166,6 +166,20 @@ namespace tri {
         }
     }
 
+    Ref<FrameBuffer> RenderPass::getOutputFrameBuffer() {
+        if (subPasses.size() > 0) {
+            for (int i = subPasses.size() - 1; i >= 0; i--) {
+                auto& pass = subPasses[i];
+                auto fb = pass->getOutputFrameBuffer();
+                if (fb) {
+                    return fb;
+                }
+            }
+        }
+        return nullptr;
+    }
+
+
     RenderPassDrawCall::RenderPassDrawCall() {
         mesh = nullptr;
         vertexArray = nullptr;
@@ -180,7 +194,12 @@ namespace tri {
         mesh = call.mesh;
         vertexArray = call.vertexArray;
         shader = call.shader;
-        shaderState = Ref<ShaderState>::make(*call.shaderState);
+        if (call.shaderState) {
+            shaderState = Ref<ShaderState>::make(*call.shaderState);
+        }
+        else {
+            shaderState = nullptr;
+        }
         frameBuffer = call.frameBuffer;
         instanceCount = call.instanceCount;
         textures = call.textures;
@@ -239,6 +258,19 @@ namespace tri {
             }
             RenderPass::execute();
         }
+    }
+
+    Ref<FrameBuffer> RenderPassDrawCall::getOutputFrameBuffer() {
+        if (subPasses.size() > 0) {
+            for (int i = subPasses.size() - 1; i >= 0; i--) {
+                auto& pass = subPasses[i];
+                auto fb = pass->getOutputFrameBuffer();
+                if (fb) {
+                    return fb;
+                }
+            }
+        }
+        return frameBuffer;
     }
 
     void RenderPassDrawCommand::execute() {

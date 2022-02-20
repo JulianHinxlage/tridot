@@ -55,6 +55,7 @@ namespace tri {
         Ref<RenderPass> getPass(const std::string& name, bool fixed = false, bool resetPosition = false);
         void removetPass(const std::string& name);
         virtual void execute();
+        virtual Ref<FrameBuffer> getOutputFrameBuffer();
     };
 
     class RenderPassDrawCall : public RenderPass {
@@ -63,7 +64,7 @@ namespace tri {
         VertexArray* vertexArray;
         Shader *shader;
         Ref<ShaderState> shaderState;
-        FrameBuffer *frameBuffer;
+        Ref<FrameBuffer> frameBuffer;
         int instanceCount = -1;
         std::vector<Texture*> textures;
         std::vector<Buffer*> buffers;
@@ -72,12 +73,13 @@ namespace tri {
         RenderPassDrawCall(const RenderPassDrawCall &call);
     
         virtual void execute() override;
+        virtual Ref<FrameBuffer> getOutputFrameBuffer() override;
     };
 
     class RenderPassDrawCommand : public RenderPass {
     public:
         RenderCommand command = NOOP;
-        FrameBuffer* frameBuffer;
+        Ref<FrameBuffer> frameBuffer;
     
         virtual void execute() override;
     };

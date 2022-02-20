@@ -18,6 +18,8 @@ namespace tri {
         glm::vec2 resizeFactor = {1, 1};
         bool clear = true;
         bool resize = true;
+        bool mipMapping = true;
+        TextureFormat textureFormat = TEXTURE_FORMAT_NONE;
     };
 
     class FrameBuffer {

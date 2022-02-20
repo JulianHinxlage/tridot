@@ -8,6 +8,7 @@
 #include "Transform.h"
 #include "render/Window.h"
 #include "render/RenderPipeline.h"
+#include "render/RenderThread.h"
 #include <glm/gtc/matrix_transform.hpp>
 
 namespace tri {
@@ -50,6 +51,11 @@ namespace tri {
     }
 
     TRI_UPDATE_CALLBACK("Camera") {
+
+        if (!env->editor) {
+            env->renderPipeline->setSize(env->window->getSize().x, env->window->getSize().y);
+        }
+
         env->scene->view<Camera, Transform>().each([](Camera& camera, Transform &transform) {
             glm::mat4 t = transform.getMatrix();
             camera.forward = t * glm::vec4(0, 0, -1, 0);
@@ -63,9 +69,24 @@ namespace tri {
             camera.transform = transform.getMatrix();
 
             //frame buffer
-            if (camera.active && camera.output) {
-                env->renderPipeline->getPass("clear")->addCommand("clear", CLEAR)->frameBuffer = camera.output.get();
-                env->renderPipeline->getPass("clear")->addCommand("resize", RESIZE)->frameBuffer = camera.output.get();
+            if (camera.active) {
+                if (!env->editor) {
+                    if (camera.isPrimary) {
+                        camera.aspectRatio = env->window->getAspectRatio();
+                    }
+                }
+                if (!camera.output) {
+                    if (env->renderPipeline->defaultFrameBufferSpecs.size() > 0) {
+                        camera.output = Ref<FrameBuffer>::make();
+                        env->renderThread->addTask([output = camera.output]() {
+                            output->init(env->renderPipeline->getWidth(), env->renderPipeline->getHeight(), env->renderPipeline->defaultFrameBufferSpecs);
+                        });
+                    }
+                }
+                else {
+                    env->renderPipeline->getPass("clear")->addCommand("clear", CLEAR)->frameBuffer = camera.output;
+                    env->renderPipeline->getPass("clear")->addCommand("resize", RESIZE)->frameBuffer = camera.output;
+                }
             }
         });
     }

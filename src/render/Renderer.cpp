@@ -372,7 +372,7 @@ namespace tri {
                             //set draw call
                             auto step = renderPass->addDrawCall("mesh " + file);
                             step->shader = batch->shader;
-                            step->frameBuffer = frameBuffer.get();
+                            step->frameBuffer = frameBuffer;
                             step->mesh = batch->mesh;
                             step->vertexArray = batch->vertexArray.get();
                             step->instanceCount = batch->instanceCount;

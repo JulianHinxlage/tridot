@@ -64,6 +64,8 @@ namespace tri {
         getPass("geometry");
         getPass("viewport");
         getPass("outlines");
+        getPass("post processing");
+        getPass("draw to screen");
     }
 
     Ref<RenderPass> RenderPipeline::getPass(const std::string& name, bool fixed) {

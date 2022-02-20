@@ -32,6 +32,7 @@ namespace tri {
     };
 
     enum TextureFormat{
+        TEXTURE_FORMAT_NONE,
         RGBA8,
         RGB8,
         RG8,

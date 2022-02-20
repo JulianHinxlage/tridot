@@ -39,22 +39,15 @@ namespace tri {
             editorCameraId = -1;
         });
 
-        sceneBuffer = Ref<Scene>::make();
-    }
-
-    void ViewportWindow::setupFrameBuffer(Camera &cam, bool idBuffer){
-        if(!cam.output) {
-            cam.output = cam.output.make();
-            cam.output->setAttachment({COLOR, env->window->getBackgroundColor()});
-            cam.output->setAttachment({DEPTH, Color(0)});
-        }
-        if(idBuffer){
-            if(cam.output->getAttachment((TextureAttachment) (COLOR + 1)).get() == nullptr) {
-                Ref<Texture> idTexture = Ref<Texture>::make();
-                idTexture->create(0, 0, TextureFormat::RGB8, false);
-                cam.output->setAttachment({(TextureAttachment) (COLOR + 1), Color::white}, idTexture);
-            }
-        }
+        FrameBufferAttachmentSpec idBuffer;
+        idBuffer.type = (TextureAttachment)(COLOR + 1);
+        idBuffer.clearColor = Color::white;
+        idBuffer.mipMapping = false;
+        env->renderPipeline->defaultFrameBufferSpecs = {
+            {COLOR, env->window->getBackgroundColor()},
+            {DEPTH, Color(0)},
+            idBuffer,
+        };
     }
 
     void ViewportWindow::setupEditorCamera(){
@@ -104,12 +97,6 @@ namespace tri {
                 }
             }
 
-            env->scene->view<Camera>().each([&](EntityId id, Camera& camera) {
-                if (!camera.output) {
-                    setupFrameBuffer(camera, true);
-                }
-            });
-
             glm::vec2 oldSize = viewportSize;
             viewportSize = { ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y };
             viewportPosition = { ImGui::GetCursorPos().x, ImGui::GetCursorPos().y };
@@ -130,7 +117,7 @@ namespace tri {
                     }
                     isHovered = ImGui::IsWindowHovered();
 
-                    //set render pipeline size and output
+                    //set render pipeline size
                     env->renderPipeline->setSize(viewportSize.x, viewportSize.y);
 
                     //editor camera
@@ -191,9 +178,6 @@ namespace tri {
                             ImGui::Image((ImTextureID)(size_t)selectionOverlay->getAttachment(TextureAttachment::COLOR)->getId(), ImVec2(viewportSize.x, viewportSize.y), ImVec2(0, 1), ImVec2(1, 0));
                         }
                     }
-                }
-                else {
-                    setupFrameBuffer(camera, true);
                 }
             }
 

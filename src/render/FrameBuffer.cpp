@@ -135,20 +135,35 @@ namespace tri {
 
         Ref<Texture> texture;
         switch (spec.type) {
-            case DEPTH:
+            case DEPTH: {
                 texture = Ref<Texture>::make();
-                texture->create(width, height, TextureFormat::DEPTH24, false);
+                TextureFormat format = TextureFormat::DEPTH24;
+                if (spec.textureFormat != TextureFormat::TEXTURE_FORMAT_NONE) {
+                    format = spec.textureFormat;
+                }
+                texture->create(width, height, format, spec.mipMapping);
                 break;
-            case STENCIL:
+            }
+            case STENCIL: {
                 texture = Ref<Texture>::make();
-                texture->create(width, height, TextureFormat::DEPTH24STENCIL8, false);
+                TextureFormat format = TextureFormat::DEPTH24STENCIL8;
+                if (spec.textureFormat != TextureFormat::TEXTURE_FORMAT_NONE) {
+                    format = spec.textureFormat;
+                }
+                texture->create(width, height, format, spec.mipMapping);
                 break;
-            default:
+            }
+            default: {
                 if(spec.type >= COLOR && spec.type < COLOR + 16){
                     texture = Ref<Texture>::make();
-                    texture->create(width, height, TextureFormat::RGBA8, false);
+                    TextureFormat format = TextureFormat::RGBA8;
+                    if (spec.textureFormat != TextureFormat::TEXTURE_FORMAT_NONE) {
+                        format = spec.textureFormat;
+                    }
+                    texture->create(width, height, format, spec.mipMapping);
                 }
                 break;
+            }
         }
         return setAttachment(spec, texture);
     }

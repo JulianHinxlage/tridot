@@ -35,18 +35,6 @@ namespace tri {
             if (camera.active) {
                 env->renderer->stats.cameraCount++;
 
-                //frame buffer
-                if(!env->editor){
-                    if (camera.isPrimary) {
-                        camera.aspectRatio = env->window->getAspectRatio();
-                        if(camera.output) {
-                            if (camera.output->getSize() != env->window->getSize()) {
-                                camera.output->resize(env->window->getSize().x, env->window->getSize().y);
-                            }
-                        }
-                    }
-                }
-
                 if (cameraCount > 1) {
                     std::string passName = "Camera " + std::to_string(cameraIndex++);
                     env->renderer->setRenderPass(env->renderPipeline->getPass("geometry")->getPass(passName));

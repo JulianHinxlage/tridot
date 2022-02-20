@@ -12,6 +12,8 @@ namespace tri {
 
     class RenderPipeline : public System {
     public:
+        std::vector<FrameBufferAttachmentSpec> defaultFrameBufferSpecs;
+
         RenderPipeline();
         void startup() override;
 

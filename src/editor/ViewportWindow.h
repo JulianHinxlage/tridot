@@ -30,13 +30,11 @@ namespace tri {
         EditorCamera editorCamera;
         EditorCameraMode cameraMode;
         Prefab editorCameraBuffer;
-        Ref<Scene> sceneBuffer;
         Ref<FrameBuffer> selectionOverlay;
         Ref<FrameBuffer> selectionOverlay2;
         Ref<Material> outlineMaterial;
 
         void startup();
-        void setupFrameBuffer(Camera &cam, bool idBuffer);
         void setupEditorCamera();
         void update() override;
         void updateMousePicking(Ref<Texture> texture, glm::vec2 viewportSize, glm::vec2 pos);
