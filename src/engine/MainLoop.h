@@ -10,7 +10,7 @@ namespace tri {
 
     class MainLoop {
     public:
-        void startup(const std::vector<std::string>& configFileList);
+        void startup(const std::vector<std::string>& configFileList, const std::string &defaultTitle = "Tridot");
         void run();
         void shutdown();
     };

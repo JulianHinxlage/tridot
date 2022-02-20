@@ -13,7 +13,7 @@
 
 namespace tri {
 
-    void MainLoop::startup(const std::vector<std::string>& configFileList) {
+    void MainLoop::startup(const std::vector<std::string>& configFileList, const std::string& defaultTitle) {
         Environment::startup();
         TRI_PROFILE_PHASE("startup");
 
@@ -21,6 +21,7 @@ namespace tri {
         env->console->setVariable<int>("resolution_x", 1920);
         env->console->setVariable<int>("resolution_y", 1080);
         env->console->setVariable<int>("vsync", 1);
+        env->console->setVariable<std::string>("title", defaultTitle);
         env->console->setVariable<std::string>("log_file", "log.txt");
         env->console->setVariable<bool>("use_render_thread", &env->renderThread->useDedicatedThread);
         env->console->setVariable<bool>("use_job_threads", &env->jobSystem->enableMultiThreading);
@@ -50,7 +51,7 @@ namespace tri {
                 env->window->init(
                         *env->console->getVariable<int>("resolution_x"),
                         *env->console->getVariable<int>("resolution_y"),
-                        "Tridot Editor");
+                        *env->console->getVariable<std::string>("title"));
                 env->window->setBackgroundColor(Color(50, 50, 50));
 
                 {

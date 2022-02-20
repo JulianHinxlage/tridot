@@ -31,7 +31,7 @@ int main(int argc, char* argv[]) {
     });
 
     MainLoop loop;
-    loop.startup({ "config.txt", "../config.txt", "../../config.txt" });
+    loop.startup({ "config.txt", "../config.txt", "../../config.txt" }, "Tridot Launcher");
 
     //wait to load all assets before displaying the scene
     //wait 30 seconds max

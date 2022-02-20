@@ -11,7 +11,7 @@ int main(int argc, char* argv[]) {
     env->assets->hotReloadEnabled = true;
 
     MainLoop loop;
-    loop.startup({ "config.txt", "../config.txt", "../../config.txt" });
+    loop.startup({ "config.txt", "../config.txt", "../../config.txt" }, "Tridot Editor");
     loop.run();
     loop.shutdown();
 }
