@@ -323,15 +323,25 @@ namespace tri {
                             }
 
                             ImGui::SameLine();
-                            if(attachment == DEPTH){
-                                ImGui::Text("depth");
-                            }else if(attachment == STENCIL){
-                                ImGui::Text("stencil");
-                            }else if(attachment == COLOR){
-                                ImGui::Text("color");
-                            }else{
-                                ImGui::Text("color %i", (int)attachment - COLOR);
+                            std::string name;
+                            if (auto *spec = v->getAttachmentSpec(attachment)) {
+                                name = spec->name;
                             }
+                            if (name.empty()) {
+                                if (attachment == DEPTH) {
+                                    name = "depth";
+                                }
+                                else if (attachment == STENCIL) {
+                                    name = "stencil";
+                                }
+                                else if (attachment == COLOR) {
+                                    name = "color";
+                                }
+                                else {
+                                    name = "color " + std::to_string((int)attachment - COLOR);
+                                }
+                            }
+                            ImGui::Text("%s", name.c_str());
                         }
                     }
                     ImGui::TreePop();

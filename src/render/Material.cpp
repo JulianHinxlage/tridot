@@ -14,6 +14,7 @@ namespace tri {
         roughness = 1.0;
         metallic = 0.0;
         normalMapFactor = 1.0;
+        emissive = 0;
 
         this->texture = texture;
         normalMap = nullptr;
@@ -74,6 +75,7 @@ namespace tri {
     TRI_REGISTER_MEMBER_RANGE(Material, roughness, 0, 1);
     TRI_REGISTER_MEMBER_RANGE(Material, metallic, 0, 1);
     TRI_REGISTER_MEMBER_RANGE(Material, normalMapFactor, 0, 1);
+    TRI_REGISTER_MEMBER_RANGE(Material, emissive, 0, 1);
     TRI_REGISTER_MEMBER(Material, texture);
     TRI_REGISTER_MEMBER(Material, normalMap);
     TRI_REGISTER_MEMBER(Material, roughnessMap);

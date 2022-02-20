@@ -15,6 +15,7 @@ namespace tri {
     public:
         TextureAttachment type = COLOR;
         Color clearColor = Color::white;
+        std::string name = "";
         glm::vec2 resizeFactor = {1, 1};
         bool clear = true;
         bool resize = true;
@@ -37,6 +38,7 @@ namespace tri {
         void init(uint32_t width, uint32_t height, std::vector<FrameBufferAttachmentSpec> specs);
 
         Ref<Texture> getAttachment(TextureAttachment attachment);
+        const FrameBufferAttachmentSpec *getAttachmentSpec(TextureAttachment attachment);
         Ref<Texture> setAttachment(FrameBufferAttachmentSpec spec, const Ref<Texture> &texture);
         Ref<Texture> setAttachment(FrameBufferAttachmentSpec spec);
 

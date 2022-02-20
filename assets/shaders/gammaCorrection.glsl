@@ -23,12 +23,16 @@ in vec2 fTexCoords;
 uniform sampler2D uTextures[32];
 uniform vec4 uColor = vec4(1);
 uniform float gamma = 2.2;
+uniform float exposure = 1.0f;
 
 out vec4 oColor;
 out vec4 oId;
+out vec4 oEmissive;
 
 void main(){
     oColor = texture(uTextures[0], fTexCoords) * uColor;
+    oColor.rgb = vec3(1.0) - exp(-oColor.rgb * exposure);
     oColor.rgb = pow(oColor.rgb, vec3(1.0 / gamma));
-    oId = vec4(1, 1, 1, 0);
+    oId = vec4(0, 0, 0, 0);
+    oEmissive = vec4(0, 0, 0, 0);
 }

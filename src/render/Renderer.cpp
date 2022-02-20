@@ -60,6 +60,7 @@ namespace tri {
         float roughness;
         float metallic;
         float normalMapFactor;
+        float emissive;
 
         int texture;
         int normalMap;
@@ -68,7 +69,6 @@ namespace tri {
         int ambientOcclusionMap;
         int displacementMap;
         int align1;
-        int align2;
 
         glm::vec2 textureOffset;
         glm::vec2 textureScale;
@@ -343,6 +343,7 @@ namespace tri {
                                     m->roughness = mat->roughness;
                                     m->metallic = mat->metallic;
                                     m->normalMapFactor = mat->normalMapFactor;
+                                    m->emissive = mat->emissive;
 
                                     m->textureOffset = mat->textureOffset + mat->offset;
                                     m->textureScale = mat->textureScale * mat->scale;
@@ -368,8 +369,6 @@ namespace tri {
                             batch->instanceCount = batch->instances->size();
                             batch->instances->swapBuffers();
                             batch->materialBuffer->swapBuffers();
-
-                            stats.instanceCount += batch->instanceCount;
 
                             //set draw call
                             auto step = renderPass->addDrawCall("mesh " + file);
@@ -774,7 +773,6 @@ namespace tri {
     void Renderer::update() {
         stats.shaderCount = 0;
         stats.meshCount = 0;
-        stats.instanceCount = 0;
 
         for (auto& list : impl->batchLists) {
             list->frustumCullingEnabled = impl->frustumCullingEnabled;

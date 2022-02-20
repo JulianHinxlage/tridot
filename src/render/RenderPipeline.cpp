@@ -97,17 +97,19 @@ namespace tri {
         int drawCallCount = 0;
         int instanceCount = 0;
         executeRootPass = Ref<RenderPass>::make(*rootPass);
-        std::function<void(Ref<RenderPass>)> clear = [&](Ref<RenderPass> pass) {
+        std::function<void(Ref<RenderPass>, bool)> clear = [&](Ref<RenderPass> pass, bool active) {
             for (int i = pass->subPasses.size() - 1; i >= 0; i--) {
                 auto& subPass = pass->subPasses[i];
                 if (subPass->type == RenderPass::DRAW_CALL) {
-                    drawCallCount++;
-                    int count = ((RenderPassDrawCall*)subPass.get())->instanceCount;
-                    if (count != -1) {
-                        instanceCount += count;
+                    if (subPass->active && active) {
+                        drawCallCount++;
+                        int count = ((RenderPassDrawCall*)subPass.get())->instanceCount;
+                        if (count != -1) {
+                            instanceCount += count;
+                        }
                     }
                 }
-                clear(subPass);
+                clear(subPass, active && subPass->active);
                 if (!subPass->fixed) {
                     if (subPass->type != RenderPass::NODE) {
                         pass->subPasses.erase(pass->subPasses.begin() + i);
@@ -115,7 +117,7 @@ namespace tri {
                 }
             }
         };
-        clear(rootPass);
+        clear(rootPass, true);
 
         env->renderer->stats.drawCallCount = drawCallCount;
         env->renderer->stats.instanceCount = instanceCount;

@@ -59,7 +59,10 @@ namespace tri {
     }
 
     void BatchBuffer::swapBuffers(){
-        if (useBackBuffer) {
+        if (swapOnUpdate) {
+            reset();
+        }
+        else if (useBackBuffer) {
             swapOnUpdate = true;
         }
         else {

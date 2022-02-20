@@ -23,16 +23,32 @@ in vec2 fTexCoords;
 uniform sampler2D uTextures[32];
 uniform int steps = 10;
 uniform vec2 spread = vec2(1, 0);
+uniform bool gaussian = false;
 
 out vec4 oColor;
 out vec4 oId;
 
 void main(){
-    vec2 texSize = textureSize(uTextures[0], 0);
+    vec2 texelSize = 1.0f / textureSize(uTextures[0], 0);
     vec4 color = vec4(0);
-    for(int i = -steps; i <= steps; i++){
-        color += texture(uTextures[0], clamp(fTexCoords.xy + i * spread * (1.0 / texSize), 0.0f, 0.999f));
+    if(gaussian){
+        float sum = 0;
+        for(int i = -steps; i <= steps; i++){
+            float a = float(i) / float(steps) * 2.0;
+            float weight = exp(-0.5 * a * a);
+            vec2 uv = fTexCoords.xy + i * spread * texelSize;
+            color += texture(uTextures[0], clamp(uv, 0.0f, 0.999f)) * weight;
+            sum += weight;
+        }
+        oColor = color / sum;
+
+    }else{
+        for(int i = -steps; i <= steps; i++){
+            vec2 uv = fTexCoords.xy + i * spread * texelSize;
+            color += texture(uTextures[0], clamp(uv, 0.0f, 0.999f));
+        }
+        oColor = color / (steps * 2 + 1);
     }
-    oColor = color / (steps * 2 + 1);
+
     oId = vec4(1, 1, 1, 0);
 }

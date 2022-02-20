@@ -62,6 +62,21 @@ namespace tri {
                     env->editor->gui.typeGui.drawMember(env->reflection->getTypeId<Ref<FrameBuffer>>(), &frameBuffer, "frameBuffer", nullptr, nullptr, false);
 
                     env->editor->gui.typeGui.drawMember(env->reflection->getTypeId<Ref<ShaderState>>(), &call->shaderState, "shaderState", nullptr, nullptr, false);
+
+                    if (ImGui::TreeNode("textures")) {
+                        for (auto* texture : call->textures) {
+                            if (texture) {
+                                float aspect = 1;
+                                if (texture->getHeight() != 0) {
+                                    aspect = (float)texture->getWidth() / (float)texture->getHeight();
+                                }
+                                ImGui::Image((void*)(size_t)texture->getId(), ImVec2(200 * aspect, 200), ImVec2(0, 1), ImVec2(1, 0));
+                            }
+                        }
+                        ImGui::TreePop();
+                    }
+
+
                 }
                 else if (pass->type == RenderPass::DRAW_COMMAND) {
                     env->editor->gui.typeGui.drawType(env->reflection->getTypeId<RenderPassDrawCommand>(), pass, false);

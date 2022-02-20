@@ -460,7 +460,7 @@ namespace tri {
         }
     };
     TRI_STARTUP_CALLBACK("") {
-        //env->editor->addElement<ImguiDemo>();
+        env->editor->addElement<ImguiDemo>();
     }
 
 }

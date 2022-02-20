@@ -82,6 +82,7 @@ struct Material{
     float roughness;
     float metallic;
     float normalMapFactor;
+    float emissive;
     int texture;
     int normalMap;
     int roughnessMap;
@@ -89,7 +90,6 @@ struct Material{
     int ambientOcclusionMap;
     int displacementMap;
     int align1;
-    int align2;
     vec2 textureOffset;
     vec2 textureScale;
     vec2 normalMapOffset;
@@ -119,10 +119,13 @@ layout(std140) uniform uEnvironment {
 
 uniform sampler2D uTextures[30];
 uniform samplerCube uCubeTextures[2];
+uniform float bloomThreshold = 1.0;
 const float PI = 3.14159265359;
 
-out vec4 oColor;
-out vec4 oId;
+layout (location = 0) out vec4 oColor;
+layout (location = 1) out vec4 oId;
+layout (location = 2) out vec4 oEmissive;
+layout (location = 3) out vec4 oNormal;
 
 vec4 sampleTexture(int textureIndex, int mapping, vec2 textureScale, vec2 textureOffset);
 vec4 sampleTextureIndexed(int textureIndex, vec2 textureCoords);
@@ -177,8 +180,18 @@ void main(){
     }
 
     vec3 lightColor = lighing(albedo.rgb, normal, metallic, roughness, ao);
+
+    float brightness = dot(lightColor.rgb, vec3(0.2126, 0.7152, 0.0722));
+    if(brightness > bloomThreshold){
+        oEmissive = vec4(lightColor.rgb, 1.0);
+    }else{
+        oEmissive = vec4(0.0, 0.0, 0.0, material.emissive > 0.0 ? 1.0 : albedo.a);
+    }
+    oEmissive.rgb += material.emissive * albedo.rgb;
+
     oColor = vec4(lightColor, albedo.a);
     oId = vec4(fId.xyz, 1.0);
+    oNormal = vec4(normal + 1.0 * 0.5, 1.0);
 }
 
 float shadowMapping(int lightIndex, float ndotl){

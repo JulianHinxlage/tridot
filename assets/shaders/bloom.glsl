@@ -21,14 +21,15 @@ void main(){
 in vec2 fTexCoords;
 
 uniform sampler2D uTextures[32];
-uniform vec4 uColor = vec4(1);
+uniform float bloomIntesity = 1.0f;
 
 out vec4 oColor;
 out vec4 oId;
 out vec4 oEmissive;
 
 void main(){
-    oColor = texture(uTextures[0], fTexCoords) * uColor;
+    oColor = texture(uTextures[0], fTexCoords); //albedo
+    oColor += max(texture(uTextures[1], fTexCoords), texture(uTextures[2], fTexCoords) * bloomIntesity); //max(emissive, bloom)
     oId = vec4(0, 0, 0, 0);
     oEmissive = vec4(0, 0, 0, 0);
 }

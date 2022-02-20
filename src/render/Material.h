@@ -26,6 +26,7 @@ namespace tri {
         float roughness;
         float metallic;
         float normalMapFactor;
+        float emissive;
 
         Ref<Texture> texture;
         Ref<Texture> normalMap;

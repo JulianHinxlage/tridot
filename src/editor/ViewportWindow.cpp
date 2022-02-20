@@ -38,16 +38,6 @@ namespace tri {
         env->signals->sceneLoad.addCallback([&](Scene *scene){
             editorCameraId = -1;
         });
-
-        FrameBufferAttachmentSpec idBuffer;
-        idBuffer.type = (TextureAttachment)(COLOR + 1);
-        idBuffer.clearColor = Color::white;
-        idBuffer.mipMapping = false;
-        env->renderPipeline->defaultFrameBufferSpecs = {
-            {COLOR, env->window->getBackgroundColor()},
-            {DEPTH, Color(0)},
-            idBuffer,
-        };
     }
 
     void ViewportWindow::setupEditorCamera(){

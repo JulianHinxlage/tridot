@@ -108,6 +108,16 @@ namespace tri {
         }
     }
 
+    const FrameBufferAttachmentSpec* FrameBuffer::getAttachmentSpec(TextureAttachment attachment) {
+        auto entry = attachments.find((uint32_t)attachment);
+        if (entry != attachments.end()) {
+            return &entry->second.spec;
+        }
+        else {
+            return nullptr;
+        }
+    }
+
     Ref<Texture> FrameBuffer::setAttachment(FrameBufferAttachmentSpec spec, const Ref<Texture> &texture) {
         if(id == 0){
             glGenFramebuffers(1, &id);
