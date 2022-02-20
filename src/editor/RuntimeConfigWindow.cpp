@@ -62,6 +62,7 @@ namespace tri {
                 "RuntimeMode",
                 "RenderPipeline",
                 "JobSystem",
+                "PostProcess",
             };
 
             for (auto& name : activeInEdit) {

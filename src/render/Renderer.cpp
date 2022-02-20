@@ -9,6 +9,7 @@
 #include "ShaderState.h"
 #include "engine/AssetManager.h"
 #include "RenderThread.h"
+#include "engine/Transform.h"
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/ext/matrix_clip_space.hpp>
 
@@ -196,6 +197,7 @@ namespace tri {
         std::string renderPassName;
         Ref<FrameBuffer> frameBuffer;
         bool needsUpdate = true;
+        bool frustumCullingEnabled = true;
 
         void init(Ref<RenderPass> renderPass) {
             lightBuffer = Ref<BatchBuffer>::make();
@@ -406,9 +408,52 @@ namespace tri {
             frameBuffer = nullptr;
         }
 
+        bool checkClipSpace(const glm::vec4 &p) {
+            if (p.x > p.w) { return false; }
+            if (p.x < -p.w) { return false; }
+            if (p.y > p.w) { return false; }
+            if (p.y < -p.w) { return false; }
+            if (p.z > p.w) { return false; }
+            if (p.z < -p.w) { return false; }
+            return true;
+        }
+
         void submit(const glm::mat4& transform, const glm::vec3& position, Mesh* mesh, Shader *shader, Material* material, Color color, uint32_t id) {
             Batch* batch = getBatch(mesh, shader);
             if (batch->instances) {
+
+                //view frustum culling check
+                if (frustumCullingEnabled) {
+                    bool cull = true;
+                    glm::vec3 scale = transform * glm::vec4(1, 1, 1, 0);
+                    if (std::abs(scale.x) > 10) { cull = false; }
+                    if (std::abs(scale.y) > 10) { cull = false; }
+                    if (std::abs(scale.z) > 10) { cull = false; }
+
+                    if (cull && checkClipSpace(environment.projection * transform * glm::vec4(0, 0, 0, 1.0f))) {
+                        cull = false;
+                    }
+                    if (mesh && cull) {
+                        glm::vec3 min = mesh->boundingMin;
+                        glm::vec3 max = mesh->boundingMax;
+                        for (int i = 0; i < 8; i++) {
+                            float x = i % 2;
+                            float y = (i / 2) % 2;
+                            float z = (i / 4) % 2;
+
+                            if (checkClipSpace(environment.projection * transform * glm::vec4(
+                                min.x + x * (max.x - min.x),
+                                min.y + y * (max.y - min.y),
+                                min.z + z * (max.z - min.z),
+                                1.0f))) {
+                                cull = false;
+                                break;
+                            }
+                        }
+                    }
+                    if (cull) { return; }
+                }
+
                 InstanceData* i = (InstanceData*)batch->instances->next();
                 i->transform = transform;
                 i->materialIndex = batch->materials.getIndex(material);
@@ -479,11 +524,13 @@ namespace tri {
         bool shadowsEnabled = true;
         bool drawListSortingEnabled = true;
         bool transparencyPassEnabled = true;
+        bool frustumCullingEnabled = true;
 
         void startup() {
             env->console->setVariable("shadows", &shadowsEnabled);
             env->console->setVariable("draw_list_sorting", &drawListSortingEnabled);
             env->console->setVariable("transparency_pass", &transparencyPassEnabled);
+            env->console->setVariable("frustum_culling", &frustumCullingEnabled);
         }
 
         Batch *getBatch(Mesh* mesh, Shader* shader) {
@@ -730,6 +777,7 @@ namespace tri {
         stats.instanceCount = 0;
 
         for (auto& list : impl->batchLists) {
+            list->frustumCullingEnabled = impl->frustumCullingEnabled;
             if (list && list->needsUpdate) {
                 
                 if (list->parentBatchList) {
