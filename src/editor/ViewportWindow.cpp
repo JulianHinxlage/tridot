@@ -110,6 +110,13 @@ namespace tri {
                     //set render pipeline size
                     env->renderPipeline->setSize(viewportSize.x, viewportSize.y);
 
+                    //focus
+                    if (isHovered) {
+                        if (ImGui::IsMouseDown(ImGuiMouseButton_Right)) {
+                            ImGui::SetWindowFocus();
+                        }
+                    }
+
                     //editor camera
                     if (cameraMode != FIXED_PRIMARY_CAMERA || env->runtime->getMode() == RuntimeMode::EDIT) {
                         if (isHovered) {

@@ -8,55 +8,33 @@
 
 namespace tri {
 
-    class SystemManager;
-    class Console;
-    class ModuleManager;
-    class Reflection;
-    class Profiler;
-    class SignalManager;
-    class ThreadPool;
-    class Scene;
-    class Input;
-    class Time;
-    class Window;
-    class Renderer;
-    class Serializer;
-    class AssetManager;
-    class Editor;
-    class HierarchySystem;
-    class Physics;
-    class Random;
-    class RuntimeMode;
-    class RenderPipeline;
-    class RenderThread;
-    class JobSystem;
-
     class TRI_API Environment {
     public:
         Environment();
 
-        SystemManager *systems;
-        Console *console;
-        ModuleManager *modules;
-        Reflection *reflection;
-        Profiler *profiler;
-        SignalManager *signals;
-        ThreadPool *threads;
-        Scene *scene;
-        Input *input;
-        Time *time;
-        Window *window;
-        Renderer *renderer;
-        Serializer *serializer;
-        AssetManager *assets;
-        Editor *editor;
-        HierarchySystem *hierarchies;
-        Physics *physics;
-        Random* random;
-        RuntimeMode* runtime;
-        RenderPipeline* renderPipeline;
-        RenderThread* renderThread;
-        JobSystem* jobSystem;
+        class SystemManager *systems;
+        class Console *console;
+        class ModuleManager *modules;
+        class Reflection *reflection;
+        class Profiler *profiler;
+        class SignalManager *signals;
+        class ThreadPool *threads;
+        class Scene *scene;
+        class Input *input;
+        class Time *time;
+        class Window *window;
+        class Renderer *renderer;
+        class Serializer *serializer;
+        class AssetManager *assets;
+        class Editor *editor;
+        class HierarchySystem *hierarchies;
+        class Physics *physics;
+        class Random* random;
+        class RuntimeMode* runtime;
+        class RenderPipeline* renderPipeline;
+        class RenderThread* renderThread;
+        class JobSystem* jobSystem;
+        class RenderSettings* renderSettings;
 
         static Environment* startup();
         static void shutdown();

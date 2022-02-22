@@ -8,7 +8,7 @@
 #include "render/Window.h"
 #include "render/FrameBuffer.h"
 #include "engine/Input.h"
-#include "render/RenderPipeline.h"
+#include "render/RenderThread.h"
 #include <imgui/imgui.h>
 #include <imgui/backends/imgui_impl_glfw.h>
 #include <imgui/backends/imgui_impl_opengl3.h>
@@ -46,7 +46,7 @@ namespace tri {
         }
 
         void begin() {
-            env->renderPipeline->getPass("gui begin")->addCallback("gui begin", [&]() {
+            env->renderThread->addTask([&]() {
                 if (!inFrame && env->window->isOpen()) {
                     ImGuiIO& io = ImGui::GetIO();
                     io.MouseWheel += (float)env->input->getMouseWheelDelta();
@@ -60,7 +60,7 @@ namespace tri {
         }
 
         void end() {
-            env->renderPipeline->getPass("gui end")->addCallback("gui end", [&]() {
+            env->renderThread->addTask([&]() {
                 env->input->allowInputs = !ImGui::GetIO().WantTextInput;
                 if (inFrame && env->window->isOpen()) {
                     FrameBuffer::unbind();

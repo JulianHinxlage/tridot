@@ -62,6 +62,8 @@ namespace tri {
 
     uint32_t internalEnum(TextureFormat format) {
         switch (format) {
+            case TEXTURE_FORMAT_NONE:
+                return GL_NONE;
             case RGBA8:
                 return GL_RGBA8;
             case RGB8:
@@ -70,6 +72,17 @@ namespace tri {
                 return GL_RG8;
             case RED8:
                 return GL_R8;
+
+
+            case RGB16F:
+                return GL_RGB16F;
+            case RGB32F:
+                return GL_RGB32F;
+            case RGBA16F:
+                return GL_RGBA16F;
+            case RGBA32F:
+                return GL_RGBA32F;
+
             case RED16:
                 return GL_R16F;
             case RED32:

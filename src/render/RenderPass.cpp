@@ -69,7 +69,7 @@ namespace tri {
 
         subPasses.resize(renderPass.subPasses.size());
         for (int i = 0; i < subPasses.size(); i++) {
-            auto pass = renderPass.subPasses[i];
+            auto &pass = renderPass.subPasses[i];
             if (pass->type == NODE) {
                 subPasses[i] = Ref<RenderPass>::make(*pass);
             }
@@ -179,6 +179,15 @@ namespace tri {
         return nullptr;
     }
 
+    void RenderPass::prepare() {
+        if (active) {
+            for (auto& pass : subPasses) {
+                if (pass) {
+                    pass->prepare();
+                }
+            }
+        }
+    }
 
     RenderPassDrawCall::RenderPassDrawCall() {
         mesh = nullptr;
@@ -187,6 +196,8 @@ namespace tri {
         shaderState = nullptr;
         frameBuffer = nullptr;
         instanceCount = -1;
+        output = nullptr;
+        shaderStateInput = nullptr;
     }
 
     RenderPassDrawCall::RenderPassDrawCall(const RenderPassDrawCall& call)
@@ -204,6 +215,27 @@ namespace tri {
         instanceCount = call.instanceCount;
         textures = call.textures;
         buffers = call.buffers;
+        inputs = call.inputs;
+        output = call.output;
+        shaderStateInput = call.shaderStateInput;
+    }
+
+    Ref<ShaderState> getShaderState(RenderPass *pass) {
+        if (pass && pass->type == RenderPass::DRAW_CALL) {
+            auto &state = ((RenderPassDrawCall*)pass)->shaderState;
+            if (state) {
+                return state;
+            }
+        }
+        else {
+            for (int i = pass->subPasses.size() - 1; i >= 0; i--) {
+                auto state = getShaderState(pass->subPasses[i].get());
+                if (state) {
+                    return state;
+                }
+            }
+        }
+        return nullptr;
     }
 
     void RenderPassDrawCall::execute() {
@@ -218,6 +250,13 @@ namespace tri {
             }
             if (shader && shader->getId() != 0) {
                 shader->bind();
+
+                for (auto* buffer : buffers) {
+                    if (buffer) {
+                        buffer->update();
+                    }
+                }
+
                 if (shaderState) {
                     shaderState->apply(shader);
                 }
@@ -273,6 +312,39 @@ namespace tri {
         return frameBuffer;
     }
 
+    void RenderPassDrawCall::prepare() {
+        if (output) {
+            frameBuffer = output->getOutputFrameBuffer();
+        }
+
+        for (int i = 0; i < inputs.size(); i++) {
+            auto& input = inputs[i];
+            if (input.source) {
+                auto* source = input.source->getOutputFrameBuffer().get();
+                if (source) {
+                    if (textures.size() <= i) {
+                        textures.resize(i + 1);
+                    }
+                    if (input.attachmentName.empty()) {
+                        textures[i] = source->getAttachment(input.attachment).get();
+                    }
+                    else {
+                        textures[i] = source->getAttachment(input.attachmentName).get();
+                    }
+                }
+            }
+        }
+
+        if (shaderStateInput) {
+            auto state = getShaderState(shaderStateInput);
+            if (state) {
+                shaderState = state;
+            }
+        }
+
+        RenderPass::prepare();
+    }
+
     void RenderPassDrawCommand::execute() {
         if (active) {
             TracyGpuZone("drawCommand");
@@ -317,13 +389,22 @@ namespace tri {
     }
 
     void RenderPassDrawCallback::execute() {
-        if (active) {
+        if (active && !prepareCall) {
             TracyGpuZone("drawCallback");
 
             if (callback) {
                 callback();
             }
             RenderPass::execute();
+        }
+    }
+
+    void RenderPassDrawCallback::prepare() {
+        if (active && prepareCall) {
+            if (callback) {
+                callback();
+            }
+            RenderPass::prepare();
         }
     }
 

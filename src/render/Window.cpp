@@ -8,6 +8,7 @@
 #include "core/core.h"
 #include "RenderContext.h"
 #include "RenderPipeline.h"
+#include "RenderThread.h"
 #include "GL/glew.h"
 #include "GLFW/glfw3.h"
 #include "tracy/TracyOpenGL.hpp"
@@ -115,7 +116,7 @@ namespace tri {
     }
 
     void Window::update() {
-        env->renderPipeline->getPass("window")->addCallback("update", [&]() {
+        env->renderThread->addTask([&]() {
 
             if(context != nullptr) {
                 GLFWwindow *window = (GLFWwindow*)context;

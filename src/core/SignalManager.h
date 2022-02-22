@@ -13,6 +13,8 @@
 
 namespace tri {
 
+    class Scene;
+
     class SignalManager : public System{
     public:
         Signal<> preStartup;

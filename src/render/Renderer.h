@@ -38,7 +38,7 @@ namespace tri {
 
 
         void setCamera(glm::mat4& projection, glm::vec3 position, Ref<FrameBuffer> frameBuffer = nullptr);
-        void setRenderPass(const Ref<RenderPass> &pass);
+        void setRenderPass(Ref<RenderPass> pass, Ref<RenderPass> transparencyPass = nullptr);
         void setEnvironMap(Ref<Texture> radianceMap, Ref<Texture> irradianceMap, float intensity);
         void submit(const glm::vec3& position, const glm::vec3 direction, Light& light);
         void submit(const glm::mat4& transform, const glm::vec3& position, Mesh* mesh = nullptr, Material* material = nullptr, Color color = Color::white, uint32_t id = -1);
@@ -49,8 +49,7 @@ namespace tri {
         Ref<RenderPass> geometryPass;
         Ref<RenderPass> shadowPass;
         Ref<RenderPass> transparencyPass;
-        Ref<RenderPass> opaquePass;
-        Ref<RenderPass> currentPass;
+
         Ref<Mesh> defaultMesh;
         Ref<Texture> defaultTexture;
         Ref<Shader> defaultShader;

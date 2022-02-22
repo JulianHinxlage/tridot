@@ -53,15 +53,12 @@ namespace tri {
             quadIndices, sizeof(quadIndices) / sizeof(quadIndices[0]),
             { {FLOAT, 3}, {FLOAT, 3} ,{FLOAT, 2} });
 
-
-        getPass("gui end");
-        getPass("window");
-        getPass("gui begin");
         getPass("clear");
-        getPass("editor");
         getPass("skybox");
         getPass("shadow");
         getPass("geometry");
+        getPass("deferred");
+        getPass("transparency");
         getPass("viewport");
         getPass("outlines");
         getPass("post processing");
@@ -76,8 +73,8 @@ namespace tri {
         rootPass->removetPass(name);
     }
 
-    void RenderPipeline::submitRenderPasses() {
-        TRI_PROFILE("submitRenderPasses");
+    void RenderPipeline::prepareRenderPasses() {
+        TRI_PROFILE("prepareRenderPasses");
         env->renderThread->lock();
 
         //move active flag to new passes
@@ -92,7 +89,10 @@ namespace tri {
             }
         };
         setActive(rootPass, executeRootPass);
-        
+
+
+        rootPass->prepare();
+
         //copy passes to current passes and clear passes
         int drawCallCount = 0;
         int instanceCount = 0;

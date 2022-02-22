@@ -10,7 +10,7 @@
 #include "Shader.h"
 #include "FrameBuffer.h"
 #include "Texture.h"
-#include "Buffer.h"
+#include "BatchBuffer.h"
 
 namespace tri {
 
@@ -56,6 +56,7 @@ namespace tri {
         void removetPass(const std::string& name);
         virtual void execute();
         virtual Ref<FrameBuffer> getOutputFrameBuffer();
+        virtual void prepare();
     };
 
     class RenderPassDrawCall : public RenderPass {
@@ -65,15 +66,32 @@ namespace tri {
         Shader *shader;
         Ref<ShaderState> shaderState;
         Ref<FrameBuffer> frameBuffer;
-        int instanceCount = -1;
+        int instanceCount;
         std::vector<Texture*> textures;
-        std::vector<Buffer*> buffers;
+        std::vector<BatchBuffer*> buffers;
+
+        class Input {
+        public:
+            TextureAttachment attachment;
+            std::string attachmentName;
+            RenderPass *source;
+
+            Input(TextureAttachment attachment = COLOR, RenderPass* source = nullptr)
+                : source(source), attachment(attachment), attachmentName("") {}
+
+            Input(std::string attachmentName, RenderPass* source = nullptr)
+                : source(source), attachment(COLOR), attachmentName(attachmentName) {}
+        };
+        std::vector<Input> inputs;
+        RenderPass* output;
+        RenderPass* shaderStateInput;
 
         RenderPassDrawCall();
         RenderPassDrawCall(const RenderPassDrawCall &call);
     
         virtual void execute() override;
         virtual Ref<FrameBuffer> getOutputFrameBuffer() override;
+        virtual void prepare() override;
     };
 
     class RenderPassDrawCommand : public RenderPass {
@@ -87,8 +105,10 @@ namespace tri {
     class RenderPassDrawCallback : public RenderPass {
     public:
         std::function<void()> callback;
+        bool prepareCall = false;
     
         virtual void execute() override;
+        virtual void prepare() override;
     };
 
 }

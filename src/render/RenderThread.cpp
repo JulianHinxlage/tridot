@@ -50,7 +50,7 @@ namespace tri {
 		else {
 			currentTasks.swap(tasks);
 			tasks.clear();
-			env->renderPipeline->submitRenderPasses();
+			env->renderPipeline->prepareRenderPasses();
 			execute();
 		}
 	}
@@ -82,7 +82,7 @@ namespace tri {
 							ZoneScopedNC("waitForMainThread", tracy::Color::Gray30);
 							barrier.arrive_and_wait();
 						}
-						env->renderPipeline->submitRenderPasses();
+						env->renderPipeline->prepareRenderPasses();
 						barrier.arrive_and_wait();
 
 						TRI_PROFILE("RenderThread");

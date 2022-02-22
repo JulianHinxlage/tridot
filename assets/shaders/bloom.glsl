@@ -29,7 +29,7 @@ out vec4 oEmissive;
 
 void main(){
     oColor = texture(uTextures[0], fTexCoords); //albedo
-    oColor += max(texture(uTextures[1], fTexCoords), texture(uTextures[2], fTexCoords) * bloomIntesity); //max(emissive, bloom)
+    oColor += texture(uTextures[1], fTexCoords) * bloomIntesity; //bloom
     oId = vec4(0, 0, 0, 0);
     oEmissive = vec4(0, 0, 0, 0);
 }

@@ -10,6 +10,7 @@
 #include "engine/AssetManager.h"
 #include "RenderThread.h"
 #include "engine/Transform.h"
+#include "RenderSettings.h"
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/ext/matrix_clip_space.hpp>
 
@@ -197,7 +198,6 @@ namespace tri {
         std::string renderPassName;
         Ref<FrameBuffer> frameBuffer;
         bool needsUpdate = true;
-        bool frustumCullingEnabled = true;
 
         void init(Ref<RenderPass> renderPass) {
             lightBuffer = Ref<BatchBuffer>::make();
@@ -318,7 +318,7 @@ namespace tri {
                     stats.shaderCount++;
                 }
 
-                for (auto batch : list) {
+                for (auto &batch : list) {
                     if (batch && batch->instances && batch->materialBuffer) {
                         if (batch->instances->size() > 0) {
                             meshCounter++;
@@ -360,12 +360,6 @@ namespace tri {
                             batch->materials.reset();
 
 
-                            //set instances
-                            renderPass->addCallback("instances " + file, [batch]() {
-                                batch->instances->update();
-                                batch->materialBuffer->update();
-                            });
-
                             batch->instanceCount = batch->instances->size();
                             batch->instances->swapBuffers();
                             batch->materialBuffer->swapBuffers();
@@ -375,9 +369,10 @@ namespace tri {
                             step->shader = batch->shader;
                             step->frameBuffer = frameBuffer;
                             step->mesh = batch->mesh;
+                            step->buffers.push_back(batch->instances.get());
+                            step->buffers.push_back(batch->materialBuffer.get());
                             step->vertexArray = batch->vertexArray.get();
                             step->instanceCount = batch->instanceCount;
-
 
                             //set textures
                             for (auto& tex : batch->textures.assets) {
@@ -417,40 +412,46 @@ namespace tri {
             return true;
         }
 
+        bool checkFrustum(const glm::mat4& transform, Mesh* mesh) {
+            bool cull = true;
+            glm::vec3 scale = transform * glm::vec4(1, 1, 1, 0);
+            if (std::abs(scale.x) > 10) { cull = false; }
+            if (std::abs(scale.y) > 10) { cull = false; }
+            if (std::abs(scale.z) > 10) { cull = false; }
+
+            if (cull && checkClipSpace(environment.projection * transform * glm::vec4(0, 0, 0, 1.0f))) {
+                cull = false;
+            }
+            if (mesh && cull) {
+                glm::vec3 min = mesh->boundingMin;
+                glm::vec3 max = mesh->boundingMax;
+                for (int i = 0; i < 8; i++) {
+                    float x = i % 2;
+                    float y = (i / 2) % 2;
+                    float z = (i / 4) % 2;
+
+                    if (checkClipSpace(environment.projection * transform * glm::vec4(
+                        min.x + x * (max.x - min.x),
+                        min.y + y * (max.y - min.y),
+                        min.z + z * (max.z - min.z),
+                        1.0f))) {
+                        cull = false;
+                        break;
+                    }
+                }
+            }
+            return !cull;
+        }
+
         void submit(const glm::mat4& transform, const glm::vec3& position, Mesh* mesh, Shader *shader, Material* material, Color color, uint32_t id) {
             Batch* batch = getBatch(mesh, shader);
             if (batch->instances) {
 
                 //view frustum culling check
-                if (frustumCullingEnabled) {
-                    bool cull = true;
-                    glm::vec3 scale = transform * glm::vec4(1, 1, 1, 0);
-                    if (std::abs(scale.x) > 10) { cull = false; }
-                    if (std::abs(scale.y) > 10) { cull = false; }
-                    if (std::abs(scale.z) > 10) { cull = false; }
-
-                    if (cull && checkClipSpace(environment.projection * transform * glm::vec4(0, 0, 0, 1.0f))) {
-                        cull = false;
+                if (env->renderSettings->frustumCullingEnabled) {
+                    if (!checkFrustum(transform, mesh)) {
+                        return;
                     }
-                    if (mesh && cull) {
-                        glm::vec3 min = mesh->boundingMin;
-                        glm::vec3 max = mesh->boundingMax;
-                        for (int i = 0; i < 8; i++) {
-                            float x = i % 2;
-                            float y = (i / 2) % 2;
-                            float z = (i / 4) % 2;
-
-                            if (checkClipSpace(environment.projection * transform * glm::vec4(
-                                min.x + x * (max.x - min.x),
-                                min.y + y * (max.y - min.y),
-                                min.z + z * (max.z - min.z),
-                                1.0f))) {
-                                cull = false;
-                                break;
-                            }
-                        }
-                    }
-                    if (cull) { return; }
                 }
 
                 InstanceData* i = (InstanceData*)batch->instances->next();
@@ -520,53 +521,61 @@ namespace tri {
         std::vector<Ref<BatchList>> batchLists;
         BatchList* current;
         BatchList *currentTransparency;
-        bool shadowsEnabled = true;
-        bool drawListSortingEnabled = true;
-        bool transparencyPassEnabled = true;
-        bool frustumCullingEnabled = true;
+        bool deferredShadingEnabledLast;
 
         void startup() {
-            env->console->setVariable("shadows", &shadowsEnabled);
-            env->console->setVariable("draw_list_sorting", &drawListSortingEnabled);
-            env->console->setVariable("transparency_pass", &transparencyPassEnabled);
-            env->console->setVariable("frustum_culling", &frustumCullingEnabled);
+            deferredShadingEnabledLast = env->renderSettings->deferredShadingEnabled;
         }
 
         Batch *getBatch(Mesh* mesh, Shader* shader) {
             return current->getBatch(mesh, shader);
         }
 
-        void setPass(Ref<RenderPass> pass) {
+        void setPass(Ref<RenderPass> pass, bool transparency) {
             for (auto& batchList : batchLists) {
                 if (batchList && batchList->renderPassName == pass->name) {
-                    current = batchList.get();
-                    current->needsUpdate = true;
-                    current->renderPass = pass;
+                    if (transparency) {
+                        currentTransparency = batchList.get();
+                        currentTransparency->needsUpdate = true;
+                        currentTransparency->renderPass = pass;
+                    }
+                    else {
+                        current = batchList.get();
+                        current->needsUpdate = true;
+                        current->renderPass = pass;
+                    }
                     return;
                 }
             }
-            auto batchList = batchLists.emplace_back(Ref<BatchList>::make());
+            auto &batchList = batchLists.emplace_back(Ref<BatchList>::make());
             batchList->init(pass);
-            current = batchList.get();
+            if (transparency) {
+                currentTransparency = batchList.get();
+            }
+            else {
+                current = batchList.get();
+            }
         }
     };
 
     void Renderer::startup() {
         geometryPass = env->renderPipeline->getPass("geometry");
         shadowPass = env->renderPipeline->getPass("shadow");
+        transparencyPass = env->renderPipeline->getPass("transparency");
 
-        opaquePass = geometryPass->getPass("opaque");
-        transparencyPass = geometryPass->getPass("transparency");
-        
+        if (env->renderSettings->deferredShadingEnabled) {
+            defaultShader = env->assets->get<Shader>("shaders/geometry.glsl");
+        }
+        else {
+            defaultShader = env->assets->get<Shader>("shaders/forwardPBR.glsl");
+        }
+
         Image image;
         image.init(1, 1, 4, 8);
         image.set(0, 0, Color::white);
         defaultTexture = Ref<Texture>::make();
         defaultTexture->load(image);
-
-        defaultShader = env->assets->get<Shader>("shaders/pbr.glsl");
         defaultMaterial = Ref<Material>::make();
-
         defaultMesh = Ref<Mesh>::make();
         float quadVertices[] = {
             -0.5, +0.0, -0.5, 0.0, 1.0, 0.0, 0.0, 0.0,
@@ -583,10 +592,7 @@ namespace tri {
 
         impl = Ref<Impl>::make();
         impl->startup();
-        setRenderPass(transparencyPass);
-        impl->currentTransparency = impl->current;
-        setRenderPass(geometryPass);
-        impl->currentTransparency->parentBatchList = impl->current;
+        setRenderPass(geometryPass, transparencyPass);
     }
 
     void Renderer::setCamera(glm::mat4& projection, glm::vec3 position, Ref<FrameBuffer> frameBuffer) {
@@ -596,19 +602,17 @@ namespace tri {
         impl->current->frameBuffer = frameBuffer;
     }
 
-    void Renderer::setRenderPass(const Ref<RenderPass>& pass) {
-        if (!pass || pass == geometryPass) {
-            currentPass = geometryPass;
-            if (impl->transparencyPassEnabled) {
-                impl->setPass(opaquePass);
-            }
-            else {
-                impl->setPass(currentPass);
-            }
+    void Renderer::setRenderPass(Ref<RenderPass> pass, Ref<RenderPass> transparencyPass) {
+        if (!pass) {
+            pass = geometryPass;
         }
-        else {
-            currentPass = pass;
-            impl->setPass(pass);
+        if (!transparencyPass) {
+            transparencyPass = this->transparencyPass;
+        }
+        impl->setPass(pass, false);
+        impl->setPass(transparencyPass, true);
+        if (impl->currentTransparency) {
+            impl->currentTransparency->parentBatchList = impl->current;
         }
     }
 
@@ -623,7 +627,7 @@ namespace tri {
         l->color = light.color.vec();
         l->shadowMapIndex = -1;
 
-        if (impl->shadowsEnabled) {
+        if (env->renderSettings->shadowsEnabled) {
             if (light.shadowMap.get() == nullptr && light.type == DIRECTIONAL_LIGHT) {
                 light.shadowMap = Ref<FrameBuffer>::make();
                 env->renderThread->addTask([shadowMap = light.shadowMap]() {
@@ -684,10 +688,10 @@ namespace tri {
         if (mesh->vertexArray.getId() != 0) {
             if (shader->getId() != 0) {
 
-                if (impl->transparencyPassEnabled && currentPass == geometryPass) {
+                if (env->renderSettings->transparencyPassEnabled) {
                     bool opaque = material->isOpaque() && color.a == 255;
                     if (opaque) {
-                        if (impl->drawListSortingEnabled) {
+                        if (env->renderSettings->drawListSortingEnabled) {
                             impl->current->submitDrawList(transform, position, mesh, shader, material, color, id);
                         }
                         else {
@@ -695,7 +699,8 @@ namespace tri {
                         }
                     }
                     else {
-                        if (impl->drawListSortingEnabled) {
+                        shader = env->assets->get<Shader>("shaders/forwardPBR.glsl").get();
+                        if (env->renderSettings->drawListSortingEnabled) {
                             impl->currentTransparency->submitDrawList(transform, position, mesh, shader, material, color, id);
                         }
                         else {
@@ -704,7 +709,7 @@ namespace tri {
                     }
                 }
                 else {
-                    if (impl->drawListSortingEnabled) {
+                    if (env->renderSettings->drawListSortingEnabled) {
                         impl->current->submitDrawList(transform, position, mesh, shader, material, color, id);
                     }
                     else {
@@ -750,7 +755,7 @@ namespace tri {
                     texture = defaultTexture.get();
                 }
 
-                RenderPass* pass = currentPass.get();
+                RenderPass* pass = impl->current->renderPass.get();
                 if (!pass) {
                     pass = geometryPass.get();
                 }
@@ -771,13 +776,23 @@ namespace tri {
     }
 
     void Renderer::update() {
+
+        //toggle deferred shading
+        if (env->renderSettings->deferredShadingEnabled != impl->deferredShadingEnabledLast) {
+            if (env->renderSettings->deferredShadingEnabled) {
+                defaultShader = env->assets->get<Shader>("shaders/geometry.glsl");
+            }
+            else {
+                defaultShader = env->assets->get<Shader>("shaders/forwardPBR.glsl");
+            }
+            impl->deferredShadingEnabledLast = env->renderSettings->deferredShadingEnabled;
+        }
+
         stats.shaderCount = 0;
         stats.meshCount = 0;
 
         for (auto& list : impl->batchLists) {
-            list->frustumCullingEnabled = impl->frustumCullingEnabled;
             if (list && list->needsUpdate) {
-                
                 if (list->parentBatchList) {
                     list->environment = list->parentBatchList->environment;
                     list->lights = list->parentBatchList->lights;
@@ -786,24 +801,21 @@ namespace tri {
                     list->irradianceMap = list->parentBatchList->irradianceMap;
                     list->radianceMap = list->parentBatchList->radianceMap;
                 }
+            }
+        }
 
-                if (list->renderPass == geometryPass) {
-                    list->renderPass->addCommand("depth on", DEPTH_ON);
-                    list->renderPass->addCommand("blend on", BLEND_ON);
-                }else if (list->renderPass == opaquePass) {
-                    list->renderPass->addCommand("depth on", DEPTH_ON);
-                    list->renderPass->addCommand("blend on", BLEND_ON);
-                }else if (list->renderPass == transparencyPass) {
-                    list->renderPass->addCommand("depth on", DEPTH_ON);
-                    list->renderPass->addCommand("blend on", BLEND_ON);
-                }
+        for (auto& list : impl->batchLists) {
+            if (list && list->needsUpdate) {
+                
+                list->renderPass->addCommand("depth on", DEPTH_ON);
+                list->renderPass->addCommand("blend on", BLEND_ON);
                 
 
-                if (impl->drawListSortingEnabled) {
+                if (env->renderSettings->drawListSortingEnabled) {
                     list->updateDrawList();
                 }
 
-                if (impl->shadowsEnabled && (list->renderPass == geometryPass || list->renderPass == opaquePass)) {
+                if (env->renderSettings->shadowsEnabled && (list->renderPass == geometryPass)) {
                     impl->current = list.get();
                     updateShadowMaps();
                 }
@@ -813,12 +825,7 @@ namespace tri {
             }
         }
         
-        //set needsUpdate for transparency pass
-        if (impl->transparencyPassEnabled) {
-            setRenderPass(transparencyPass);
-        }
-
-        setRenderPass(nullptr);
+        setRenderPass(nullptr, nullptr);
         frameBuffer = nullptr;
     }
 
@@ -856,7 +863,7 @@ namespace tri {
 
                         call->mesh = batch->mesh;
                         call->vertexArray = batch->vertexArray.get();
-                        call->instanceCount = batch->instanceCount;
+                        call->instanceCount = batch->instances->size();
                     }
                 }
             }

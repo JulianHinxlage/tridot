@@ -8,7 +8,7 @@
 #include "Editor.h"
 #include "engine/Transform.h"
 #include "engine/Input.h"
-#include "render/RenderPipeline.h"
+#include "render/RenderThread.h"
 #include <imgui.h>
 #include <imgui/imgui_internal.h>
 #include <imguizmo/ImGuizmo.h>
@@ -20,7 +20,7 @@ namespace tri {
         type = ALWAYS_OPEN;
 
         env->signals->update.addCallback("Gizmos begin", [](){
-            env->renderPipeline->getPass("gui begin")->addCallback("gizmos begin", []() {
+            env->renderThread->addTask([]() {
                 if(env->window->isOpen() && ImGui::GetCurrentContext()->WithinFrameScope){
                     ImGuizmo::BeginFrame();
                 }

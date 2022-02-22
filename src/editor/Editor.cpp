@@ -13,7 +13,7 @@
 #include "engine/AssetManager.h"
 #include "engine/EntityInfo.h"
 #include "engine/RuntimeMode.h"
-#include "render/RenderPipeline.h"
+#include "render/RenderThread.h"
 #include <imgui/imgui.h>
 #include <imgui/imgui_internal.h>
 
@@ -144,7 +144,7 @@ namespace tri {
     }
 
     void Editor::update() {
-        env->renderPipeline->getPass("editor")->addCallback("editor", [&]() {
+        env->renderThread->addTask([&]() {
         if (!updated && ImGui::GetCurrentContext() && ImGui::GetCurrentContext()->WithinFrameScope) {
             updated = true;
             ImGui::DockSpaceOverViewport();

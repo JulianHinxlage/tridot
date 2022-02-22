@@ -3,6 +3,7 @@ mapping: SCALE_TRI_PLANAR
 roughness: 1
 metallic: 0
 normalMapFactor: 1
+emissive: 0
 texture: textures/Wood049_1K_Color.jpg
 normalMap: textures/Wood049_1K_Normal.jpg
 roughnessMap: textures/Wood049_1K_Roughness.jpg

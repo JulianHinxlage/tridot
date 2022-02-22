@@ -125,7 +125,6 @@ const float PI = 3.14159265359;
 layout (location = 0) out vec4 oColor;
 layout (location = 1) out vec4 oId;
 layout (location = 2) out vec4 oEmissive;
-layout (location = 3) out vec4 oNormal;
 
 vec4 sampleTexture(int textureIndex, int mapping, vec2 textureScale, vec2 textureOffset);
 vec4 sampleTextureIndexed(int textureIndex, vec2 textureCoords);
@@ -167,7 +166,7 @@ void main(){
         metallic *= (sampleTexture(material.metallicMap, material.mapping, material.metallicMapScale, material.metallicMapOffset).r);
     }
 
-    //roughness
+    //ambient occlusion
     float ao = 1;
     if(material.ambientOcclusionMap != -1){
         ao *= (sampleTexture(material.ambientOcclusionMap, material.mapping, material.ambientOcclusionMapScale, material.ambientOcclusionMapOffset).r);
@@ -180,8 +179,11 @@ void main(){
     }
 
     vec3 lightColor = lighing(albedo.rgb, normal, metallic, roughness, ao);
+    oColor = vec4(lightColor, albedo.a);
+    oColor.rgb += material.emissive * albedo.rgb;
 
     float brightness = dot(lightColor.rgb, vec3(0.2126, 0.7152, 0.0722));
+
     if(brightness > bloomThreshold){
         oEmissive = vec4(lightColor.rgb, 1.0);
     }else{
@@ -189,9 +191,7 @@ void main(){
     }
     oEmissive.rgb += material.emissive * albedo.rgb;
 
-    oColor = vec4(lightColor, albedo.a);
     oId = vec4(fId.xyz, 1.0);
-    oNormal = vec4(normal + 1.0 * 0.5, 1.0);
 }
 
 float shadowMapping(int lightIndex, float ndotl){

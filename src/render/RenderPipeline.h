@@ -25,10 +25,9 @@ namespace tri {
         uint32_t getWidth() { return width; }
         Ref<Mesh> getQuad() { return quad; }
 
-        void submitRenderPasses();
+        void prepareRenderPasses();
         void execute();
         Ref<RenderPass> getRootPass() { return executeRootPass; }
-
     private:
         Ref<RenderPass> rootPass;
         Ref<RenderPass> executeRootPass;

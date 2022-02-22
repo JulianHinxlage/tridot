@@ -3,6 +3,7 @@ mapping: SCALE_TRI_PLANAR
 roughness: 1.29999995
 metallic: 0
 normalMapFactor: 1
+emissive: 0
 texture: textures/Ground037_1K_Color.jpg
 normalMap: textures/Ground037_1K_Normal.jpg
 roughnessMap: textures/Ground037_1K_Roughness.jpg

@@ -38,7 +38,9 @@ namespace tri {
         void init(uint32_t width, uint32_t height, std::vector<FrameBufferAttachmentSpec> specs);
 
         Ref<Texture> getAttachment(TextureAttachment attachment);
-        const FrameBufferAttachmentSpec *getAttachmentSpec(TextureAttachment attachment);
+        Ref<Texture> getAttachment(const std::string& name);
+        const FrameBufferAttachmentSpec* getAttachmentSpec(TextureAttachment attachment);
+        const FrameBufferAttachmentSpec *getAttachmentSpec(const std::string &name);
         Ref<Texture> setAttachment(FrameBufferAttachmentSpec spec, const Ref<Texture> &texture);
         Ref<Texture> setAttachment(FrameBufferAttachmentSpec spec);
 

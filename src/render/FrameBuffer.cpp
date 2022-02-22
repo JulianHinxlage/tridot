@@ -108,6 +108,17 @@ namespace tri {
         }
     }
 
+    Ref<Texture> FrameBuffer::getAttachment(const std::string& name) {
+        for (auto& attachment : attachments) {
+            if (attachment.second.texture.get() != nullptr) {
+                if (attachment.second.spec.name == name) {
+                    return attachment.second.texture;
+                }
+            }
+        }
+        return nullptr;
+    }
+
     const FrameBufferAttachmentSpec* FrameBuffer::getAttachmentSpec(TextureAttachment attachment) {
         auto entry = attachments.find((uint32_t)attachment);
         if (entry != attachments.end()) {
@@ -116,6 +127,17 @@ namespace tri {
         else {
             return nullptr;
         }
+    }
+
+    const FrameBufferAttachmentSpec* FrameBuffer::getAttachmentSpec(const std::string& name) {
+        for (auto& attachment : attachments) {
+            if (attachment.second.texture.get() != nullptr) {
+                if (attachment.second.spec.name == name) {
+                    return &attachment.second.spec;
+                }
+            }
+        }
+        return nullptr;
     }
 
     Ref<Texture> FrameBuffer::setAttachment(FrameBufferAttachmentSpec spec, const Ref<Texture> &texture) {

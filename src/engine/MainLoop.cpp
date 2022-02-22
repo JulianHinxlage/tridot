@@ -20,6 +20,7 @@ namespace tri {
         env->console->setVariable<bool>("hot_reloading", &env->assets->hotReloadEnabled);
         env->console->setVariable<int>("resolution_x", 1920);
         env->console->setVariable<int>("resolution_y", 1080);
+        env->console->setVariable<bool>("fullscreen", false);
         env->console->setVariable<int>("vsync", 1);
         env->console->setVariable<std::string>("title", defaultTitle);
         env->console->setVariable<std::string>("log_file", "log.txt");
@@ -51,7 +52,9 @@ namespace tri {
                 env->window->init(
                         *env->console->getVariable<int>("resolution_x"),
                         *env->console->getVariable<int>("resolution_y"),
-                        *env->console->getVariable<std::string>("title"));
+                        *env->console->getVariable<std::string>("title"),
+                        *env->console->getVariable<bool>("fullscreen")
+                );
                 env->window->setBackgroundColor(Color(50, 50, 50));
 
                 {
