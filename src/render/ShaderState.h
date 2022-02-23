@@ -48,6 +48,7 @@ namespace tri {
             std::string name;
             int typeId = -1;
             virtual void apply(Shader* shader) = 0;
+            virtual void apply(ShaderState* shaderState) = 0;
 
             virtual void* getData() = 0;
         };
@@ -65,6 +66,10 @@ namespace tri {
             
             void apply(Shader* shader) override {
                 shader->set(name, value);
+            }
+
+            void apply(ShaderState* shaderState) override {
+                shaderState->set(name, value);
             }
 
             virtual void* getData() {
@@ -87,6 +92,10 @@ namespace tri {
                 shader->set(name, values.data(), (int)values.size());
             }
 
+            void apply(ShaderState* shaderState) override {
+                shaderState->set(name, values.data(), (int)values.size());
+            }
+
             virtual void* getData() {
                 return &values;
             }
@@ -96,7 +105,6 @@ namespace tri {
 
     public:
         const std::vector<Ref<Base>>& getValues() { return states; }
-
     };
 
 }

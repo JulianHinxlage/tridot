@@ -260,7 +260,7 @@ namespace tri {
         }
 
         env->renderer->setRenderPass(pass->getPass("outline geometry", false, true));
-        env->renderer->setCamera(camera.projection, cameraTransform.position, selectionOverlay2);
+        env->renderer->setCamera(camera.projection, camera.viewMatrix, cameraTransform.position, selectionOverlay2);
         for (auto id : env->editor->selectionContext.getSelected()) {
             if (env->scene->hasComponents<Transform, MeshComponent>(id)) {
                 Transform& transform = env->scene->getComponent<Transform>(id);

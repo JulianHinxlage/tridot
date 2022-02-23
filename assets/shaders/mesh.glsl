@@ -19,6 +19,7 @@ flat out float fTextureIndex;
 
 layout(std140) uniform uEnvironment {
     mat4 projection;
+    mat4 viewMatrix;
     vec3 cameraPosition;
     int align1;
     int lightCount;

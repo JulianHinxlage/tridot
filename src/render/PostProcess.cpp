@@ -8,6 +8,7 @@
 #include "engine/AssetManager.h"
 #include "render/Window.h"
 #include "RenderSettings.h"
+#include "engine/Random.h"
 
 namespace tri {
 
@@ -16,13 +17,17 @@ namespace tri {
         bool deferredShadingLast;
         std::vector<FrameBufferAttachmentSpec> gBufferSpec;
         Ref<FrameBuffer> swapBuffer;
+        Ref<FrameBuffer> ssaoBuffer;
         Ref<FrameBuffer> bloomBuffer;
         Ref<FrameBuffer> bloomBuffer2;
+        Ref<Texture> noise;
 
         void startup() {
             env->signals->postStartup.addCallback("PostProcess", [this]() {
                 setupBuffers();
+                setupClearBuffers();
                 setupDrawToScreen();
+                setupSSAO();
                 setupDeferred();
                 setupBloom();
                 setupPostProcess();
@@ -71,7 +76,7 @@ namespace tri {
             position.type = (TextureAttachment)(COLOR + 3);
             position.clearColor = Color::black;
             position.name = "position";
-            position.textureFormat = TextureFormat::RGB16F;
+            position.textureFormat = TextureFormat::RGB32F;
 
             FrameBufferAttachmentSpec RMAO;
             RMAO.type = (TextureAttachment)(COLOR + 4);
@@ -111,6 +116,9 @@ namespace tri {
 
             bloomBuffer2 = Ref<FrameBuffer>::make();
             bloomBuffer2->init(0, 0, { { COLOR, Color::transparent } });
+
+            ssaoBuffer = Ref<FrameBuffer>::make();
+            ssaoBuffer->init(0, 0, { { COLOR, Color::white } });
         }
 
         void setupDrawToScreen() {
@@ -122,12 +130,108 @@ namespace tri {
             }
         }
 
-        void setupDeferred() {
+        float lerp(float x, float y, float t) {
+            return x * (1.0f - t) + y * t;
+        }
+
+        void setupClearBuffers() {
+            auto clear = env->renderPipeline->getPass("clear");
+
+            clear->addCommand("clear", CLEAR, true)->frameBuffer = swapBuffer;
+            clear->addCommand("resize", RESIZE, true)->frameBuffer = swapBuffer;
+
+            clear->addCommand("clear", CLEAR, true)->frameBuffer = ssaoBuffer;
+            clear->addCommand("resize", RESIZE, true)->frameBuffer = ssaoBuffer;
+
+            clear->addCommand("clear", CLEAR, true)->frameBuffer = bloomBuffer;
+            clear->addCommand("resize", RESIZE, true)->frameBuffer = bloomBuffer;
+            clear->addCommand("clear", CLEAR, true)->frameBuffer = bloomBuffer2;
+            clear->addCommand("resize", RESIZE, true)->frameBuffer = bloomBuffer2;
+        }
+
+        void setupSSAO() {
             auto geometry = env->renderPipeline->getPass("geometry");
             auto deferred = env->renderPipeline->getPass("deferred");
 
-            deferred->addCommand("clear", CLEAR, true)->frameBuffer = swapBuffer;
-            deferred->addCommand("resize", RESIZE, true)->frameBuffer = swapBuffer;
+            int noiseResolution = 4;
+            std::vector<Color> noiseData;
+            noiseData.resize(noiseResolution * noiseResolution);
+            for (int i = 0; i < noiseData.size(); i++) {
+                noiseData[i] = Color(glm::vec3(env->random->getVec2(), 0.0));
+            }
+
+            Image noiseImage;
+            noiseImage.init(noiseResolution, noiseResolution, 3, 8, noiseData.data(), noiseData.size());
+            noise = Ref<Texture>::make();
+            noise->load(noiseImage);
+
+            auto ssaoParent = deferred->getPass("ssao", true);
+
+            ssaoParent->addCommand("blend off", BLEND_OFF, true);
+
+            auto ssao = ssaoParent->addDrawCall("ssao", true);
+            ssao->shader = env->assets->get<Shader>("shaders/ssao.glsl").get();
+            ssao->frameBuffer = ssaoBuffer;
+            ssao->textures.resize(3);
+            ssao->textures[2] = noise.get();
+            ssao->shaderStateInput = geometry.get();
+
+            int kernalSize = 64;
+            std::vector<glm::vec3> samples(256);
+            for (int i = 0; i < samples.size(); i++) {
+                glm::vec3 sample = env->random->getVec3();
+                sample.x = sample.x * 2.0 - 1.0;
+                sample.y = sample.y * 2.0 - 1.0;
+                sample = glm::normalize(sample);
+                sample *= env->random->getFloat();
+
+                float scale = (float)i / (float)kernalSize;
+                scale = lerp(0.1f, 1.0f, scale * scale);
+                sample *= scale;
+                samples[i] = sample;
+            }
+            ssao->shaderState = Ref<ShaderState>::make();
+            ssao->shaderState->set("samples", samples.data(), samples.size());
+            ssao->shaderState->set("kernalSize", kernalSize);
+
+            ssao->shaderState->set("sampleRadius", 1.0f);
+            ssao->shaderState->set("occlusionStrength", 1.0f);
+            ssao->shaderState->set("bias", 0.025f);
+
+            ssao->inputs.emplace_back((TextureAttachment)(COLOR + 3), geometry.get()); //position
+            ssao->inputs.emplace_back((TextureAttachment)(COLOR + 2), geometry.get()); //normals
+
+
+            //blur
+            ssaoParent->addCommand("blend on", BLEND_ON, true);
+            ssaoParent->addCommand("depth off", DEPTH_OFF, true);
+
+            auto hblur = ssaoParent->addDrawCall("hblur", true);
+            hblur->shader = env->assets->get<Shader>("shaders/blur.glsl").get();
+            hblur->shaderState = Ref<ShaderState>::make();
+            hblur->shaderState->set("steps", noiseResolution);
+            hblur->shaderState->set("spread", glm::vec2(0, 1));
+            hblur->shaderState->set("gaussian", true);
+            hblur->frameBuffer = swapBuffer;
+            hblur->inputs.emplace_back(COLOR, ssao.get());
+
+            auto vblur = ssaoParent->addDrawCall("vblur", true);
+            vblur->shader = env->assets->get<Shader>("shaders/blur.glsl").get();
+            vblur->shaderState = Ref<ShaderState>::make();
+            vblur->shaderState->set("steps", noiseResolution);
+            vblur->shaderState->set("spread", glm::vec2(1, 0));
+            vblur->shaderState->set("gaussian", true);
+            vblur->textures.push_back(swapBuffer->getAttachment(COLOR).get());
+            vblur->frameBuffer = ssaoBuffer;
+
+            ssaoParent->addCommand("depth on", DEPTH_ON, true);
+        }
+
+        void setupDeferred() {
+            auto geometry = env->renderPipeline->getPass("geometry");
+            auto deferred = env->renderPipeline->getPass("deferred");
+            auto ssao = deferred->getPass("ssao", true);
+
             deferred->addCommand("depth off", DEPTH_OFF, true);
 
             auto lighting = deferred->addDrawCall("lighting", true);
@@ -142,6 +246,7 @@ namespace tri {
             lighting->inputs.emplace_back((TextureAttachment)(COLOR + 4), geometry.get());
             lighting->inputs.emplace_back((TextureAttachment)(COLOR + 5), geometry.get());
             lighting->inputs.emplace_back((TextureAttachment)(DEPTH), geometry.get());
+            lighting->inputs.emplace_back((TextureAttachment)(COLOR), ssao.get());
 
             auto swap = deferred->addDrawCall("swap", true);
             swap->shader = env->assets->get<Shader>("shaders/base.glsl").get();
@@ -156,10 +261,6 @@ namespace tri {
 
             auto bloom = pp->getPass("bloom", true);
             bloom->active = true;
-            bloom->addCommand("clear", CLEAR, true)->frameBuffer = bloomBuffer;
-            bloom->addCommand("resize", RESIZE, true)->frameBuffer = bloomBuffer;
-            bloom->addCommand("clear", CLEAR, true)->frameBuffer = bloomBuffer2;
-            bloom->addCommand("resize", RESIZE, true)->frameBuffer = bloomBuffer2;
             bloom->addCommand("blend on", BLEND_ON, true);
             bloom->addCommand("depth off", DEPTH_OFF, true);
 

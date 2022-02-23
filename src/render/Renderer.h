@@ -37,7 +37,7 @@ namespace tri {
         void shutdown() override;
 
 
-        void setCamera(glm::mat4& projection, glm::vec3 position, Ref<FrameBuffer> frameBuffer = nullptr);
+        void setCamera(const glm::mat4& projection, const glm::mat4& viewMatrix, glm::vec3 position, Ref<FrameBuffer> frameBuffer = nullptr);
         void setRenderPass(Ref<RenderPass> pass, Ref<RenderPass> transparencyPass = nullptr);
         void setEnvironMap(Ref<Texture> radianceMap, Ref<Texture> irradianceMap, float intensity);
         void submit(const glm::vec3& position, const glm::vec3 direction, Light& light);

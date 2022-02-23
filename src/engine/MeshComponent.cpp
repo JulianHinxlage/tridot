@@ -51,7 +51,7 @@ namespace tri {
                     env->renderer->submit(position, direction, light);
                 });
 
-                env->renderer->setCamera(camera.projection, cameraTransform.position, camera.output);
+                env->renderer->setCamera(camera.projection, camera.viewMatrix, cameraTransform.position, camera.output);
 
                 env->scene->view<Skybox>().each([](Skybox& skybox) {
                     if (skybox.useIBL && skybox.irradianceMap.get() != nullptr) {

@@ -12,6 +12,7 @@ layout (location=9) in vec4 iId;
 
 layout(std140) uniform uEnvironment {
     mat4 projection;
+    mat4 viewMatrix;
     vec3 cameraPosition;
     int align1;
     int lightCount;
@@ -109,6 +110,7 @@ layout(std140) uniform uMaterials {
 
 layout(std140) uniform uEnvironment {
     mat4 projection;
+    mat4 viewMatrix;
     vec3 cameraPosition;
     int align1;
     int lightCount;
@@ -148,9 +150,10 @@ void main(){
     vec3 normal = fNormal;
     if(material.normalMap != -1){
         vec3 n = sampleTexture(material.normalMap, material.mapping, material.normalMapScale, material.normalMapOffset).rgb;
-        n = normalize(normalize(n) * 2.0 - 1.0);
-        vec3 tangent = cross(normal, normalize(normal + vec3(0.2, 0.2, 0.2)));
-        mat3 tbn = mat3(tangent, cross(tangent, normal), normal);
+        n = normalize(n * 2.0 - 1.0);
+        vec3 tangent = normalize(n - normal * dot(n, normal));
+        vec3 bitangent = cross(normal, tangent);
+        mat3 tbn = mat3(tangent, bitangent, normal);
         normal = normalize(tbn * n) * material.normalMapFactor + normal * (1.0 - material.normalMapFactor);
     }
 

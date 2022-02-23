@@ -338,7 +338,14 @@ namespace tri {
         if (shaderStateInput) {
             auto state = getShaderState(shaderStateInput);
             if (state) {
-                shaderState = state;
+                if (!shaderState) {
+                    shaderState = state;
+                }
+                else {
+                    for (auto& value : state->getValues()) {
+                        value->apply(shaderState.get());
+                    }
+                }
             }
         }
 

@@ -17,6 +17,7 @@ namespace tri {
         glm::vec3 up;
         glm::vec3 right;
         glm::mat4 projection;
+        glm::mat4 viewMatrix;
         glm::mat4 transform;
 
         Ref<FrameBuffer> output;

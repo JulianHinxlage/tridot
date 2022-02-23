@@ -110,6 +110,7 @@ namespace tri {
     class EnvironmentData {
     public:
         glm::mat4 projection;
+        glm::mat4 viewMatrix;
         glm::vec3 cameraPosition;
         int align1;
         int lightCount;
@@ -595,8 +596,9 @@ namespace tri {
         setRenderPass(geometryPass, transparencyPass);
     }
 
-    void Renderer::setCamera(glm::mat4& projection, glm::vec3 position, Ref<FrameBuffer> frameBuffer) {
+    void Renderer::setCamera(const glm::mat4& projection, const glm::mat4& viewMatrix, glm::vec3 position, Ref<FrameBuffer> frameBuffer) {
         impl->current->environment.projection = projection;
+        impl->current->environment.viewMatrix = viewMatrix;
         impl->current->environment.cameraPosition = position;
         this->frameBuffer = frameBuffer;
         impl->current->frameBuffer = frameBuffer;
