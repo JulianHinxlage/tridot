@@ -40,6 +40,7 @@ layout(std140) uniform uLights {
 layout(std140) uniform uEnvironment {
     mat4 projection;
     mat4 viewMatrix;
+    mat4 projectionOnly;
     vec3 cameraPosition;
     int align1;
     int lightCount;
@@ -241,11 +242,11 @@ void main() {
     normal = normalize(normal * 2.0 - 1.0);
 
     vec3 position = texture(uTextures[2], fTexCoords).xyz;
-    vec4 RMAO = texture(uTextures[3], fTexCoords);
-    float emissive = texture(uTextures[4], fTexCoords).x;
-    float roughness = RMAO.x;
-    float metallic = RMAO.y;
-    float ao = texture(uTextures[6], fTexCoords).x;
+    vec4 RME = texture(uTextures[3], fTexCoords);
+    float roughness = RME.r;
+    float metallic = RME.g;
+    float emissive = RME.b;
+    float ao = texture(uTextures[4], fTexCoords).r;
 
     //lighting
     vec3 lightColor = lighing(albedo.rgb, normal, metallic, roughness, ao, position);

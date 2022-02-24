@@ -149,6 +149,11 @@ namespace tri {
 
         auto entry = attachments.find((uint32_t)spec.type);
         if(entry != attachments.end()){
+            texture->setMagMin(spec.magNearest, spec.minNearest);
+            texture->setWrap(spec.sRepeat, spec.tRepeat);
+            if (spec.useBorderColor) {
+                texture->setBorderColor(spec.borderColor);
+            }
             entry->second.spec = spec;
             entry->second.texture = texture;
             return entry->second.texture;

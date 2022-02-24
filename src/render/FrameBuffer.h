@@ -21,6 +21,12 @@ namespace tri {
         bool resize = true;
         bool mipMapping = true;
         TextureFormat textureFormat = TEXTURE_FORMAT_NONE;
+        bool magNearest = true;
+        bool minNearest = false;
+        bool sRepeat = true;
+        bool tRepeat = true;
+        bool useBorderColor = false;
+        Color borderColor = Color::white;
     };
 
     class FrameBuffer {

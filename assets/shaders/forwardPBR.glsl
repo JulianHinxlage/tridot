@@ -13,6 +13,7 @@ layout (location=9) in vec4 iId;
 layout(std140) uniform uEnvironment {
     mat4 projection;
     mat4 viewMatrix;
+    mat4 projectionOnly;
     vec3 cameraPosition;
     int align1;
     int lightCount;
@@ -44,8 +45,7 @@ void main(){
     fPosition = pos.xyz;
     gl_Position = projection * pos;
     fScale = vec3(length(iTransform[0].xyz), length(iTransform[1].xyz), length(iTransform[2].xyz));
-    fNormal = normalize(vec3(iTransform * vec4(vNormal, 0.0)));
-}
+    fNormal = normalize(vec3(transpose(inverse(iTransform)) * vec4(vNormal, 1.0)));}
 
 #type fragment
 #version 400 core
@@ -111,6 +111,7 @@ layout(std140) uniform uMaterials {
 layout(std140) uniform uEnvironment {
     mat4 projection;
     mat4 viewMatrix;
+    mat4 projectionOnly;
     vec3 cameraPosition;
     int align1;
     int lightCount;

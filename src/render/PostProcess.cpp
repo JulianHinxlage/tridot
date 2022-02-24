@@ -20,6 +20,7 @@ namespace tri {
         Ref<FrameBuffer> ssaoBuffer;
         Ref<FrameBuffer> bloomBuffer;
         Ref<FrameBuffer> bloomBuffer2;
+        Ref<FrameBuffer> bloomBuffer3;
         Ref<Texture> noise;
 
         void startup() {
@@ -77,18 +78,16 @@ namespace tri {
             position.clearColor = Color::black;
             position.name = "position";
             position.textureFormat = TextureFormat::RGB32F;
+            position.sRepeat = false;
+            position.tRepeat = false;
+            position.useBorderColor = true;
+            position.borderColor = Color::black;
 
-            FrameBufferAttachmentSpec RMAO;
-            RMAO.type = (TextureAttachment)(COLOR + 4);
-            RMAO.clearColor = Color::black;
-            RMAO.name = "RMAO";
-            RMAO.textureFormat = TextureFormat::RGBA8;
-
-            FrameBufferAttachmentSpec emissive;
-            emissive.type = (TextureAttachment)(COLOR + 5);
-            emissive.clearColor = Color::black;
-            emissive.name = "emissive";
-            emissive.textureFormat = TextureFormat::RGB8;
+            FrameBufferAttachmentSpec RME;
+            RME.type = (TextureAttachment)(COLOR + 4);
+            RME.clearColor = Color::black;
+            RME.name = "RME";
+            RME.textureFormat = TextureFormat::RGB8;
 
             FrameBufferAttachmentSpec depth;
             depth.type = (TextureAttachment)(DEPTH);
@@ -101,24 +100,47 @@ namespace tri {
                 ids,
                 normals,
                 position,
-                RMAO,
-                emissive,
+                RME,
                 depth,
             };
             env->renderPipeline->defaultFrameBufferSpecs = gBufferSpec;
 
+            FrameBufferAttachmentSpec emissive;
             emissive.type = (TextureAttachment)(COLOR + 1);
+            emissive.clearColor = Color::black;
+            emissive.name = "emissive";
+            emissive.textureFormat = TextureFormat::RGB8;
+
             swapBuffer = Ref<FrameBuffer>::make();
             swapBuffer->init(0, 0, { albedo, emissive });
 
+            FrameBufferAttachmentSpec bloomColor;
+            bloomColor.type = (TextureAttachment)(COLOR);
+            bloomColor.clearColor = Color::transparent;
+            bloomColor.name = "bloom";
+            bloomColor.textureFormat = TextureFormat::RGB8;
+
             bloomBuffer = Ref<FrameBuffer>::make();
-            bloomBuffer->init(0, 0, { { COLOR, Color::transparent } });
+            bloomBuffer->init(0, 0, { bloomColor });
 
             bloomBuffer2 = Ref<FrameBuffer>::make();
-            bloomBuffer2->init(0, 0, { { COLOR, Color::transparent } });
+            bloomBuffer2->init(0, 0, { bloomColor });
+
+            bloomBuffer3 = Ref<FrameBuffer>::make();
+            bloomBuffer3->init(0, 0, { albedo });
+
+            FrameBufferAttachmentSpec ao;
+            ao.type = (TextureAttachment)(COLOR);
+            ao.clearColor = Color::white;
+            ao.mipMapping = false;
+            ao.name = "ao";
+            ao.textureFormat = TextureFormat::RED8;
+            ao.resizeFactor = { 0.5, 0.5 };
+            ao.magNearest = true;
+            ao.minNearest = true;
 
             ssaoBuffer = Ref<FrameBuffer>::make();
-            ssaoBuffer->init(0, 0, { { COLOR, Color::white } });
+            ssaoBuffer->init(0, 0, { ao });
         }
 
         void setupDrawToScreen() {
@@ -147,6 +169,8 @@ namespace tri {
             clear->addCommand("resize", RESIZE, true)->frameBuffer = bloomBuffer;
             clear->addCommand("clear", CLEAR, true)->frameBuffer = bloomBuffer2;
             clear->addCommand("resize", RESIZE, true)->frameBuffer = bloomBuffer2;
+            clear->addCommand("clear", CLEAR, true)->frameBuffer = bloomBuffer3;
+            clear->addCommand("resize", RESIZE, true)->frameBuffer = bloomBuffer3;
         }
 
         void setupSSAO() {
@@ -194,7 +218,7 @@ namespace tri {
             ssao->shaderState->set("samples", samples.data(), samples.size());
             ssao->shaderState->set("kernalSize", kernalSize);
 
-            ssao->shaderState->set("sampleRadius", 1.0f);
+            ssao->shaderState->set("sampleRadius", 0.5f);
             ssao->shaderState->set("occlusionStrength", 1.0f);
             ssao->shaderState->set("bias", 0.025f);
 
@@ -244,9 +268,8 @@ namespace tri {
             lighting->inputs.emplace_back((TextureAttachment)(COLOR + 2), geometry.get());
             lighting->inputs.emplace_back((TextureAttachment)(COLOR + 3), geometry.get());
             lighting->inputs.emplace_back((TextureAttachment)(COLOR + 4), geometry.get());
-            lighting->inputs.emplace_back((TextureAttachment)(COLOR + 5), geometry.get());
-            lighting->inputs.emplace_back((TextureAttachment)(DEPTH), geometry.get());
             lighting->inputs.emplace_back((TextureAttachment)(COLOR), ssao.get());
+            lighting->inputs.emplace_back((TextureAttachment)(DEPTH), geometry.get());
 
             auto swap = deferred->addDrawCall("swap", true);
             swap->shader = env->assets->get<Shader>("shaders/base.glsl").get();
@@ -291,13 +314,13 @@ namespace tri {
             cbloom->inputs.emplace_back(COLOR, geometry.get());
             cbloom->shaderState = Ref<ShaderState>::make();
             cbloom->shaderState->set("bloomIntesity", 1.5f);
-            cbloom->frameBuffer = bloomBuffer;
+            cbloom->frameBuffer = bloomBuffer3;
 
 
             auto bloomSwap = bloom->addDrawCall("bloom swap", true);
             bloomSwap->shader = env->assets->get<Shader>("shaders/base.glsl").get();
             bloomSwap->output = geometry.get();
-            bloomSwap->textures.push_back(bloomBuffer->getAttachment(COLOR).get());
+            bloomSwap->textures.push_back(bloomBuffer3->getAttachment(COLOR).get());
 
             bloom->addCommand("depth on", DEPTH_ON, true);
 

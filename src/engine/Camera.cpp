@@ -80,7 +80,7 @@ namespace tri {
                     if (env->renderPipeline->defaultFrameBufferSpecs.size() > 0) {
                         camera.output = Ref<FrameBuffer>::make();
                         env->renderThread->addTask([output = camera.output]() {
-                            output->init(env->renderPipeline->getWidth(), env->renderPipeline->getHeight(), env->renderPipeline->defaultFrameBufferSpecs);
+                            output->init(0, 0, env->renderPipeline->defaultFrameBufferSpecs);
                         });
                     }
                 }

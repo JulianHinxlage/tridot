@@ -13,6 +13,7 @@ layout (location=9) in vec4 iId;
 layout(std140) uniform uEnvironment {
     mat4 projection;
     mat4 viewMatrix;
+    mat4 projectionOnly;
     vec3 cameraPosition;
     int align1;
     int lightCount;
@@ -44,7 +45,7 @@ void main(){
     fPosition = pos.xyz;
     gl_Position = projection * pos;
     fScale = vec3(length(iTransform[0].xyz), length(iTransform[1].xyz), length(iTransform[2].xyz));
-    fNormal = normalize(vec3(iTransform * vec4(vNormal, 0.0)));
+    fNormal = normalize(vec3(transpose(inverse(iTransform)) * vec4(vNormal, 1.0)));
 }
 
 #type fragment
@@ -94,6 +95,7 @@ layout(std140) uniform uMaterials {
 layout(std140) uniform uEnvironment {
     mat4 projection;
     mat4 viewMatrix;
+    mat4 projectionOnly;
     vec3 cameraPosition;
     int align1;
     int lightCount;
@@ -109,8 +111,7 @@ layout (location = 0) out vec4 oAlbedo;
 layout (location = 1) out vec4 oId;
 layout (location = 2) out vec4 oNormal;
 layout (location = 3) out vec4 oPosition;
-layout (location = 4) out vec4 oRoughnessMetallicAO;
-layout (location = 5) out vec4 oEmissive;
+layout (location = 4) out vec4 oRoughnessMetallicEmissive;
 
 vec4 sampleTexture(int textureIndex, int mapping, vec2 textureScale, vec2 textureOffset);
 vec4 sampleTextureIndexed(int textureIndex, vec2 textureCoords);
@@ -163,10 +164,12 @@ void main(){
     //outputs
     oAlbedo = albedo;
     oId = vec4(fId.xyz, 1.0);
+    
+    //world space
     oNormal = vec4(normal + 1.0 * 0.5, 1.0);
     oPosition = vec4(fPosition, 1.0);
-    oRoughnessMetallicAO = vec4(roughness, metallic, ao, 1.0);
-    oEmissive = vec4(material.emissive, 0.0, 0.0, 1.0);
+
+    oRoughnessMetallicEmissive = vec4(roughness, metallic, material.emissive, 1.0);
 }
 
 vec4 sampleTexture(int textureIndex, int mapping, vec2 textureScale, vec2 textureOffset){

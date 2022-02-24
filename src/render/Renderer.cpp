@@ -111,6 +111,7 @@ namespace tri {
     public:
         glm::mat4 projection;
         glm::mat4 viewMatrix;
+        glm::mat4 projectionOnly;
         glm::vec3 cameraPosition;
         int align1;
         int lightCount;
@@ -599,6 +600,7 @@ namespace tri {
     void Renderer::setCamera(const glm::mat4& projection, const glm::mat4& viewMatrix, glm::vec3 position, Ref<FrameBuffer> frameBuffer) {
         impl->current->environment.projection = projection;
         impl->current->environment.viewMatrix = viewMatrix;
+        impl->current->environment.projectionOnly = projection * glm::inverse(viewMatrix);
         impl->current->environment.cameraPosition = position;
         this->frameBuffer = frameBuffer;
         impl->current->frameBuffer = frameBuffer;

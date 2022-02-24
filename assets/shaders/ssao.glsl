@@ -30,6 +30,7 @@ uniform float occlusionStrength = 1.0;
 layout(std140) uniform uEnvironment {
     mat4 projection;
     mat4 viewMatrix;
+    mat4 projectionOnly;
     vec3 cameraPosition;
     int align1;
     int lightCount;
@@ -43,7 +44,16 @@ out vec4 oColor;
 void main(){
     vec3 position = texture(uTextures[0], fTexCoords).xyz;
     vec3 normal = texture(uTextures[1], fTexCoords).xyz;
+    if(normal == vec3(0, 0, 0)){
+        oColor.r = 1;
+        return;
+    }
     normal = normalize(normal * 2.0 - 1.0);
+
+    //view space
+    position = vec3(viewMatrix * vec4(position, 1.0));
+    normal = normalize(vec3(transpose(inverse(viewMatrix)) * vec4(normal, 1.0)));
+
 
     vec2 noiseScale = textureSize(uTextures[0], 0) / textureSize(uTextures[2], 0);
     vec3 noise = texture(uTextures[2], fTexCoords * noiseScale).xyz;
@@ -55,18 +65,16 @@ void main(){
     float occlusion = 0;
     for(int i = 0; i < kernalSize; i++){
         vec3 samplePos = position + (tbn * samples[i]) * sampleRadius;
-        vec4 pos = projection * vec4(samplePos, 1.0);
-        pos.xyz /= pos.w;
-        pos.xyz = pos.xyz * 0.5 + 0.5;
+        vec4 samplePosUV = projectionOnly * vec4(samplePos, 1.0);
+        samplePosUV.xyz /= samplePosUV.w;
+        samplePosUV.xyz = samplePosUV.xyz * 0.5 + 0.5;
 
-        float sampleDepth = texture(uTextures[0], pos.xy).z;
-        float rangeCheck = smoothstep(0.0, 1.0, sampleRadius / abs(position.z - sampleDepth));
-        if(samplePos.z < cameraPosition.z){
-            occlusion += (sampleDepth >= samplePos.z + bias ? 1.0 : 0.0) * rangeCheck;
-        }else{
-            occlusion += (sampleDepth >= samplePos.z - bias ? 0.0 : 1.0) * rangeCheck;
-        }
+        vec3 actualPos = texture(uTextures[0], samplePosUV.xy).xyz;
+        actualPos = vec3(viewMatrix * vec4(actualPos, 1.0));
+
+        float rangeCheck = smoothstep(0.0, 1.0, sampleRadius / abs(position.z - actualPos.z));
+        occlusion += (actualPos.z >= samplePos.z + bias ? 1.0 : 0.0) * rangeCheck;
     }
     occlusion = 1.0 - (occlusion / kernalSize);
-    oColor = vec4(vec3(pow(occlusion, occlusionStrength)), 1.0);
+    oColor.r = pow(occlusion, occlusionStrength);
 }

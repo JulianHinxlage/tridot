@@ -3,7 +3,7 @@ shadows 0
 fullscreen = 0
 draw_list_sorting 1
 deferred_shading 1
-use_render_thread 0
+use_render_thread 1
 use_job_threads 0
 asset_directory ../assets/
 asset_directory ../local/data/
