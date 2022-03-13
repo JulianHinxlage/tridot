@@ -104,7 +104,7 @@ namespace tri {
                                         transform.rotation = env->scene->getComponent<Transform>(id).rotation;
                                     }
                                     
-                                    step->shaderState->set("uProjection", camera.projection);
+                                    step->shaderState->set("uProjection", camera.viewProjection);
                                     step->shaderState->set("uTransform", transform.calculateLocalMatrix());
                                     step->shaderState->set("uColor", skybox.color.vec());
                                     step->frameBuffer = camera.output.get();

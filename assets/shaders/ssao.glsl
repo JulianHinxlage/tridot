@@ -29,9 +29,9 @@ uniform float occlusionStrength = 1.0;
 
 layout(std140) uniform uEnvironment {
     mat4 projection;
-    mat4 viewMatrix;
-    mat4 projectionOnly;
-    vec3 cameraPosition;
+    mat4 view;
+    mat4 viewProjection;
+    vec3 eyePosition;
     int align1;
     int lightCount;
     float environmentMapIntensity;
@@ -51,8 +51,8 @@ void main(){
     normal = normalize(normal * 2.0 - 1.0);
 
     //view space
-    position = vec3(viewMatrix * vec4(position, 1.0));
-    normal = normalize(vec3(transpose(inverse(viewMatrix)) * vec4(normal, 1.0)));
+    position = vec3(view * vec4(position, 1.0));
+    normal = normalize(vec3(transpose(inverse(view)) * vec4(normal, 1.0)));
 
 
     vec2 noiseScale = textureSize(uTextures[0], 0) / textureSize(uTextures[2], 0);
@@ -65,12 +65,12 @@ void main(){
     float occlusion = 0;
     for(int i = 0; i < kernalSize; i++){
         vec3 samplePos = position + (tbn * samples[i]) * sampleRadius;
-        vec4 samplePosUV = projectionOnly * vec4(samplePos, 1.0);
+        vec4 samplePosUV = projection * vec4(samplePos, 1.0);
         samplePosUV.xyz /= samplePosUV.w;
         samplePosUV.xyz = samplePosUV.xyz * 0.5 + 0.5;
 
         vec3 actualPos = texture(uTextures[0], samplePosUV.xy).xyz;
-        actualPos = vec3(viewMatrix * vec4(actualPos, 1.0));
+        actualPos = vec3(view * vec4(actualPos, 1.0));
 
         float rangeCheck = smoothstep(0.0, 1.0, sampleRadius / abs(position.z - actualPos.z));
         occlusion += (actualPos.z >= samplePos.z + bias ? 1.0 : 0.0) * rangeCheck;

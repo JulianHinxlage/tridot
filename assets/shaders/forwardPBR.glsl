@@ -12,9 +12,9 @@ layout (location=9) in vec4 iId;
 
 layout(std140) uniform uEnvironment {
     mat4 projection;
-    mat4 viewMatrix;
-    mat4 projectionOnly;
-    vec3 cameraPosition;
+    mat4 view;
+    mat4 viewProjection;
+    vec3 eyePosition;
     int align1;
     int lightCount;
     float environmentMapIntensity;
@@ -43,7 +43,7 @@ void main(){
 
     vec4 pos = iTransform * vec4(vPosition, 1.0);
     fPosition = pos.xyz;
-    gl_Position = projection * pos;
+    gl_Position = viewProjection * pos;
     fScale = vec3(length(iTransform[0].xyz), length(iTransform[1].xyz), length(iTransform[2].xyz));
     fNormal = normalize(vec3(transpose(inverse(iTransform)) * vec4(vNormal, 1.0)));}
 
@@ -69,8 +69,8 @@ struct Light{
     int align3;
     int type;
     float intensity;
+    float radius;
     int shadowMapIndex;
-    int align4;
     mat4 projection;
 };
 layout(std140) uniform uLights {
@@ -110,9 +110,9 @@ layout(std140) uniform uMaterials {
 
 layout(std140) uniform uEnvironment {
     mat4 projection;
-    mat4 viewMatrix;
-    mat4 projectionOnly;
-    vec3 cameraPosition;
+    mat4 view;
+    mat4 viewProjection;
+    vec3 eyePosition;
     int align1;
     int lightCount;
     float environmentMapIntensity;
@@ -226,7 +226,7 @@ float shadowMapping(int lightIndex, float ndotl){
 
 vec3 lighing(vec3 albedo, vec3 normal, float metallic, float roughness, float ao){
     vec3 lightOutput = vec3(0.0);
-    vec3 viewDirection = normalize(cameraPosition - fPosition);
+    vec3 viewDirection = normalize(eyePosition - fPosition);
 
     //lights
     for(int i = 0; i < lightCount; i++){

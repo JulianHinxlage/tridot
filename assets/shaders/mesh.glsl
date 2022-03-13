@@ -19,8 +19,9 @@ flat out float fTextureIndex;
 
 layout(std140) uniform uEnvironment {
     mat4 projection;
-    mat4 viewMatrix;
-    vec3 cameraPosition;
+    mat4 view;
+    mat4 viewProjection;
+    vec3 eyePosition;
     int align1;
     int lightCount;
     float environmentMapIntensity;
@@ -31,7 +32,7 @@ layout(std140) uniform uEnvironment {
 void main(){
     vec4 pos = iTransform * vec4(vPosition, 1.0);
     fPosition = vec3(pos);
-    gl_Position = projection * pos;
+    gl_Position = viewProjection * pos;
     fNormal = (iTransform * vec4(vNormal, 0.0)).xyz;
     fColor = iColor;
     fId = iId;

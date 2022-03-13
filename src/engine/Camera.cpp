@@ -61,13 +61,14 @@ namespace tri {
             camera.forward = t * glm::vec4(0, 0, -1, 0);
             camera.right = t * glm::vec4(1, 0, 0, 0);
             camera.up = t * glm::vec4(0, 1, 0, 0);
-            camera.viewMatrix = glm::inverse(t);
+            camera.view = glm::inverse(t);
             if (camera.type == Camera::PERSPECTIVE) {
-                camera.projection = glm::perspective(glm::radians(camera.fieldOfView), camera.aspectRatio, camera.near, camera.far) * camera.viewMatrix;
+                camera.projection = glm::perspective(glm::radians(camera.fieldOfView), camera.aspectRatio, camera.near, camera.far);
             }else if (camera.type == Camera::ORTHOGRAPHIC) {
-                camera.projection = glm::ortho(-transform.scale.x * camera.aspectRatio, transform.scale.x * camera.aspectRatio, -transform.scale.y, transform.scale.y, camera.near, camera.far) * camera.viewMatrix;
+                camera.projection = glm::ortho(-transform.scale.x * camera.aspectRatio, transform.scale.x * camera.aspectRatio, -transform.scale.y, transform.scale.y, camera.near, camera.far);
             }
             camera.transform = t;
+            camera.viewProjection = camera.projection * camera.view;
 
             //frame buffer
             if (camera.active) {

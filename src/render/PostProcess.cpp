@@ -29,7 +29,6 @@ namespace tri {
                 setupClearBuffers();
                 setupDrawToScreen();
                 setupSSAO();
-                setupDeferred();
                 setupBloom();
                 setupPostProcess();
                 deferredShadingLast = !env->renderSettings->deferredShadingEnabled;
@@ -119,6 +118,9 @@ namespace tri {
             bloomColor.clearColor = Color::transparent;
             bloomColor.name = "bloom";
             bloomColor.textureFormat = TextureFormat::RGB8;
+            //bloomColor.resizeFactor = { 0.5, 0.5 };
+            bloomColor.magNearest = true;
+            bloomColor.minNearest = true;
 
             bloomBuffer = Ref<FrameBuffer>::make();
             bloomBuffer->init(0, 0, { bloomColor });
@@ -135,7 +137,7 @@ namespace tri {
             ao.mipMapping = false;
             ao.name = "ao";
             ao.textureFormat = TextureFormat::RED8;
-            ao.resizeFactor = { 0.5, 0.5 };
+            //ao.resizeFactor = { 0.5, 0.5 };
             ao.magNearest = true;
             ao.minNearest = true;
 
@@ -150,10 +152,6 @@ namespace tri {
                 call->shader = env->assets->get<Shader>("shaders/base.glsl").get();
                 call->inputs.emplace_back(COLOR, env->renderPipeline->getPass("geometry").get());
             }
-        }
-
-        float lerp(float x, float y, float t) {
-            return x * (1.0f - t) + y * t;
         }
 
         void setupClearBuffers() {
@@ -171,6 +169,10 @@ namespace tri {
             clear->addCommand("resize", RESIZE, true)->frameBuffer = bloomBuffer2;
             clear->addCommand("clear", CLEAR, true)->frameBuffer = bloomBuffer3;
             clear->addCommand("resize", RESIZE, true)->frameBuffer = bloomBuffer3;
+        }
+        
+        float lerp(float x, float y, float t) {
+            return x * (1.0f - t) + y * t;
         }
 
         void setupSSAO() {
@@ -218,7 +220,7 @@ namespace tri {
             ssao->shaderState->set("samples", samples.data(), samples.size());
             ssao->shaderState->set("kernalSize", kernalSize);
 
-            ssao->shaderState->set("sampleRadius", 0.5f);
+            ssao->shaderState->set("sampleRadius", 1.0f);
             ssao->shaderState->set("occlusionStrength", 1.0f);
             ssao->shaderState->set("bias", 0.025f);
 
@@ -249,32 +251,6 @@ namespace tri {
             vblur->frameBuffer = ssaoBuffer;
 
             ssaoParent->addCommand("depth on", DEPTH_ON, true);
-        }
-
-        void setupDeferred() {
-            auto geometry = env->renderPipeline->getPass("geometry");
-            auto deferred = env->renderPipeline->getPass("deferred");
-            auto ssao = deferred->getPass("ssao", true);
-
-            deferred->addCommand("depth off", DEPTH_OFF, true);
-
-            auto lighting = deferred->addDrawCall("lighting", true);
-            lighting->shader = env->assets->get<Shader>("shaders/deferredPBR.glsl").get();
-            lighting->frameBuffer = swapBuffer;
-            lighting->textures.resize(5);
-            lighting->shaderStateInput = geometry.get();
-
-            lighting->inputs.emplace_back((TextureAttachment)(COLOR + 0), geometry.get());
-            lighting->inputs.emplace_back((TextureAttachment)(COLOR + 2), geometry.get());
-            lighting->inputs.emplace_back((TextureAttachment)(COLOR + 3), geometry.get());
-            lighting->inputs.emplace_back((TextureAttachment)(COLOR + 4), geometry.get());
-            lighting->inputs.emplace_back((TextureAttachment)(COLOR), ssao.get());
-            lighting->inputs.emplace_back((TextureAttachment)(DEPTH), geometry.get());
-
-            auto swap = deferred->addDrawCall("swap", true);
-            swap->shader = env->assets->get<Shader>("shaders/base.glsl").get();
-            swap->textures.push_back(swapBuffer->getAttachment(COLOR).get());
-            swap->output = geometry.get();
         }
 
         void setupBloom() {

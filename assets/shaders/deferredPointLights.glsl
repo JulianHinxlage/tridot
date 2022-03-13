@@ -39,9 +39,9 @@ layout(std140) uniform uLights {
 
 layout(std140) uniform uEnvironment {
     mat4 projection;
-    mat4 view;
-    mat4 viewProjection;
-    vec3 eyePosition;
+    mat4 viewMatrix;
+    mat4 projectionOnly;
+    vec3 cameraPosition;
     int align1;
     int lightCount;
     float environmentMapIntensity;
@@ -175,7 +175,7 @@ float shadowMapping(int lightIndex, float ndotl, vec3 fPosition){
 
 vec3 lighing(vec3 albedo, vec3 normal, float metallic, float roughness, float ao, vec3 fPosition){
     vec3 lightOutput = vec3(0.0);
-    vec3 viewDirection = normalize(eyePosition - fPosition);
+    vec3 viewDirection = normalize(cameraPosition - fPosition);
 
     //lights
     for(int i = 0; i < lightCount; i++){

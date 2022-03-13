@@ -16,6 +16,7 @@ namespace tri {
         AMBIENT_LIGHT = 0,
         DIRECTIONAL_LIGHT = 1,
         POINT_LIGHT = 2,
+        SPOT_LIGHT = 3,
     };
 
     class Light {
@@ -23,9 +24,10 @@ namespace tri {
         Color color;
         float intensity;
         LightType type;
+        float radius;
         Ref<FrameBuffer> shadowMap;
 
-        Light(LightType type = DIRECTIONAL_LIGHT, Color color = Color::white, float intensity = 1);
+        Light(LightType type = DIRECTIONAL_LIGHT, Color color = Color::white, float intensity = 1, float radius = 10);
     };
 
 }

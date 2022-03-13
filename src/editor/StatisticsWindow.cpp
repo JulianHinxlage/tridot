@@ -4,6 +4,7 @@
 
 #include "Editor.h"
 #include "render/Renderer.h"
+#include "render/RenderSettings.h"
 #include "engine/Time.h"
 #include <imgui.h>
 
@@ -35,21 +36,21 @@ namespace tri{
 
             ImGui::Separator();
             ImGui::Text("rendering:");
-            ImGui::Text("%i instances", env->renderer->stats.instanceCount);
-            ImGui::Text("%i draw calls", env->renderer->stats.drawCallCount);
-            ImGui::Text("%i shaders", env->renderer->stats.shaderCount);
-            ImGui::Text("%i materials", env->renderer->stats.materialCount);
-            ImGui::Text("%i meshes", env->renderer->stats.meshCount);
-            ImGui::Text("%i lights", env->renderer->stats.lightCount);
-            ImGui::Text("%i cameras", env->renderer->stats.cameraCount);
+            ImGui::Text("%i instances", env->renderSettings->stats.instanceCount);
+            ImGui::Text("%i draw calls", env->renderSettings->stats.drawCallCount);
+            ImGui::Text("%i shaders", env->renderSettings->stats.shaderCount);
+            ImGui::Text("%i materials", env->renderSettings->stats.materialCount);
+            ImGui::Text("%i meshes", env->renderSettings->stats.meshCount);
+            ImGui::Text("%i lights", env->renderSettings->stats.lightCount);
+            ImGui::Text("%i cameras", env->renderSettings->stats.cameraCount);
 
-            env->renderer->stats.drawCallCount = 0;
-            env->renderer->stats.instanceCount = 0;
-            env->renderer->stats.meshCount = 0;
-            env->renderer->stats.materialCount = 0;
-            env->renderer->stats.shaderCount = 0;
-            env->renderer->stats.lightCount = 0;
-            env->renderer->stats.cameraCount = 0;
+            env->renderSettings->stats.drawCallCount = 0;
+            env->renderSettings->stats.instanceCount = 0;
+            env->renderSettings->stats.meshCount = 0;
+            env->renderSettings->stats.materialCount = 0;
+            env->renderSettings->stats.shaderCount = 0;
+            env->renderSettings->stats.lightCount = 0;
+            env->renderSettings->stats.cameraCount = 0;
         }
     };
 

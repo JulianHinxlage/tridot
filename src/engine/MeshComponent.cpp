@@ -5,6 +5,7 @@
 #include "MeshComponent.h"
 #include "entity/Scene.h"
 #include "render/Renderer.h"
+#include "render/RenderSettings.h"
 #include "render/Window.h"
 #include "Transform.h"
 #include "Camera.h"
@@ -33,12 +34,14 @@ namespace tri {
         int cameraIndex = 0;
         env->scene->view<Camera, Transform>().each([&](Camera& camera, Transform &cameraTransform) {
             if (camera.active) {
-                env->renderer->stats.cameraCount++;
+                env->renderSettings->stats.cameraCount++;
 
                 if (cameraCount > 1) {
                     std::string passName = "Camera " + std::to_string(cameraIndex++);
                     env->renderer->setRenderPass(env->renderPipeline->getPass("geometry")->getPass(passName));
                 }
+
+                env->renderer->setCamera(camera.projection, camera.view, cameraTransform.position, camera.output);
 
                 //lights
                 env->scene->view<Light, Transform>().each([](Light &light, Transform &transform){
@@ -50,8 +53,6 @@ namespace tri {
                     glm::vec3 direction = t.calculateLocalMatrix() * glm::vec4(0, 0, -1, 0);
                     env->renderer->submit(position, direction, light);
                 });
-
-                env->renderer->setCamera(camera.projection, camera.viewMatrix, cameraTransform.position, camera.output);
 
                 env->scene->view<Skybox>().each([](Skybox& skybox) {
                     if (skybox.useIBL && skybox.irradianceMap.get() != nullptr) {

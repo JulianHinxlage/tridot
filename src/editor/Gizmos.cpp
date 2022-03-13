@@ -109,8 +109,8 @@ namespace tri {
             }
 
             //matrices
-            glm::mat4 view = glm::inverse(cameraTransform.getMatrix());
-            glm::mat4 projection = camera.projection * cameraTransform.getMatrix();
+            glm::mat4 view = camera.view;
+            glm::mat4 projection = camera.projection;
             glm::mat4 transform = avg.calculateLocalMatrix();
             glm::mat4 inverseTransform = glm::inverse(transform);
 

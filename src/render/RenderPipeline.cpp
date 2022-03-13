@@ -7,7 +7,7 @@
 #include "RenderContext.h"
 #include "ShaderState.h"
 #include "RenderThread.h"
-#include "Renderer.h"
+#include "RenderSettings.h"
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include "tracy/TracyOpenGL.hpp"
@@ -55,8 +55,8 @@ namespace tri {
 
         getPass("clear");
         getPass("skybox");
-        getPass("shadow");
         getPass("geometry");
+        getPass("shadow");
         getPass("deferred");
         getPass("transparency");
         getPass("viewport");
@@ -119,8 +119,8 @@ namespace tri {
         };
         clear(rootPass, true);
 
-        env->renderer->stats.drawCallCount = drawCallCount;
-        env->renderer->stats.instanceCount = instanceCount;
+        env->renderSettings->stats.drawCallCount = drawCallCount;
+        env->renderSettings->stats.instanceCount = instanceCount;
         env->renderThread->unlock();
     }
 

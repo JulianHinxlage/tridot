@@ -1,0 +1,27 @@
+color: [255, 255, 255, 255]
+mapping: SCALE_TRI_PLANAR
+roughness: 1
+metallic: 1
+normalMapFactor: 1
+emissive: 0
+texture: textures/Metal038_1K_Color.jpg
+normalMap: textures/Metal038_1K_Normal.jpg
+roughnessMap: textures/Metal038_1K_Roughness.jpg
+metallicMap: textures/Metal038_1K_Metalness.jpg
+ambientOcclusionMap: ~
+displacementMap: ~
+shader: ~
+offset: [0, 0]
+scale: [1, 1]
+textureOffset: [0, 0]
+textureScale: [1, 1]
+normalMapOffset: [0, 0]
+normalMapScale: [1, 1]
+roughnessMapOffset: [0, 0]
+roughnessMapScale: [1, 1]
+metallicMapOffset: [0, 0]
+metallicMapScale: [1, 1]
+ambientOcclusionMapOffset: [0, 0]
+ambientOcclusionMapScale: [1, 1]
+displacementMapOffset: [0, 0]
+displacementMapScale: [1, 1]
