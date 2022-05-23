@@ -1,13 +1,11 @@
-vsync 1
-shadows 0
-fullscreen = 0
-draw_list_sorting 1
-deferred_shading 1
-use_render_thread 1
-use_job_threads 0
-asset_directory ../assets/
-asset_directory ../local/data/
-asset_directory ./
-resolution_x 1920
-resolution_y 1080
-scene_load autosave.scene
+windowWidth = 800
+windowHeight = 600
+windowTitle = "Tridot Launcher"
+
+enableJobMultithreading = true
+enableModuleHotReloading = true
+unloadModuleOnCrash = true
+enableCrashRecovery = true
+workerThreadCount = 8
+
+loadModule TridotRender

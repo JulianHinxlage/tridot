@@ -1,40 +1,41 @@
 //
-// Copyright (c) 2021 Julian Hinxlage. All rights reserved.
+// Copyright (c) 2022 Julian Hinxlage. All rights reserved.
 //
 
 #pragma once
-#include "pch.h"
+
 #include "System.h"
-#include "Module.h"
+#include "Reflection.h"
 
 namespace tri {
 
-    class ModuleManager : public System {
-    public:
-        ModuleManager();
+	class Module {
+	public:
+		void* handle;
+		std::string name;
+		std::string file;
+		std::string path;
+		std::string runtimeName;
+		std::string runtimeFile;
+		std::string runtimePath;
+	};
 
-        virtual void startup() override;
-        virtual void update() override;
-        virtual void shutdown() override;
+	class ModuleManager : public System {
+	public:
+		bool enableModuleHotReloading = false;
 
-        Module* loadModule(const std::string& name);
-        Module* getModule(const std::string& name);
-        void unloadModule(Module* module);
+		Module* loadModule(const std::string& name, bool pending = true);
+		Module* getModule(const std::string& name);
+		void unloadModule(const std::string& name, bool pending = true);
+		void unloadModule(Module *module, bool pending = true);
+		void performePending();
 
-    private:
-        class ModuleRecord {
-        public:
-            std::string name;
-            std::string file;
-            Module* module;
-            void* handle;
-            bool startupFlag;
-            int updateCallbackId;
-            uint64_t timeStamp;
-        };
-        std::unordered_map<std::string, ModuleRecord> modules;
-        bool startupFlag;
-
-    };
+		const std::vector<std::shared_ptr<Module>> &getModules();
+		static std::string getModuleNameByAddress(void* address);
+	private:
+		std::vector<std::shared_ptr<Module>> modules;
+		std::vector<std::string> pendingLoads;
+		std::vector<std::string> pendingUnloads;
+	};
 
 }

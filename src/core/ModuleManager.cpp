@@ -1,14 +1,14 @@
 //
-// Copyright (c) 2021 Julian Hinxlage. All rights reserved.
+// Copyright (c) 2022 Julian Hinxlage. All rights reserved.
 //
 
-#include "config.h"
 #include "ModuleManager.h"
+#include "config.h"
 #include "Environment.h"
 #include "Console.h"
-#include "SignalManager.h"
-#include "engine/AssetManager.h"
-#include "engine/Time.h"
+#include "EventManager.h"
+#include "Profiler.h"
+#include "FileWatcher.h"
 
 #if !TRI_WINDOWS
 #include <dlfcn.h>
@@ -18,174 +18,222 @@
 
 namespace tri {
 
-    uint64_t getTimeStamp(const std::string& file);
+	TRI_SYSTEM_INSTANCE(ModuleManager, env->moduleManager);
 
-    ModuleManager::ModuleManager(){
-        startupFlag = false;
-    }
+	bool checkName(Module* module, const std::string& file) {
+		if (module->name == file) {
+			return true;
+		}
+		if (module->file == file) {
+			return true;
+		}
+		if (module->path == file) {
+			return true;
+		}
+		if (module->runtimeName == file) {
+			return true;
+		}
+		if (module->runtimePath == file) {
+			return true;
+		}
+		return false;
+	}
 
-    void ModuleManager::startup(){
-        startupFlag = true;
-        for (auto& record : modules) {
-            if (record.second.module) {
-                if (record.second.startupFlag == false) {
-                    record.second.startupFlag = true;
-                    record.second.module->startup();
-                }
-            }
-        }
-    }
-
-    void ModuleManager::update(){
-        if (env->assets->hotReloadEnabled) {
-            if (env->time->frameTicks(1.0)) {
-                for (auto& record : modules) {
-                    uint64_t currentTimeStamp = getTimeStamp(record.second.file);
-                    if (currentTimeStamp != record.second.timeStamp ||
-                        (currentTimeStamp != 0 && record.second.handle == nullptr)) {
-                        std::string file = record.second.file;
-                        std::string name = record.second.name;
-                        unloadModule(record.second.module);
-                        if (loadModule(name) == nullptr) {
-                            modules[file] = { name, file, nullptr, nullptr, true, -1,  currentTimeStamp };
-                        }
-                        break;
-                    }
-                }
-            }
-        }
-    }
-
-    void ModuleManager::shutdown(){
-        while (!modules.empty()) {
-            for (auto &record : modules) {
-                if (record.second.module) {
-                    unloadModule(record.second.module);
-                }
-                else {
-                    modules.erase(record.first);
-                }
-                break;
-            }
-        }
-    }
-
-    Module* ModuleManager::loadModule(const std::string& name){
-        std::string file = name;
-
-        file = env->assets->searchFile(file);
-        if (file == "") {
+	Module* ModuleManager::loadModule(const std::string& name, bool pending) {
+		if (pending) {
+			pendingLoads.push_back(name);
+			return nullptr;
+		}
+		
+		std::string filePath = name;
+		if (std::filesystem::path(name).extension() == "") {
 #if TRI_WINDOWS
-            file = name + ".dll";
+			filePath = name + ".dll";
 #else
-            file = std::string("lib") + name + ".so";
+			filePath = name + ".so";
 #endif
-            file = env->assets->searchFile(file);
-        }
+		}
 
-        if (!std::filesystem::exists(file)) {
-            env->console->warning("module ", name, " not found");
-            return nullptr;
-        }
+		TRI_PROFILE_FUNC();
+		TRI_PROFILE_INFO(filePath.c_str(), filePath.size());
+		if (!std::filesystem::exists(filePath)) {
+			env->console->warning("module \"%s\" not found", name.c_str());
+			return nullptr;
+		}
 
-        if (modules.find(file) != modules.end() && modules.find(file)->second.module != nullptr) {
-            env->console->warning("module ", file, " already loaded");
-            return modules[file].module;
-        }
+		if (auto *module = getModule(name)) {
+			env->console->info("module \"%s\" already loaded", name.c_str());
+			return module;
+		}
 
-        TRI_PROFILE("loadModule");
-        TRI_PROFILE_INFO(file.c_str(), file.size());
+		std::string runtimePath = filePath;
+		if (enableModuleHotReloading) {
+			std::filesystem::path path(filePath);
+			runtimePath = (path.parent_path() / "runtime_dlls" / path.filename()).string();
+			if (!std::filesystem::exists(std::filesystem::path(runtimePath).parent_path())) {
+				std::filesystem::create_directories(std::filesystem::path(runtimePath).parent_path());
+			}
+			int postfix = 0;
+			for (int postfix = 0; postfix < 10; postfix++) {
+				try {
+					std::filesystem::copy(filePath, runtimePath, std::filesystem::copy_options::overwrite_existing);
+					break;
+				}
+				catch (...) {}
+				runtimePath = (path.parent_path() / "runtime_dlls" / (path.filename().stem().string() + "_" + std::to_string(postfix + 1) + path.filename().extension().string())).string();
+			}
+		}
 
+		if (!std::filesystem::exists(runtimePath)) {
+			runtimePath = filePath;
+			env->console->info("can't create runtime file for module \"%s\"", name.c_str());
+		}
+
+		void* handle = nullptr;
+		{
 #if TRI_WINDOWS
-        void* handle = (void*)LoadLibrary(file.c_str());
+		TRI_PROFILE("loadDLL");
+		handle = (void*)LoadLibrary(runtimePath.c_str());
+		if (!handle) {
+			env->console->info("faild to load module \"%s\" (code %i)", name.c_str(), GetLastError());
+		}
 #else
-        void* handle = dlopen(file.c_str(), RTLD_NOW | RTLD_LOCAL);
+		TRI_PROFILE("loadSharedLibrary");
+		handle = dlopen(runtimePath.c_str(), RTLD_NOW | RTLD_LOCAL);
 #endif
-        if (handle) {
-            env->console->debug("loaded module ", file);
-            typedef Module* (*Function)();
+		}
 
-#if TRI_WINDOWS
-            Function create = (Function)GetProcAddress((HINSTANCE)handle, "triCreateModuleInstance");
-#else
-            Function create = (Function)dlsym(handle, "triCreateModuleInstance");
-#endif
-            Module* module = nullptr;
-            if (create) {
-                module = create();
-            }
-            else {
-#if TRI_WINDOWS
-                env->console->warning("no module class defined in module ", file, " (code ", GetLastError(), ")");
-#else
-                env->console->warning("no module class defined in module ", file, " (", dlerror(), ")");
-#endif
-            }
 
-            std::string name = std::filesystem::path(file).filename().replace_extension().string();
-            int callbackId = -1;
-            if (module) {
-                callbackId = env->signals->update.addCallback(name, [module]() { module->update(); });
-                env->signals->moduleLoad.invoke(module);
-            }
-            if (module && startupFlag == true) {
-                module->startup();
-                modules[file] = { name, file, module, handle, true };
-            }
-            else {
-                modules[file] = { name, file, module, handle, false };
-            }
-            modules[file].updateCallbackId = callbackId;
-            modules[file].timeStamp = getTimeStamp(file);
-            return module;
-        }
-        else {
+		auto module = std::make_shared<Module>();
+		module->path = filePath;
+		module->file = std::filesystem::path(filePath).filename().string();
+		module->name = std::filesystem::path(filePath).filename().stem().string();
+		module->runtimePath = runtimePath;
+		module->runtimeFile = std::filesystem::path(runtimePath).filename().string();
+		module->runtimeName = std::filesystem::path(runtimePath).filename().stem().string();
+		module->handle = handle;
+		modules.push_back(module);
 
-            modules[file] = { "", file, nullptr, handle, true };
-            modules[file].timeStamp = getTimeStamp(file);
+		SystemManager::addNewSystems();
 
-#if TRI_WINDOWS
-            env->console->warning("failed to load module ", file, " (code ", GetLastError(), ")");
-#else
-            env->console->warning("failed to load module ", file, " (", dlerror(), ")");
-#endif
-            return nullptr;
-        }
-    }
+		env->console->info("module \"%s\" loaded", module->name.c_str());
+		env->eventManager->onModuleLoad.invoke(module->name);
 
-    Module* ModuleManager::getModule(const std::string& file){
-        if (modules.find(file) != modules.end()) {
-            return modules[file].module;
-        }
-        else {
-            return nullptr;
-        }
-    }
+		if (enableModuleHotReloading) {
+			env->fileWatcher->addFile(module->path, [](const std::string& path) {
+				env->console->info("reloading module \"%s\"", std::filesystem::path(path).filename().stem().string().c_str());
+				env->moduleManager->unloadModule(path, true);
+				env->moduleManager->loadModule(path, true);
+			});
+		}
 
-    void ModuleManager::unloadModule(Module* module){
-        if (module) {
-            for (auto it = modules.begin(); it != modules.end();) {
-                if (it->second.module == module) {
-                    TRI_PROFILE("unloadModule");
-                    TRI_PROFILE_INFO(it->second.file.c_str(), it->second.file.size());
+		return module.get();
+	}
 
-                    it->second.module->shutdown();
-                    env->signals->update.removeCallback(it->second.updateCallbackId);
-                    env->signals->moduleUnload.invoke(it->second.module);
-                    delete it->second.module;
+	Module* ModuleManager::getModule(const std::string& name) {
+		for (auto& module : modules) {
+			if (module && checkName(module.get(), name)) {
+				return module.get();
+			}
+		}
+		return nullptr;
+	}
+
+	const std::vector<std::shared_ptr<Module>>& ModuleManager::getModules() {
+		return modules;
+	}
+
+	void ModuleManager::unloadModule(const std::string& name, bool pending) {
+		unloadModule(getModule(name), pending);
+	}
+
+	void ModuleManager::unloadModule(Module* module, bool pending) {
+		for (int i = 0; i < modules.size(); i++) {
+			auto* m = modules[i].get();
+			if (m && m == module) {
+				if (pending) {
+					pendingUnloads.push_back(m->file);
+
+					//mark systems for shutdown
+					for (auto* desc : Reflection::getDescriptors()) {
+						if (desc && (desc->flags & ClassDescriptor::SYSTEM)) {
+							std::string file = getModuleNameByAddress(desc->registrationSourceAddress);
+							if (checkName(m, file)) {
+								env->systemManager->getSystemHandle(desc->classId)->pendingShutdown = true;
+							}
+						}
+					}
+					return;
+				}
+
+				TRI_PROFILE_FUNC();
+				TRI_PROFILE_INFO(m->file.c_str(), m->file.size());
+
+				env->eventManager->onModuleUnload.invoke(module->name);
+
+				//remove systems and unregister types assosiated with the unloaded module
+				for (auto* desc : Reflection::getDescriptors()) {
+					if (desc) {
+						std::string file = getModuleNameByAddress(desc->registrationSourceAddress);
+						if (checkName(m, file)) {
+							if (desc->flags & ClassDescriptor::SYSTEM) {
+								env->systemManager->removeSystem(desc->classId, true);
+							}
+							Reflection::unregisterClass(desc->classId);
+						}
+					}
+				}
+
+				{
 #ifdef TRI_WINDOWS
-                    FreeLibrary((HINSTANCE)it->second.handle);
+					TRI_PROFILE("unloadDLL");
+					FreeLibrary((HINSTANCE)m->handle);
 #else      
-                    dlclose(it->second.handle);
+					TRI_PROFILE("unloadSharedLibrary");
+					dlclose(m->handle);
 #endif
-                    env->console->debug("unloaded module ", it->first);
-                    modules.erase(it++);
-                }
-                else {
-                    ++it;
-                }
-            }
-        }
-    }
+				}
+
+				env->console->info("module \"%s\" unloaded", module->name.c_str());
+
+				modules.erase(modules.begin() + i);
+				break;
+			}
+		}
+	}
+
+	void ModuleManager::performePending() {
+		for (auto& file : pendingUnloads) {
+			unloadModule(file, false);
+		}
+		pendingUnloads.clear();
+
+		for (auto& file : pendingLoads) {
+			loadModule(file, false);
+		}
+		pendingLoads.clear();
+	}
+
+	std::string ModuleManager::getModuleNameByAddress(void* address) {
+#if TRI_WINDOWS
+		char path[256];
+		HMODULE hm = NULL;
+
+		if (GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
+			GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+			(LPCSTR)address, &hm) == 0) {
+			return "";
+		}
+		if (GetModuleFileName(hm, path, sizeof(path)) == 0) {
+			return "";
+		}
+
+		return std::filesystem::path(path).filename().string();
+#else
+		return "";
+#endif
+	}
+
+
 
 }

@@ -1,49 +1,30 @@
 //
-// Copyright (c) 2021 Julian Hinxlage. All rights reserved.
+// Copyright (c) 2022 Julian Hinxlage. All rights reserved.
 //
 
 #pragma once
 
 #include "pch.h"
-#include "Color.h"
-#include "core/core.h"
-#include "glm/glm.hpp"
+#include "core/System.h"
 
 namespace tri {
 
-    class Window : public System {
-    public:
-        Window();
-        Window(int width, int height, const std::string &title);
-        ~Window();
-        void init(int width, int height, const std::string &title, bool fullscreen = false);
-        void update() override;
-        bool isOpen();
-        void close();
-        void bind();
-        void unbind();
+	class Window : public System {
+	public:
+		void init() override;
+		void startup() override;
+		void updateBegin();
+		void updateEnd();
+		void shutdown() override;
+		void tick() override;
 
-        const glm::vec2 &getSize() const;
-        const glm::vec2 &getPosition() const;
-        const Color &getBackgroundColor() const;
-        bool getVSync() const;
-        float getAspectRatio() const;
-        void *getContext() const;
-        void setSize(const glm::vec2 &size);
-        void setPosition(const glm::vec2 &position);
-        void setBackgroundColor(const Color &color);
-        void setTitle(const std::string &title);
-        void setVSync(int value);
-    private:
-        int vsync;
-        int lastVsync = -1;
-        Color backgroundColor;
-        glm::vec2 size;
-        glm::vec2 position;
-        void *context;
-
-        void clear();
-    };
+		void close();
+		bool isOpen();
+		bool inFrame();
+	private:
+		void *window;
+		bool inFrameFlag = false;
+	};
 
 }
 

@@ -1,112 +1,97 @@
 //
-// Copyright (c) 2021 Julian Hinxlage. All rights reserved.
+// Copyright (c) 2022 Julian Hinxlage. All rights reserved.
 //
 
 #include "Profiler.h"
-#include "util/StrUtil.h"
+#include "Reflection.h"
 #include "Environment.h"
+#include "EventManager.h"
 
 namespace tri {
 
-    thread_local std::shared_ptr<Profiler::Node> Profiler::currentNode;
-    thread_local std::vector<std::shared_ptr<Profiler::Node>> Profiler::phaseNodeStack;
+	TRI_SYSTEM_INSTANCE(Profiler, env->profiler);
 
-    Profiler::Profiler() {
-        currentFrame = 0;
-        currentNode = nullptr;
-    }
+	thread_local Profiler::Node* Profiler::currentNode = nullptr;
 
-    void Profiler::begin(const std::string &name) {
-        if(currentNode){
-            for(auto &node : currentNode->children){
-                if(node && node->name == name){
-                    node->clock.reset();
-                    currentNode = node;
-                    return;
-                }
-            }
-            mutex.lock();
-            std::shared_ptr<Node> node = std::make_shared<Node>();
-            node->name = name;
-            node->parent = currentNode;
-            node->clock.reset();
-            currentNode->children.push_back(node);
-            currentNode = node;
-            mutex.unlock();
-        }
-    }
+#if TRI_PROFILE_ENABLED
 
-    void Profiler::end() {
-        if(currentNode){
-            double elapsed = currentNode->clock.elapsed();
-            currentNode->frames[currentFrame].push_back(elapsed);
-            currentNode = currentNode->parent;
-        }
-    }
+	static uint64_t nowNano() {
+		return std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
+	}
 
-    void Profiler::beginPhase(const std::string &name) {
-        if(currentNode != nullptr){
-            phaseNodeStack.push_back(currentNode);
-        }
-        for(auto &node : phases){
-            if(node && node->name == name){
-                node->clock.reset();
-                currentNode = node;
-                return;
-            }
-        }
-        mutex.lock();
-        std::shared_ptr<Node> node = std::make_shared<Node>();
-        node->name = name;
-        node->parent = nullptr;
-        node->clock.reset();
-        phases.push_back(node);
-        currentNode = node;
-        mutex.unlock();
-    }
+	static void check(Profiler::Node* node, const char* name) {
+		node->nodes.erase(name);
+		for (auto& n : node->nodes) {
+			check(n.second.get(), name);
+		}
+	}
 
-    void Profiler::endPhase() {
-        if(currentNode){
-            double elapsed = currentNode->clock.elapsed();
-            currentNode->frames[currentFrame].push_back(elapsed);
-        }
-        if(!phaseNodeStack.empty()){
-            currentNode = phaseNodeStack.back();
-            phaseNodeStack.pop_back();
-        }else{
-            currentNode = nullptr;
-        }
-    }
+	void Profiler::init() {
+		env->eventManager->onClassUnregister.addListener([this](int classId) {
+			check(&root, Reflection::getDescriptor(classId)->name.c_str());
+			currentNode = &root;
+		});
+		currentNode = &root;
+		root.name = "frame";
+	}
+	
+	void Profiler::shutdown() {
+		root.nodes.clear();
+		root.times.clear();
+	}
+	
+	void Profiler::nextFrame() {
+		end();
+	}
 
-    void Profiler::nextFrame() {
-        currentFrame++;
-    }
+	void Profiler::begin(const char* name) {
+		if (!currentNode) {
+			currentNode = &root;
+		}
+		auto& node = currentNode->nodes[name];
+		if (!node) {
+			node = std::make_shared<Node>();
+			node->parent = currentNode;
+			node->name = name;
+		}
+		node->beginTimeNano = nowNano();
+		currentNode = node.get();
+	}
 
-    int Profiler::getCurrentFrame() {
-        return currentFrame;
-    }
+	void Profiler::end() {
+		uint64_t timeNano = nowNano();
+		
+		if (currentNode->beginTimeNano != 0) {
+			double time = (double)(timeNano - currentNode->beginTimeNano) / 1000.0 / 1000.0 / 1000.0;
+			double total = currentNode->time * currentNode->times.size();
 
-    impl::ProfileScope::ProfileScope(const std::string &name) {
-        if(env->profiler){
-            env->profiler->begin(name);
-        }
-    }
+			while (total > keepTimeSeconds) {
+				total -= currentNode->times.front();
+				currentNode->times.erase(currentNode->times.begin());
+			}
 
-    impl::ProfileScope::~ProfileScope() {
-        if(env->profiler) {
-            env->profiler->end();
-        }
-    }
+			currentNode->times.push_back(time);
+			currentNode->time = (total + time) / (currentNode->times.size());
+			currentNode->beginTimeNano = 0;
+		}
+		if (currentNode->parent) {
+			currentNode = currentNode->parent;
+		}
+		else {
+			currentNode->beginTimeNano = timeNano;
+		}
+	}
 
-    impl::ProfilePhase::ProfilePhase(const std::string &name) {
-        if(env->profiler){
-            env->profiler->beginPhase(name);
-        }
-    }
-
-    impl::ProfilePhase::~ProfilePhase() {
-        if(env->profiler) {
-            env->profiler->endPhase();
-        }
-    }
+#else
+	void Profiler::init() {
+		currentNode = &root;
+		root.name = "frame";
+	}
+	void Profiler::nextFrame() {}
+	void Profiler::begin(const char* name) {}
+	void Profiler::end() {}
+#endif
 }
+
+
+

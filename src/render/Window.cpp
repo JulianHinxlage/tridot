@@ -1,239 +1,169 @@
 //
-// Copyright (c) 2021 Julian Hinxlage. All rights reserved.
+// Copyright (c) 2022 Julian Hinxlage. All rights reserved.
 //
 
 #include "Window.h"
-#include "FrameBuffer.h"
-#include "core/Profiler.h"
 #include "core/core.h"
-#include "RenderContext.h"
-#include "RenderPipeline.h"
-#include "RenderThread.h"
-#include "GL/glew.h"
-#include "GLFW/glfw3.h"
-#include "tracy/TracyOpenGL.hpp"
+#include <GL/glew.h>
+#include <GLFW/glfw3.h>
+#include <imgui.h>
+#include <imgui/backends/imgui_impl_glfw.h>
+#include <imgui/backends/imgui_impl_opengl3.h>
+
+static void glfw_error_callback(int error, const char* description) {
+	fprintf(stderr, "Glfw Error %d: %s\n", error, description);
+}
 
 namespace tri {
 
-    TRI_REGISTER_SYSTEM_INSTANCE(Window, env->window);
+	TRI_SYSTEM_INSTANCE(Window, env->window);
 
-    Window::Window() {
-        size = {0, 0};
-        position = {0, 0};
-        vsync = true;
-        backgroundColor = Color::white;
-        context = nullptr;
-    }
+	void Window::init() {
+		auto *job = env->jobManager->addJob("Render", { "Window", "TestUI" });
+	}
 
-    Window::Window(int width, int height, const std::string &title) {
-        size = {0, 0};
-        position = {0, 0};
-        vsync = true;
-        backgroundColor = Color::white;
-        context = nullptr;
-        init(width, height, title);
-    }
+	void Window::startup() {
+		TRI_PROFILE_FUNC();
+		int width = env->console->getCVarValue<int>("windowWidth", 800);
+		int height = env->console->getCVarValue<int>("windowHeight", 600);
+		std::string title = env->console->getCVarValue<std::string>("windowTitle", "Tridot Engine");
 
-    Window::~Window() {
-        clear();
-    }
+		//init glfw
+		glfwSetErrorCallback(glfw_error_callback);
 
-    void Window::bind() {
-        FrameBuffer::unbind();
-        RenderContext::set(context);
-        if(context != nullptr){
-            glViewport(0, 0, size.x, size.y);
-        }
-    }
+		if (!glfwInit()) {
+			printf("failed to initialize GLFW\n");
+			return;
+		}
 
-    void Window::unbind() {
-        RenderContext::set(nullptr);
-    }
+		//create window
+		const char* glsl_version = "#version 130";
+		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+		window = (void*)glfwCreateWindow(width, height, title.c_str(), nullptr, nullptr);
+		if (!window) {
+			printf("failed to create Window\n");
+			return;
+		}
+		glfwMakeContextCurrent((GLFWwindow*)window);
+		glfwSwapInterval(1);
 
-    void Window::init(int width, int height, const std::string &title, bool fullscreen) {
-        TRI_PROFILE("window init");
-        context = RenderContext::create();
-        if(!context){
-            return;
-        }
-        GLFWwindow *window = (GLFWwindow*)context;
-        glfwSetWindowTitle(window, title.c_str());
-        glfwSetWindowSize(window, width, height);
-        if(fullscreen){
-            GLFWmonitor *monitor = glfwGetPrimaryMonitor();
-            glfwSetWindowMonitor(window, monitor, 0, 0, width, height, 0);
-        }
+		//init glew
+		if (glewInit() != GLEW_OK) {
+			printf("failed to initialize OpenGL\n");
+			return;
+		}
 
-        //setup callbacks
-        glfwSetWindowUserPointer(window, this);
-        glfwSetWindowSizeCallback(window, [](GLFWwindow *context, int width, int height){
-            Window *window = (Window*)glfwGetWindowUserPointer(context);
-            window->size = {width, height};
-            glViewport(0, 0, width, height);
-            env->console->trace("window resized: width = ", width, ", height = ", height);
-        });
-        glfwSetWindowPosCallback(window, [](GLFWwindow* context, int x, int y){
-            Window *window = (Window*)glfwGetWindowUserPointer(context);
-            window->position = glm::vec2(x, y);
-            env->console->trace("window moved: x = ", x, ", y = ", y);
-        });
 
-        if (!fullscreen) {
-            //set window pos and size to fit monitor
-            int x = 0;
-            int y = 0;
-            int w = 0;
-            int h = 0;
+		//init imgui
+		IMGUI_CHECKVERSION();
+		ImGui::CreateContext();
+		ImGuiIO& io = ImGui::GetIO(); (void)io;
+		io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+		io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+		io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
+		ImGui::StyleColorsDark();
+		ImGuiStyle& style = ImGui::GetStyle();
+		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+		{
+			style.WindowRounding = 0.0f;
+			style.Colors[ImGuiCol_WindowBg].w = 1.0f;
+		}
 
-            int l = 0;
-            int r = 0;
-            int t = 0;
-            int b = 0;
+		ImGui_ImplGlfw_InitForOpenGL((GLFWwindow*)window, true);
+		ImGui_ImplOpenGL3_Init(glsl_version);
 
-            glfwGetMonitorWorkarea(glfwGetPrimaryMonitor(), &x, &y, &w, &h);
-            glfwGetWindowFrameSize(window, &l, &t, &r, &b);
+		//set imgui style colors
+		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(1, 1, 1, 0.3));
+		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(1, 1, 1, 0.4));
+		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(1, 1, 1, 0.5));
+		ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(1, 1, 1, 0.2));
+		ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4(1, 1, 1, 0.3));
+		ImGui::PushStyleColor(ImGuiCol_HeaderActive, ImVec4(1, 1, 1, 0.4));
+		ImGui::PushStyleColor(ImGuiCol_Tab, ImVec4(1, 1, 1, 0.1));
+		ImGui::PushStyleColor(ImGuiCol_TabActive, ImVec4(1, 1, 1, 0.25));
+		ImGui::PushStyleColor(ImGuiCol_TabHovered, ImVec4(1, 1, 1, 0.40));
+		ImGui::PushStyleColor(ImGuiCol_TabUnfocused, ImVec4(1, 1, 1, 0.1));
+		ImGui::PushStyleColor(ImGuiCol_TabUnfocusedActive, ImVec4(1, 1, 1, 0.25));
+		ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(1, 1, 1, 0.35));
+		ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, ImVec4(1, 1, 1, 0.45));
+		ImGui::PushStyleColor(ImGuiCol_FrameBgActive, ImVec4(1, 1, 1, 0.55));
+		ImGui::PushStyleColor(ImGuiCol_SliderGrab, ImVec4(1, 1, 1, 0.35));
+		ImGui::PushStyleColor(ImGuiCol_SliderGrabActive, ImVec4(1, 1, 1, 0.35));
+		ImGui::PushStyleColor(ImGuiCol_CheckMark, ImVec4(1, 1, 1, 0.45));
+		ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.116, 0.125, 0.133, 1));
+		ImGui::PushStyleColor(ImGuiCol_TitleBg, ImVec4(0.177, 0.177, 0.177, 1));
+		ImGui::PushStyleColor(ImGuiCol_TitleBgActive, ImVec4(0.238, 0.238, 0.238, 1));
+		ImGui::PushStyleColor(ImGuiCol_DragDropTarget, ImVec4(0.0, 0.32, 1.0, 1));
 
-            if ((h - t) < height) {
-                height = h - t;
-            }
-            if (w < width) {
-                width = w;
-            }
-            x = (w - width) / 2;
-            y = t + ((h - t) - height) / 2;
+		ImGui::GetIO().IniFilename = "layout.ini";
+	}
 
-            glfwSetWindowSize(window, width, height);
-            glfwSetWindowPos(window, x, y);
-        }
+	void Window::updateBegin() {
+		TRI_PROFILE_FUNC();
+		glfwPollEvents();
+		ImGui_ImplOpenGL3_NewFrame();
+		ImGui_ImplGlfw_NewFrame();
+		ImGui::NewFrame();
+		inFrameFlag = true;
+	}
 
-        //set initial size and position
-        int x = 0;
-        int y = 0;
-        glfwGetWindowPos(window, &x, &y);
-        position = {x, y};
-        glfwGetWindowSize(window, &x, &y);
-        size =  {x, y};
-    }
+	void Window::updateEnd() {
+		TRI_PROFILE_FUNC();
+		if (inFrameFlag) {
+			ImGui::Render();
+			int x = 0;
+			int y = 0;
+			glfwGetFramebufferSize((GLFWwindow*)window, &x, &y);
+			glViewport(0, 0, x, y);
+			glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+			glClear(GL_COLOR_BUFFER_BIT);
+			ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
-    void Window::update() {
-        env->renderThread->addTask([&]() {
+			ImGuiIO& io = ImGui::GetIO(); (void)io;
+			if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+			{
+				GLFWwindow* backup_current_context = glfwGetCurrentContext();
+				ImGui::UpdatePlatformWindows();
+				ImGui::RenderPlatformWindowsDefault();
+				glfwMakeContextCurrent(backup_current_context);
+			}
 
-            if(context != nullptr) {
-                GLFWwindow *window = (GLFWwindow*)context;
-                bind();
+			glfwSwapBuffers((GLFWwindow*)window);
 
-                {
-                    TRI_PROFILE("pollEvents");
-                    glfwPollEvents();
-                }
+			if (!isOpen()) {
+				env->console->setCVarValue("running", false);
+			}
+		}
+		inFrameFlag = false;
+	}
 
-                if (glfwWindowShouldClose(window)) {
-                    clear();
-                    return;
-                }
+	void Window::tick() {
+		TRI_PROFILE_FUNC();
+		updateEnd();
+		updateBegin();
+	}
 
-                if(vsync != lastVsync) {
-                    TRI_PROFILE("setSwapInterval");
-                    glfwSwapInterval(vsync);
-                    lastVsync = vsync;
-                }
+	void Window::shutdown() {
+		TRI_PROFILE_FUNC();
+		ImGui_ImplOpenGL3_Shutdown();
+		ImGui_ImplGlfw_Shutdown();
+		ImGui::DestroyContext();
+		glfwDestroyWindow((GLFWwindow*)window);
+		glfwTerminate();
+		env->console->info("Window::shutdown()");
+	}
 
-                {
-                    TRI_PROFILE("swapBuffers");
-                    TracyGpuZone("swapBuffers");
-                    glfwSwapBuffers(window);
-                }
-                TracyGpuCollect;
-                {
-                    TRI_PROFILE("clear");
-                    TracyGpuZone("clear");
-                    glm::vec4 color = backgroundColor.vec();
-                    glClearColor(color.r, color.g, color.b, color.a);
-                    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-                }
-            }else{
-                env->console->warning("window: update called before init or after close");
-            }
+	void Window::close() {
+		glfwSetWindowShouldClose((GLFWwindow*)window, 1);
+	}
 
-        });
-    }
+	bool Window::isOpen() {
+		return glfwWindowShouldClose((GLFWwindow*)window) == 0;
+	}
 
-    bool Window::isOpen() {
-        if(context != nullptr){
-            if(glfwWindowShouldClose((GLFWwindow*)context) == GLFW_FALSE){
-                return true;
-            }else{
-                clear();
-                return false;
-            }
-        }else{
-            return false;
-        }
-    }
-
-    void Window::close() {
-        if (context) {
-            glfwSetWindowShouldClose((GLFWwindow*)context, true);
-        }
-    }
-
-    void Window::clear() {
-        if(context != nullptr) {
-            void *current = RenderContext::get();
-            RenderContext::set(context);
-            RenderContext::destroy();
-            if(current != context){
-                RenderContext::set(current);
-            }
-            context = nullptr;
-            env->console->trace("window closed");
-        }
-    }
-
-    const glm::vec2 &Window::getSize()  const{
-        return size;
-    }
-
-    const glm::vec2 &Window::getPosition()  const{
-        return position;
-    }
-
-    const Color &Window::getBackgroundColor()  const{
-        return backgroundColor;
-    }
-
-    bool Window::getVSync()  const{
-        return vsync;
-    }
-
-    float Window::getAspectRatio() const {
-        return size.x / size.y;
-    }
-
-    void *Window::getContext()  const{
-        return context;
-    }
-
-    void Window::setSize(const glm::vec2 &size) {
-        this->size = size;
-        glfwSetWindowSize((GLFWwindow*)context, size.x, size.y);
-    }
-
-    void Window::setPosition(const glm::vec2 &position) {
-        this->position = position;
-        glfwSetWindowPos((GLFWwindow*)context, position.x, position.y);
-    }
-
-    void Window::setBackgroundColor(const Color &color) {
-        this->backgroundColor = color;
-    }
-
-    void Window::setTitle(const std::string &title) {
-        glfwSetWindowTitle((GLFWwindow*)context, title.c_str());
-    }
-
-    void Window::setVSync(int value) {
-        this->vsync = value;
-    }
+	bool Window::inFrame() {
+		return inFrameFlag;
+	}
 
 }

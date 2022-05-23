@@ -4,6 +4,7 @@
 
 #include "JobSystem.h"
 #include "core.h"
+#include "..\..\core\JobSystem.h"
 
 namespace tri {
 

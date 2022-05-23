@@ -5,10 +5,11 @@
 #pragma once
 
 #include "pch.h"
+#include "core/config.h"
 
 namespace tri {
 
-    class StrUtil{
+    class TRI_API StrUtil{
     public:
         //0 = no, 1 = yes, 2 = yes at beginning, 3 = yes at end
         static int isSubstring(const std::string &string1, const std::string &string2);

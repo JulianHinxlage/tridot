@@ -1,129 +1,57 @@
 //
-// Copyright (c) 2021 Julian Hinxlage. All rights reserved.
+// Copyright (c) 2022 Julian Hinxlage. All rights reserved.
 //
 
 #pragma once
-#include "pch.h"
+
 #include "System.h"
-#include "Environment.h"
-#include "SignalManager.h"
+#include "Reflection.h"
+#include "pch.h"
 
 namespace tri {
 
-    class SystemManager{
-    public:
-        SystemManager() {
-            startupFlag = false;
-        }
+	class SystemManager {
+	public:
+		template<typename T>
+		static T* getSystem() {
+			return (T*)getSystem(Reflection::getClassId<T>());
+		}
+		template<typename T>
+		static T* addSystem() {
+			return (T*)addSystem(Reflection::getClassId<T>());
+		}
+		template<typename T>
+		static void removeSystem() {
+			removeSystem(Reflection::getClassId<T>());
+		}
+		template<typename T>
+		static void setSystemPointer(T** ptr) {
+			setSystemPointer(Reflection::getClassId<T>(), (void**)ptr);
+		}
 
-        ~SystemManager() {
-            shutdown();
-        }
+		static System* getSystem(int classId);
+		static System* addSystem(int classId);
+		static void removeSystem(int classId, bool canAutoAddAgain = false);
+		static void setSystemPointer(int classId, void** ptr);
 
-        template<typename T>
-        T *getSystem(){
-            size_t type = typeid(T).hash_code();
-            if(systems.find(type) != systems.end()){
-                return (T*)systems[type].system.get();
-            }else{
-                return nullptr;
-            }
-        }
+		struct SystemHandle {
+		public:
+			System* system = nullptr;
+			bool wasAutoAdd = false;
+			bool wasInit = false;
+			bool wasStartup = false;
+			bool wasShutdown = false;
+			bool pendingShutdown = false;
+			bool active = true;
+			void** instancePointer = nullptr;
+			std::string name;
+		};
+		static SystemHandle* getSystemHandle(int classId);
+		static bool hasPendingStartups();
+		static bool hasPendingShutdowns();
 
-        template<typename T, typename... Args>
-        T *addSystem(const std::string &name, Args&& ...args){
-            size_t type = typeid(T).hash_code();
-            return (T*)setupSystem(std::shared_ptr<System>(new T(std::forward<Args>(args)...), [](System* ptr) {delete (T*)ptr; }), name, type);
-        }
-
-        template<typename T>
-        bool removeSystem(){
-            size_t type = typeid(T).hash_code();
-            if(systems.find(type) != systems.end()){
-                if (systems[type].system) {
-                    systems[type].system->shutdown();
-                    env->signals->update.removeCallback(systems[type].updateCallbackId);
-                }
-                systems.erase(type);
-                return true;
-            }else{
-                return false;
-            }
-        }
-
-        template<typename T>
-        T *setSystem(const std::string& name, T *system){
-            size_t type = typeid(T).hash_code();
-            return (T*)setupSystem(std::shared_ptr<System>(system, [](System* ptr) {}), name, type);
-        }
-
-        template<typename T>
-        bool hasSystem(){
-            return getSystem<T>() != nullptr;
-        }
-
-        template<typename T>
-        void startupSystem(){
-            size_t type = typeid(T).hash_code();
-            if(systems.find(type) != systems.end()){
-                auto &record = systems[type];
-                if(record.startupFlag == false){
-                    record.startupFlag = true;
-                    record.system->startup();
-                }
-            }
-        }
-
-        void startup() {
-            startupFlag = true;
-            for (auto sys : systems) {
-                if (sys.second.system) {
-                    if (sys.second.startupFlag == false) {
-                        TRI_PROFILE_NAME(sys.second.name.c_str(), sys.second.name.size());
-                        sys.second.startupFlag = true;
-                        sys.second.system->startup();
-                    }
-                }
-            }
-        }
-
-        void shutdown(){
-            for (auto sys : systems) {
-                if (sys.second.system) {
-                    TRI_PROFILE_NAME(sys.second.name.c_str(), sys.second.name.size());
-                    sys.second.system->shutdown();
-                    env->signals->update.removeCallback(sys.second.updateCallbackId);
-                    sys.second.system = nullptr;
-                }
-            }
-            systems.clear();
-        }
-
-    private:
-        System* setupSystem(std::shared_ptr<System> system, const std::string& name, size_t type) {
-            SystemRecord& r = systems[type];
-            r.system = system;
-            r.startupFlag = false;
-            r.name = name;
-            r.updateCallbackId = env->signals->update.addCallback(name, [system = r.system.get()]() { system->update(); });
-            if (startupFlag) {
-                r.startupFlag = true;
-                r.system->startup();
-            }
-            return r.system.get();
-        }
-
-        class SystemRecord {
-        public:
-            std::shared_ptr<System> system;
-            bool startupFlag;
-            std::string name;
-            int updateCallbackId;
-        };
-
-        std::unordered_map<size_t, SystemRecord> systems;
-        bool startupFlag;
-    };
+		static void addNewSystems();
+		static void removeAllSystems();
+	};
 
 }
-

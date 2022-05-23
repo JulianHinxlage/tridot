@@ -1,20 +1,17 @@
 //
-// Copyright (c) 2021 Julian Hinxlage. All rights reserved.
+// Copyright (c) 2022 Julian Hinxlage. All rights reserved.
 //
 
 #pragma once
 
-#include "pch.h"
-
 namespace tri {
 
-    class TRI_API System {
-    public:
-        System() {}
-        virtual ~System() {}
-        virtual void startup() {};
-        virtual void update() {};
-        virtual void shutdown() {};
-    };
+	class System {
+	public:
+		virtual void init() {}
+		virtual void startup() {}
+		virtual void tick() {}
+		virtual void shutdown() {}
+	};
 
 }

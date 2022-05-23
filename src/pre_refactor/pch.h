@@ -22,3 +22,5 @@
 #include <condition_variable>
 #include <cassert>
 #include <cstdint>
+
+#include "core/config.h"

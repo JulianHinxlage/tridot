@@ -1,89 +1,56 @@
 //
-// Copyright (c) 2021 Julian Hinxlage. All rights reserved.
+// Copyright (c) 2022 Julian Hinxlage. All rights reserved.
 //
 
 #pragma once
 
-#include "pch.h"
 #include "System.h"
-#include "util/Clock.h"
 #include "tracy/Tracy.hpp"
 
 namespace tri {
 
-    class Profiler : public System {
-    public:
-        Profiler();
+	class Profiler : public System {
+	public:
+		virtual void init();
+		virtual void shutdown();
+		void nextFrame();
+		void begin(const char *name);
+		void end();
 
-        void begin(const std::string &name);
-        void end();
+		class Node {
+		public:
+			double time = 0;
+			double displayTime = 0;
+			const char* name = nullptr;
+			std::unordered_map<const char*, std::shared_ptr<Node>> nodes;
+		private:
+			friend class Profiler;
+			uint64_t beginTimeNano = 0;
+			std::vector<double> times;
+			Node* parent;
+		};
+		Node* getRoot() { return &root; }
 
-        void beginPhase(const std::string &name);
-        void endPhase();
-
-        void nextFrame();
-        int getCurrentFrame();
-
-        class Node{
-        public:
-            std::string name;
-            std::shared_ptr<Node> parent;
-            std::vector<std::shared_ptr<Node>> children;
-            std::unordered_map<int, std::vector<float>> frames;
-            Clock clock;
-        };
-        const std::vector<std::shared_ptr<Node>> &getPhaseNodes(){
-            return phases;
-        }
-
-    private:
-        std::vector<std::shared_ptr<Node>> phases;
-        thread_local static std::shared_ptr<Node> currentNode;
-        thread_local static std::vector<std::shared_ptr<Node>> phaseNodeStack;
-        int currentFrame;
-        std::mutex mutex;
-    };
-
-    namespace impl {
-        class ProfileScope {
-        public:
-            ProfileScope(const std::string &name);
-            ~ProfileScope();
-        };
-        class ProfilePhase {
-        public:
-            ProfilePhase(const std::string &name);
-            ~ProfilePhase();
-        };
-    }
+	private:
+		Node root;
+		double keepTimeSeconds = 1;
+		static thread_local Node* currentNode;
+	};
 
 }
 
-#ifdef TRI_DEBUG
-    #if TRI_ENABLE_OWN_PROFILER
-        #define TRI_PROFILE(name) tri::impl::ProfileScope profileScope(name); ZoneScopedN(name);
-        #define TRI_PROFILE_NAME(name, size) tri::impl::ProfileScope profileScope(name); ZoneScoped; ZoneName(name, size);
-        #define TRI_PROFILE_PHASE(name) tri::impl::ProfilePhase profilePhase(name);
-        #define TRI_PROFILE_FUNC() TRI_PROFILE(__FUNCTION__) ZoneScoped;
-        #define TRI_PROFILE_THREAD(name) tracy::SetThreadName(name);
-        #define TRI_PROFILE_INFO(text, size) ZoneText(text, size)
-        #define TRI_PROFILE_FRAME env->profiler->nextFrame(); FrameMark;
-    #else
-        #define TRI_PROFILE(name) ZoneScopedN(name);
-        #define TRI_PROFILE_NAME(name, size) ZoneScoped; ZoneName(name, size);
-        #define TRI_PROFILE_PHASE(name) 
-        #define TRI_PROFILE_FUNC() ZoneScoped;
-        #define TRI_PROFILE_THREAD(name) tracy::SetThreadName(name);
-        #define TRI_PROFILE_INFO(text, size) ZoneText(text, size);
-        #define TRI_PROFILE_FRAME FrameMark;
-    #endif
+#if TRI_PROFILE_ENABLED
+#define TRI_PROFILE(name) ZoneScopedN(name);
+#define TRI_PROFILE_NAME(name, size) ZoneScoped; ZoneName(name, size);
+#define TRI_PROFILE_FUNC() ZoneScoped;
+#define TRI_PROFILE_THREAD(name) tracy::SetThreadName(name);
+#define TRI_PROFILE_INFO(text, size) ZoneText(text, size);
+#define TRI_PROFILE_FRAME FrameMark;
 #else
-    #define TRI_PROFILE(name)
-    #define TRI_PROFILE_NAME(name, size)
-    #define TRI_PROFILE_PHASE(name)
-    #define TRI_PROFILE_FUNC()
-    #define TRI_PROFILE_THREAD(name)
-    #define TRI_PROFILE_INFO(text, size)
-    #define TRI_PROFILE_FRAME
+#define TRI_PROFILE(name)
+#define TRI_PROFILE_NAME(name, size)
+#define TRI_PROFILE_FUNC()
+#define TRI_PROFILE_THREAD(name)
+#define TRI_PROFILE_INFO(text, size)
+#define TRI_PROFILE_FRAME
 #endif
-

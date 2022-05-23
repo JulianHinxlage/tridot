@@ -1,46 +1,41 @@
 //
-// Copyright (c) 2021 Julian Hinxlage. All rights reserved.
+// Copyright (c) 2022 Julian Hinxlage. All rights reserved.
 //
 
 #pragma once
 
+#include "System.h"
+#include "Reflection.h"
+#include "SystemManager.h"
 #include "pch.h"
 
 namespace tri {
 
-    class TRI_API Environment {
-    public:
-        Environment();
+	class Environment {
+	public:
+		//core
+		class Reflection* reflection;
+		class SystemManager* systemManager;
+		class Console* console;
+		class ModuleManager* moduleManager;
+		class EventManager* eventManager;
+		class JobManager* jobManager;
+		class ThreadManager* threadManager;
+		class FileWatcher *fileWatcher;
+		class Profiler* profiler;
+		class Config* config;
+		
+		//render
+		class Window* window;
 
-        class SystemManager *systems;
-        class Console *console;
-        class ModuleManager *modules;
-        class Reflection *reflection;
-        class Profiler *profiler;
-        class SignalManager *signals;
-        class ThreadPool *threads;
-        class Scene *scene;
-        class Input *input;
-        class Time *time;
-        class Window *window;
-        class Renderer *renderer;
-        class Serializer *serializer;
-        class AssetManager *assets;
-        class Editor *editor;
-        class HierarchySystem *hierarchies;
-        class Physics *physics;
-        class Random* random;
-        class RuntimeMode* runtime;
-        class RenderPipeline* renderPipeline;
-        class RenderThread* renderThread;
-        class JobSystem* jobSystem;
-        class RenderSettings* renderSettings;
+		Environment();
 
-        static Environment* startup();
-        static void shutdown();
-    };
+		static void init();
+		static void shutdown();
+	};
+
+	Environment* getEnvironment();
 
 }
 
-extern TRI_API tri::Environment* env;
-extern TRI_API tri::Environment* environment;
+static tri::Environment* env = tri::getEnvironment();
