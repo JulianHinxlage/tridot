@@ -10,7 +10,7 @@ namespace tri {
 
 	class ThreadManager : public System {
 	public:
-		int workerThreadCount = 8;
+		int workerThreadCount = std::thread::hardware_concurrency();
 
 		void startup() override;
 		void shutdown() override;

@@ -18,12 +18,17 @@ namespace tri {
 		void shutdown() override;
 		void tick() override;
 
+		void setVSync(int interval);
+		int getVSync();
+
 		void close();
 		bool isOpen();
 		bool inFrame();
+		void* getContext();
 	private:
 		void *window;
 		bool inFrameFlag = false;
+		int vsyncInterval = 1;
 	};
 
 }

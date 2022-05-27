@@ -23,7 +23,17 @@ namespace tri {
 			std::string name;
 			bool enableMultithreading;
 
+			template<typename T>
+			void addSystem() {
+				addSystem(Reflection::getDescriptor<T>()->name);
+			}
+			template<typename... T>
+			void addSystems() {
+				addSystems({ Reflection::getDescriptor<T>()->name... });
+			}
 			void addSystem(const std::string& name);
+			void addSystems(const std::vector<std::string>& names);
+
 			void removeSystem(const std::string& name);
 			void orderSystems(const std::vector<std::string>& systems);
 			void addJobExclusion(const std::string& name);

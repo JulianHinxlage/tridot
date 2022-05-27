@@ -76,7 +76,7 @@ namespace tri {
 		virtual void move(void* from, void* to, int count) const = 0;
 		virtual void construct(void* ptr, int count) const = 0;
 		virtual void destruct(void* ptr, int count) const = 0;
-		virtual void copy(void* from, void* to, int count) const = 0;
+		virtual void copy(const void* from, void* to, int count) const = 0;
 
 		virtual int vectorSize(void* ptr) const { return 0; }
 		virtual void* vectorGet(void* ptr, int index) const { return nullptr; }
@@ -148,6 +148,13 @@ namespace tri {
 		template<typename ClassType, typename PropertyType>
 		static void registerProperty(const std::string& name, int offset, PropertyDescriptor::Flags flags = PropertyDescriptor::NONE) {
 			auto* desc = getDescriptorsImpl()[getClassId<ClassType>()];
+
+			for (auto &prop : desc->properties) {
+				if (prop.name == name) {
+					return;
+				}
+			}
+
 			PropertyDescriptor prop;
 			prop.name = name;
 			prop.type = getDescriptorsImpl()[getClassId<PropertyType>()];
@@ -159,8 +166,34 @@ namespace tri {
 		}
 
 		template<typename ClassType, typename PropertyType>
+		static void registerPropertyRange(const std::string& name, PropertyType min, PropertyType max) {
+			auto* desc = getDescriptorsImpl()[getClassId<ClassType>()];
+			for (auto& prop : desc->properties) {
+				if (prop.name == name) {
+					prop.min = new PropertyType(min);
+					prop.max = new PropertyType(max);
+					return;
+				}
+			}
+		}
+
+		template<typename ClassType, typename PropertyType>
+		static void registerProperty(const std::string& name, int offset, PropertyDescriptor::Flags flags, PropertyType min, PropertyType max) {
+			registerProperty<ClassType, PropertyType>(name, offset, flags);
+			registerPropertyRange<ClassType, PropertyType>(name, min, max);
+		}
+
+		/*
+		template<typename ClassType, typename PropertyType>
 		static void registerProperty(const std::string& name, int offset, PropertyDescriptor::Flags flags, PropertyType min, PropertyType max) {
 			auto* desc = getDescriptorsImpl()[getClassId<ClassType>()];
+
+			for (auto &prop : desc->properties) {
+				if (prop.name == name) {
+					return;
+				}
+			}
+
 			PropertyDescriptor prop;
 			prop.name = name;
 			prop.type = getDescriptorsImpl()[getClassId<PropertyType>()];
@@ -170,6 +203,7 @@ namespace tri {
 			prop.max = new PropertyType(max);
 			desc->properties.push_back(prop);
 		}
+		*/
 
 		template<typename ClassType>
 		static void registerEnumValue(const std::string& name, int value) {
@@ -310,7 +344,7 @@ namespace tri {
 					}
 				}
 			}
-			void copy(void* from, void* to, int count) const override {
+			void copy(const void* from, void* to, int count) const override {
 				if constexpr (std::is_copy_constructible<T>::value) {
 					T* f = (T*)from;
 					T* t = (T*)to;
@@ -461,9 +495,12 @@ namespace tri::impl {
 #define TRI_SYSTEM_INSTANCE(T, ptr) TRI_SYSTEM(T) static tri::impl::GlobalInitializationCallback TRI_UNIQUE_IDENTIFIER(init)([](){ tri::SystemManager::setSystemPointer<T>(&ptr); });
 #define TRI_COMPONENT(T) TRI_CLASS_FLAGS(T, #T, "", tri::ClassDescriptor::Flags::COMPONENT)
 #define TRI_COMPONENT_CATEGORY(T, category) TRI_CLASS_FLAGS(T, #T, category, tri::ClassDescriptor::Flags::COMPONENT)
+#define TRI_ASSET(T) TRI_CLASS_FLAGS(T, #T, "", tri::ClassDescriptor::Flags::ASSET)
 #define TRI_FUNCTION(T, func) static tri::impl::GlobalInitializationCallback TRI_UNIQUE_IDENTIFIER(init)([](){ tri::Reflection::registerFunction<T>(#func, &T::func); });
 
-#define TRI_PROPERTY(T, name) static tri::impl::GlobalInitializationCallback TRI_UNIQUE_IDENTIFIER(init)([](){ tri::Reflection::registerProperty<T, decltype(T::name)>(#name, offsetof(T, T::name)); });
+#define TRI_PROPERTY_FLAGS(T, name, flags) static tri::impl::GlobalInitializationCallback TRI_UNIQUE_IDENTIFIER(init)([](){ tri::Reflection::registerProperty<T, decltype(T::name)>(#name, offsetof(T, T::name), flags); });
+#define TRI_PROPERTY_RANGE(T, name, min, max) static tri::impl::GlobalInitializationCallback TRI_UNIQUE_IDENTIFIER(init)([](){ tri::Reflection::registerPropertyRange<T, decltype(T::name)>(#name, min, max); });
+#define TRI_PROPERTY(T, name) TRI_PROPERTY_FLAGS(T, name, tri::PropertyDescriptor::NONE)
 #define TRI_PROPERTIES1(T, property1) TRI_PROPERTY(T, property1)
 #define TRI_PROPERTIES2(T, property1, property2) TRI_PROPERTY(T, property1) TRI_PROPERTIES1(T, property2)
 #define TRI_PROPERTIES3(T, property1, property2, property3) TRI_PROPERTY(T, property1) TRI_PROPERTIES2(T, property2, property3)

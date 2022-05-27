@@ -150,6 +150,7 @@ namespace tri {
 
 					threadManager->taskMutex->unlock();
 					if (callback) {
+						TRI_PROFILE("task");
 						callback();
 					}
 					threadManager->taskMutex->lock();

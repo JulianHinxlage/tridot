@@ -17,13 +17,17 @@ namespace tri {
 				std::this_thread::sleep_for(std::chrono::milliseconds((long long)(checkTimeInterval * 1000.0)));
 				TRI_PROFILE("FileWatcher");
 				for (auto& file : files) {
-					uint64_t time = std::filesystem::last_write_time(file.path).time_since_epoch().count();
-					if (time != file.time) {
-						file.time = time;
-						if (file.onChange) {
-							file.onChange(file.path);
+					uint64_t time = 0;
+					try {
+						time = std::filesystem::last_write_time(file.path).time_since_epoch().count();
+						if (time != file.time) {
+							file.time = time;
+							if (file.onChange) {
+								file.onChange(file.path);
+							}
 						}
 					}
+					catch (...) {}
 				}
 			}
 		});

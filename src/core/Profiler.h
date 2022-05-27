@@ -11,6 +11,8 @@ namespace tri {
 
 	class Profiler : public System {
 	public:
+		bool active = false;
+
 		virtual void init();
 		virtual void shutdown();
 		void nextFrame();

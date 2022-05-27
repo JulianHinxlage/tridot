@@ -7,6 +7,9 @@
 #include "pch.h"
 #include "System.h"
 
+typedef uint32_t EntityId;
+typedef uint64_t EntitySignature;
+
 namespace tri {
 
 	class Config : public System {

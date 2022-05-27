@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "pch.h"
 #include "config.h"
 #include "Environment.h"
 #include "SystemManager.h"
@@ -15,3 +16,6 @@
 #include "Profiler.h"
 #include "JobManager.h"
 #include "MainLoop.h"
+#include "ThreadManager.h"
+#include "util/StrUtil.h"
+#include "util/Ref.h"

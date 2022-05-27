@@ -43,13 +43,21 @@ namespace tri {
 		return handle.system;
 	}
 
-	void SystemManager::removeSystem(int classId, bool canAutoAddAgain) {
+	void SystemManager::removeSystem(int classId, bool pending, bool canAutoAddAgain) {
 		TRI_PROFILE_FUNC();
 		if (getSystemsImpl().size() <= classId) {
 			return;
 		}
 		auto& handle = getSystemsImpl()[classId];
 		if (handle.system) {
+			if (pending) {
+				handle.pendingShutdown = true;
+				if (canAutoAddAgain) {
+					handle.wasAutoAdd = false;
+				}
+				return;
+			}
+
 			TRI_PROFILE_NAME(handle.name.c_str(), handle.name.size());
 			if (!handle.wasShutdown) {
 				handle.system->shutdown();
@@ -126,7 +134,7 @@ namespace tri {
 	void SystemManager::removeAllSystems() {
 		auto& systems = getSystemsImpl();
 		for (int i = systems.size() - 1; i >= 0; i--){
-			removeSystem(i);
+			removeSystem(i, false);
 		}
 		getSystemsImpl().clear();
 	}

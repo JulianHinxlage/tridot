@@ -20,6 +20,12 @@ namespace tri {
 		config = nullptr;
 
 		window = nullptr;
+		input = nullptr;
+		time = nullptr;
+		random = nullptr;
+		assetManager = nullptr;
+		world = nullptr;
+		editor = nullptr;
 	}
 
 	void Environment::init() {

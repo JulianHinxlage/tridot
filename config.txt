@@ -6,6 +6,12 @@ enableJobMultithreading = true
 enableModuleHotReloading = true
 unloadModuleOnCrash = true
 enableCrashRecovery = true
-workerThreadCount = 8
+#workerThreadCount = 8
 
+loadModule TridotEntity
+loadModule TridotEngine
+
+loadModule TridotWindow
+loadModule TridotDebugMenu
+loadModule TridotEditor
 loadModule TridotRender

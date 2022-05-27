@@ -28,6 +28,18 @@ namespace tri {
 		//render
 		class Window* window;
 
+		//engine
+		class Input* input;
+		class Time* time;
+		class Random* random;
+		class AssetManager* assetManager;
+
+		//entity
+		class World* world;
+
+		//editor
+		class Editor* editor;
+
 		Environment();
 
 		static void init();

@@ -4,22 +4,20 @@
 
 #include "Window.h"
 #include "core/core.h"
+#include "RenderContext.h"
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <imgui.h>
 #include <imgui/backends/imgui_impl_glfw.h>
 #include <imgui/backends/imgui_impl_opengl3.h>
 
-static void glfw_error_callback(int error, const char* description) {
-	fprintf(stderr, "Glfw Error %d: %s\n", error, description);
-}
-
 namespace tri {
 
 	TRI_SYSTEM_INSTANCE(Window, env->window);
 
 	void Window::init() {
-		auto *job = env->jobManager->addJob("Render", { "Window", "TestUI" });
+		window = nullptr;
+		env->jobManager->addJob("Render", { "Window", "TestUI" });
 	}
 
 	void Window::startup() {
@@ -27,33 +25,15 @@ namespace tri {
 		int width = env->console->getCVarValue<int>("windowWidth", 800);
 		int height = env->console->getCVarValue<int>("windowHeight", 600);
 		std::string title = env->console->getCVarValue<std::string>("windowTitle", "Tridot Engine");
-
-		//init glfw
-		glfwSetErrorCallback(glfw_error_callback);
-
-		if (!glfwInit()) {
-			printf("failed to initialize GLFW\n");
+		if (env->console->getCVarValue<bool>("noWindow", false)) {
 			return;
 		}
 
-		//create window
-		const char* glsl_version = "#version 130";
-		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
-		window = (void*)glfwCreateWindow(width, height, title.c_str(), nullptr, nullptr);
-		if (!window) {
-			printf("failed to create Window\n");
-			return;
-		}
-		glfwMakeContextCurrent((GLFWwindow*)window);
+		window = RenderContext::create();
+		glfwSetWindowSize((GLFWwindow*)window, width, height);
+		glfwSetWindowTitle((GLFWwindow*)window, title.c_str());
 		glfwSwapInterval(1);
-
-		//init glew
-		if (glewInit() != GLEW_OK) {
-			printf("failed to initialize OpenGL\n");
-			return;
-		}
-
+		vsyncInterval = 1;
 
 		//init imgui
 		IMGUI_CHECKVERSION();
@@ -71,6 +51,7 @@ namespace tri {
 		}
 
 		ImGui_ImplGlfw_InitForOpenGL((GLFWwindow*)window, true);
+		const char* glsl_version = "#version 130";
 		ImGui_ImplOpenGL3_Init(glsl_version);
 
 		//set imgui style colors
@@ -101,16 +82,18 @@ namespace tri {
 
 	void Window::updateBegin() {
 		TRI_PROFILE_FUNC();
-		glfwPollEvents();
-		ImGui_ImplOpenGL3_NewFrame();
-		ImGui_ImplGlfw_NewFrame();
-		ImGui::NewFrame();
-		inFrameFlag = true;
+		if (window) {
+			glfwPollEvents();
+			ImGui_ImplOpenGL3_NewFrame();
+			ImGui_ImplGlfw_NewFrame();
+			ImGui::NewFrame();
+			inFrameFlag = true;
+		}
 	}
 
 	void Window::updateEnd() {
 		TRI_PROFILE_FUNC();
-		if (inFrameFlag) {
+		if (window && inFrameFlag) {
 			ImGui::Render();
 			int x = 0;
 			int y = 0;
@@ -154,6 +137,17 @@ namespace tri {
 		env->console->info("Window::shutdown()");
 	}
 
+	void Window::setVSync(int interval) {
+		if (vsyncInterval != interval) {
+			glfwSwapInterval(interval);
+		}
+		vsyncInterval = interval;
+	}
+
+	int Window::getVSync() {
+		return vsyncInterval;
+	}
+
 	void Window::close() {
 		glfwSetWindowShouldClose((GLFWwindow*)window, 1);
 	}
@@ -164,6 +158,10 @@ namespace tri {
 
 	bool Window::inFrame() {
 		return inFrameFlag;
+	}
+
+	void* Window::getContext() {
+		return window;
 	}
 
 }

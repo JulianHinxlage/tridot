@@ -30,11 +30,15 @@ namespace tri {
 	}
 
 	void Reflection::handleDuplicatedClass(ClassDescriptor* desc, void* address1, void* address2) {
-		env->console->fatal("the same class \"%s\" was registerd in multiple modules: %s and %s", 
-			desc->name.c_str(), 
-			ModuleManager::getModuleNameByAddress(address1).c_str(),
-			ModuleManager::getModuleNameByAddress(address2).c_str()
-		);
+		std::string name1 = ModuleManager::getModuleNameByAddress(address1);
+		std::string name2 = ModuleManager::getModuleNameByAddress(address2);
+		if (name1 != name2) {
+			env->console->fatal("the same class \"%s\" was registerd in multiple modules: %s and %s", 
+				desc->name.c_str(), 
+				name1.c_str(),
+				name2.c_str()
+			);
+		}
 	}
 
 

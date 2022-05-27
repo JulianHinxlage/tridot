@@ -45,40 +45,44 @@ namespace tri {
 	}
 
 	void Profiler::begin(const char* name) {
-		if (!currentNode) {
-			currentNode = &root;
+		if (active) {
+			if (!currentNode) {
+				currentNode = &root;
+			}
+			auto& node = currentNode->nodes[name];
+			if (!node) {
+				node = std::make_shared<Node>();
+				node->parent = currentNode;
+				node->name = name;
+			}
+			node->beginTimeNano = nowNano();
+			currentNode = node.get();
 		}
-		auto& node = currentNode->nodes[name];
-		if (!node) {
-			node = std::make_shared<Node>();
-			node->parent = currentNode;
-			node->name = name;
-		}
-		node->beginTimeNano = nowNano();
-		currentNode = node.get();
 	}
 
 	void Profiler::end() {
-		uint64_t timeNano = nowNano();
-		
-		if (currentNode->beginTimeNano != 0) {
-			double time = (double)(timeNano - currentNode->beginTimeNano) / 1000.0 / 1000.0 / 1000.0;
-			double total = currentNode->time * currentNode->times.size();
+		if (active) {
+			uint64_t timeNano = nowNano();
 
-			while (total > keepTimeSeconds) {
-				total -= currentNode->times.front();
-				currentNode->times.erase(currentNode->times.begin());
+			if (currentNode->beginTimeNano != 0) {
+				double time = (double)(timeNano - currentNode->beginTimeNano) / 1000.0 / 1000.0 / 1000.0;
+				double total = currentNode->time * currentNode->times.size();
+
+				while (total > keepTimeSeconds) {
+					total -= currentNode->times.front();
+					currentNode->times.erase(currentNode->times.begin());
+				}
+
+				currentNode->times.push_back(time);
+				currentNode->time = (total + time) / (currentNode->times.size());
+				currentNode->beginTimeNano = 0;
 			}
-
-			currentNode->times.push_back(time);
-			currentNode->time = (total + time) / (currentNode->times.size());
-			currentNode->beginTimeNano = 0;
-		}
-		if (currentNode->parent) {
-			currentNode = currentNode->parent;
-		}
-		else {
-			currentNode->beginTimeNano = timeNano;
+			if (currentNode->parent) {
+				currentNode = currentNode->parent;
+			}
+			else {
+				currentNode->beginTimeNano = timeNano;
+			}
 		}
 	}
 
@@ -87,6 +91,7 @@ namespace tri {
 		currentNode = &root;
 		root.name = "frame";
 	}
+	void Profiler::shutdown() {}
 	void Profiler::nextFrame() {}
 	void Profiler::begin(const char* name) {}
 	void Profiler::end() {}

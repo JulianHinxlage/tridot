@@ -177,7 +177,7 @@ namespace tri {
 						std::string file = getModuleNameByAddress(desc->registrationSourceAddress);
 						if (checkName(m, file)) {
 							if (desc->flags & ClassDescriptor::SYSTEM) {
-								env->systemManager->removeSystem(desc->classId, true);
+								env->systemManager->removeSystem(desc->classId, false, true);
 							}
 							Reflection::unregisterClass(desc->classId);
 						}

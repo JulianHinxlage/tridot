@@ -59,6 +59,11 @@ namespace tri {
 			}
 		}
 
+		template<typename T>
+		bool isType() {
+			return classId == Reflection::getClassId<T>();
+		}
+
 		virtual std::string toString() {
 			return "";
 		}

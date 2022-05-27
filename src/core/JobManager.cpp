@@ -33,7 +33,9 @@ namespace tri {
 	JobManager::Job* JobManager::addJob(const std::string& name, const std::vector<std::string>& systems) {
 		if(auto *job = getJobHandle(name)) {
 			if (!job->pendingRemove) {
-				job->job.systemNames = systems;
+				for (auto& system : systems) {
+					job->job.addSystem(system);
+				}
 				return &job->job;
 			}
 		}
@@ -56,6 +58,15 @@ namespace tri {
 			}
 		}
 		return nullptr;
+		//auto handle = std::make_shared<JobHandle>();
+		//handle->threadId = -1;
+		//handle->jobManager = this;
+		//handle->job.name = name;
+		//handle->job.enableMultithreading = true;
+		//handle->isDefaultJob = false;
+		//handle->pendingRemove = false;
+		//jobs.push_back(handle);
+		//return &handle->job;
 	}
 
 	void JobManager::removeJob(const std::string& name) {
@@ -100,6 +111,12 @@ namespace tri {
 		systemNames.push_back(name);
 	}
 
+	void JobManager::Job::addSystems(const std::vector<std::string>& names) {
+		for (auto& name : names) {
+			addSystem(name);
+		}
+	}
+
 	void JobManager::Job::removeSystem(const std::string& name) {
 		for (int i = 0; i < systemNames.size(); i++) {
 			if (systemNames[i] == name) {
@@ -110,7 +127,31 @@ namespace tri {
 	}
 
 	void JobManager::Job::orderSystems(const std::vector<std::string>& systems) {
-		//todo
+		std::string prev;
+		int prevIndex = -1;
+		for (int i = 0; i < systems.size(); i++) {
+			std::string system = systems[i];
+			int index = -1;
+
+			for (int j = 0; j < systemNames.size(); j++) {
+				if (systemNames[j] == system) {
+					index = j;
+					break;
+				}
+			}
+
+			if (i > 0 && index != -1 && prevIndex != -1) {
+				if (prevIndex > index) {
+					systemNames.erase(systemNames.begin() + prevIndex);
+					systemNames.insert(systemNames.begin() + index, prev);
+					prevIndex = index;
+					index++;
+				}
+			}
+
+			prev = system;
+			prevIndex = index;
+		}
 	}
 
 	void JobManager::Job::addJobExclusion(const std::string& name) {
@@ -380,10 +421,13 @@ namespace tri {
 			if (index >= recoveryIndex) {
 				if (auto* desc = Reflection::getDescriptor(name)) {
 					if (auto* sys = env->systemManager->getSystem(desc->classId)) {
-						TRI_PROFILE_NAME(desc->name.c_str(), desc->name.size());
-						env->profiler->begin(desc->name.c_str());
-						sys->tick();
-						env->profiler->end();
+						auto* handle = env->systemManager->getSystemHandle(desc->classId);
+						if (handle->active) {
+							TRI_PROFILE_NAME(desc->name.c_str(), desc->name.size());
+							env->profiler->begin(desc->name.c_str());
+							sys->tick();
+							env->profiler->end();
+						}
 					}
 				}
 				recoveryIndex++;
