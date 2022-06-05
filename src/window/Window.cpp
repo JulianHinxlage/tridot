@@ -5,11 +5,14 @@
 #include "Window.h"
 #include "core/core.h"
 #include "RenderContext.h"
+#include "Viewport.h"
+#include "Input.h"
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <imgui.h>
 #include <imgui/backends/imgui_impl_glfw.h>
 #include <imgui/backends/imgui_impl_opengl3.h>
+#include <tracy/TracyOpenGL.hpp>
 
 namespace tri {
 
@@ -17,7 +20,7 @@ namespace tri {
 
 	void Window::init() {
 		window = nullptr;
-		env->jobManager->addJob("Render", { "Window", "TestUI" });
+		env->jobManager->addJob("Render", { "Window" });
 	}
 
 	void Window::startup() {
@@ -39,7 +42,7 @@ namespace tri {
 		IMGUI_CHECKVERSION();
 		ImGui::CreateContext();
 		ImGuiIO& io = ImGui::GetIO(); (void)io;
-		io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+		//io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
 		io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 		io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 		ImGui::StyleColorsDark();
@@ -87,6 +90,14 @@ namespace tri {
 			ImGui_ImplOpenGL3_NewFrame();
 			ImGui_ImplGlfw_NewFrame();
 			ImGui::NewFrame();
+
+			int x = 0;
+			int y = 0;
+			glfwGetFramebufferSize((GLFWwindow*)window, &x, &y);
+			glViewport(0, 0, x, y);
+			glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
 			inFrameFlag = true;
 		}
 	}
@@ -94,14 +105,16 @@ namespace tri {
 	void Window::updateEnd() {
 		TRI_PROFILE_FUNC();
 		if (window && inFrameFlag) {
-			ImGui::Render();
-			int x = 0;
-			int y = 0;
-			glfwGetFramebufferSize((GLFWwindow*)window, &x, &y);
-			glViewport(0, 0, x, y);
-			glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-			glClear(GL_COLOR_BUFFER_BIT);
-			ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+			env->input->allowInputs = !ImGui::GetIO().WantTextInput;
+			{
+				TracyGpuZone("imgui render");
+				ImGui::Render();
+			}
+
+			{
+				TracyGpuZone("imgui render draw data");
+				ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+			}
 
 			ImGuiIO& io = ImGui::GetIO(); (void)io;
 			if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
@@ -112,17 +125,28 @@ namespace tri {
 				glfwMakeContextCurrent(backup_current_context);
 			}
 
-			glfwSwapBuffers((GLFWwindow*)window);
+			{
+				TracyGpuZone("swap buffers");
+				glfwSwapBuffers((GLFWwindow*)window);
+			}
+			TracyGpuCollect;
 
 			if (!isOpen()) {
 				env->console->setCVarValue("running", false);
 			}
+			ImGui::GetIO().MouseWheel += env->input->getMouseWheelDelta();
 		}
 		inFrameFlag = false;
 	}
 
 	void Window::tick() {
 		TRI_PROFILE_FUNC();
+		if (env->viewport->displayInWindow) {
+			int width = 0;
+			int height = 0;
+			glfwGetWindowSize((GLFWwindow*)window, &width, &height);
+			env->viewport->size = { width, height };
+		}
 		updateEnd();
 		updateBegin();
 	}
@@ -134,7 +158,7 @@ namespace tri {
 		ImGui::DestroyContext();
 		glfwDestroyWindow((GLFWwindow*)window);
 		glfwTerminate();
-		env->console->info("Window::shutdown()");
+		inFrameFlag = false;
 	}
 
 	void Window::setVSync(int interval) {
@@ -157,6 +181,9 @@ namespace tri {
 	}
 
 	bool Window::inFrame() {
+		if (!ImGui::GetCurrentContext()) {
+			return false;
+		}
 		return inFrameFlag;
 	}
 

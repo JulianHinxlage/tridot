@@ -5,6 +5,7 @@
 #pragma once
 
 #include "pch.h"
+#include "util/Ref.h"
 
 namespace tri {
 
@@ -57,7 +58,7 @@ namespace tri {
 		std::vector<PropertyDescriptor> properties;
 		std::vector<FunctionDescriptor*> functions;
 		std::vector<std::pair<std::string, int>> enumValues;
-		ClassDescriptor* baseType;
+		ClassDescriptor* elementType;
 		void* registrationSourceAddress;
 
 		template<typename T>
@@ -132,16 +133,12 @@ namespace tri {
 
 		template<typename ClassType>
 		static void registerClass(const std::string &name, ClassDescriptor::Flags flags = ClassDescriptor::NONE, const std::string& category = "") {
-			registerClassId<ClassType>(true);
-			auto *desc = getDescriptorsImpl()[getClassId<ClassType>()];
-			getDescriptorsByNameImpl().erase(desc->name);
-			desc->name = name;
-			getDescriptorsByNameImpl()[desc->name] = desc;
-			desc->category = category;
-			desc->flags = (ClassDescriptor::Flags)((int)desc->flags | (int)flags);
-			if (!desc->wasRegisterCallbackInvoked) {
-				desc->wasRegisterCallbackInvoked = true;
-				onClassRegister(desc->classId);
+			registerClassImpl<ClassType>(name, flags, category);
+			if (flags & ClassDescriptor::ASSET) {
+				if (!(flags & ClassDescriptor::REFERENCE)) {
+					registerClassImpl<Ref<ClassType>>(std::string("Ref<") + name + ">",  (ClassDescriptor::Flags)(flags | ClassDescriptor::REFERENCE), category);
+					getDescriptorsImpl()[getClassId<Ref<ClassType>>()]->elementType = getDescriptorsImpl()[getClassId<ClassType>()];
+				}
 			}
 		}
 
@@ -182,28 +179,6 @@ namespace tri {
 			registerProperty<ClassType, PropertyType>(name, offset, flags);
 			registerPropertyRange<ClassType, PropertyType>(name, min, max);
 		}
-
-		/*
-		template<typename ClassType, typename PropertyType>
-		static void registerProperty(const std::string& name, int offset, PropertyDescriptor::Flags flags, PropertyType min, PropertyType max) {
-			auto* desc = getDescriptorsImpl()[getClassId<ClassType>()];
-
-			for (auto &prop : desc->properties) {
-				if (prop.name == name) {
-					return;
-				}
-			}
-
-			PropertyDescriptor prop;
-			prop.name = name;
-			prop.type = getDescriptorsImpl()[getClassId<PropertyType>()];
-			prop.offset = offset;
-			prop.flags = flags;
-			prop.min = new PropertyType(min);
-			prop.max = new PropertyType(max);
-			desc->properties.push_back(prop);
-		}
-		*/
 
 		template<typename ClassType>
 		static void registerEnumValue(const std::string& name, int value) {
@@ -401,6 +376,21 @@ namespace tri {
 		static void onClassRegister(int classId);
 		static void onClassUnregister(int classId);
 
+		template<typename ClassType>
+		static void registerClassImpl(const std::string& name, ClassDescriptor::Flags flags = ClassDescriptor::NONE, const std::string& category = "") {
+			registerClassId<ClassType>(true);
+			auto* desc = getDescriptorsImpl()[getClassId<ClassType>()];
+			getDescriptorsByNameImpl().erase(desc->name);
+			desc->name = name;
+			getDescriptorsByNameImpl()[desc->name] = desc;
+			desc->category = category;
+			desc->flags = (ClassDescriptor::Flags)((int)desc->flags | (int)flags);
+			if (!desc->wasRegisterCallbackInvoked) {
+				desc->wasRegisterCallbackInvoked = true;
+				onClassRegister(desc->classId);
+			}
+		}
+
 		template<typename T>
 		static int registerClassId(bool explicitRegistration) {
 			auto& descriptors = getDescriptorsImpl();
@@ -429,7 +419,7 @@ namespace tri {
 			ClassDescriptor* desc;
 			if constexpr (impl::is_vector<T>::value) {
 				desc = new ClassDescriptorVector<T::value_type>();
-				desc->baseType = descriptors[getClassId<T::value_type>()];
+				desc->elementType = descriptors[getClassId<T::value_type>()];
 				desc->flags = ClassDescriptor::VECTOR;
 			}
 			else {

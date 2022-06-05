@@ -11,7 +11,7 @@ namespace tri {
 
     class TRI_API RenderContext {
     public:
-        static void *create();
+        static void* create();
         static void *get();
         static void set(void *context);
         static void destroy();

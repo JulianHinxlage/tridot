@@ -5,7 +5,7 @@
 #pragma once
 
 #include "pch.h"
-#include "Color.h"
+#include "engine/Color.h"
 #include "Texture.h"
 #include "Shader.h"
 #include "engine/Asset.h"
@@ -58,7 +58,7 @@ namespace tri {
 
         Ref<Shader> shader;
 
-        Material(Color color = Color::white, const Ref<Texture> &texture = nullptr, Mapping mapping = UV);
+        Material(Color color = color::white, const Ref<Texture> &texture = nullptr, Mapping mapping = UV);
 
         bool isOpaque();
 

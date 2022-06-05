@@ -21,9 +21,17 @@ namespace tri {
 
 	static void check(Profiler::Node* node, const char* name) {
 		node->nodes.erase(name);
-		for (auto& n : node->nodes) {
+		auto nodes = node->nodes;
+		for (auto& n : nodes) {
 			check(n.second.get(), name);
+			if (n.second->nodes.size() == 0) {
+				node->nodes.erase(n.first);
+			}
 		}
+	}
+
+	Profiler::Node::~Node() {
+		nodes.clear();
 	}
 
 	void Profiler::init() {
@@ -32,7 +40,7 @@ namespace tri {
 			currentNode = &root;
 		});
 		currentNode = &root;
-		root.name = "frame";
+		root.name = "Frame";
 	}
 	
 	void Profiler::shutdown() {
@@ -45,51 +53,52 @@ namespace tri {
 	}
 
 	void Profiler::begin(const char* name) {
-		if (active) {
-			if (!currentNode) {
-				currentNode = &root;
-			}
-			auto& node = currentNode->nodes[name];
-			if (!node) {
-				node = std::make_shared<Node>();
-				node->parent = currentNode;
-				node->name = name;
-			}
-			node->beginTimeNano = nowNano();
-			currentNode = node.get();
+		if (!currentNode) {
+			currentNode = &root;
 		}
+		std::unique_lock<std::mutex> lock(currentNode->mutex);
+		auto node = currentNode->nodes[name];
+		if (!node) {
+			node = std::make_shared<Node>();
+			node->parent = currentNode;
+			node->name = name;
+			currentNode->nodes[name] = node;
+		}
+		node->beginTimeNano = nowNano();
+		currentNode = node.get();
 	}
 
 	void Profiler::end() {
-		if (active) {
-			uint64_t timeNano = nowNano();
+		uint64_t timeNano = nowNano();
 
-			if (currentNode->beginTimeNano != 0) {
-				double time = (double)(timeNano - currentNode->beginTimeNano) / 1000.0 / 1000.0 / 1000.0;
-				double total = currentNode->time * currentNode->times.size();
+		if (currentNode->beginTimeNano != 0) {
+			double time = (double)(timeNano - currentNode->beginTimeNano) / 1000.0 / 1000.0 / 1000.0;
+			double total = currentNode->time * currentNode->times.size();
 
-				while (total > keepTimeSeconds) {
-					total -= currentNode->times.front();
-					currentNode->times.erase(currentNode->times.begin());
-				}
+			while (total > keepTimeSeconds) {
+				total -= currentNode->times.front();
+				currentNode->times.erase(currentNode->times.begin());
+			}
 
-				currentNode->times.push_back(time);
-				currentNode->time = (total + time) / (currentNode->times.size());
-				currentNode->beginTimeNano = 0;
-			}
-			if (currentNode->parent) {
-				currentNode = currentNode->parent;
-			}
-			else {
-				currentNode->beginTimeNano = timeNano;
-			}
+			currentNode->times.push_back(time);
+			currentNode->time = (total + time) / (currentNode->times.size());
+			currentNode->beginTimeNano = 0;
+		}
+		if (currentNode->parent) {
+			currentNode = currentNode->parent;
+		}
+		else {
+			currentNode->beginTimeNano = timeNano;
 		}
 	}
 
 #else
+	Profiler::Node::~Node() {
+		nodes.clear();
+	}
 	void Profiler::init() {
 		currentNode = &root;
-		root.name = "frame";
+		root.name = "Frame";
 	}
 	void Profiler::shutdown() {}
 	void Profiler::nextFrame() {}

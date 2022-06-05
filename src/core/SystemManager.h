@@ -33,6 +33,8 @@ namespace tri {
 		static System* addSystem(int classId);
 		static void removeSystem(int classId, bool pending = true, bool canAutoAddAgain = false);
 		static void setSystemPointer(int classId, void** ptr);
+		static int getClassIdBySystem(System *system);
+
 
 		struct SystemHandle {
 		public:

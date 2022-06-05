@@ -189,6 +189,10 @@ namespace tri {
         void setMousePosition(glm::vec2 position, bool screenSpace = false);
         float getMouseWheelDelta();
 
+        bool downControl();
+        bool downShift();
+        bool downAlt();
+
     private:
         std::unordered_map<Key, State> keys;
         std::unordered_map<Button, State> buttons;

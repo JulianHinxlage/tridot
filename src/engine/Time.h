@@ -6,7 +6,6 @@
 
 #include "pch.h"
 #include "core/core.h"
-#include "Clock.h"
 
 namespace tri {
 

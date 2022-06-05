@@ -7,10 +7,8 @@
 #include "core/core.h"
 #include "entity/World.h"
 #include "engine/Time.h"
-//#include "entity/Scene.h"
 #include <glm/gtc/matrix_transform.hpp>
-//#include <imgui/imgui.h>
-//#include <imguizmo/ImGuizmo.h>
+#include <glm/glm/gtx/matrix_decompose.hpp>
 
 namespace tri {
 
@@ -35,12 +33,24 @@ namespace tri {
     }
 
     void Transform::decompose(const glm::mat4 &matrix) {
-        //ImGuizmo::DecomposeMatrixToComponents((float*)&matrix, (float*)&position, (float*)&rotation, (float*)&scale);
-        rotation = glm::radians(rotation);
+        glm::vec3 skew;
+        glm::vec4 perspective;
+        glm::quat orentiation;
+        glm::decompose(matrix, scale, orentiation, position, skew, perspective);
+        rotation = glm::eulerAngles(orentiation);
     }
 
     TRI_COMPONENT(Transform);
     TRI_PROPERTIES3(Transform, position, scale, rotation);
     TRI_PROPERTY_FLAGS(Transform, parent, PropertyDescriptor::HIDDEN);
 
+    class STransform : public System {
+    public:
+        void tick() override {
+            env->world->each<Transform>([](Transform& t) {
+                t.matrix = t.calculateLocalMatrix();
+            });
+        }
+    };
+    TRI_SYSTEM(STransform);
 }

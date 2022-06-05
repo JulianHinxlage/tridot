@@ -77,6 +77,7 @@ namespace tri {
         bool isLoadingInProcess(int typeId = -1);
         bool isUsed(const std::string& file);
 
+        void init() override;
         void startup() override;
         void tick() override;
         void shutdown() override;

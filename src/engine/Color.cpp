@@ -5,13 +5,6 @@
 #include "Color.h"
 
 namespace tri {
-
-    const Color Color::white = 0xffffffff;
-    const Color Color::black = 0xff000000;
-    const Color Color::red = 0xff0000ff;
-    const Color Color::green = 0xff00ff00;
-    const Color Color::blue = 0xffff0000;
-    const Color Color::transparent = 0x00ffffff;
     
     Color::Color(uint32_t value) {
         this->value = value;

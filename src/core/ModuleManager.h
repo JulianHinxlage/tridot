@@ -18,12 +18,14 @@ namespace tri {
 		std::string runtimeName;
 		std::string runtimeFile;
 		std::string runtimePath;
+		std::vector<Module*> autoLoaded;
 	};
 
 	class ModuleManager : public System {
 	public:
 		bool enableModuleHotReloading = false;
 
+		void init() override;
 		Module* loadModule(const std::string& name, bool pending = true);
 		Module* getModule(const std::string& name);
 		void unloadModule(const std::string& name, bool pending = true);
@@ -36,6 +38,7 @@ namespace tri {
 		std::vector<std::shared_ptr<Module>> modules;
 		std::vector<std::string> pendingLoads;
 		std::vector<std::string> pendingUnloads;
+		Module* currentlyLoading;
 	};
 
 }

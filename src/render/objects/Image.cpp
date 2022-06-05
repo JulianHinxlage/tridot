@@ -66,7 +66,7 @@ namespace tri {
             }
             return color;
         }else{
-            return Color::white;
+            return color::white;
         }
     }
 
@@ -85,7 +85,7 @@ namespace tri {
         stbi_uc *uc = stbi_load(file.c_str(), &x, &y, &c, 0);
 
         if(uc == nullptr){
-            env->console->warning("image: no file ", file, " found");
+            env->console->warning("image: no file %s found", file.c_str());
             return false;
         }
 
@@ -99,7 +99,7 @@ namespace tri {
             data[i] = uc[i];
         }
         stbi_image_free(uc);
-        env->console->debug("loaded image ", file);
+        env->console->trace("loaded image %s", file.c_str());
         return true;
     }
 

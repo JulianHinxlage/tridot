@@ -20,10 +20,13 @@ namespace tri {
 		config = nullptr;
 
 		window = nullptr;
+		viewport = nullptr;
 		input = nullptr;
 		time = nullptr;
 		random = nullptr;
+		serializer = nullptr;
 		assetManager = nullptr;
+		runtimeMode = nullptr;
 		world = nullptr;
 		editor = nullptr;
 	}

@@ -100,6 +100,14 @@ namespace tri {
 
 		template<typename... Args>
 		std::string format(const char* fmt, Args... args) {
+
+			//bool hasStrings = ((std::is_same_v<Args, std::string>) || ...);
+			//if (hasStrings) {
+			//	return format(fmt,
+			//		(std::is_same_v<Args, std::string>) ? args.c_str() : args)...
+			//	);
+			//}
+
 			int size = std::snprintf(nullptr, 0, fmt, args...) + 1;
 			if (size > 0) {
 				std::string msg(size, '\0');
@@ -205,12 +213,10 @@ namespace tri {
 		}
 
 		void removeCVar(const std::string& name);
-
 		void addCommand(const std::string& name, const std::function<void(const std::vector<std::string>& args)>& callback);
-
 		void removeCommand(const std::string& name);
-
 		void executeCommand(const std::string& command);
+		std::string autoComplete(const std::string& command, bool printOptions = true);
 
 	private:
 		class Command {

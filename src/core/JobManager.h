@@ -43,6 +43,8 @@ namespace tri {
 			std::vector<std::string> systemNames;
 			std::vector<int> systemClassIds;
 			std::vector<std::string> jobExclusion;
+			std::vector<std::vector<std::string>> orderConstraints;
+			void sort();
 		};
 
 		Job* addJob(const std::string& name, const std::vector<std::string>& systems = {});

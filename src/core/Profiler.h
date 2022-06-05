@@ -11,8 +11,6 @@ namespace tri {
 
 	class Profiler : public System {
 	public:
-		bool active = false;
-
 		virtual void init();
 		virtual void shutdown();
 		void nextFrame();
@@ -23,8 +21,11 @@ namespace tri {
 		public:
 			double time = 0;
 			double displayTime = 0;
-			const char* name = nullptr;
-			std::unordered_map<const char*, std::shared_ptr<Node>> nodes;
+			const char *name = nullptr;
+			std::unordered_map<const char *, std::shared_ptr<Node>> nodes;
+			std::mutex mutex;
+
+			~Node();
 		private:
 			friend class Profiler;
 			uint64_t beginTimeNano = 0;

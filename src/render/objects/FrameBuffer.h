@@ -14,7 +14,7 @@ namespace tri {
     class FrameBufferAttachmentSpec {
     public:
         TextureAttachment type = COLOR;
-        Color clearColor = Color::white;
+        Color clearColor = color::white;
         std::string name = "";
         glm::vec2 resizeFactor = {1, 1};
         bool clear = true;
@@ -26,7 +26,7 @@ namespace tri {
         bool sRepeat = true;
         bool tRepeat = true;
         bool useBorderColor = false;
-        Color borderColor = Color::white;
+        Color borderColor = color::white;
     };
 
     class FrameBuffer {

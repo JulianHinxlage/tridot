@@ -25,10 +25,12 @@ namespace tri {
 		Console::LogTarget target;
 		target.stream = &std::cout;
 		target.includeDate = false;
+		target.level = LogLevel::DEBUG;
 		env->console->addLogTarget(target);
 
 		Console::LogTarget target2;
 		target2.file = "log.txt";
+		target2.level = LogLevel::TRACE;
 		env->console->addLogTarget(target2);
 	}
 	

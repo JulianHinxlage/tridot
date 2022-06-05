@@ -8,6 +8,10 @@
 #include "core/JobManager.h"
 #include "core/config.h"
 #include "window/Window.h"
+#include "engine/Serializer.h"
+#include "window/Input.h"
+#include "window/UIManager.h"
+#include "engine/RuntimeMode.h"
 #include <imgui.h>
 #include <imgui/imgui_internal.h>
 
@@ -18,48 +22,98 @@ namespace tri {
 	void Editor::init() {
 		auto *job = env->jobManager->addJob("Render");
 		job->addSystem<Editor>();
-		job->orderSystems({ "Editor", "DebugMenu" });
-		menus = { "View", "Debug" };
+		autoSaveListener = -1;
+		playBufferListener = -1;
 	}
 
 	void Editor::startup() {
-		setupFlagsHandler();
+		autoSaveListener = env->eventManager->preShutdown.addListener([&]() {
+			if (env->runtimeMode->getMode() != RuntimeMode::EDIT) {
+				env->serializer->serializeWorld(playBuffer, "autosave.tmap");
+			}
+			else {
+				env->serializer->serializeWorld(env->world, "autosave.tmap");
+			}
+		});
+
+		playBuffer = new World();
+
+		playBufferListener = env->eventManager->onRuntimeModeChange.addListener([&](int prev, int mode) {
+			if (mode == RuntimeMode::PLAY && prev == RuntimeMode::EDIT) {
+				playBuffer->copy(*env->world);
+			}else if (mode == RuntimeMode::PAUSED && prev == RuntimeMode::EDIT) {
+				playBuffer->copy(*env->world);
+			}
+			else if (mode == RuntimeMode::EDIT && prev != RuntimeMode::LOADING) {
+				std::vector<std::pair<EntityId, Prefab>> persistent;
+
+				for (auto& i : playModePersistentEntities) {
+					Prefab p;
+					p.copyEntity(i.second);
+					persistent.push_back({ i.second, p });
+				}
+
+				env->world->copy(*playBuffer);
+
+				for (auto& i : persistent) {
+					i.second.copyIntoEntity(i.first);
+				}
+			}
+			env->systemManager->getSystem<UIManager>()->updateActiveFlags();
+		});
+
+		std::vector<std::string> systems1 = { "Time", "Input", "AssetManager", "STransform", "SCamera", "FileWatcher", "JobManager"};
+		std::vector<std::string> systems2 = { "Window", "SimpleRenderer", "UIManager"};
+		std::vector<std::string> systems3 = { "Gizmos", "UndoSystem", "Editor"};
+		env->runtimeMode->setActiveSystems(RuntimeMode::EDIT, systems1, true);
+		env->runtimeMode->setActiveSystems(RuntimeMode::EDIT, systems2, true);
+		env->runtimeMode->setActiveSystems(RuntimeMode::EDIT, systems3, true);
+
+		env->runtimeMode->setActiveSystems(RuntimeMode::PAUSED, systems1, true);
+		env->runtimeMode->setActiveSystems(RuntimeMode::PAUSED, systems2, true);
+		env->runtimeMode->setActiveSystems(RuntimeMode::PAUSED, systems3, true);
+
+		env->runtimeMode->setActiveSystems(RuntimeMode::LOADING, systems1, true);
+		env->runtimeMode->setActiveSystems(RuntimeMode::LOADING, systems2, true);
+		env->runtimeMode->setActiveSystems(RuntimeMode::LOADING, systems3, true);
+
+		env->runtimeMode->setMode(RuntimeMode::EDIT);
+	}
+
+	void Editor::shutdown() {
+		env->eventManager->preShutdown.removeListener(autoSaveListener);
+		env->eventManager->onRuntimeModeChange.removeListener(playBufferListener);
 	}
 
 	void Editor::tick() {
 		if (env->window && env->window->inFrame()) {
-			ImGui::DockSpaceOverViewport();
-
 			bool openAbout = false;
 			if (ImGui::BeginMainMenuBar()) {
 				if (ImGui::BeginMenu("File")) {
+
+					if (ImGui::MenuItem("Save", "Ctrl+S")) {
+						Clock clock;
+						env->serializer->serializeWorld(env->world, "world.tmap");
+						env->console->info("save world took %f s", clock.elapsed());
+					}
+					if (ImGui::MenuItem("Load")) {
+						Clock clock;
+						env->serializer->deserializeWorld(env->world, "world.tmap");
+						env->console->info("load world took %f s", clock.elapsed());
+					}
+
+					if (ImGui::MenuItem("Save Binary")) {
+						Clock clock;
+						env->serializer->serializeWorldBinary(env->world, "world.bin");
+						env->console->info("save (bin) world took %f s", clock.elapsed());
+					}
+					if (ImGui::MenuItem("Load Binary")) {
+						Clock clock;
+						env->serializer->deserializeWorldBinary(env->world, "world.bin");
+						env->console->info("load (bin) world took %f s", clock.elapsed());
+					}
 					ImGui::EndMenu();
 				}
-
-				for (auto& menu : menus) {
-					if (ImGui::BeginMenu(menu.c_str())) {
-						ImGui::EndMenu();
-					}
-				}
-
-				for (auto& window : windows) {
-					
-					if (ImGui::BeginMenu(window.menu.c_str())) {
-						auto* desc = Reflection::getDescriptor(window.classId);
-						auto* sys = env->systemManager->getSystemHandle(window.classId);
-
-						if (window.category.empty() || ImGui::BeginMenu(window.category.c_str())) {
-							if (ImGui::MenuItem(window.displayName.c_str(), nullptr, &sys->active)) {}
-							if (!window.category.empty()) {
-								ImGui::EndMenu();
-							}
-						}
-
-						ImGui::EndMenu();
-					}
-
-				}
-
 
 				if (ImGui::BeginMenu("Extra")) {
 					if (ImGui::MenuItem("About")) {
@@ -84,58 +138,117 @@ namespace tri {
 				}
 				ImGui::EndPopup();
 			}
+
+			//shortcuts
+			if (env->input->downControl()) {
+				//undo/redo
+				if (env->input->pressed('Y')) {
+					if (!env->input->downShift()) {
+						undo->undo();
+					}
+					else {
+						undo->redo();
+					}
+				}
+
+				if (env->input->pressed('S')) {
+					Clock clock;
+					env->serializer->serializeWorld(env->world, "world.tmap");
+					env->console->info("save world took %f s", clock.elapsed());
+				}
+
+				if (env->input->pressed('C')) {
+					if (env->editor->selectionContext->isSingleSelection()) {
+						EntityId id = env->editor->selectionContext->getSelected()[0];
+						env->editor->entityOperations->copyEntity(id);
+					}
+				}
+				if (env->input->pressed('V')) {
+					if (env->editor->entityOperations->hasCopiedEntity()) {
+						env->editor->selectionContext->select(env->editor->entityOperations->pastEntity());
+					}
+				}
+				if (env->input->pressed('D')) {
+					env->editor->undo->beginAction();
+					auto selected = env->editor->selectionContext->getSelected();
+					env->editor->selectionContext->unselectAll();
+					for (EntityId id : selected) {
+						env->editor->selectionContext->select(env->editor->entityOperations->duplicateEntity(id), false);
+					}
+					env->editor->undo->endAction();
+				}
+			}
+			if (env->input->pressed(Input::KEY_DELETE)) {
+				env->editor->undo->beginAction();
+				for (EntityId id : env->editor->selectionContext->getSelected()) {
+					env->editor->entityOperations->removeEntity(id);
+				}
+				env->editor->selectionContext->unselectAll();
+				env->editor->undo->endAction();
+			}
+			if (env->input->pressed(Input::KEY_F5)) {
+				auto mode = env->runtimeMode->getMode();
+				if (mode == RuntimeMode::EDIT) {
+					env->runtimeMode->setMode(RuntimeMode::PLAY);
+				}
+				else if (mode == RuntimeMode::PLAY) {
+					env->runtimeMode->setMode(RuntimeMode::EDIT);
+				}
+				else if (mode == RuntimeMode::PAUSED) {
+					env->runtimeMode->setMode(RuntimeMode::EDIT);
+				}
+			}
+			if (env->input->pressed(Input::KEY_F6)) {
+				auto mode = env->runtimeMode->getMode();
+				if (mode == RuntimeMode::PAUSED) {
+					env->runtimeMode->setMode(RuntimeMode::PLAY);
+				}
+				else if (mode == RuntimeMode::PLAY) {
+					env->runtimeMode->setMode(RuntimeMode::PAUSED);
+				}
+				else if (mode == RuntimeMode::EDIT) {
+					env->runtimeMode->setMode(RuntimeMode::PAUSED);
+				}
+			}
+
 		}
 	}
 
-	void Editor::addWindow(int classId, const std::string& displayName, const std::string& menu, const std::string& category) {
-		Window window;
-		window.classId = classId;
-		window.displayName = displayName;
-		window.menu = menu;
-		window.category = category;
-		windows.push_back(window);
-		env->jobManager->getJob("Render")->addSystem(Reflection::getDescriptor(classId)->name);
-		auto* sys = env->systemManager->getSystemHandle(classId);
-		sys->active = false;
-	}
-
-	void Editor::setupFlagsHandler() {
-		ImGuiSettingsHandler handler;
-		handler.TypeName = "OpenFlags";
-		handler.TypeHash = ImHashStr("OpenFlags");
-		handler.ReadOpenFn = [](ImGuiContext* ctx, ImGuiSettingsHandler* handler, const char* name) -> void* {
-			if (std::string(name) == "") {
-				return (void*)1;
-			}
-			else {
-				return nullptr;
-			}
-		};
-		handler.ReadLineFn = [](ImGuiContext* ctx, ImGuiSettingsHandler* handler, void* entry, const char* line) {
-			auto parts = StrUtil::split(line, "=");
-			if (parts.size() >= 2) {
-				for (auto& window : env->editor->windows) {
-					auto* desc = Reflection::getDescriptor(window.classId);
-					auto* sys = env->systemManager->getSystemHandle(window.classId);
-					if (window.displayName == parts[0]) {
-						try {
-							sys->active= std::stoi(parts[1]);
-						}
-						catch (...) {}
+	int Editor::setPersistentEntity(EntityId id, int handle) {
+		if (handle == -1) {
+			handle = 0;
+			while (true) {
+				bool change = false;
+				for (auto& i : playModePersistentEntities) {
+					if (i.first == handle) {
+						handle++;
+						change = false;
+						break;
 					}
 				}
+				if (!change) {
+					break;
+				}
 			}
-		};
-		handler.WriteAllFn = [](ImGuiContext* ctx, ImGuiSettingsHandler* handler, ImGuiTextBuffer* buf) {
-			buf->append("[OpenFlags][]\n");
-			for (auto& window : env->editor->windows) {
-				auto* desc = Reflection::getDescriptor(window.classId);
-				auto* sys = env->systemManager->getSystemHandle(window.classId);
-				buf->appendf("%s=%i\n", window.displayName.c_str(), (int)sys->active);
+			playModePersistentEntities.push_back({ handle, id });
+			return handle;
+		}
+		else {
+			for (int i = 0; i < playModePersistentEntities.size(); i++) {
+				auto& entity = playModePersistentEntities[i];
+				if (entity.first == handle) {
+					if (id == -1) {
+						playModePersistentEntities.erase(playModePersistentEntities.begin() + i);
+						handle = -1;
+					}
+					else {
+						entity.second = id;
+					}
+					break;
+				}
 			}
-			buf->appendf("\n");
-		};
-		ImGui::GetCurrentContext()->SettingsHandlers.push_back(handler);
+			return handle;
+		}
 	}
 
 }

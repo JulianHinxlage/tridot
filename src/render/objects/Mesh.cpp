@@ -173,7 +173,7 @@ namespace tri {
                         }
                         if(parts.size() - 1 >= 4){
                             if(!faceWarning){
-                                env->console->warning("mesh ", file, ": only triangle faces are supported");
+                                env->console->warning("mesh %s: only triangle faces are supported", file.c_str());
                                 faceWarning = true;
                             }
                         }
@@ -253,10 +253,10 @@ namespace tri {
                 indexData.push_back(index);
             }
 
-            env->console->debug("loaded mesh ", file);
+            env->console->trace("loaded mesh %s", file.c_str());
             return true;
         }else{
-            env->console->warning("mesh: file ", file, " not found");
+            env->console->warning("mesh: file %s not found", file.c_str());
         }
         return false;
     }

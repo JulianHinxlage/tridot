@@ -35,14 +35,16 @@ namespace tri {
         Color operator*(Color rhs) const;
         Color operator+(Color rhs) const;
         Color operator-(Color rhs) const;
-
-        static const Color white;
-        static const Color black;
-        static const Color red;
-        static const Color green;
-        static const Color blue;
-        static const Color transparent;
     };
+
+    namespace color {
+        static const Color white = 0xffffffff;
+        static const Color black = 0xff000000;
+        static const Color red = 0xff0000ff;
+        static const Color green = 0xff00ff00;
+        static const Color blue = 0xffff0000;
+        static const Color transparent = 0x00ffffff;
+    }
 
 }
 

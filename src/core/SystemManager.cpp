@@ -88,6 +88,16 @@ namespace tri {
 		}
 	}
 
+	int SystemManager::getClassIdBySystem(System* system) {
+		auto& systems = getSystemsImpl();
+		for (int i = 0; i < systems.size(); i++) {
+			if (systems[i].system == system) {
+				return i;
+			}
+		}
+		return -1;
+	}
+
 	SystemManager::SystemHandle* SystemManager::getSystemHandle(int classId) {
 		if (getSystemsImpl().size() <= classId) {
 			return nullptr;

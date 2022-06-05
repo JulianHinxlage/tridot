@@ -13,8 +13,6 @@ namespace tri {
 	public:
 		void init() override;
 		void startup() override;
-		void updateBegin();
-		void updateEnd();
 		void shutdown() override;
 		void tick() override;
 
@@ -29,6 +27,9 @@ namespace tri {
 		void *window;
 		bool inFrameFlag = false;
 		int vsyncInterval = 1;
+
+		void updateBegin();
+		void updateEnd();
 	};
 
 }

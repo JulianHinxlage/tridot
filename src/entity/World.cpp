@@ -70,7 +70,7 @@ namespace tri {
 					id = maxCurrentEntityId++;
 					break;
 				}
-			} while (id >= maxCurrentEntityId);
+			} while (id >= maxCurrentEntityId || hasEntity(id));
 		}
 
 		if (enablePendingOperations) {
@@ -79,6 +79,14 @@ namespace tri {
 		}
 		else {
 			onEntityAddIds.push_back(id);
+		}
+
+		if (id >= maxCurrentEntityId) {
+			for (int i = maxCurrentEntityId; i < id; i++) {
+				maxCurrentEntityId++;
+				freeEntityIds.push_back(i);
+			}
+			maxCurrentEntityId++;
 		}
 
 		TRI_ASSERT(!entityStorage.hasComponent(id), "entity id already in use");
@@ -242,6 +250,7 @@ namespace tri {
 		nextComponentId = from.nextComponentId;
 		componentIdMap = from.componentIdMap;
 		freeEntityIds = from.freeEntityIds;
+		maxCurrentEntityId = from.maxCurrentEntityId;
 		entityStorage.copy(from.entityStorage);
 
 		storages.resize(from.storages.size());
@@ -249,6 +258,9 @@ namespace tri {
 			if (from.storages[i]) {
 				storages[i] = std::make_shared<ComponentStorage>(from.storages[i]->classId);
 				storages[i]->copy(*from.storages[i]);
+			}
+			else if (storages[i]) {
+				storages[i] = nullptr;
 			}
 		}
 	}
@@ -270,6 +282,7 @@ namespace tri {
 	void World::clear() {
 		entityStorage.clear();
 		freeEntityIds.clear();
+		maxCurrentEntityId = 0;
 		for (auto& store : storages) {
 			if (store) {
 				store->clear();
@@ -414,6 +427,7 @@ namespace tri {
 	}
 
 	void World::setComponentGroup(const std::vector<ComponentStorage*>& storages) {
+		return;
 		auto group = std::make_shared<ComponentStorage::Group>();
 		group->storages = storages;
 		group->size = 0;

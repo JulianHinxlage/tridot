@@ -83,6 +83,8 @@ namespace tri {
 		Event<int> onClassRegister;
 		Event<int> onClassUnregister;
 
+		//args: previous mode, new mode
+		Event<int, int> onRuntimeModeChange;
 
 		Event<World*, EntityId> onEntityAdd;
 		Event<World*, EntityId> onEntityRemove;

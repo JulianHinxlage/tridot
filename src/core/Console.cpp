@@ -159,4 +159,35 @@ namespace tri {
 		}
 	}
 
+	std::string Console::autoComplete(const std::string& command, bool printOptions) {
+		std::vector<std::string> options;
+		for (auto& com : commands) {
+			int match = StrUtil::match(command, com.first);
+			if (match >= command.size()) {
+				options.push_back(com.first);
+			}
+		}
+		for (auto& cvar : cvars) {
+			int match = StrUtil::match(command, cvar.first);
+			if (match >= command.size()) {
+				options.push_back(cvar.first);
+			}
+		}
+
+		int minMatch = -1;
+		for (int i = 0; i < options.size(); i++) {
+			int match = StrUtil::match(options[i], options[0]);
+			if (minMatch == -1 || match < minMatch) {
+				minMatch = match;
+			}
+			if (printOptions) {
+				info("%s", options[i].c_str());
+			}
+		}
+		if (minMatch != -1) {
+			return options[0].substr(0, minMatch);
+		}
+		return command;
+	}
+
 }

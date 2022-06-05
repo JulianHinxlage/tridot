@@ -2,7 +2,7 @@
 // Copyright (c) 2022 Julian Hinxlage. All rights reserved.
 //
 
-#include "DebugMenu.h"
+#include "window/UIManager.h"
 #include "core/Reflection.h"
 #include "core/Environment.h"
 #include "core/ModuleManager.h"
@@ -12,19 +12,15 @@
 
 namespace tri {
 
-	class ModulesWindow : public System {
+	class ModulesWindow : public UIWindow {
 	public:
 		void init() override {
-			env->systemManager->getSystem<DebugMenu>()->addWindow<ModulesWindow>("Modules");
-		}
-
-		bool& active() {
-			return env->systemManager->getSystemHandle(Reflection::getClassId<ModulesWindow>())->active;
+			env->systemManager->getSystem<UIManager>()->addWindow<ModulesWindow>("Modules", "Debug");
 		}
 
 		void tick() override {
 			if (env->window && env->window->inFrame()) {
-				if (ImGui::Begin("Modules", &active())) {
+				if (ImGui::Begin("Modules", &active)) {
 
 					if (ImGui::Button("Load Module")) {
 						ImGui::OpenPopup("load");
@@ -58,11 +54,25 @@ namespace tri {
 						}
 						ImGui::SameLine();
 						ImGui::Text("%s", m->name.c_str());
+
+						std::string autoLoaded;
+						for (auto& d : m->autoLoaded) {
+							if (d) {
+								if (!autoLoaded.empty()) {
+									autoLoaded += ", ";
+								}
+								autoLoaded += d->name;
+							}
+						}
+						if (!autoLoaded.empty()) {
+							ImGui::Text("auto loaded: %s", autoLoaded.c_str());
+						}
+
 						ImGui::PopID();
 					}
 
-					ImGui::End();
 				}
+				ImGui::End();
 			}
 		}
 	};

@@ -28,7 +28,7 @@ namespace tri {
 
     void AssetManager::addSearchDirectory(const std::string &directory) {
         if (!std::filesystem::exists(directory)) {
-            env->console->warning("asset directory ", directory, " not found");
+            env->console->warning("asset directory %s not found", directory.c_str());
         }
         else {
             if(directory.size() > 0 && directory.back() == '/'){
@@ -147,7 +147,7 @@ namespace tri {
             auto &record = iter.second;
             if(record.file == minimalPath){
                 assets.erase(record.file);
-                env->console->debug("unloaded asset: ", minimalPath);
+                env->console->debug("unloaded asset: %s", minimalPath.c_str());
                 break;
             }
         }
@@ -164,7 +164,7 @@ namespace tri {
                     if (record.asset.use_count() <= 1) {
                         std::string file = iter.first;
                         assets.erase(iter.first);
-                        env->console->debug("unloaded asset: ", file);
+                        env->console->debug("unloaded asset: %s", file.c_str());
                         change = true;
                         break;
                     }
@@ -181,11 +181,23 @@ namespace tri {
         return false;
     }
 
+    void AssetManager::init() {
+        auto* job = env->jobManager->addJob("Render");
+        job->addSystem<AssetManager>();
+        job->orderSystems({"Window", "AssetManager"});
+
+        env->console->addCommand("addAssetDirectory", [](auto& args) {
+            if (args.size() > 0) {
+                env->assetManager->addSearchDirectory(args[0]);
+            }
+        });
+        env->console->addCVar("enableAssetHotReloading", &hotReloadEnabled);
+    }
+
     void AssetManager::startup() {
         running = true;
         for (int i = 0; i < 16; i++) {
             threadIds.push_back(env->threadManager->addThread(std::string("Asset Thread ") + std::to_string(i), [&]() {
-                TRI_PROFILE_THREAD("Asset Thread");
                 while (running) {
                     bool processed = false;
                     for (auto &iter : assets) {
@@ -286,7 +298,7 @@ namespace tri {
                             record.status = (Status) (record.status | STATE_PRE_LOADED);
                         } else {
                             record.status = (Status) (record.status | FAILED_TO_LOAD);
-                            env->console->warning("failed to load asset: ", record.file);
+                            env->console->warning("failed to load asset: %s", record.file.c_str());
                         }
                         processed = true;
                     }
@@ -296,7 +308,7 @@ namespace tri {
                         if (record.path == "") {
                             record.status = (Status) (record.status | FAILED_TO_LOAD);
                             record.status = (Status) (record.status | FILE_NOT_FOUND);
-                            env->console->warning("asset file not found: ", record.file);
+                            env->console->warning("asset file not found: %s", record.file.c_str());
                         } else {
                             record.previousTimeStamp = record.timeStamp;
                             record.timeStamp = getTimeStamp(record.path);
@@ -307,7 +319,7 @@ namespace tri {
                                 record.status = (Status) (record.status | STATE_LOADED);
                             } else {
                                 record.status = (Status) (record.status | FAILED_TO_LOAD);
-                                env->console->warning("failed to load asset: ", record.file);
+                                env->console->warning("failed to load asset: %s", record.file.c_str());
                             }
                         }
                         processed = true;
@@ -333,7 +345,7 @@ namespace tri {
                             record.status = (Status) (record.status | STATE_ACTIVATED);
                         } else {
                             record.status = (Status) (record.status | FAILED_TO_LOAD);
-                            env->console->warning("failed to load asset: ", record.file);
+                            env->console->warning("failed to load asset: %s", record.file.c_str());
                         }
                         processed = true;
                     }
@@ -345,13 +357,13 @@ namespace tri {
                             record.status = (Status) (record.status | LOADED);
                             record.status = (Status) (record.status & ~(int) UNLOADED);
                             if(record.previousTimeStamp != 0){
-                                env->console->debug("reloaded asset: ", file);
+                                env->console->debug("reloaded asset: %s", file.c_str());
                             }else{
-                                env->console->debug("loaded asset: ", file);
+                                env->console->debug("loaded asset: %s", file.c_str());
                             }
                         } else {
                             record.status = (Status) (record.status | FAILED_TO_LOAD);
-                            env->console->warning("failed to load asset: ", file);
+                            env->console->warning("failed to load asset: %s", file.c_str());
                         }
                         processed = true;
                     }

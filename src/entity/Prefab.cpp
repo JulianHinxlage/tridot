@@ -26,21 +26,38 @@ namespace tri {
 
 	void DynamicObjectBuffer::set(int classId, const void* ptr, int count) {
 		clear();
-		this->classId = classId;
-		this->count = count;
+		if (classId != -1) {
+			this->classId = classId;
+			this->count = count;
+			auto* desc = Reflection::getDescriptor(classId);
+			data = new uint8_t[count * desc->size];
+			if (ptr) {
+				desc->copy(ptr, data, count);
+			}
+			else {
+				desc->construct(data, count);
+			}
+		}
+	}
+
+	void DynamicObjectBuffer::get(void* ptr) const {
 		auto* desc = Reflection::getDescriptor(classId);
-		data = new uint8_t[count * desc->size];
-		if (ptr) {
-			desc->copy(ptr, data, count);
-		}
-		else {
-			desc->construct(data, count);
-		}
+		desc->copy(data, ptr);
+	}
+
+	void* DynamicObjectBuffer::get() const {
+		return data;
 	}
 
 	void DynamicObjectBuffer::clear() {
 		if (data) {
-			Reflection::getDescriptor(classId)->destruct(data, count);
+			auto* desc = Reflection::getDescriptor(classId);
+			if (desc) {
+				desc->destruct(data, count);
+			}
+			else {
+				env->console->warning("can't properly free memory for component");
+			}
 			delete data;
 		}
 		data = nullptr;
@@ -48,14 +65,12 @@ namespace tri {
 		classId = -1;
 	}
 
-	EntityId Prefab::createEntity(World* world) {
+	EntityId Prefab::createEntity(World* world, EntityId hint) {
 		if (!world) {
 			world = env->world;
 		}
-		EntityId id = world->addEntity();
-		for (int i = 0; i < components.size(); i++) {
-			world->addComponent(id, components[i].classId, components[i].data);
-		}
+		EntityId id = world->addEntity(hint);
+		copyIntoEntity(id, world);
 		return id;
 	}
 
@@ -70,6 +85,21 @@ namespace tri {
 				if (comp) {
 					addComponent(desc->classId, comp);
 				}
+			}
+		}
+	}
+
+	void Prefab::copyIntoEntity(EntityId id, World* world) {
+		if (!world) {
+			world = env->world;
+		}
+		for (int i = 0; i < components.size(); i++) {
+			int classId = components[i].classId;
+			if (world->hasComponent(id, classId)) {
+				components[i].get(world->getComponent(id, classId));
+			}
+			else {
+				world->addComponent(id, classId, components[i].data);
 			}
 		}
 	}
@@ -116,6 +146,10 @@ namespace tri {
 	void Prefab::clear() {
 		components.clear();
 		childs.clear();
+	}
+
+	const std::vector<DynamicObjectBuffer>& Prefab::getComponents() {
+		return components;
 	}
 
 }

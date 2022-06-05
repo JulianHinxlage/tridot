@@ -3,7 +3,6 @@
 //
 
 #include "core.h"
-
 using namespace tri;
 
 int main(int argc, char* argv[]) {

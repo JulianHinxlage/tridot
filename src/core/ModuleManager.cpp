@@ -39,6 +39,24 @@ namespace tri {
 		return false;
 	}
 
+	void ModuleManager::init() {
+		currentlyLoading = nullptr;
+		env->eventManager->onClassRegister.addListener([this](int classId) {
+			auto name = getModuleNameByAddress(Reflection::getDescriptor(classId)->registrationSourceAddress);
+			if (!getModule(name)) {
+				bool enabled = enableModuleHotReloading;
+				Module *currently = currentlyLoading;
+				enableModuleHotReloading = false;
+				Module *module = loadModule(name, false);
+				if (currently) {
+					currently->autoLoaded.push_back(module);
+				}
+				currentlyLoading = currently;
+				enableModuleHotReloading = enabled;
+			}
+		});
+	}
+
 	Module* ModuleManager::loadModule(const std::string& name, bool pending) {
 		if (pending) {
 			pendingLoads.push_back(name);
@@ -89,21 +107,6 @@ namespace tri {
 			env->console->info("can't create runtime file for module \"%s\"", name.c_str());
 		}
 
-		void* handle = nullptr;
-		{
-#if TRI_WINDOWS
-		TRI_PROFILE("loadDLL");
-		handle = (void*)LoadLibrary(runtimePath.c_str());
-		if (!handle) {
-			env->console->info("faild to load module \"%s\" (code %i)", name.c_str(), GetLastError());
-		}
-#else
-		TRI_PROFILE("loadSharedLibrary");
-		handle = dlopen(runtimePath.c_str(), RTLD_NOW | RTLD_LOCAL);
-#endif
-		}
-
-
 		auto module = std::make_shared<Module>();
 		module->path = filePath;
 		module->file = std::filesystem::path(filePath).filename().string();
@@ -111,8 +114,26 @@ namespace tri {
 		module->runtimePath = runtimePath;
 		module->runtimeFile = std::filesystem::path(runtimePath).filename().string();
 		module->runtimeName = std::filesystem::path(runtimePath).filename().stem().string();
-		module->handle = handle;
+		module->handle = nullptr;
 		modules.push_back(module);
+		currentlyLoading = module.get();
+
+
+		{
+#if TRI_WINDOWS
+		TRI_PROFILE("loadDLL");
+		module->handle = (void*)LoadLibrary(runtimePath.c_str());
+		if (!module->handle) {
+			env->console->info("faild to load module \"%s\" (code %i)", name.c_str(), GetLastError());
+		}
+#else
+		TRI_PROFILE("loadSharedLibrary");
+		module->handle = dlopen(runtimePath.c_str(), RTLD_NOW | RTLD_LOCAL);
+#endif
+		}
+
+
+
 
 		SystemManager::addNewSystems();
 
@@ -127,6 +148,7 @@ namespace tri {
 			});
 		}
 
+		currentlyLoading = nullptr;
 		return module.get();
 	}
 

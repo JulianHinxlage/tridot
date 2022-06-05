@@ -70,6 +70,10 @@ namespace tri {
 		indexByIdPages.clear();
 		indexByIdPageEntries.clear();
 		pageCount = 0;
+
+		for (auto& g : groups) {
+			g->size = 0;
+		}
 	}
 
 	uint32_t ComponentStorage::getIndexById(EntityId id) {
@@ -174,7 +178,7 @@ namespace tri {
 				}
 
 				if (haveAll) {
-					if (getIndexById(id) > group->size) {
+					if (getIndexById(id) >= group->size) {
 						for (auto* s : group->storages) {
 							s->swapIndex(group->size, s->getIndexById(id));
 						}
@@ -370,11 +374,43 @@ namespace tri {
 	}
 
 	void ComponentStorage::copy(ComponentStorage& from) {
+		TRI_ASSERT(classId == from.classId, "component type must match when copying a storage");
+		TRI_ASSERT(componentSize == from.componentSize, "component type must match when copying a storage");
+
+		//delete current memory
+		auto* desc = Reflection::getDescriptor(classId);
+		if (desc) {
+			desc->destruct(componentData, componentDataSize);
+		}
+		delete componentData;
+
+		//allocate memory and copy data
+		componentDataSize = from.componentDataSize;
+		componentDataCapacity = from.componentDataCapacity;
+		if (componentDataCapacity == 0) {
+			componentData = nullptr;
+		}
+		else {
+			componentData = new uint8_t[componentDataCapacity * componentSize];
+		}
+		if (desc) {
+			desc->copy(from.componentData, componentData, componentDataSize);
+		}
+
+		//copy ids
 		idData = from.idData;
-		componentData = from.componentData;
 		indexByIdPageEntries = from.indexByIdPageEntries;
 		pageCount = from.pageCount;
 
+		//delete pages
+		for (int i = 0; i < indexByIdPages.size(); i++) {
+			if (indexByIdPages[i]) {
+				delete indexByIdPages[i];
+				indexByIdPages[i] = nullptr;
+			}
+		}
+
+		//copy pages
 		indexByIdPages.resize(from.indexByIdPages.size());
 		for (int i = 0; i < indexByIdPages.size(); i++) {
 			if (from.indexByIdPages[i]) {
@@ -387,8 +423,10 @@ namespace tri {
 	}
 
 	void ComponentStorage::reserve(int count) {
-		idData.reserve(count);
-		resizeData(count);
+		if (count > componentDataCapacity) {
+			idData.reserve(count);
+			resizeData(count);
+		}
 	}
 
 	void ComponentStorage::resizeData(int count) {
@@ -403,10 +441,12 @@ namespace tri {
 		}
 		
 		int size = std::min(componentDataSize, newCapacity);
-		Reflection::getDescriptor(classId)->move(oldData, componentData, size);
-
-		if (newCapacity < componentDataSize) {
-			Reflection::getDescriptor(classId)->destruct(oldData + newCapacity * componentSize, componentDataSize - newCapacity);
+		auto *desc = Reflection::getDescriptor(classId);
+		if (desc) {
+			desc->move(oldData, componentData, size);
+			if (newCapacity < componentDataSize) {
+				desc->destruct(oldData + newCapacity * componentSize, componentDataSize - newCapacity);
+			}
 		}
 
 		componentDataCapacity = newCapacity;

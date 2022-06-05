@@ -25,14 +25,17 @@ namespace tri {
 		class Profiler* profiler;
 		class Config* config;
 		
-		//render
+		//window
 		class Window* window;
+		class Viewport* viewport;
 
 		//engine
 		class Input* input;
 		class Time* time;
 		class Random* random;
 		class AssetManager* assetManager;
+		class Serializer* serializer;
+		class RuntimeMode* runtimeMode;
 
 		//entity
 		class World* world;

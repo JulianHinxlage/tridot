@@ -7,35 +7,31 @@
 #include "core/System.h"
 #include "core/Reflection.h"
 #include "entity/World.h"
+#include "ClassUI.h"
+#include "UndoSystem.h"
+#include "SelectionContext.h"
+#include "EntityOperations.h"
 
 namespace tri {
 
 	class Editor : public System {
 	public:
+		ClassUI *classUI;
+		UndoSystem* undo;
+		SelectionContext* selectionContext;
+		EntityOperations* entityOperations;
+
 		void init() override;
 		void startup() override;
 		void tick() override;
+		void shutdown() override;
 
-		template<typename T>
-		void addWindow(const std::string& displayName, const std::string& menu = "View", const std::string& category = "") {
-			addWindow(Reflection::getClassId<T>(), displayName, menu, category);
-		}
-		void addWindow(int classId, const std::string& displayName, const std::string& menu = "View", const std::string& category = "");
-
-		EntityId selectedEntity = -1;
+		int setPersistentEntity(EntityId id, int handle = -1);
 	private:
-		class Window {
-		public:
-			int classId;
-			std::string displayName;
-			std::string menu;
-			std::string category;
-		};
-
-		std::vector<Window> windows;
-		std::vector<std::string> menus;
-
-		void setupFlagsHandler();
+		int autoSaveListener;
+		int playBufferListener;
+		World* playBuffer;
+		std::vector<std::pair<int, EntityId>> playModePersistentEntities;
 	};
 
 }

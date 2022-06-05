@@ -19,13 +19,16 @@ namespace tri {
 		DynamicObjectBuffer(const DynamicObjectBuffer &buffer);
 		~DynamicObjectBuffer();
 		void set(int classId, const void* ptr = nullptr, int count = 1);
+		void get(void* ptr) const;
+		void *get() const;
 		void clear();
 	};
 
 	class Prefab {
 	public:
-		EntityId createEntity(World* world = nullptr);
+		EntityId createEntity(World* world = nullptr, EntityId hint = -1);
 		void copyEntity(EntityId id, World* world = nullptr);
+		void copyIntoEntity(EntityId id, World* world = nullptr);
 
 		template<typename T>
 		T* addComponent(const T& t = T()) {
@@ -45,6 +48,7 @@ namespace tri {
 		void removeComponent(int classId);
 		Prefab* addChild();
 		void clear();
+		const std::vector<DynamicObjectBuffer>& getComponents();
 
 	private:
 		std::vector<DynamicObjectBuffer> components;

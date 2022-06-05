@@ -4,6 +4,7 @@
 
 #include "Input.h"
 #include "window/Window.h"
+#include "window/Viewport.h"
 #include <GL/glew.h>
 #include <GL/gl.h>
 #include <GLFW/glfw3.h>
@@ -159,8 +160,8 @@ namespace tri {
     glm::vec2 Input::getMousePosition(bool screenSpace) {
         if (screenSpace) {
             glm::vec2 m = mousePosition;
-            //m.x /= env->window->getSize().x;
-            //m.y /= env->window->getSize().y;
+            m.x /= env->viewport->size.x;
+            m.y /= env->viewport->size.y;
             m.y = 1.0f - m.y;
             m *= 2.0f;
             m -= glm::vec2(1, 1);
@@ -181,13 +182,25 @@ namespace tri {
             m += glm::vec2(1, 1);
             m /= 2.0f;
             m.y = 1.0f - m.y;
-            //m.x *= env->window->getSize().x;
-            //m.y *= env->window->getSize().y;
+            m.x *= env->viewport->size.x;
+            m.y *= env->viewport->size.y;
             mousePositionUpdate = m;
         }
         else {
             mousePositionUpdate = position;
         }
+    }
+
+    bool Input::downControl() {
+        return down(Key::KEY_LEFT_CONTROL) || down(Key::KEY_RIGHT_CONTROL);
+    }
+
+    bool Input::downShift() {
+        return down(Key::KEY_LEFT_SHIFT) || down(Key::KEY_RIGHT_SHIFT);
+    }
+
+    bool Input::downAlt() {
+        return down(Key::KEY_LEFT_ALT) || down(Key::KEY_RIGHT_ALT);
     }
 
 }

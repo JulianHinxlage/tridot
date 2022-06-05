@@ -47,7 +47,7 @@ namespace tri {
     bool Shader::load(const std::string &file) {
         std::ifstream stream(file);
         if(!stream.is_open()){
-            env->console->warning("shader: file ", file, " not found");
+            env->console->warning("shader: file %s not found", file.c_str());
             return false;
         }
         this->file = file;
@@ -89,13 +89,13 @@ namespace tri {
                 std::string log(logLength, '\0');
                 glGetShaderInfoLog(shaderId, logLength, &logLength, log.data());
                 if((GLenum)source.first == GL_VERTEX_SHADER){
-                    env->console->warning("vertex shader compilation:\n", log);
+                    env->console->warning("vertex shader compilation:\n%s", log.c_str());
                 }else if((GLenum)source.first == GL_FRAGMENT_SHADER){
-                    env->console->warning("fragment shader compilation:\n", log);
+                    env->console->warning("fragment shader compilation:\n%s", log.c_str());
                 }else if((GLenum)source.first == GL_GEOMETRY_SHADER){
-                    env->console->warning("geometry shader compilation:\n", log);
+                    env->console->warning("geometry shader compilation:\n%s", log.c_str());
                 }else if((GLenum)source.first == GL_COMPUTE_SHADER){
-                    env->console->warning("compute shader compilation:\n", log);
+                    env->console->warning("compute shader compilation:\n%s", log.c_str());
                 }
                 glDeleteShader(shaderId);
             }else{
@@ -124,7 +124,7 @@ namespace tri {
             glGetProgramiv(programId, GL_INFO_LOG_LENGTH, &logLength);
             std::string log(logLength, '\0');
             glGetProgramInfoLog(programId, logLength, &logLength, log.data());
-            env->console->warning("shader linking:\n", log);
+            env->console->warning("shader linking:\n%s", log.c_str());
 
             for(auto &shaderId : shaderIds){
                 glDetachShader(programId, shaderId);
@@ -140,7 +140,7 @@ namespace tri {
             glDeleteShader(shaderId);
         }
         id = programId;
-        env->console->debug("loaded shader ", file);
+        env->console->trace("loaded shader %s", file.c_str());
         locations.clear();
         bufferLocations.clear();
         return true;
@@ -249,7 +249,7 @@ namespace tri {
         }else{
             uint32_t location = glGetUniformLocation(id, name.c_str());
             if(location == -1 && warn){
-                env->console->warning("uniform ", name, " not found in shader ", file);
+                env->console->warning("uniform %s not found in shader %s", name.c_str(), file.c_str());
             }
             locations[name] = location;
             return location;
@@ -263,7 +263,7 @@ namespace tri {
         }else{
             uint32_t location = glGetUniformBlockIndex(id, name.c_str());
             if(location == -1 && warn){
-                env->console->warning("uniform buffer ", name, " not found in shader ", file);
+                env->console->warning("uniform buffer %s not found in shader %s", name.c_str(), file.c_str());
             }
             bufferLocations[name] = location;
             return location;

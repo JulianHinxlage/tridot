@@ -109,6 +109,7 @@ namespace tri {
 			}
 		}
 		systemNames.push_back(name);
+		sort();
 	}
 
 	void JobManager::Job::addSystems(const std::vector<std::string>& names) {
@@ -127,31 +128,8 @@ namespace tri {
 	}
 
 	void JobManager::Job::orderSystems(const std::vector<std::string>& systems) {
-		std::string prev;
-		int prevIndex = -1;
-		for (int i = 0; i < systems.size(); i++) {
-			std::string system = systems[i];
-			int index = -1;
-
-			for (int j = 0; j < systemNames.size(); j++) {
-				if (systemNames[j] == system) {
-					index = j;
-					break;
-				}
-			}
-
-			if (i > 0 && index != -1 && prevIndex != -1) {
-				if (prevIndex > index) {
-					systemNames.erase(systemNames.begin() + prevIndex);
-					systemNames.insert(systemNames.begin() + index, prev);
-					prevIndex = index;
-					index++;
-				}
-			}
-
-			prev = system;
-			prevIndex = index;
-		}
+		orderConstraints.push_back(systems);
+		sort();
 	}
 
 	void JobManager::Job::addJobExclusion(const std::string& name) {
@@ -161,6 +139,36 @@ namespace tri {
 			}
 		}
 		jobExclusion.push_back(name);
+	}
+
+	void JobManager::Job::sort() {
+		for (auto& order : orderConstraints) {
+			std::string prev;
+			int prevIndex = -1;
+			for (int i = 0; i < order.size(); i++) {
+				std::string system = order[i];
+				int index = -1;
+
+				for (int j = 0; j < systemNames.size(); j++) {
+					if (systemNames[j] == system) {
+						index = j;
+						break;
+					}
+				}
+
+				if (i > 0 && index != -1 && prevIndex != -1) {
+					if (prevIndex > index) {
+						systemNames.erase(systemNames.begin() + prevIndex);
+						systemNames.insert(systemNames.begin() + index, prev);
+						prevIndex = index;
+						index++;
+					}
+				}
+
+				prev = system;
+				prevIndex = index;
+			}
+		}
 	}
 
 
