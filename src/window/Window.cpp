@@ -80,6 +80,11 @@ namespace tri {
 		ImGui::PushStyleColor(ImGuiCol_TitleBgActive, ImVec4(0.238, 0.238, 0.238, 1));
 		ImGui::PushStyleColor(ImGuiCol_DragDropTarget, ImVec4(0.0, 0.32, 1.0, 1));
 
+		if (!std::filesystem::exists("layout.ini")) {
+			if (std::filesystem::exists("../layout.ini")) {
+				std::filesystem::copy("../layout.ini", "layout.ini");
+			}
+		}
 		ImGui::GetIO().IniFilename = "layout.ini";
 	}
 

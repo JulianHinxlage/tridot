@@ -18,6 +18,8 @@ namespace tri {
 			LOADING,
 		};
 
+		void init() override;
+		void shutdown() override;
 		Mode getMode();
 		void setMode(Mode mode);
 		void setActiveSystem(Mode mode, const std::string& systemName, bool active);
@@ -25,6 +27,7 @@ namespace tri {
 
 	private:
 		Mode mode = LOADING;
+		int listener;
 		
 		class ModeContext {
 		public:
@@ -35,6 +38,7 @@ namespace tri {
 		std::unordered_map<Mode, ModeContext> modeContexts;
 
 		void setAllActive(bool active);
+		void updateActive();
 	};
 
 }

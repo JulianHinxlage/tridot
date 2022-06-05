@@ -8,19 +8,24 @@ namespace tri {
 
 	TRI_SYSTEM_INSTANCE(RuntimeMode, env->runtimeMode);
 
+	void RuntimeMode::init() {
+		listener = env->eventManager->onModuleLoad.addListener([&](const std::string &name) {
+			updateActive();
+		});
+	}
+
+	void RuntimeMode::shutdown() {
+		env->eventManager->onModuleLoad.removeListener(listener);
+	}
+
 	RuntimeMode::Mode RuntimeMode::getMode() {
 		return mode;
 	}
 
-	void RuntimeMode::setMode(Mode mode) {
-		Mode previousMode = this->mode;
-		if (mode == previousMode) {
-			return;
-		}
-		this->mode = mode;
+	void RuntimeMode::updateActive() {
 		auto entry = modeContexts.find(mode);
 		if (entry != modeContexts.end()) {
-			auto &context = entry->second;
+			auto& context = entry->second;
 
 			if (context.activeSystems.size() > 0) {
 				setAllActive(false);
@@ -51,6 +56,15 @@ namespace tri {
 		else {
 			setAllActive(true);
 		}
+	}
+
+	void RuntimeMode::setMode(Mode mode) {
+		Mode previousMode = this->mode;
+		if (mode == previousMode) {
+			return;
+		}
+		this->mode = mode;
+		updateActive();
 		env->eventManager->onRuntimeModeChange.invoke(previousMode, mode);
 	}
 

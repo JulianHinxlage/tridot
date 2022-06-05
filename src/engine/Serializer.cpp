@@ -6,6 +6,7 @@
 #include "entity/World.h"
 #include "engine/Color.h"
 #include "engine/AssetManager.h"
+#include "engine/ComponentCache.h"
 #include <glm/glm.hpp>
 
 namespace tri {
@@ -136,9 +137,9 @@ namespace tri {
 				}
 			}
 		}
+		env->systemManager->getSystem<ComponentCache>()->serialize(id, world, data);
 
 		*data.emitter << YAML::EndMap;
-
 	}
 
 	void Serializer::deserializeEntity(World* world, SerialData& data) {
@@ -153,6 +154,12 @@ namespace tri {
 					SerialData d;
 					d.node = i.second;
 					deserializeClass(desc->classId, comp, d);
+				}
+				else {
+					//unknown component will be added to the component cache to not lose data
+					YAML::Emitter e;
+					e << i.second;
+					env->systemManager->getSystem<ComponentCache>()->addComponent(id, world, i.first.Scalar(), e.c_str());
 				}
 			}
 		}

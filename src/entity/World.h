@@ -11,33 +11,6 @@
 
 namespace tri {
 
-	/*
-		EntitySystem:
-		( ) generation in id
-
-		(x) add/remove entity
-		(x) add/remove components
-		(x) get components
-		(x) get signature
-
-		(x) pending operations
-
-		(x) clear
-		(x) copy
-		swap
-		save/load serialisation
-
-		(x) onAdd/onRemove entities/components
-
-		(x) ComponentStorage
-		(x) Store use: ctor, copy ctor, move ect. to proper handle components
-		(x) optimization: groups / store alignement
-
-		( ) dynamic Component Buffer
-		( ) prefab
-
-	*/
-
 	template<typename... Components>
 	class EntityView;
 
@@ -160,6 +133,9 @@ namespace tri {
 		ComponentStorage* getComponentStorage(int classId);
 		ComponentStorage* getEntityStorage();
 		void setComponentGroup(const std::vector<ComponentStorage*>& storages);
+
+		static const std::vector<World*>& getAllWorlds();
+		void removeComponentStorage(int classId);
 	private:
 		//component data
 		std::vector<std::shared_ptr<ComponentStorage>> storages;

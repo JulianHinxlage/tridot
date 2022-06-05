@@ -47,6 +47,10 @@ namespace tri {
 	};
 	TRI_SYSTEM(WorldManager);
 
+	const std::vector<World*>& World::getAllWorlds() {
+		return env->systemManager->getSystem<WorldManager>()->worlds;
+	}
+
 	World::World()
 		: entityStorage(Reflection::getClassId<EntitySignature>()) {
 		maxCurrentEntityId = 0;
@@ -446,6 +450,21 @@ namespace tri {
 				auto* storage = storages[i];
 				storage->addGroup(group);
 			}
+		}
+	}
+
+	void World::removeComponentStorage(int classId) {
+		if (storages.size() > classId) {
+			storages[classId] = nullptr;
+		}
+		if (pendingAddComponentStorages.size() > classId) {
+			pendingAddComponentStorages[classId] = nullptr;
+		}
+		int compId = getComponentId(classId);
+		int size = entityStorage.size();
+		EntitySignature* data = (EntitySignature*)entityStorage.getComponentData();
+		for (int i = 0; i < size; i++) {
+			data[i] &= ~(1 << compId);
 		}
 	}
 
