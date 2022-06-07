@@ -114,10 +114,12 @@ namespace tri {
 			}
 
 			for (auto& prop : desc->properties) {
-				if (auto i = data.node[prop.name]) {
-					SerialData d;
-					d.node = i;
-					deserializeClass(prop.type->classId, (uint8_t*)ptr + prop.offset, d);
+				if (data.node.IsMap()) {
+					if (auto i = data.node[prop.name]) {
+						SerialData d;
+						d.node = i;
+						deserializeClass(prop.type->classId, (uint8_t*)ptr + prop.offset, d);
+					}
 				}
 			}
 		}
@@ -237,8 +239,11 @@ namespace tri {
 	}
 
 	bool Serializer::loadFromFile(SerialData& data, const std::string& file) {
-		data.node = YAML::LoadFile(file);
-		return (bool)data.node;
+		try {
+			data.node = YAML::LoadFile(file);
+			return (bool)data.node;
+		}
+		catch (...) { return false; }
 	}
 
 
@@ -250,12 +255,20 @@ namespace tri {
 		serializeWorld(world, data);
 	}
 
-	void Serializer::deserializeWorld(World* world, const std::string& file) {
+	bool Serializer::deserializeWorld(World* world, const std::string& file) {
 		if (std::filesystem::exists(file)) {
 			SerialData data;
-			loadFromFile(data, file);
+			if (!loadFromFile(data, file)) {
+				env->console->warning("failed to load file %s", file.c_str());
+				return false;
+			}
 			deserializeWorld(world, data);
 		}
+		else {
+			env->console->warning("file %s not found", file.c_str());
+			return false;
+		}
+		return true;
 	}
 
 	void Serializer::init() {

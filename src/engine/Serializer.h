@@ -37,7 +37,7 @@ namespace tri {
 		bool loadFromFile(SerialData& data, const std::string& file);
 
 		void serializeWorld(World* world, const std::string& file);
-		void deserializeWorld(World* world, const std::string& file);
+		bool deserializeWorld(World* world, const std::string& file);
 
 		void addSerializeCallback(int classId, const std::function<void(void* ptr, SerialData& data)>& callback);
 		void addDeserializeCallback(int classId, const std::function<void(void* ptr, SerialData& data)>& callback);

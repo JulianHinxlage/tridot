@@ -16,9 +16,7 @@ namespace tri {
         glm::vec3 position;
         glm::vec3 scale;
         glm::vec3 rotation;
-
-        EntityId parent;
-        glm::mat4 matrix;
+        EntityId parent = -1;
 
         Transform(const glm::vec3 &position = {0, 0, 0}, const glm::vec3 &scale = {1, 1, 1}, const glm::vec3 &rotation = {0, 0, 0})
             : position(position), scale(scale), rotation(rotation) {
@@ -29,8 +27,14 @@ namespace tri {
         glm::mat4 calculateLocalMatrix() const;
         const glm::mat4 &getMatrix() const;
         void decompose(const glm::mat4 &matrix);
-    };
 
+        //only for main world (env->world)
+        static const std::vector<EntityId>& getChilds(EntityId id);
+
+    private:
+        glm::mat4 matrix;
+        friend class STransform;
+    };
 
 }
 

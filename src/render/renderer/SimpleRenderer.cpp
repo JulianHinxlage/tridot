@@ -92,7 +92,7 @@ namespace tri {
             projection = c.viewProjection;
         });
 		env->world->each<const Transform, const MeshComponent>([&](EntityId id, const Transform &t, const MeshComponent &m) {
-			submit(t.matrix, m.mesh.get(), m.material.get(), m.color, id);
+			submit(t.getMatrix(), m.mesh.get(), m.material.get(), m.color, id);
 		});
         FrameBuffer::unbind();
 	}

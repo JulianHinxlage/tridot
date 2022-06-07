@@ -39,6 +39,7 @@ namespace tri {
 	class EntitiesWindow : public UIWindow {
 	public:
 		EntityId lastClicked = -1;
+		EntityId dragEntity = -1;
 
 		std::vector<EntityId> list;
 		bool needListUpdate = true;
@@ -263,12 +264,27 @@ namespace tri {
 			end = std::min(end, size);
 			start = std::max(start, 0);
 
+			//draw full list for now
+			//todo: fix
+			start = 0;
+			end = size;
+
 			ImGui::SetCursorPosY(ImGui::GetCursorPos().y + spacing * start);
 			for (uint32_t i = start; i < end; i++) {
 				EntityId id = list[i];
 				ImGui::PushID(id);
 
-				entity(id);
+				bool show = true;
+				auto* t = env->world->getComponent<Transform>(id);
+				if (t) {
+					if (t->parent != -1) {
+						show = false;
+					}
+				}
+
+				if (show) {
+					entity2(id);
+				}
 
 				ImGui::PopID();
 			}
@@ -354,8 +370,19 @@ namespace tri {
 				}
 			});
 
-			//sort
-			std::sort(list.begin(), list.end(), [](EntityId a, EntityId b) {
+	
+			//sort by entity hierarchy
+			std::vector<EntityId> newList;
+			std::vector<EntityId> topLevelList;
+			for (auto id : list) {
+				auto* t = env->world->getComponent<Transform>(id);
+				if (!t || t && t->parent == -1) {
+					topLevelList.push_back(id);
+				}
+			}
+
+			//sort alphabetical
+			std::sort(topLevelList.begin(), topLevelList.end(), [](EntityId a, EntityId b) {
 				if (auto* infoa = env->world->getComponent<EntityInfo>(a)) {
 					if (auto* infob = env->world->getComponent<EntityInfo>(b)) {
 						return infoa->name < infob->name;
@@ -363,6 +390,28 @@ namespace tri {
 				}
 				return a < b;
 			});
+
+			sortListByHierarchy(topLevelList, newList);
+			list = newList;
+		}
+
+		void sortListByHierarchy(const std::vector<EntityId>&list, std::vector<EntityId> &newList) {
+			for (auto id : list) {
+				auto childs = Transform::getChilds(id);
+
+				//sort alphabetical
+				std::sort(childs.begin(), childs.end(), [](EntityId a, EntityId b) {
+					if (auto* infoa = env->world->getComponent<EntityInfo>(a)) {
+						if (auto* infob = env->world->getComponent<EntityInfo>(b)) {
+							return infoa->name < infob->name;
+						}
+					}
+					return a < b;
+				});
+
+				newList.push_back(id);
+				sortListByHierarchy(childs, newList);
+			}
 		}
 
 		void entity(EntityId id) {
@@ -375,9 +424,7 @@ namespace tri {
 			}
 
 			if (ImGui::Selectable(lable.c_str(), env->editor->selectionContext->isSelected(id))) {
-
 				if (env->input->downShift()) {
-
 					//range select
 					if (lastClicked != -1 && id != lastClicked) {
 						bool select = env->editor->selectionContext->isSelected(lastClicked);
@@ -423,7 +470,117 @@ namespace tri {
 				lastClicked = id;
 			}
 
+			if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenBlockedByActiveItem)) {
+				if (env->input->pressed(Input::MOUSE_BUTTON_LEFT)) {
+					dragEntity = id;
+				}
+				if (env->input->released(Input::MOUSE_BUTTON_LEFT)) {
+					if (dragEntity != id && dragEntity != -1) {
+						env->editor->entityOperations->parentEntity(dragEntity, id);
+						needListUpdate = true;
+					}
+					dragEntity = -1;
+				}
+			}
+
 			entityContextMenu(id);
+		}
+
+		void entity2(EntityId id) {
+			std::string lable = "<" + std::to_string(id) + ">";
+
+			if (auto* info = env->world->getComponent<EntityInfo>(id)) {
+				if (!info->name.empty()) {
+					lable = info->name;
+				}
+			}
+
+			auto& childs = Transform::getChilds(id);
+
+			bool open = false;
+			if (childs.size() != 0) {
+				open = ImGui::TreeNodeEx("");
+				ImGui::SameLine();
+			}
+			else {
+				ImGui::TreePush();
+				open = true;
+			}
+
+			if (ImGui::Selectable(lable.c_str(), env->editor->selectionContext->isSelected(id), ImGuiSelectableFlags_SpanAllColumns)) {
+				selection(id);
+			}
+
+			if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenBlockedByActiveItem)) {
+				if (env->input->pressed(Input::MOUSE_BUTTON_LEFT)) {
+					dragEntity = id;
+				}
+				if (env->input->released(Input::MOUSE_BUTTON_LEFT)) {
+					if (dragEntity != id && dragEntity != -1) {
+						env->editor->entityOperations->parentEntity(dragEntity, id);
+						needListUpdate = true;
+					}
+					dragEntity = -1;
+				}
+			}
+
+			entityContextMenu(id);
+
+			if(open){
+				for (auto& child : childs) {
+					ImGui::PushID(child);
+					entity2(child);
+					ImGui::PopID();
+				}
+				ImGui::TreePop();
+			}
+		}
+
+		void selection(EntityId id) {
+			if (env->input->downShift()) {
+				//range select
+				if (lastClicked != -1 && id != lastClicked) {
+					bool select = env->editor->selectionContext->isSelected(lastClicked);
+					bool inRange = false;
+					for (uint32_t i = 0; i < list.size(); i++) {
+						EntityId iterId = list[i];
+
+						bool iterInRange = inRange;
+						if (iterId == id || iterId == lastClicked) {
+							inRange = !inRange;
+							if (inRange) {
+								iterInRange = true;
+							}
+						}
+
+						if (iterInRange) {
+							if (select) {
+								env->editor->selectionContext->select(iterId, false);
+							}
+							else {
+								env->editor->selectionContext->unselect(iterId);
+							}
+						}
+
+					}
+				}
+
+			}
+			else {
+				//select
+				if (env->editor->selectionContext->isSelected(id)) {
+					if (env->input->downControl()) {
+						env->editor->selectionContext->unselect(id);
+					}
+					else {
+						env->editor->selectionContext->select(id, true);
+					}
+				}
+				else {
+					env->editor->selectionContext->select(id, !env->input->downControl());
+				}
+			}
+			lastClicked = id;
 		}
 
 		void entityContextMenu(EntityId id) {
@@ -465,6 +622,30 @@ namespace tri {
 						env->editor->selectionContext->select(env->editor->entityOperations->duplicateEntity(id));
 					}
 
+				}
+				bool canParent = (env->editor->selectionContext->isSelected(id) && env->editor->selectionContext->isMultiSelection())
+					|| !env->editor->selectionContext->isSelected(id);
+
+				if (ImGui::MenuItem("Parent", nullptr, false, canParent)) {
+					env->editor->undo->beginAction();
+					auto selected = env->editor->selectionContext->getSelected();
+					for (EntityId iterId : selected) {
+						env->editor->entityOperations->parentEntity(iterId, id);
+					}
+					env->editor->undo->endAction();
+				}
+				if (ImGui::MenuItem("Unparent")) {
+					if (env->editor->selectionContext->isSelected(id)) {
+						env->editor->undo->beginAction();
+						auto selected = env->editor->selectionContext->getSelected();
+						for (EntityId id : selected) {
+							env->editor->entityOperations->parentEntity(id, -1);
+						}
+						env->editor->undo->endAction();
+					}
+					else {
+						env->editor->entityOperations->parentEntity(id, -1);
+					}
 				}
 				ImGui::EndPopup();
 			}

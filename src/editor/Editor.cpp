@@ -39,26 +39,28 @@ namespace tri {
 		playBuffer = new World();
 
 		playBufferListener = env->eventManager->onRuntimeModeChange.addListener([&](int prev, int mode) {
-			if (mode == RuntimeMode::PLAY && prev == RuntimeMode::EDIT) {
-				playBuffer->copy(*env->world);
-			}else if (mode == RuntimeMode::PAUSED && prev == RuntimeMode::EDIT) {
-				playBuffer->copy(*env->world);
-			}
-			else if (mode == RuntimeMode::EDIT && prev != RuntimeMode::LOADING) {
-				std::vector<std::pair<EntityId, Prefab>> persistent;
-
-				for (auto& i : playModePersistentEntities) {
-					Prefab p;
-					p.copyEntity(i.second);
-					persistent.push_back({ i.second, p });
+			env->eventManager->postTick.addListener([&, prev, mode]() {
+				if (mode == RuntimeMode::PLAY && prev == RuntimeMode::EDIT) {
+					playBuffer->copy(*env->world);
+				}else if (mode == RuntimeMode::PAUSED && prev == RuntimeMode::EDIT) {
+					playBuffer->copy(*env->world);
 				}
+				else if (mode == RuntimeMode::EDIT && prev != RuntimeMode::LOADING) {
+					std::vector<std::pair<EntityId, Prefab>> persistent;
 
-				env->world->copy(*playBuffer);
+					for (auto& i : playModePersistentEntities) {
+						Prefab p;
+						p.copyEntity(i.second);
+						persistent.push_back({ i.second, p });
+					}
 
-				for (auto& i : persistent) {
-					i.second.copyIntoEntity(i.first);
+					env->world->copy(*playBuffer);
+
+					for (auto& i : persistent) {
+						i.second.copyIntoEntity(i.first);
+					}
 				}
-			}
+			}, true);
 			env->systemManager->getSystem<UIManager>()->updateActiveFlags();
 		});
 
@@ -92,25 +94,34 @@ namespace tri {
 				if (ImGui::BeginMenu("File")) {
 
 					if (ImGui::MenuItem("Save", "Ctrl+S")) {
-						Clock clock;
-						env->serializer->serializeWorld(env->world, "world.tmap");
-						env->console->info("save world took %f s", clock.elapsed());
+						env->eventManager->postTick.addListener([]() {
+							Clock clock;
+							env->serializer->serializeWorld(env->world, "world.tmap");
+							env->console->info("save world took %f s", clock.elapsed());
+						}, true);
 					}
 					if (ImGui::MenuItem("Load")) {
-						Clock clock;
-						env->serializer->deserializeWorld(env->world, "world.tmap");
-						env->console->info("load world took %f s", clock.elapsed());
+						env->eventManager->postTick.addListener([]() {
+							Clock clock;
+							env->serializer->deserializeWorld(env->world, "world.tmap");
+							env->console->info("load world took %f s", clock.elapsed());
+						}, true);
 					}
 
 					if (ImGui::MenuItem("Save Binary")) {
-						Clock clock;
-						env->serializer->serializeWorldBinary(env->world, "world.bin");
-						env->console->info("save (bin) world took %f s", clock.elapsed());
+						env->eventManager->postTick.addListener([]() {
+							Clock clock;
+							env->serializer->serializeWorldBinary(env->world, "world.bin");
+							env->console->info("save (bin) world took %f s", clock.elapsed());
+						}, true);
+
 					}
 					if (ImGui::MenuItem("Load Binary")) {
-						Clock clock;
-						env->serializer->deserializeWorldBinary(env->world, "world.bin");
-						env->console->info("load (bin) world took %f s", clock.elapsed());
+						env->eventManager->postTick.addListener([]() {
+							Clock clock;
+							env->serializer->deserializeWorldBinary(env->world, "world.bin");
+							env->console->info("load (bin) world took %f s", clock.elapsed());
+						}, true);
 					}
 					ImGui::EndMenu();
 				}
@@ -152,9 +163,11 @@ namespace tri {
 				}
 
 				if (env->input->pressed('S')) {
-					Clock clock;
-					env->serializer->serializeWorld(env->world, "world.tmap");
-					env->console->info("save world took %f s", clock.elapsed());
+					env->eventManager->postTick.addListener([]() {
+						Clock clock;
+						env->serializer->serializeWorld(env->world, "world.tmap");
+						env->console->info("save world took %f s", clock.elapsed());
+					}, true);
 				}
 
 				if (env->input->pressed('C')) {

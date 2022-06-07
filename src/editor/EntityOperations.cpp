@@ -4,6 +4,7 @@
 
 #include "EntityOperations.h"
 #include "Editor.h"
+#include "engine/Transform.h"
 
 namespace tri {
 
@@ -83,6 +84,29 @@ namespace tri {
 			env->editor->undo->componentRemoved(classId, id);
 		}
 		world->removeComponent(id, classId);
+	}
+
+	void EntityOperations::parentEntity(EntityId id, EntityId parent, World* world) {
+		if (!world) {
+			world = env->world;
+		}
+		if (id == parent) {
+			return;
+		}
+		Transform* t = env->world->getComponent<Transform>(id);
+		env->editor->undo->componentChanged(Reflection::getClassId<Transform>(), id, t);
+		if (t) {
+			t->parent = parent;
+			if (parent == -1) {
+				t->decompose(t->getMatrix());
+			}
+			else {
+				Transform* pt = env->world->getComponent<Transform>(parent);
+				if (pt) {
+					t->decompose(glm::inverse(pt->getMatrix()) * t->getMatrix());
+				}
+			}
+		}
 	}
 
 	bool EntityOperations::hasCopiedEntity() {

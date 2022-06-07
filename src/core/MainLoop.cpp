@@ -53,9 +53,15 @@ namespace tri {
 			}
 
 			//tick jobs which will tick systems
-			env->eventManager->preTick.invoke();
+			{
+				TRI_PROFILE("preTick");
+				env->eventManager->preTick.invoke();
+			}
 			env->jobManager->tickJobs();
-			env->eventManager->postTick.invoke();
+			{
+				TRI_PROFILE("postTick");
+				env->eventManager->postTick.invoke();
+			}
 
 			//performe shutdown on systems to be removed
 			if (env->systemManager->hasPendingShutdowns()) {

@@ -22,6 +22,7 @@ namespace tri {
 		void copyComponent(EntityId id, int classId, World* world = nullptr);
 		void pastComponent(EntityId id, World* world = nullptr);
 		void removeComponent(EntityId id, int classId, World* world = nullptr);
+		void parentEntity(EntityId id, EntityId parent, World* world = nullptr);
 
 		bool hasCopiedEntity();
 		int getCopiedComponentClassId();
