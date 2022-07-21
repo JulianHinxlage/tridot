@@ -80,6 +80,9 @@ namespace tri {
 		Event<std::string> onModuleLoad;
 		Event<std::string> onModuleUnload;
 		
+		Event<World*, std::string> onMapLoad;
+		Event<World*, std::string> onMapBegin;
+
 		Event<int> onClassRegister;
 		Event<int> onClassUnregister;
 

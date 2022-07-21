@@ -7,6 +7,7 @@
 #include "window/Window.h"
 #include "engine/AssetManager.h"
 #include "engine/Serializer.h"
+#include "engine/Map.h"
 
 #include "render/objects/Texture.h"
 #include "render/objects/Shader.h"
@@ -47,7 +48,11 @@ namespace tri {
 					if (id == Reflection::getClassId<World>()) {
 						if (ImGui::BeginPopupContextItem()) {
 							if (ImGui::MenuItem("Load")) {
-								env->serializer->deserializeWorld(env->world, path);
+								Map::loadAndSetToActiveWorld(path);
+							}
+							bool isLoaded = env->assetManager->getStatus(path) & AssetManager::Status::LOADED;
+							if (ImGui::MenuItem("Unload", nullptr, nullptr, isLoaded)) {
+								env->assetManager->unload(path);
 							}
 							ImGui::EndPopup();
 						}

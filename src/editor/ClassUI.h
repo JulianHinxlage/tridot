@@ -18,8 +18,8 @@ namespace tri {
 		void addClassUI(int classId, const std::function<bool(const char* label, void* value, void* min, void* max, bool multiValue)>& callback);
 
 		template<typename T>
-		void draw(T &t, const char *label = nullptr) {
-			draw(Reflection::getClassId<T>(), &t, label);
+		bool draw(T &t, const char *label = nullptr) {
+			return draw(Reflection::getClassId<T>(), &t, label);
 		}
 
 		template<typename T>
@@ -29,10 +29,15 @@ namespace tri {
 			});
 		}
 
+		bool componentCombo(int& classId, const char* label);
+		bool funcPropertyCombo(int classId, FunctionDescriptor** func, const char* label);
+		bool propertyCombo(int classId, int &propertyIndex, const char* label);
+
 		bool dragTarget(int classId, void* ptr);
 		bool dragSource(int classId, const void* ptr);
 		bool dragTarget(int classId, std::string &str);
 		bool dragSource(int classId, const std::string &str);
+
 
 	private:
 		std::vector<std::function<bool(const char *label, void* value, void* min, void* max, bool multiValue)>> callbacks;

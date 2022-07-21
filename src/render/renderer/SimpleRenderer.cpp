@@ -48,7 +48,7 @@ namespace tri {
         };
         defaultMesh->create(quadVertices, sizeof(quadVertices) / sizeof(quadVertices[0]), quadIndices, sizeof(quadIndices) / sizeof(quadIndices[0]), { {FLOAT, 3}, {FLOAT, 3} ,{FLOAT, 2} });
 
-        defaultShader = env->assetManager->get<Shader>("shaders/simple.glsl", AssetManager::SYNCHRONOUS);
+        defaultShader = env->assetManager->get<Shader>("shaders/simple.glsl");
         projection = glm::mat4(1);
 	}
 
@@ -111,6 +111,10 @@ namespace tri {
         Texture *texture = material->texture.get();
         if (!texture) {
             texture = defaultTexture.get();
+        }
+
+        if (shader->getId() == 0) {
+            return;
         }
 
         shader->bind();

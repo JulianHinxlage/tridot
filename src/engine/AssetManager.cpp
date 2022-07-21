@@ -76,6 +76,10 @@ namespace tri {
 
     Ref<Asset> AssetManager::get(int typeId, const std::string &file, Options options,
         const std::function<bool(Ref<Asset>)> &preLoad, const std::function<bool(Ref<Asset>)> &postLoad) {
+
+        static std::mutex mutex;
+        std::unique_lock<std::mutex> lock(mutex);
+
         std::string minimalPath = minimalFilePath(file);
         auto x = assets.find(minimalPath);
         if(x != assets.end()){

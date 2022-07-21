@@ -21,6 +21,8 @@ namespace tri {
 		SelectionContext* selectionContext;
 		EntityOperations* entityOperations;
 
+		EntityId dragEntityId = -1;
+
 		void init() override;
 		void startup() override;
 		void tick() override;

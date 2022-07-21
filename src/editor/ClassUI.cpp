@@ -7,10 +7,12 @@
 #include "engine/Color.h"
 #include "engine/AssetManager.h"
 #include "engine/Transform.h"
+#include "engine/EntityEvent.h"
+#include "window/Input.h"
 #include <imgui/imgui.h>
 #include <imgui/misc/cpp/imgui_stdlib.h>
 #include <glm/glm.hpp>
-
+ 
 namespace tri {
 
 	TRI_SYSTEM(ClassUI);
@@ -42,7 +44,25 @@ namespace tri {
 		addClassUI<double>([](const char* label, double* value, double* min, double* max, bool multiEdit) {
 			return ImGui::InputDouble(label, value, 0.1);
 		});
-
+		addClassUI<EntityId>([](const char* label, EntityId* value, EntityId* min, EntityId* max, bool multiEdit) {
+			bool change = false;
+			if (min && max) {
+				change |= ImGui::SliderInt(label, (int*)value, *min, *max);
+			}
+			else {
+				change |= ImGui::DragInt(label, (int*)value);
+			}
+			if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenBlockedByActiveItem)) {
+				if (env->input->released(Input::MOUSE_BUTTON_LEFT)) {
+					if (env->editor->dragEntityId != *value && env->editor->dragEntityId != -1) {
+						*value = env->editor->dragEntityId;
+						change = true;
+					}
+					env->editor->dragEntityId = -1;
+				}
+			}
+			return change;
+		});
 
 		addClassUI<glm::vec2>([](const char* label, glm::vec2* value, glm::vec2* min, glm::vec2* max, bool multiEdit) {
 			if (min && max) {
@@ -89,6 +109,20 @@ namespace tri {
 			if (ImGui::DragFloat3("rotation", (float*)&degrees, 1)) {
 				value->rotation = glm::radians(degrees);
 				change = true;
+			}
+			return change;
+		});
+		addClassUI<EntityEvent::Listener>([](const char* label, EntityEvent::Listener* value, EntityEvent::Listener* min, EntityEvent::Listener* max, bool multiEdit) {
+			bool change = false;
+			change |= env->editor->classUI->draw(value->entityId, "entityId");
+			change |= env->editor->classUI->componentCombo(value->classId, "component");
+			change |= env->editor->classUI->funcPropertyCombo(value->classId, &value->func, "function");
+			return change;
+		});
+		addClassUI<EntityEvent>([](const char* label, EntityEvent* value, EntityEvent* min, EntityEvent* max, bool multiEdit) {
+			bool change = env->editor->classUI->draw(value->listeners);
+			if (ImGui::Button("invoke")) {
+				value->invoke();
 			}
 			return change;
 		});
@@ -276,6 +310,72 @@ namespace tri {
 		return false;
 	}
 
+	bool ClassUI::componentCombo(int &classId, const char* label){
+		bool change = false;
+		std::string preview = "";
+		if (classId != -1) {
+			if (auto* desc = Reflection::getDescriptor(classId)) {
+				preview = desc->name;
+			}
+		}
+		if (ImGui::BeginCombo(label, preview.c_str())) {
+			for (auto* desc : Reflection::getDescriptors()) {
+				if (desc && desc->flags & ClassDescriptor::COMPONENT && !(desc->flags & ClassDescriptor::HIDDEN)) {
+					if (ImGui::Selectable(desc->name.c_str(), preview == desc->name)) {
+						classId = desc->classId;
+						change = true;
+					}
+				}
+			}
+			ImGui::EndCombo();
+		}
+		return change;
+	}
+
+	bool ClassUI::funcPropertyCombo(int classId, FunctionDescriptor** func, const char* label) {
+		bool change = false;
+		if (auto* desc = Reflection::getDescriptor(classId)) {
+			std::string preview = "";
+			if (*func) {
+				preview = (*func)->name;
+			}
+			if (ImGui::BeginCombo(label, preview.c_str())) {
+				for (int i = 0; i < desc->functions.size(); i++) {
+					auto& f = desc->functions[i];
+					if (ImGui::Selectable(f->name.c_str(), preview == f->name)) {
+						*func = f;
+						change = true;
+					}
+				}
+				ImGui::EndCombo();
+			}
+		}
+		return change;
+	}
+
+	bool ClassUI::propertyCombo(int classId, int& propertyIndex, const char* label) {
+		bool change = false;
+		if (auto* desc = Reflection::getDescriptor(classId)) {
+			std::string preview = "";
+			if (propertyIndex >= 0 && propertyIndex < desc->properties.size()) {
+				preview = desc->properties[propertyIndex].name;
+			}
+			if (ImGui::BeginCombo(label, preview.c_str())) {
+				for (int i = 0; i < desc->properties.size(); i++) {
+					auto& prop = desc->properties[i];
+					if (!(prop.flags & PropertyDescriptor::HIDDEN)) {
+						if (ImGui::Selectable(prop.name.c_str(), preview == prop.name)) {
+							propertyIndex = i;
+							change = true;
+						}
+					}
+				}
+				ImGui::EndCombo();
+			}
+		}
+		return change;
+	}
+
 	bool ClassUI::dragTarget(int classId, void* ptr) {
 		auto *desc = Reflection::getDescriptor(classId);
 		if (desc) {
@@ -330,5 +430,7 @@ namespace tri {
 		}
 		return false;
 	}
+
+
 
 }

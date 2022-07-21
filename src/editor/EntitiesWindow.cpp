@@ -39,7 +39,6 @@ namespace tri {
 	class EntitiesWindow : public UIWindow {
 	public:
 		EntityId lastClicked = -1;
-		EntityId dragEntity = -1;
 
 		std::vector<EntityId> list;
 		bool needListUpdate = true;
@@ -71,24 +70,7 @@ namespace tri {
 				}
 				else if (value->type == EntityFilter::COMPONENT || value->type == EntityFilter::PROPERTY) {
 
-					std::string preview = "";
-					if (value->classId != -1) {
-						if (auto* desc = Reflection::getDescriptor(value->classId)) {
-							preview = desc->name;
-						}
-					}
-					if (ImGui::BeginCombo("component", preview.c_str())) {
-						for (auto* desc : Reflection::getDescriptors()) {
-							if (desc && desc->flags & ClassDescriptor::COMPONENT && !(desc->flags & ClassDescriptor::HIDDEN)) {
-								if (ImGui::Selectable(desc->name.c_str(), preview == desc->name)) {
-									value->classId = desc->classId;
-									change = true;
-								}
-							}
-						}
-						ImGui::EndCombo();
-					}
-
+					env->editor->classUI->componentCombo(value->classId, "component");
 
 					if (value->type == EntityFilter::PROPERTY) {
 						if (value->classId != -1) {
@@ -472,14 +454,14 @@ namespace tri {
 
 			if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenBlockedByActiveItem)) {
 				if (env->input->pressed(Input::MOUSE_BUTTON_LEFT)) {
-					dragEntity = id;
+					env->editor->dragEntityId = id;
 				}
 				if (env->input->released(Input::MOUSE_BUTTON_LEFT)) {
-					if (dragEntity != id && dragEntity != -1) {
-						env->editor->entityOperations->parentEntity(dragEntity, id);
+					if (env->editor->dragEntityId != id && env->editor->dragEntityId != -1) {
+						env->editor->entityOperations->parentEntity(env->editor->dragEntityId, id);
 						needListUpdate = true;
 					}
-					dragEntity = -1;
+					env->editor->dragEntityId = -1;
 				}
 			}
 
@@ -513,14 +495,14 @@ namespace tri {
 
 			if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenBlockedByActiveItem)) {
 				if (env->input->pressed(Input::MOUSE_BUTTON_LEFT)) {
-					dragEntity = id;
+					env->editor->dragEntityId = id;
 				}
 				if (env->input->released(Input::MOUSE_BUTTON_LEFT)) {
-					if (dragEntity != id && dragEntity != -1) {
-						env->editor->entityOperations->parentEntity(dragEntity, id);
+					if (env->editor->dragEntityId != id && env->editor->dragEntityId != -1) {
+						env->editor->entityOperations->parentEntity(env->editor->dragEntityId, id);
 						needListUpdate = true;
 					}
-					dragEntity = -1;
+					env->editor->dragEntityId = -1;
 				}
 			}
 

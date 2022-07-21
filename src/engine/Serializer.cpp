@@ -7,6 +7,8 @@
 #include "engine/Color.h"
 #include "engine/AssetManager.h"
 #include "engine/ComponentCache.h"
+#include "engine/EntityEvent.h"
+#include "engine/Map.h"
 #include <glm/glm.hpp>
 
 namespace tri {
@@ -253,6 +255,7 @@ namespace tri {
 		std::ofstream stream(file);
 		data.emitter = std::make_shared<YAML::Emitter>(stream);
 		serializeWorld(world, data);
+		env->console->info("save world to \"%s\"", file.c_str());
 	}
 
 	bool Serializer::deserializeWorld(World* world, const std::string& file) {
@@ -303,7 +306,24 @@ namespace tri {
 		addSerializeCallback<Color>([](Color* v, SerialData& data) {
 			*data.emitter << YAML::Flow << YAML::BeginSeq << (int)v->r << (int)v->g << (int)v->b << (int)v->a << YAML::EndSeq;
 		});
-
+		addSerializeCallback<EntityEvent>([](EntityEvent* v, SerialData& data) {
+			*data.emitter << YAML::BeginSeq;
+			for (auto& l : v->listeners) {
+				*data.emitter << YAML::BeginMap;
+				*data.emitter << YAML::Key << "id" << YAML::Value << (int)l.entityId;
+				if (l.classId != -1) {
+					auto* desc = Reflection::getDescriptor(l.classId);
+					if (desc) {
+						*data.emitter << YAML::Key << "component" << YAML::Value << desc->name;
+					}
+				}
+				if (l.func) {
+					*data.emitter << YAML::Key << "function" << YAML::Value << l.func->name;
+				}
+				*data.emitter << YAML::EndMap;
+			}
+			*data.emitter << YAML::EndSeq;
+		});
 
 		
 		addDeserializeCallback<int>([](int* v, SerialData& data) {
@@ -345,6 +365,25 @@ namespace tri {
 			v->b = data.node[2].as<int>(255);
 			v->a = data.node[3].as<int>(255);
 		});
+		addDeserializeCallback<EntityEvent>([](EntityEvent* v, SerialData& data) {
+			for (auto i : data.node) {
+				EntityId id = i["id"].as<int>(-1);
+				std::string component = i["component"].as<std::string>("");
+				std::string function = i["function"].as<std::string>("");
+				EntityEvent::Listener l;
+				l.entityId = id;
+				auto* desc = Reflection::getDescriptor(component);
+				if (desc) {
+					l.classId = desc->classId;
+					for (auto* f : desc->functions) {
+						if (f->name == function) {
+							l.func = f;
+						}
+					}
+				}
+				v->listeners.push_back(l);
+			}
+		});
 
 		env->console->addCommand("loadMap", [](auto &args) {
 			if (args.size() > 0) {
@@ -353,7 +392,7 @@ namespace tri {
 					env->serializer->deserializeWorldBinary(env->world, file);
 				}
 				else {
-					env->serializer->deserializeWorld(env->world, file);
+					Map::loadAndSetToActiveWorld(file);
 				}
 			}
 			else {

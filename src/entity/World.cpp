@@ -12,10 +12,7 @@ namespace tri {
 		int postTickListener = 0;
 
 		void shutdown() {
-			std::vector<World*> tmpWorlds = worlds;
-			for (auto* world : tmpWorlds) {
-				delete world;
-			}
+			delete env->world;
 			worlds.clear();
 			env->world = nullptr;
 			env->eventManager->postTick.removeListener(postTickListener);

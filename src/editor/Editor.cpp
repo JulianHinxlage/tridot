@@ -12,6 +12,7 @@
 #include "window/Input.h"
 #include "window/UIManager.h"
 #include "engine/RuntimeMode.h"
+#include "engine/Map.h"
 #include <imgui.h>
 #include <imgui/imgui_internal.h>
 
@@ -101,11 +102,13 @@ namespace tri {
 						}, true);
 					}
 					if (ImGui::MenuItem("Load")) {
-						env->eventManager->postTick.addListener([]() {
-							Clock clock;
-							env->serializer->deserializeWorld(env->world, "world.tmap");
-							env->console->info("load world took %f s", clock.elapsed());
-						}, true);
+						Map::loadAndSetToActiveWorld("world.tmap");
+
+						//env->eventManager->postTick.addListener([]() {
+						//	Clock clock;
+						//	env->serializer->deserializeWorld(env->world, "world.tmap");
+						//	env->console->info("load world took %f s", clock.elapsed());
+						//}, true);
 					}
 
 					if (ImGui::MenuItem("Save Binary")) {
