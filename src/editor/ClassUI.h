@@ -6,6 +6,7 @@
 
 #include "core/System.h"
 #include "core/Reflection.h"
+#include "entity/World.h"
 
 namespace tri {
 
@@ -37,6 +38,8 @@ namespace tri {
 		bool dragSource(int classId, const void* ptr);
 		bool dragTarget(int classId, std::string &str);
 		bool dragSource(int classId, const std::string &str);
+		bool dragTargetFunc(int &classId, std::string& func, EntityId &entityId);
+		bool dragSourceFunc(int classId, const std::string& func, EntityId entityId);
 
 
 	private:

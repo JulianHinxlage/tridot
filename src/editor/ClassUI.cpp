@@ -121,13 +121,36 @@ namespace tri {
 		});
 		addClassUI<EntityEvent>([](const char* label, EntityEvent* value, EntityEvent* min, EntityEvent* max, bool multiEdit) {
 			bool change = false;
+
+			auto drag = [value]() {
+				//drag target
+				EntityEvent::Listener l;
+				std::string func;
+				if (env->editor->classUI->dragTargetFunc(l.classId, func, l.entityId)) {
+					auto* desc = env->reflection->getDescriptor(l.classId);
+					if (desc) {
+						for (auto& f : desc->functions) {
+							if (f->name == func) {
+								l.func = f;
+							}
+						}
+						value->addListener(l.entityId, l.classId, l.func);
+					}
+				}
+			};
+
 			if (ImGui::TreeNodeEx(label, 0)) {
+				drag();
 				change |= env->editor->classUI->draw(value->listeners);
 				if (ImGui::Button("invoke")) {
 					value->invoke();
 				}
 				ImGui::TreePop();
 			}
+			else {
+				drag();
+			}
+
 			return change;
 		});
 	}
@@ -307,6 +330,7 @@ namespace tri {
 				if (ImGui::Button(func->name.c_str())) {
 					func->invoke(ptr);
 				}
+				dragSourceFunc(desc->classId, func->name, env->world->getIdByComponent(ptr, classId));
 			}
 
 			return change;
@@ -435,6 +459,37 @@ namespace tri {
 		return false;
 	}
 
+	bool ClassUI::dragTargetFunc(int& classId, std::string& func, EntityId& entityId) {
+		if (ImGui::BeginDragDropTarget()) {
+			auto* payload = ImGui::AcceptDragDropPayload("event");
+			if (payload) {
+				std::string data = std::string((char*)payload->Data, payload->DataSize);
+				auto parts = StrUtil::split(data, ";");
 
+				if (parts.size() >= 3) {
+					try {
+						func = parts[0];
+						classId = std::stoi(parts[1]);
+						entityId = std::stoi(parts[2]);
+					}
+					catch (...) {}
+				}
+
+				ImGui::EndDragDropTarget();
+				return true;
+			}
+		}
+		return false;
+	}
+
+	bool ClassUI::dragSourceFunc(int classId, const std::string& func, EntityId entityId) {
+		if (ImGui::BeginDragDropSource()) {
+			std::string data = func + ";" + std::to_string(classId) + ";" + std::to_string(entityId);
+			ImGui::SetDragDropPayload("event", data.data(), data.size());
+			ImGui::Text("%s", func.c_str());
+			ImGui::EndDragDropSource();
+			return true;
+		}
+	}
 
 }
