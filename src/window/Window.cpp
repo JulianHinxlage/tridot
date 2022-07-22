@@ -14,6 +14,12 @@
 #include <imgui/backends/imgui_impl_opengl3.h>
 #include <tracy/TracyOpenGL.hpp>
 
+#if TRI_WINDOWS
+#define GLFW_EXPOSE_NATIVE_WIN32
+#include <glfw/glfw3native.h>
+#undef max
+#endif
+
 namespace tri {
 
 	TRI_SYSTEM_INSTANCE(Window, env->window);
@@ -212,6 +218,14 @@ namespace tri {
 
 	void* Window::getContext() {
 		return window;
+	}
+
+	void* Window::getNativeContext() {
+#if TRI_WINDOWS
+		return glfwGetWin32Window((GLFWwindow*)window);
+#else
+		return nullptr;
+#endif
 	}
 
 }

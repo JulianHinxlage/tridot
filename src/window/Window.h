@@ -23,6 +23,7 @@ namespace tri {
 		bool isOpen();
 		bool inFrame();
 		void* getContext();
+		void* getNativeContext();
 	private:
 		void *window;
 		bool inFrameFlag = false;

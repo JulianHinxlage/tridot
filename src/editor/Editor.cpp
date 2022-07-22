@@ -17,6 +17,10 @@
 #include <imgui.h>
 #include <imgui/imgui_internal.h>
 
+#if TRI_WINDOWS
+#include <windows.h>
+#endif
+
 namespace tri {
 
 	TRI_SYSTEM_INSTANCE(Editor, env->editor);
@@ -116,12 +120,13 @@ namespace tri {
 							}
 						}, true);
 					}
-					if (ImGui::MenuItem("Load")) {
-						env->eventManager->postTick.addListener([]() {
-							if (!env->worldFile.empty()) {
-								Map::loadAndSetToActiveWorld(env->worldFile);
-							}
-						}, true);
+					if (ImGui::MenuItem("Open", "Ctrl+O")) {
+						std::string file = openFileDialog("*.tmap");
+						if (!file.empty()) {
+							env->eventManager->postTick.addListener([file]() {
+								Map::loadAndSetToActiveWorld(file);
+								}, true);
+						}
 					}
 
 					if (ImGui::MenuItem("Save Binary")) {
@@ -186,6 +191,14 @@ namespace tri {
 							env->console->info("save world took %f s", clock.elapsed());
 						}
 					}, true);
+				}
+				if (env->input->pressed('O')) {
+					std::string file = openFileDialog("*.tmap");
+					if (!file.empty()) {
+						env->eventManager->postTick.addListener([file]() {
+							Map::loadAndSetToActiveWorld(file);
+							}, true);
+					}
 				}
 
 				if (env->input->pressed('C')) {
@@ -280,6 +293,33 @@ namespace tri {
 			}
 			return handle;
 		}
+	}
+
+	std::string Editor::openFileDialog(const std::string& pattern) {
+#if TRI_WINDOWS
+		OPENFILENAME ofn = { 0 };
+		TCHAR szFile[260] = { 0 };
+		ofn.lStructSize = sizeof(ofn);
+		ofn.hwndOwner = (HWND)env->window->getNativeContext();
+		ofn.lpstrFile = szFile;
+		ofn.nMaxFile = sizeof(szFile);
+		ofn.lpstrFilter = pattern.c_str();
+		ofn.nFilterIndex = 1;
+		ofn.lpstrFileTitle = NULL;
+		ofn.nMaxFileTitle = 0;
+		ofn.lpstrInitialDir = NULL;
+		ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
+
+		if (GetOpenFileName(&ofn) == TRUE) {
+			std::string file = ofn.lpstrFile;
+			return file;
+		}
+		else {
+			return "";
+		}
+#else
+		return "";
+#endif
 	}
 
 }

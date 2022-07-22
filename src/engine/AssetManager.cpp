@@ -58,7 +58,12 @@ namespace tri {
                 }
             }
         }
-        return "";
+        if (std::filesystem::is_regular_file(file)) {
+            return file;
+        }
+        else {
+            return "";
+        }
     }
 
     std::string AssetManager::minimalFilePath(const std::string &file) {
