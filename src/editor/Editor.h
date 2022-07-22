@@ -30,7 +30,7 @@ namespace tri {
 
 		int setPersistentEntity(EntityId id, int handle = -1);
 
-		std::string openFileDialog(const std::string &pattern);
+		std::string openFileDialog(const char* pattern);
 	private:
 		int autoSaveListener;
 		int crashSaveListener;

@@ -111,6 +111,14 @@ namespace tri {
 			if (ImGui::BeginMainMenuBar()) {
 				if (ImGui::BeginMenu("File")) {
 
+					if (ImGui::MenuItem("Open", "Ctrl+O")) {
+						std::string file = openFileDialog(".tmap\0*.tmap\0.*\0*.*\0");
+						if (!file.empty()) {
+							env->eventManager->postTick.addListener([file]() {
+								Map::loadAndSetToActiveWorld(file);
+							}, true);
+						}
+					}
 					if (ImGui::MenuItem("Save", "Ctrl+S")) {
 						env->eventManager->postTick.addListener([]() {
 							if (!env->worldFile.empty()) {
@@ -120,14 +128,18 @@ namespace tri {
 							}
 						}, true);
 					}
-					if (ImGui::MenuItem("Open", "Ctrl+O")) {
-						std::string file = openFileDialog("*.tmap");
+					if (ImGui::MenuItem("Save As", "Ctrl+Shift+S")) {
+						std::string file = openFileDialog(".tmap\0*.tmap\0.*\0*.*\0");
 						if (!file.empty()) {
 							env->eventManager->postTick.addListener([file]() {
-								Map::loadAndSetToActiveWorld(file);
-								}, true);
+								Clock clock;
+								env->serializer->serializeWorld(env->world, file);
+								env->worldFile = file;
+								env->console->info("save world took %f s", clock.elapsed());
+							}, true);
 						}
 					}
+
 
 					if (ImGui::MenuItem("Save Binary")) {
 						env->eventManager->postTick.addListener([]() {
@@ -183,17 +195,33 @@ namespace tri {
 					}
 				}
 
-				if (env->input->pressed('S')) {
-					env->eventManager->postTick.addListener([]() {
-						if (!env->worldFile.empty()) {
-							Clock clock;
-							env->serializer->serializeWorld(env->world, env->worldFile);
-							env->console->info("save world took %f s", clock.elapsed());
+				if (env->input->downShift()) {
+					if (env->input->pressed('S')) {
+						std::string file = openFileDialog(".tmap\0*.tmap\0.*\0*.*\0");
+						if (!file.empty()) {
+							env->eventManager->postTick.addListener([file]() {
+								Clock clock;
+								env->serializer->serializeWorld(env->world, file);
+								env->worldFile = file;
+								env->console->info("save world took %f s", clock.elapsed());
+							}, true);
 						}
-					}, true);
+					}
 				}
+				else {
+					if (env->input->pressed('S')) {
+						env->eventManager->postTick.addListener([]() {
+							if (!env->worldFile.empty()) {
+								Clock clock;
+								env->serializer->serializeWorld(env->world, env->worldFile);
+								env->console->info("save world took %f s", clock.elapsed());
+							}
+						}, true);
+					}			
+				}
+
 				if (env->input->pressed('O')) {
-					std::string file = openFileDialog("*.tmap");
+					std::string file = openFileDialog(".tmap\0*.tmap\0.*\0*.*\0");
 					if (!file.empty()) {
 						env->eventManager->postTick.addListener([file]() {
 							Map::loadAndSetToActiveWorld(file);
@@ -295,7 +323,8 @@ namespace tri {
 		}
 	}
 
-	std::string Editor::openFileDialog(const std::string& pattern) {
+	std::string Editor::openFileDialog(const char *pattern) {
+		TRI_PROFILE_FUNC();
 #if TRI_WINDOWS
 		OPENFILENAME ofn = { 0 };
 		TCHAR szFile[260] = { 0 };
@@ -303,7 +332,7 @@ namespace tri {
 		ofn.hwndOwner = (HWND)env->window->getNativeContext();
 		ofn.lpstrFile = szFile;
 		ofn.nMaxFile = sizeof(szFile);
-		ofn.lpstrFilter = pattern.c_str();
+		ofn.lpstrFilter = pattern;
 		ofn.nFilterIndex = 1;
 		ofn.lpstrFileTitle = NULL;
 		ofn.nMaxFileTitle = 0;

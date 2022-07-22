@@ -21,6 +21,17 @@ namespace tri {
 	class AssetBrowser : public UIWindow {
 	public:
 		std::unordered_map<std::string, int> fileAssosiations;
+		std::mutex mutex;
+		double checkTimeInterval = 4;
+
+		class Node {
+		public:
+			std::string name;
+			std::string path;
+			bool isFile;
+			std::vector<Node> childs;
+		};
+		std::vector<Node> nodes;
 
 		void init() override {
 			env->systemManager->addSystem<Editor>();
@@ -33,6 +44,52 @@ namespace tri {
 				{".obj", Reflection::getClassId<Mesh>() },
 				{".tmap", Reflection::getClassId<World>() },
 			};
+		}
+
+		void updateTreeStep(Node &parent) {
+			for (auto& i : std::filesystem::directory_iterator(parent.path)) {
+				parent.childs.emplace_back();
+				Node& node = parent.childs.back();
+				node.name = i.path().filename().string();
+				node.path = i.path().string();
+
+				if (i.is_directory()) {
+					node.isFile = false;
+					updateTreeStep(node);
+				}
+				else {
+					node.isFile = true;
+				}
+			}
+		}
+
+		void updateTree() {
+			std::vector<Node> tmp;
+			for (auto& path : env->assetManager->getSearchDirectories()) {
+				tmp.emplace_back();
+				Node& node = tmp.back();
+				node.name = std::filesystem::path(path).parent_path().filename().string();
+				node.path = path;
+				node.isFile = false;
+
+				updateTreeStep(node);
+			}
+
+			std::unique_lock<std::mutex> lock(mutex);
+			nodes.clear();
+			nodes = tmp;
+		}
+
+		void startup() {
+			env->threadManager->addThread("File Tree Update", [&]() {
+				while (true) {
+					{
+						TRI_PROFILE("FileTreeUpdate");
+						updateTree();
+					}
+					std::this_thread::sleep_for(std::chrono::milliseconds((long long)(checkTimeInterval * 1000.0)));
+				}
+			});
 		}
 
 		void file(const std::string& name, const std::string& path) {
@@ -93,14 +150,27 @@ namespace tri {
 			}
 		}
 
+		void step(Node &node) {
+			if (node.isFile) {
+				file(node.name, node.path);
+			}
+			else {
+				if (ImGui::TreeNodeEx(node.name.c_str())) {
+					for (auto& child : node.childs) {
+						step(child);
+					}
+					ImGui::TreePop();
+				}
+			}
+		}
+
 		void tick() override {
 			if (env->window && env->window->inFrame()) {
 				if (ImGui::Begin("Asset Browser", &active)) {
-					
-					for (auto& dir : env->assetManager->getSearchDirectories()) {
-						directory(std::filesystem::path(dir).parent_path().filename().string(), dir);
+					std::unique_lock<std::mutex> lock(mutex);
+					for (auto& node : nodes) {
+						step(node);
 					}
-
 				}
 				ImGui::End();
 			}
