@@ -13,6 +13,7 @@
 #include "window/UIManager.h"
 #include "engine/RuntimeMode.h"
 #include "engine/Map.h"
+#include "engine/Time.h"
 #include <imgui.h>
 #include <imgui/imgui_internal.h>
 
@@ -35,6 +36,17 @@ namespace tri {
 			else {
 				env->serializer->serializeWorld(env->world, "autosave.tmap");
 			}
+		});
+		crashSaveListener = env->eventManager->onUnhandledException.addListener([&]() {
+			if (lastUnhandledExceptionTime == -1 || env->time->time - lastUnhandledExceptionTime > 10.0f) {
+				if (env->runtimeMode->getMode() != RuntimeMode::EDIT) {
+					env->serializer->serializeWorld(playBuffer, "crashsave.tmap");
+				}
+				else {
+					env->serializer->serializeWorld(env->world, "crashsave.tmap");
+				}
+			}
+			lastUnhandledExceptionTime = env->time->time;
 		});
 
 		playBuffer = new World();
@@ -85,6 +97,7 @@ namespace tri {
 
 	void Editor::shutdown() {
 		env->eventManager->preShutdown.removeListener(autoSaveListener);
+		env->eventManager->onUnhandledException.removeListener(crashSaveListener);
 		env->eventManager->onRuntimeModeChange.removeListener(playBufferListener);
 	}
 
@@ -96,19 +109,19 @@ namespace tri {
 
 					if (ImGui::MenuItem("Save", "Ctrl+S")) {
 						env->eventManager->postTick.addListener([]() {
-							Clock clock;
-							env->serializer->serializeWorld(env->world, "world.tmap");
-							env->console->info("save world took %f s", clock.elapsed());
+							if (!env->worldFile.empty()) {
+								Clock clock;
+								env->serializer->serializeWorld(env->world, env->worldFile);
+								env->console->info("save world took %f s", clock.elapsed());
+							}
 						}, true);
 					}
 					if (ImGui::MenuItem("Load")) {
-						Map::loadAndSetToActiveWorld("world.tmap");
-
-						//env->eventManager->postTick.addListener([]() {
-						//	Clock clock;
-						//	env->serializer->deserializeWorld(env->world, "world.tmap");
-						//	env->console->info("load world took %f s", clock.elapsed());
-						//}, true);
+						env->eventManager->postTick.addListener([]() {
+							if (!env->worldFile.empty()) {
+								Map::loadAndSetToActiveWorld(env->worldFile);
+							}
+						}, true);
 					}
 
 					if (ImGui::MenuItem("Save Binary")) {
@@ -167,9 +180,11 @@ namespace tri {
 
 				if (env->input->pressed('S')) {
 					env->eventManager->postTick.addListener([]() {
-						Clock clock;
-						env->serializer->serializeWorld(env->world, "world.tmap");
-						env->console->info("save world took %f s", clock.elapsed());
+						if (!env->worldFile.empty()) {
+							Clock clock;
+							env->serializer->serializeWorld(env->world, env->worldFile);
+							env->console->info("save world took %f s", clock.elapsed());
+						}
 					}, true);
 				}
 

@@ -29,6 +29,8 @@ namespace tri {
 		runtimeMode = nullptr;
 		world = nullptr;
 		editor = nullptr;
+
+		worldFile = "";
 	}
 
 	void Environment::init() {

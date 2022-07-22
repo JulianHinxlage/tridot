@@ -26,6 +26,7 @@ namespace tri {
 		env->console->addCVar<int>("windowWidth", 800);
 		env->console->addCVar<int>("windowHeight", 600);
 		env->console->addCVar<std::string>("windowTitle", "Tridot Engine");
+		env->console->addCVar<int>("monitor", -1);
 		env->console->addCVar<bool>("noWindow", false);
 
 		env->console->addCVar<bool>("enableModuleHotReloading", &env->moduleManager->enableModuleHotReloading);

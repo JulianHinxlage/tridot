@@ -19,6 +19,7 @@ namespace tri {
 
 		void addComponent(EntityId id, World* world, const std::string &componentName, const std::string& data);
 		void serialize(EntityId id, World* world, SerialData &data);
+		void copyWorld(World* from, World* to);
 
 	private:
 		class Cache {

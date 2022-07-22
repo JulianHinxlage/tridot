@@ -58,15 +58,6 @@ namespace tri {
 			}
 		}
 		return nullptr;
-		//auto handle = std::make_shared<JobHandle>();
-		//handle->threadId = -1;
-		//handle->jobManager = this;
-		//handle->job.name = name;
-		//handle->job.enableMultithreading = true;
-		//handle->isDefaultJob = false;
-		//handle->pendingRemove = false;
-		//jobs.push_back(handle);
-		//return &handle->job;
 	}
 
 	void JobManager::removeJob(const std::string& name) {
@@ -402,7 +393,6 @@ namespace tri {
 	}
 
 	void JobManager::JobHandle::tick() {
-
 		mutex.lock();
 		for (auto& name : job.jobExclusion) {
 			auto *handle = jobManager->getJobHandle(name);

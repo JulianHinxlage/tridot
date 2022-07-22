@@ -120,9 +120,13 @@ namespace tri {
 			return change;
 		});
 		addClassUI<EntityEvent>([](const char* label, EntityEvent* value, EntityEvent* min, EntityEvent* max, bool multiEdit) {
-			bool change = env->editor->classUI->draw(value->listeners);
-			if (ImGui::Button("invoke")) {
-				value->invoke();
+			bool change = false;
+			if (ImGui::TreeNodeEx(label, 0)) {
+				change |= env->editor->classUI->draw(value->listeners);
+				if (ImGui::Button("invoke")) {
+					value->invoke();
+				}
+				ImGui::TreePop();
 			}
 			return change;
 		});

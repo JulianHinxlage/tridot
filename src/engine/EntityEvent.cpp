@@ -13,7 +13,7 @@ namespace tri {
 	TRI_CLASS(EntityEvent::Listener);
 	TRI_PROPERTIES3(EntityEvent::Listener, entityId, classId, func);
 
-	TRI_COMPONENT(EntityEvent);
+	TRI_CLASS(EntityEvent);
 	TRI_PROPERTIES1(EntityEvent, listeners);
 	TRI_FUNCTION(EntityEvent, invoke);
 

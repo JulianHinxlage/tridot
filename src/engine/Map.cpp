@@ -5,6 +5,7 @@
 #include "Map.h"
 #include "AssetManager.h"
 #include "Serializer.h"
+#include "ComponentCache.h"
 
 namespace tri {
 
@@ -12,6 +13,8 @@ namespace tri {
         if (world) {
             env->eventManager->postTick.addListener([&]() {
                 env->world->copy(*world);
+                env->worldFile = file;
+                env->systemManager->getSystem<ComponentCache>()->copyWorld(world.get(), env->world);
                 env->eventManager->onMapBegin.invoke(env->world, file);
             }, true);
         }
@@ -20,10 +23,16 @@ namespace tri {
     void Map::loadAndSetToActiveWorld(const std::string &file) {
         auto map = env->assetManager->get<Map>(file, AssetManager::NONE, nullptr, [](auto asset) {
             ((Map*)asset.get())->setToActiveWorld();
+            env->eventManager->postTick.addListener([file = env->assetManager->getFile(asset)]() {
+                env->assetManager->unload(file);
+            }, true);
             return true;
         });
         if (env->assetManager->getStatus(file) & AssetManager::Status::LOADED) {
             map->setToActiveWorld();
+            env->eventManager->postTick.addListener([file]() {
+                env->assetManager->unload(file);
+            }, true);
         }
     }
 

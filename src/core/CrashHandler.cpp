@@ -29,6 +29,7 @@ namespace tri {
         TRI_PROFILE("crash");
         std::string file = ModuleManager::getModuleNameByAddress(info->ExceptionRecord->ExceptionAddress);
         env->console->fatal("crash in module \"%s\"", file.c_str());
+        env->eventManager->onUnhandledException.invoke();
         if (crashHandler->enableCrashRecovery) {
             if (crashHandler->unloadModuleOnCrash) {
                 env->moduleManager->unloadModule(file, false);

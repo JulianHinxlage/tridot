@@ -38,6 +38,24 @@ namespace tri {
 		glfwSwapInterval(1);
 		vsyncInterval = 1;
 
+		//set window position by monitor
+		int monitorCount = 0;
+		GLFWmonitor** monitors = glfwGetMonitors(&monitorCount);
+		GLFWmonitor* monitor = nullptr;
+		int monitorIndex = env->console->getCVarValue<int>("monitor", -1);
+		if (monitorIndex >= 0 && monitorIndex < monitorCount) {
+			monitor = monitors[monitorIndex];
+		}
+		if (monitor) {
+			int x = 0;
+			int y = 0;
+			int w = 0;
+			int h = 0;
+			glfwGetMonitorWorkarea(monitor, &x, &y, &w, &h);
+			glfwSetWindowPos((GLFWwindow*)window, x + w / 2 - width / 2, std::max(y + h / 2 - height / 2 + 30, 30));
+		}
+
+
 		//init imgui
 		IMGUI_CHECKVERSION();
 		ImGui::CreateContext();

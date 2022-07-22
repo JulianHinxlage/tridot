@@ -31,9 +31,11 @@ namespace tri {
 		int setPersistentEntity(EntityId id, int handle = -1);
 	private:
 		int autoSaveListener;
+		int crashSaveListener;
 		int playBufferListener;
 		World* playBuffer;
 		std::vector<std::pair<int, EntityId>> playModePersistentEntities;
+		float lastUnhandledExceptionTime = -1;
 	};
 
 }

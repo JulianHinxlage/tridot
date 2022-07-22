@@ -92,6 +92,8 @@ namespace tri {
 		Event<World*, EntityId> onEntityAdd;
 		Event<World*, EntityId> onEntityRemove;
 
+		Event<> onUnhandledException;
+
 		template<typename T>
 		Event<World*, EntityId>& onComponentAdd() {
 			return onComponentAdd(Reflection::getClassId<T>());

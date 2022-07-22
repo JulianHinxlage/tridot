@@ -209,7 +209,9 @@ namespace tri {
 
 			buf->appendf("\n");
 		};
-		ImGui::GetCurrentContext()->SettingsHandlers.push_back(handler);
+		if (ImGui::GetCurrentContext()) {
+			ImGui::GetCurrentContext()->SettingsHandlers.push_back(handler);
+		}
 	}
 
 }

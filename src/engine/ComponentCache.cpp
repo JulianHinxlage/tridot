@@ -115,4 +115,17 @@ namespace tri {
 		}
 	}
 
+	void ComponentCache::copyWorld(World* from, World* to) {
+		if (enableComponentCaching) {
+			for (auto& cache : caches) {
+				if (cache->world == from) {
+					for (auto& i : cache->data) {
+						auto* toCache = getCache(to, cache->componentName, true);
+						toCache->data[i.first] = i.second;
+					}
+				}
+			}
+		}
+	}
+
 }

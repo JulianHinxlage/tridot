@@ -39,6 +39,7 @@ namespace tri {
 
 		//entity
 		class World* world;
+		std::string worldFile;
 
 		//editor
 		class Editor* editor;
