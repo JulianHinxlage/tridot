@@ -117,7 +117,8 @@ namespace tri {
 
 	void ComponentCache::copyWorld(World* from, World* to) {
 		if (enableComponentCaching) {
-			for (auto& cache : caches) {
+			auto tmp = caches;
+			for (auto& cache : tmp) {
 				if (cache->world == from) {
 					for (auto& i : cache->data) {
 						auto* toCache = getCache(to, cache->componentName, true);

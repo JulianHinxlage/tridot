@@ -88,8 +88,8 @@ target_precompile_headers(${PROJECT_NAME} PUBLIC src/pch.h)
 target_include_directories(${PROJECT_NAME} PRIVATE src/debugMenu)
 target_link_libraries(${PROJECT_NAME} PUBLIC TridotCore TridotWindow TridotEngine)
 
-#Tridot Editor
-project(TridotEditor)
+#Tridot Editor Lib
+project(TridotEditorLib)
 file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS src/editor/*.cpp)
 add_library(${PROJECT_NAME} SHARED ${SOURCES})
 target_precompile_headers(${PROJECT_NAME} PUBLIC src/pch.h)
@@ -104,32 +104,49 @@ target_precompile_headers(${PROJECT_NAME} PUBLIC src/pch.h)
 target_include_directories(${PROJECT_NAME} PRIVATE src/render)
 target_link_libraries(${PROJECT_NAME} PUBLIC TridotCore TridotWindow TridotEngine)
 
-#Tridot Launcher
-project(TridotLauncher)
-file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS src/launcher/*.cpp)
+#Tridot Test
+project(TridotTest)
+file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS src/test/*.cpp)
+add_library(${PROJECT_NAME} SHARED ${SOURCES})
+target_precompile_headers(${PROJECT_NAME} PUBLIC src/pch.h)
+target_include_directories(${PROJECT_NAME} PRIVATE src/test)
+target_link_libraries(${PROJECT_NAME} PUBLIC TridotCore TridotEngine)
+
+#Tridot Editor Executable
+project(TridotEditor)
+file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS src/launch/editor/*.cpp)
 add_executable(${PROJECT_NAME} ${SOURCES})
 target_precompile_headers(${PROJECT_NAME} PUBLIC src/pch.h)
-target_include_directories(${PROJECT_NAME} PUBLIC src src/launcher)
+target_include_directories(${PROJECT_NAME} PUBLIC src src/launch/editor)
 target_link_libraries(${PROJECT_NAME} PUBLIC TridotCore)
-add_dependencies(${PROJECT_NAME} TridotWindow TridotEntity TridotEditor TridotDebugMenu TridotEngine TridotRender)
+add_dependencies(${PROJECT_NAME} TridotWindow TridotEntity TridotEditorLib TridotDebugMenu TridotEngine TridotRender TridotTest)
+
+#Tridot Game Executable
+project(TridotGame)
+file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS src/launch/game/*.cpp)
+add_executable(${PROJECT_NAME} ${SOURCES})
+target_precompile_headers(${PROJECT_NAME} PUBLIC src/pch.h)
+target_include_directories(${PROJECT_NAME} PUBLIC src src/launcher/game)
+target_link_libraries(${PROJECT_NAME} PUBLIC TridotCore)
+add_dependencies(${PROJECT_NAME} TridotWindow TridotEntity TridotDebugMenu TridotEngine TridotRender TridotTest)
 
 #Fat Launcher Binary
-project(TridotLauncherFull)
-file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS src/core/*.cpp src/entity/*.cpp src/engine/*.cpp src/window/*.cpp src/render/*.cpp src/debugMenu/*.cpp src/editor/*.cpp src/test/*.cpp src/launcher/*.cpp)
+project(TridotGameFull)
+file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS src/core/*.cpp src/entity/*.cpp src/engine/*.cpp src/window/*.cpp src/render/*.cpp src/debugMenu/*.cpp src/test/*.cpp src/launch/game/*.cpp)
 if (NOT CMAKE_BUILD_TYPE MATCHES "Release")
     file(GLOB_RECURSE SOURCES2 CONFIGURE_DEPENDS extern/tracy/TracyClient.cpp)
 endif()
-file(GLOB IMGUI_SOURCES CONFIGURE_DEPENDS extern/imgui/*.cpp extern/imgui/misc/cpp/imgui_stdlib.cpp extern/imgui/backends/imgui_impl_glfw.cpp extern/imgui/backends/imgui_impl_opengl3.cpp)
+file(GLOB IMGUI_SOURCES CONFIGURE_DEPENDS extern/imgui/*.cpp extern/imgui/misc/cpp/imgui_stdlib.cpp extern/imgui/backends/imgui_impl_glfw.cpp extern/imgui/backends/imgui_impl_opengl3.cpp extern/imguizmo/ImGuizmo.cpp)
 add_executable(${PROJECT_NAME} ${SOURCES} ${SOURCES2} ${IMGUI_SOURCES})
 target_precompile_headers(${PROJECT_NAME} PUBLIC src/pch.h)
-target_include_directories(${PROJECT_NAME} PUBLIC src src/launcher src/render src/window)
+target_include_directories(${PROJECT_NAME} PUBLIC src src/launche src/render src/window)
 
 if(WIN32)
-    target_link_libraries(${PROJECT_NAME} TridotCore glm glfw opengl32 glew_s imm32)
+    target_link_libraries(${PROJECT_NAME} TridotCore glm glfw opengl32 glew_s yaml-cpp imm32)
 else()
-    target_link_libraries(${PROJECT_NAME} TridotCore glm glfw GL glew pthread stdc++fs)
+    target_link_libraries(${PROJECT_NAME} TridotCore glm glfw GL glew yaml-cpp pthread stdc++fs)
 endif()
-target_include_directories(${PROJECT_NAME} PUBLIC extern extern/glm extern/glfw/include extern/glew/include extern/imgui)
+target_include_directories(${PROJECT_NAME} PUBLIC extern extern/glm extern/glfw/include extern/glew/include extern/imgui extern/yaml-cpp/include)
 
 if (NOT CMAKE_BUILD_TYPE MATCHES "Debug")
     target_compile_definitions(${PROJECT_NAME} PUBLIC TRI_DEBUG)
@@ -147,5 +164,5 @@ endif()
 
 
 #folders
-set_target_properties(TridotCore TridotWindow TridotEntity TridotEngine TridotDebugMenu TridotRender TridotLauncher TridotLauncherFull PROPERTIES FOLDER Tridot)
+set_target_properties(TridotCore TridotWindow TridotEntity TridotEngine TridotDebugMenu TridotRender TridotEditorLib TridotEditor TridotGame TridotGameFull PROPERTIES FOLDER Tridot)
 set_target_properties(glfw uninstall PROPERTIES FOLDER Libs)

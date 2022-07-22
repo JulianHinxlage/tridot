@@ -7,7 +7,7 @@ using namespace tri;
 
 int main(int argc, char* argv[]) {
     MainLoop::init();
-    env->config->loadConfigSearchList({ "config.txt", "../config.txt" });
+    env->config->loadConfigSearchList({ "configGame.txt", "../configGame.txt" });
     MainLoop::startup();
     MainLoop::run();
     MainLoop::shutdown();

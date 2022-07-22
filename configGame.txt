@@ -1,0 +1,24 @@
+enableJobMultithreading = true
+enableModuleHotReloading = false
+unloadModuleOnCrash = true
+enableCrashRecovery = true
+workerThreadCount = 16
+
+loadModule TridotEntity
+loadModule TridotEngine
+loadModule TridotWindow
+loadModule TridotDebugMenu
+loadModule TridotRender
+loadModule TridotTest
+
+windowWidth = 1600
+windowHeight = 900
+windowTitle = "Tridot Game"
+monitor = 0
+
+enableAssetHotReloading = false
+
+addAssetDirectory ../assets
+addAssetDirectory ./
+
+loadMap autosave.tmap

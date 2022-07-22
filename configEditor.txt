@@ -9,12 +9,13 @@ loadModule TridotEngine
 loadModule TridotWindow
 loadModule TridotDebugMenu
 loadModule TridotRender
-loadModule TridotEditor
+loadModule TridotEditorLib
+loadModule TridotTest
 
 windowWidth = 1600
 windowHeight = 900
-windowTitle = "Tridot Launcher"
-
+windowTitle = "Tridot Editor"
+monitor = 0
 
 enableAssetHotReloading = true
 
