@@ -4,6 +4,7 @@
 
 #include "UndoSystem.h"
 #include "Editor.h"
+#include "engine/RuntimeMode.h"
 
 namespace tri {
 
@@ -12,6 +13,23 @@ namespace tri {
     void UndoSystem::init() {
         env->editor->undo = this;
         env->jobManager->addJob("Render")->addSystem<UndoSystem>();
+    }
+
+    void UndoSystem::startup() {
+        env->eventManager->onRuntimeModeChange.addListener([&](int previous, int mode) {
+            if (previous == RuntimeMode::EDIT) {
+                if (mode == RuntimeMode::PLAY || mode == RuntimeMode::PAUSED) {
+                    undoActionsPlayBuffer = undoActions;
+                    redoActionsPlayBuffer = redoActions;
+                }
+            }
+            if (previous == RuntimeMode::PLAY || previous == RuntimeMode::PAUSED) {
+                if (mode == RuntimeMode::EDIT) {
+                    undoActions = undoActionsPlayBuffer;
+                    redoActions = redoActionsPlayBuffer;
+                }
+            }
+        });
     }
 
     void UndoSystem::shutdown() {

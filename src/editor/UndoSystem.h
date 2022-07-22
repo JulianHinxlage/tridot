@@ -13,6 +13,7 @@ namespace tri {
     class UndoSystem : public System {
     public:
         void init() override;
+        void startup() override;
         void shutdown() override;
 
         void undo();
@@ -56,6 +57,9 @@ namespace tri {
         bool inActionWasAdded = false;
         bool addToRedo = false;
         bool clearRedoOnAction = true;
+
+        std::vector<Ref<Action>> undoActionsPlayBuffer;
+        std::vector<Ref<Action>> redoActionsPlayBuffer;
 
         void undoAction(Action &action);
     };
