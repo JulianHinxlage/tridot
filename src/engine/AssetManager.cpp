@@ -235,44 +235,42 @@ namespace tri {
     }
 
     void AssetManager::tick() {
-        //env->renderThread->addTask([&]() {
-            std::unique_lock<std::mutex> lock(dataMutex);
-            Clock clock;
-            for(auto &iter : assets) {
-                auto &record = iter.second;
-                if(loadActivate(record)){
-                    if(clock.elapsed() > 0.010){
-                        break;
-                    }
+        std::unique_lock<std::mutex> lock(dataMutex);
+        Clock clock;
+        for(auto &iter : assets) {
+            auto &record = iter.second;
+            if(loadActivate(record)){
+                if(clock.elapsed() > 0.010){
+                    break;
                 }
             }
+        }
 
-            if(hotReloadEnabled){
-                if(env->time->frameTicks(1.0)) {
-                    for (auto &iter : assets) {
-                        auto &record = iter.second;
-                        if((record.status & LOADED) || (record.status & FAILED_TO_LOAD)) {
-                            if(!(record.status & SHOULD_NOT_LOAD) && !(record.status & FILE_NOT_FOUND)) {
-                                if (record.timeStamp != 0) {
-                                    if (record.path != "") {
-                                        uint64_t currentTimeStamp = getTimeStamp(record.path);
-                                        if (currentTimeStamp != 0) {
-                                            if (currentTimeStamp != record.timeStamp) {
-                                                if(record.options & NO_RELOAD){
-                                                    continue;
-                                                }
-                                                if(record.options & NO_RELOAD_ONCE){
-                                                    record.options = (Options)((int)record.options & ~(int)NO_RELOAD_ONCE);
-                                                    record.timeStamp = currentTimeStamp;
-                                                    continue;
-                                                }
-                                                record.status = UNLOADED;
-                                                if (!asynchronousEnabled) {
-                                                    load(record);
-                                                    loadActivate(record);
-                                                } else {
-                                                    wakeCondition.notify_one();
-                                                }
+        if(hotReloadEnabled){
+            if(env->time->frameTicks(1.0)) {
+                for (auto &iter : assets) {
+                    auto &record = iter.second;
+                    if((record.status & LOADED) || (record.status & FAILED_TO_LOAD)) {
+                        if(!(record.status & SHOULD_NOT_LOAD) && !(record.status & FILE_NOT_FOUND)) {
+                            if (record.timeStamp != 0) {
+                                if (record.path != "") {
+                                    uint64_t currentTimeStamp = getTimeStamp(record.path);
+                                    if (currentTimeStamp != 0) {
+                                        if (currentTimeStamp != record.timeStamp) {
+                                            if(record.options & NO_RELOAD){
+                                                continue;
+                                            }
+                                            if(record.options & NO_RELOAD_ONCE){
+                                                record.options = (Options)((int)record.options & ~(int)NO_RELOAD_ONCE);
+                                                record.timeStamp = currentTimeStamp;
+                                                continue;
+                                            }
+                                            record.status = UNLOADED;
+                                            if (!asynchronousEnabled) {
+                                                load(record);
+                                                loadActivate(record);
+                                            } else {
+                                                wakeCondition.notify_one();
                                             }
                                         }
                                     }
@@ -282,7 +280,7 @@ namespace tri {
                     }
                 }
             }
-        //});
+        }
     }
 
     void AssetManager::shutdown() {

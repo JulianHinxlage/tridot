@@ -22,6 +22,9 @@ namespace tri {
 		int currentChangeClassId = -1;
 		DynamicObjectBuffer singleEditPreChangeValue;
 		std::vector<std::pair<EntityId, DynamicObjectBuffer>> multiEditPreChangeValues;
+		bool selectionLocked = false;
+		SelectionContext lockedSelectionContext;
+		SelectionContext *selectionContext;
 
 		void init() override {
 			env->systemManager->getSystem<UIManager>()->addWindow<PropertiesWindow>("Properties");
@@ -30,34 +33,49 @@ namespace tri {
 		void tick() override {
 			if (env->window && env->window->inFrame()) {
 				if (ImGui::Begin("Properties", &active)) {
-					if (env->world) {
-
-						if (env->editor->selectionContext->isSingleSelection()) {
-							EntityId id = env->editor->selectionContext->getSelected()[0];
-							if (env->world->hasEntity(id)) {
-								header();
-								if (ImGui::BeginChild("child")) {
-									singleEdit(id);
-									contextMenu();
-									ImGui::EndChild();
-								}
-							}
-						}
-						else if (env->editor->selectionContext->isMultiSelection()) {
-							header();
-							if (ImGui::BeginChild("child")) {
-								multiEdit();
-								contextMenu();
-								ImGui::EndChild();
-							}
-						}
-						else {
-							currentChangeClassId = -1;
-						}
-
-					}
+					update();
 				}
 				ImGui::End();
+			}
+		}
+
+		void update() {
+			if (!selectionContext) {
+				selectionContext = env->editor->selectionContext;
+			}
+			if (ImGui::Checkbox("lock selection", &selectionLocked)) {
+				if (selectionLocked) {
+					selectionContext = &lockedSelectionContext;
+					lockedSelectionContext = *env->editor->selectionContext;
+				}
+				else {
+					selectionContext = env->editor->selectionContext;
+				}
+			}
+
+			if (env->world) {
+				if (selectionContext->isSingleSelection()) {
+					EntityId id = selectionContext->getSelected()[0];
+					if (env->world->hasEntity(id)) {
+						header();
+						if (ImGui::BeginChild("child")) {
+							singleEdit(id);
+							contextMenu();
+							ImGui::EndChild();
+						}
+					}
+				}
+				else if (selectionContext->isMultiSelection()) {
+					header();
+					if (ImGui::BeginChild("child")) {
+						multiEdit();
+						contextMenu();
+						ImGui::EndChild();
+					}
+				}
+				else {
+					currentChangeClassId = -1;
+				}
 			}
 		}
 
@@ -71,7 +89,7 @@ namespace tri {
 					if (desc && desc->flags & ClassDescriptor::COMPONENT && !(desc->flags & ClassDescriptor::HIDDEN)) {
 
 						bool haveAll = true;
-						for (auto& id : env->editor->selectionContext->getSelected()) {
+						for (auto& id : selectionContext->getSelected()) {
 							if (!env->world->hasComponent(id, desc->classId)) {
 								haveAll = false;
 							}
@@ -82,7 +100,7 @@ namespace tri {
 								if (ImGui::MenuItem(desc->name.c_str())) {
 
 									env->editor->undo->beginAction();
-									for (auto& id : env->editor->selectionContext->getSelected()) {
+									for (auto& id : selectionContext->getSelected()) {
 										if (!env->world->hasComponent(id, desc->classId)) {
 											env->world->addComponent(id, desc->classId);
 											env->editor->undo->componentAdded(desc->classId, id);
@@ -102,17 +120,17 @@ namespace tri {
 				ImGui::EndPopup();
 			}
 
-			if (env->editor->selectionContext->isSingleSelection()) {
-				EntityId id = env->editor->selectionContext->getSelected()[0];
+			if (selectionContext->isSingleSelection()) {
+				EntityId id = selectionContext->getSelected()[0];
 				if (auto* info = env->world->getComponent<EntityInfo>(id)) {
 					singleEditComponent(id, Reflection::getClassId<EntityInfo>(), info, true);
 				}
 			}
-			else if (env->editor->selectionContext->isMultiSelection()) {
+			else if (selectionContext->isMultiSelection()) {
 				auto* desc = Reflection::getDescriptor<EntityInfo>();
 				void* comp = nullptr;
 				EntityId id = -1;
-				for (auto& iterId : env->editor->selectionContext->getSelected()) {
+				for (auto& iterId : selectionContext->getSelected()) {
 					if (env->world->hasComponent(iterId, desc->classId)) {
 						comp = env->world->getComponent(iterId, desc->classId);
 						id = iterId;
@@ -186,7 +204,7 @@ namespace tri {
 					if (desc->hasEquals()) {
 						if (!desc->equals(preEdit, postEdit)) {
 							EntityId id = -1;
-							for (auto& iterId : env->editor->selectionContext->getSelected()) {
+							for (auto& iterId : selectionContext->getSelected()) {
 								if (env->world->hasComponent(iterId, rootClassId)) {
 									void *comp = env->world->getComponent(iterId, rootClassId);
 									if (postEdit != (uint8_t*)comp + offset) {
@@ -218,7 +236,7 @@ namespace tri {
 					//save pre change values
 					currentChangeClassId = classId;
 					multiEditPreChangeValues.clear();
-					for (auto& iterId : env->editor->selectionContext->getSelected()) {
+					for (auto& iterId : selectionContext->getSelected()) {
 						if (env->world->hasComponent(iterId, classId)) {
 							if (iterId == id) {
 								multiEditPreChangeValues.push_back({ iterId, preEdit });
@@ -262,7 +280,7 @@ namespace tri {
 
 					void* comp = nullptr;
 					EntityId id = -1;
-					for (auto& iterId : env->editor->selectionContext->getSelected()) {
+					for (auto& iterId : selectionContext->getSelected()) {
 						if (env->world->hasComponent(iterId, desc->classId)) {
 							comp = env->world->getComponent(iterId, desc->classId);
 							id = iterId;
@@ -276,7 +294,7 @@ namespace tri {
 						if (ImGui::CollapsingHeader(desc->name.c_str(), &visible, ImGuiTreeNodeFlags_DefaultOpen)) {
 							if (!visible) {
 								env->editor->undo->beginAction();
-								for (auto& iterId : env->editor->selectionContext->getSelected()) {
+								for (auto& iterId : selectionContext->getSelected()) {
 									if (env->world->hasComponent(iterId, desc->classId)) {
 										env->editor->entityOperations->removeComponent(iterId, desc->classId);
 									}
@@ -286,57 +304,6 @@ namespace tri {
 							multiComponentMenu(desc->classId);
 
 							multiEditComponent(id, desc->classId, comp, false);
-							/*
-							//for undo system
-							DynamicObjectBuffer preEdit;
-							preEdit.set(desc->classId, comp);
-
-							bool change = env->editor->classUI->draw(desc->classId, comp);
-
-							//for undo system
-							if (change) {
-								if (currentChangeClassId == -1) {
-									//save pre change values
-									currentChangeClassId = desc->classId;
-									multiEditPreChangeValues.clear();
-									for (auto& iterId : env->editor->selectionContext->getSelected()) {
-										if (env->world->hasComponent(iterId, desc->classId)) {
-											if (iterId == id) {
-												multiEditPreChangeValues.push_back({ iterId, preEdit });
-											}
-											else {
-												void* iterComp = env->world->getComponent(iterId, desc->classId);
-												DynamicObjectBuffer preChange;
-												preChange.set(desc->classId, iterComp);
-												multiEditPreChangeValues.push_back({ iterId, preChange });
-											}
-										}
-									}
-								}
-							}
-							if (currentChangeClassId == desc->classId) {
-								if (!change) {
-									if (ImGui::IsAnyItemActive()) {
-										change = true;
-									}
-								}
-								if (!change) {
-									//add pre change values to the undo system
-									env->editor->undo->beginAction();
-									for (auto &preChange : multiEditPreChangeValues) {
-										env->editor->undo->componentChanged(desc->classId, preChange.first, preChange.second.get());
-									}
-									env->editor->undo->endAction();
-									multiEditPreChangeValues.clear();
-									currentChangeClassId = -1;
-								}
-							}
-
-							if (change) {
-								propagateComponentChange(desc->classId, desc->classId, preEdit.get(), comp, 0);
-							}
-							*/
-
 						}
 						else {
 							multiComponentMenu(desc->classId);
@@ -352,7 +319,7 @@ namespace tri {
 			if (ImGui::BeginPopupContextWindow("context", ImGuiMouseButton_Right, false)) {
 				if (ImGui::MenuItem("Past", nullptr, false, env->editor->entityOperations->getCopiedComponentClassId() != -1)) {
 					env->editor->undo->beginAction();
-					for (auto& id : env->editor->selectionContext->getSelected()) {
+					for (auto& id : selectionContext->getSelected()) {
 						env->editor->entityOperations->pastComponent(id);
 					}
 					env->editor->undo->endAction();
@@ -380,7 +347,7 @@ namespace tri {
 			if (ImGui::BeginPopupContextItem("context")) {
 				if (ImGui::MenuItem("Remove")) {
 					env->editor->undo->beginAction();
-					for (auto& id : env->editor->selectionContext->getSelected()) {
+					for (auto& id : selectionContext->getSelected()) {
 						if (env->world->hasComponent(id, classId)) {
 							env->editor->entityOperations->removeComponent(id, classId);
 						}
@@ -389,7 +356,7 @@ namespace tri {
 				}
 				if (ImGui::MenuItem("Past", nullptr, false, env->editor->entityOperations->getCopiedComponentClassId() != -1)) {
 					env->editor->undo->beginAction();
-					for (auto& id : env->editor->selectionContext->getSelected()) {
+					for (auto& id : selectionContext->getSelected()) {
 						if (env->world->hasComponent(id, classId)) {
 							env->editor->entityOperations->pastComponent(id);
 						}
@@ -402,5 +369,22 @@ namespace tri {
 
 	};
 	TRI_SYSTEM(PropertiesWindow);
+
+	class PropertiesWindow2 : public PropertiesWindow {
+	public:
+		void init() override {
+			env->systemManager->getSystem<UIManager>()->addWindow<PropertiesWindow2>("Properties 2");
+		}
+
+		void tick() override {
+			if (env->window && env->window->inFrame()) {
+				if (ImGui::Begin("Properties 2", &active)) {
+					update();
+				}
+				ImGui::End();
+			}
+		}
+	};
+	TRI_SYSTEM(PropertiesWindow2);
 
 }
