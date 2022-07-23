@@ -29,7 +29,6 @@ namespace tri {
 		void shutdown() override;
 
 		int setPersistentEntity(EntityId id, int handle = -1);
-
 		std::string openFileDialog(const char* pattern);
 	private:
 		int autoSaveListener;
@@ -38,6 +37,8 @@ namespace tri {
 		World* playBuffer;
 		std::vector<std::pair<int, EntityId>> playModePersistentEntities;
 		float lastUnhandledExceptionTime = -1;
+
+		void saveMap(const std::string& file);
 	};
 
 }

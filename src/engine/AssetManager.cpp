@@ -6,7 +6,6 @@
 #include "core/ThreadManager.h"
 #include "engine/Time.h"
 #include "core/util/StrUtil.h"
-//#include "render/RenderThread.h"
 
 namespace tri {
 
@@ -26,15 +25,21 @@ namespace tri {
         running = false;
     }
 
-    void AssetManager::addSearchDirectory(const std::string &directory) {
-        if (!std::filesystem::exists(directory)) {
-            env->console->warning("asset directory %s not found", directory.c_str());
+    void AssetManager::addSearchDirectory(const std::string & directory) {
+        std::string path = std::filesystem::absolute(directory).string();
+
+#if TRI_WINDOWS
+        path = StrUtil::toLower(path);
+#endif
+
+        if (!std::filesystem::exists(path)) {
+            env->console->warning("asset directory %s not found", path.c_str());
         }
         else {
-            if(directory.size() > 0 && directory.back() == '/'){
-                searchDirectories.push_back(directory);
+            if(path.size() > 0 && (path.back() == '/' || path.back() == '\\')){
+                searchDirectories.push_back(path);
             }else{
-                searchDirectories.push_back(directory + "/");
+                searchDirectories.push_back(path + "/");
             }
         }
     }
@@ -68,12 +73,12 @@ namespace tri {
 
     std::string AssetManager::minimalFilePath(const std::string &file) {
         std::string minimalPath = file;
-        int maxMatch = 0;
+        int minMatch = file.size();
         for(auto &dir : searchDirectories){
-            int match = StrUtil::match(file, dir);
-            if(match > maxMatch){
-                maxMatch = match;
-                minimalPath = file.substr(match);
+            std::string min = std::filesystem::relative(file, dir).string();
+            if (!min.empty() && min.size() < minMatch) {
+                minMatch = min.size();
+                minimalPath = min;
             }
         }
         return minimalPath;
@@ -85,7 +90,11 @@ namespace tri {
         static std::mutex mutex;
         std::unique_lock<std::mutex> lock(mutex);
 
+#if TRI_WINDOWS
+        std::string minimalPath = minimalFilePath(StrUtil::toLower(file));
+#else
         std::string minimalPath = minimalFilePath(file);
+#endif
         auto x = assets.find(minimalPath);
         if(x != assets.end()){
             if(x->second.typeId == typeId){

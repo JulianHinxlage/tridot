@@ -107,4 +107,20 @@ namespace tri {
         }
     }
 
+    std::string StrUtil::toLower(const std::string& str) {
+        std::string result;
+        for (char c : str) {
+            result.push_back(std::tolower(c));
+        }
+        return result;
+    }
+
+    std::string StrUtil::toUpper(const std::string& str) {
+        std::string result;
+        for (char c : str) {
+            result.push_back(std::toupper(c));
+        }
+        return result;
+    }
+
 }

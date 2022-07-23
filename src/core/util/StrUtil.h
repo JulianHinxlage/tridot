@@ -17,7 +17,9 @@ namespace tri {
         static std::vector<std::string> split(const std::vector<std::string> &strings, const std::string &delimiter, bool includeEmpty = true);
         static std::string join(const std::vector<std::string> &strings, const std::string &delimiter);
         static std::string replace(const std::string &string, const std::string &search, const std::string &replacement);
-        static std::string readFile(const std::string &file);
+        static std::string readFile(const std::string& file);
+        static std::string toLower(const std::string &str);
+        static std::string toUpper(const std::string &str);
     };
 
 }

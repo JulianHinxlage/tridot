@@ -34,21 +34,11 @@ namespace tri {
 
 	void Editor::startup() {
 		autoSaveListener = env->eventManager->preShutdown.addListener([&]() {
-			if (env->runtimeMode->getMode() != RuntimeMode::EDIT) {
-				env->serializer->serializeWorld(playBuffer, "autosave.tmap");
-			}
-			else {
-				env->serializer->serializeWorld(env->world, "autosave.tmap");
-			}
+			saveMap("autosave.tmap");
 		});
 		crashSaveListener = env->eventManager->onUnhandledException.addListener([&]() {
 			if (lastUnhandledExceptionTime == -1 || env->time->time - lastUnhandledExceptionTime > 10.0f) {
-				if (env->runtimeMode->getMode() != RuntimeMode::EDIT) {
-					env->serializer->serializeWorld(playBuffer, "crashsave.tmap");
-				}
-				else {
-					env->serializer->serializeWorld(env->world, "crashsave.tmap");
-				}
+				saveMap("crashsave.tmap");
 			}
 			lastUnhandledExceptionTime = env->time->time;
 		});
@@ -120,22 +110,18 @@ namespace tri {
 						}
 					}
 					if (ImGui::MenuItem("Save", "Ctrl+S")) {
-						env->eventManager->postTick.addListener([]() {
+						env->eventManager->postTick.addListener([&]() {
 							if (!env->worldFile.empty()) {
-								Clock clock;
-								env->serializer->serializeWorld(env->world, env->worldFile);
-								env->console->info("save world took %f s", clock.elapsed());
+								saveMap(env->worldFile);
 							}
 						}, true);
 					}
 					if (ImGui::MenuItem("Save As", "Ctrl+Shift+S")) {
 						std::string file = openFileDialog(".tmap\0*.tmap\0.*\0*.*\0");
 						if (!file.empty()) {
-							env->eventManager->postTick.addListener([file]() {
-								Clock clock;
-								env->serializer->serializeWorld(env->world, file);
+							env->eventManager->postTick.addListener([&, file]() {
+								saveMap(file);
 								env->worldFile = file;
-								env->console->info("save world took %f s", clock.elapsed());
 							}, true);
 						}
 					}
@@ -199,22 +185,18 @@ namespace tri {
 					if (env->input->pressed('S')) {
 						std::string file = openFileDialog(".tmap\0*.tmap\0.*\0*.*\0");
 						if (!file.empty()) {
-							env->eventManager->postTick.addListener([file]() {
-								Clock clock;
-								env->serializer->serializeWorld(env->world, file);
+							env->eventManager->postTick.addListener([&, file]() {
+								saveMap(file);
 								env->worldFile = file;
-								env->console->info("save world took %f s", clock.elapsed());
 							}, true);
 						}
 					}
 				}
 				else {
 					if (env->input->pressed('S')) {
-						env->eventManager->postTick.addListener([]() {
+						env->eventManager->postTick.addListener([&]() {
 							if (!env->worldFile.empty()) {
-								Clock clock;
-								env->serializer->serializeWorld(env->world, env->worldFile);
-								env->console->info("save world took %f s", clock.elapsed());
+								saveMap(env->worldFile);
 							}
 						}, true);
 					}			
@@ -225,7 +207,7 @@ namespace tri {
 					if (!file.empty()) {
 						env->eventManager->postTick.addListener([file]() {
 							Map::loadAndSetToActiveWorld(file);
-							}, true);
+						}, true);
 					}
 				}
 
@@ -337,7 +319,8 @@ namespace tri {
 		ofn.lpstrFileTitle = NULL;
 		ofn.nMaxFileTitle = 0;
 		ofn.lpstrInitialDir = NULL;
-		ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
+		ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR;
+		
 
 		if (GetOpenFileName(&ofn) == TRUE) {
 			std::string file = ofn.lpstrFile;
@@ -349,6 +332,17 @@ namespace tri {
 #else
 		return "";
 #endif
+	}
+
+	void Editor::saveMap(const std::string& file) {
+		Clock clock;
+		if (env->runtimeMode->getMode() != RuntimeMode::EDIT) {
+			env->serializer->serializeWorld(playBuffer, file);
+		}
+		else {
+			env->serializer->serializeWorld(env->world, file);
+		}
+		env->console->info("save world took %f s", clock.elapsed());
 	}
 
 }

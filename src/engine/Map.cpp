@@ -6,13 +6,20 @@
 #include "AssetManager.h"
 #include "Serializer.h"
 #include "ComponentCache.h"
+#include "RuntimeMode.h"
 
 namespace tri {
 
     void Map::setToActiveWorld() {
         if (world) {
             env->eventManager->postTick.addListener([&]() {
+                if (env->editor) {
+                    env->runtimeMode->setMode(RuntimeMode::EDIT);
+                }
+
+                env->eventManager->onMapEnd.invoke(env->world, file);
                 env->world->copy(*world);
+
                 env->worldFile = file;
                 env->systemManager->getSystem<ComponentCache>()->copyWorld(world.get(), env->world);
                 env->eventManager->onMapBegin.invoke(env->world, file);

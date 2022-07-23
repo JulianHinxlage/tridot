@@ -297,14 +297,53 @@ namespace tri {
 		bool currentEnablePendingOperations = enablePendingOperations;
 		enablePendingOperations = false;
 
+
+		//event buffers from non pending operations
+		for (auto& id : onEntityRemoveIds) {
+			env->eventManager->onEntityRemove.invoke(this, id);
+		}
+		for (int classId = 0; classId < onComponentRemoveIds.size(); classId++) {
+			auto& ids = onComponentRemoveIds[classId];
+			auto& event = env->eventManager->onComponentRemove(classId);
+			if (ids) {
+				for (auto& id : *ids) {
+					event.invoke(this, id);
+				}
+			}
+		}
+		for (auto& id : onEntityAddIds) {
+			env->eventManager->onEntityAdd.invoke(this, id);
+		}
+		for (int classId = 0; classId < onComponentAddIds.size(); classId++) {
+			auto& ids = onComponentAddIds[classId];
+			auto& event = env->eventManager->onComponentAdd(classId);
+			if (ids) {
+				for (auto& id : *ids) {
+					event.invoke(this, id);
+				}
+			}
+		}
+
+
+
+		//pending remove operations
+		for (auto& id : pendingRemoveIds) {
+			env->eventManager->onEntityRemove.invoke(this, id);
+		}
 		for (auto& id : pendingRemoveIds) {
 			removeEntity(id);
 		}
-		for (auto& id : pendingAddIds) {
-			addEntity(id);
-		}
 
-		//pending remove operations
+		//pending remove operations events
+		for (int classId = 0; classId < pendingRemoveComponentIds.size(); classId++) {
+			auto& ids = pendingRemoveComponentIds[classId];
+			auto& event = env->eventManager->onComponentRemove(classId);
+			if (ids) {
+				for (auto& id : *ids) {
+					event.invoke(this, id);
+				}
+			}
+		}
 		for (int classId = 0; classId < pendingRemoveComponentIds.size(); classId++) {
 			auto &ids = pendingRemoveComponentIds[classId];
 			if (ids) {
@@ -314,7 +353,12 @@ namespace tri {
 			}
 		}
 
+
+
 		//pending add operations
+		for (auto& id : pendingAddIds) {
+			addEntity(id);
+		}
 		for (int classId = 0; classId < pendingAddComponentStorages.size(); classId++) {
 			auto& store = pendingAddComponentStorages[classId];
 			if (store) {
@@ -326,24 +370,9 @@ namespace tri {
 			}
 		}
 
-		//events from pending buffers
-		for (auto& id : pendingRemoveIds) {
-			env->eventManager->onEntityRemove.invoke(this, id);
-		}
-		pendingRemoveIds.clear();
+		//pending add operations events
 		for (auto& id : pendingAddIds) {
 			env->eventManager->onEntityAdd.invoke(this, id);
-		}
-		pendingAddIds.clear();
-		for (int classId = 0; classId < pendingRemoveComponentIds.size(); classId++) {
-			auto& ids = pendingRemoveComponentIds[classId];
-			auto& event = env->eventManager->onComponentRemove(classId);
-			if (ids) {
-				for (auto& id : *ids) {
-					event.invoke(this, id);
-				}
-				ids->clear();
-			}
 		}
 		for (int classId = 0; classId < pendingAddComponentStorages.size(); classId++) {
 			auto& store = pendingAddComponentStorages[classId];
@@ -352,40 +381,42 @@ namespace tri {
 				for (int i = 0; i < store->size(); i++) {
 					event.invoke(this, store->getIdByIndex(i));
 				}
-				store->clear();
 			}
 		}
-		pendingAddIds.clear();
 
-		//event buffers
-		for (auto& id : onEntityRemoveIds) {
-			env->eventManager->onEntityRemove.invoke(this, id);
-		}
+
+
+		//clear buffers
+		pendingRemoveIds.clear();
+		pendingAddIds.clear();
 		onEntityRemoveIds.clear();
-		for (auto& id : onEntityAddIds) {
-			env->eventManager->onEntityAdd.invoke(this, id);
-		}
 		onEntityAddIds.clear();
+
 		for (int classId = 0; classId < onComponentRemoveIds.size(); classId++) {
 			auto& ids = onComponentRemoveIds[classId];
-			auto& event = env->eventManager->onComponentRemove(classId);
 			if (ids) {
-				for (auto& id : *ids) {
-					event.invoke(this, id);
-				}
 				ids->clear();
 			}
 		}
 		for (int classId = 0; classId < onComponentAddIds.size(); classId++) {
 			auto& ids = onComponentAddIds[classId];
-			auto& event = env->eventManager->onComponentAdd(classId);
 			if (ids) {
-				for (auto& id : *ids) {
-					event.invoke(this, id);
-				}
 				ids->clear();
 			}
 		}
+		for (int classId = 0; classId < pendingRemoveComponentIds.size(); classId++) {
+			auto& ids = pendingRemoveComponentIds[classId];
+			if (ids) {
+				ids->clear();
+			}
+		}
+		for (int classId = 0; classId < pendingAddComponentStorages.size(); classId++) {
+			auto& store = pendingAddComponentStorages[classId];
+			if (store) {
+				store->clear();
+			}
+		}
+
 
 		enablePendingOperations = currentEnablePendingOperations;
 	}

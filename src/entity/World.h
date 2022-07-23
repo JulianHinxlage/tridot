@@ -63,6 +63,11 @@ namespace tri {
 			return hasComponent(id, Reflection::getClassId<Component>());
 		}
 
+		template<typename... Components>
+		bool hasComponents(EntityId id) {
+			return (hasComponent<Components>(id) & ...);
+		}
+
 		template<typename Component>
 		void removeComponent(EntityId id) {
 			removeComponent(id, Reflection::getClassId<Component>());
