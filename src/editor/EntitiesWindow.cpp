@@ -24,6 +24,7 @@ namespace tri {
 			NAME,
 			COMPONENT,
 			PROPERTY,
+			SELECTION,
 		};
 		Type type;
 		bool invert = false;
@@ -34,7 +35,7 @@ namespace tri {
 	};
 	TRI_CLASS(EntityFilter);
 	TRI_CLASS(EntityFilter::Type);
-	TRI_ENUM3(EntityFilter::Type, NAME, COMPONENT, PROPERTY);
+	TRI_ENUM4(EntityFilter::Type, NAME, COMPONENT, PROPERTY, SELECTION);
 
 	class EntitiesWindow : public UIWindow {
 	public:
@@ -128,9 +129,9 @@ namespace tri {
 					if (env->world) {
 						header();
 
-						if (needListUpdate) {
+						//if (needListUpdate) {
 							updateList();
-						}
+						//}
 
 						if (ImGui::BeginChild("child")) {
 							entityList();
@@ -339,6 +340,11 @@ namespace tri {
 							}
 						}
 
+					}
+					else if (filter.type == EntityFilter::SELECTION) {
+						if (!env->editor->selectionContext->isSelected(id)) {
+							filterHit = true;
+						}
 					}
 
 					if (filterHit == !filter.invert) {

@@ -32,6 +32,10 @@ namespace tri {
         return matrix;
     }
 
+    void Transform::setMatrix(const glm::mat4& matrix) {
+        this->matrix = matrix;
+    }
+
     void Transform::decompose(const glm::mat4 &matrix) {
         glm::vec3 skew;
         glm::vec4 perspective;

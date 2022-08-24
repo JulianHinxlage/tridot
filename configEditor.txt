@@ -10,9 +10,10 @@ loadModule TridotWindow
 loadModule TridotDebugMenu
 loadModule TridotRender
 loadModule TridotEditorLib
+loadModule TridotPhysics
 loadModule TridotTest
 
-windowWidth = 1600
+windowWidth = 1920
 windowHeight = 900
 windowTitle = "Tridot Editor"
 monitor = 0

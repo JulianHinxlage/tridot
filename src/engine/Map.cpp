@@ -28,10 +28,14 @@ namespace tri {
     }
 
     void Map::loadAndSetToActiveWorld(const std::string &file) {
+        env->runtimeMode->setMode(RuntimeMode::LOADING);
         auto map = env->assetManager->get<Map>(file, AssetManager::NONE, nullptr, [](auto asset) {
             ((Map*)asset.get())->setToActiveWorld();
             env->eventManager->postTick.addListener([file = env->assetManager->getFile(asset)]() {
                 env->assetManager->unload(file);
+                if (!env->editor) {
+                    env->runtimeMode->setMode(RuntimeMode::PLAY);
+                }
             }, true);
             return true;
         });
@@ -39,6 +43,9 @@ namespace tri {
             map->setToActiveWorld();
             env->eventManager->postTick.addListener([file]() {
                 env->assetManager->unload(file);
+                if (!env->editor) {
+                    env->runtimeMode->setMode(RuntimeMode::PLAY);
+                }
             }, true);
         }
     }

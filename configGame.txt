@@ -9,6 +9,7 @@ loadModule TridotEngine
 loadModule TridotWindow
 loadModule TridotDebugMenu
 loadModule TridotRender
+loadModule TridotPhysics
 loadModule TridotTest
 
 windowWidth = 1600

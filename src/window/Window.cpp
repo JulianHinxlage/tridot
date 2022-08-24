@@ -124,7 +124,7 @@ namespace tri {
 			int y = 0;
 			glfwGetFramebufferSize((GLFWwindow*)window, &x, &y);
 			glViewport(0, 0, x, y);
-			glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+			glClearColor(backgroundColor.r, backgroundColor.g, backgroundColor.b, backgroundColor.a);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 			inFrameFlag = true;
@@ -199,6 +199,10 @@ namespace tri {
 
 	int Window::getVSync() {
 		return vsyncInterval;
+	}
+
+	void Window::setBackgroundColor(const glm::vec4& color) {
+		backgroundColor = color;
 	}
 
 	void Window::close() {

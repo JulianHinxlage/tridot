@@ -25,8 +25,9 @@ namespace tri {
         }
 
         glm::mat4 calculateLocalMatrix() const;
-        const glm::mat4 &getMatrix() const;
+        const glm::mat4& getMatrix() const;
         void decompose(const glm::mat4 &matrix);
+        void setMatrix(const glm::mat4 &matrix);
 
         //only for main world (env->world)
         static const std::vector<EntityId>& getChilds(EntityId id);

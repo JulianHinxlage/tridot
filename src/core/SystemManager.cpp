@@ -131,7 +131,8 @@ namespace tri {
 
 	void SystemManager::addNewSystems() {
 		auto& systems = getSystemsImpl();
-		for (auto* desc : Reflection::getDescriptors()) {
+		auto descriptors = Reflection::getDescriptors();
+		for (auto* desc : descriptors) {
 			if (desc && (desc->flags & ClassDescriptor::SYSTEM)){
 				if (systems.size() <= desc->classId || !systems[desc->classId].wasAutoAdd) {
 					addSystem(desc->classId);

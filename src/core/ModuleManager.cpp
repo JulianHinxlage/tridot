@@ -194,17 +194,28 @@ namespace tri {
 				env->eventManager->onModuleUnload.invoke(module->name);
 
 				//remove systems and unregister types assosiated with the unloaded module
-				for (auto* desc : Reflection::getDescriptors()) {
+				std::vector<ClassDescriptor*> unregister;
+				auto &descs = Reflection::getDescriptors();
+				for (int i = descs.size() - 1; i >= 0; i--) {
+					auto* desc = descs[i];
 					if (desc) {
 						std::string file = getModuleNameByAddress(desc->registrationSourceAddress);
 						if (checkName(m, file)) {
-							if (desc->flags & ClassDescriptor::SYSTEM) {
-								env->systemManager->removeSystem(desc->classId, false, true);
-							}
-							Reflection::unregisterClass(desc->classId);
+							unregister.push_back(desc);
 						}
 					}
 				}
+				for (auto* desc : unregister) {
+					env->eventManager->onClassUnregister.invoke(desc->classId);
+				}
+				for (auto* desc : unregister) {
+					if (desc->flags & ClassDescriptor::SYSTEM) {
+						env->systemManager->removeSystem(desc->classId, false, true);
+					}
+					Reflection::unregisterClass(desc->classId, false);
+				}
+				unregister.clear();
+
 
 				{
 #ifdef TRI_WINDOWS

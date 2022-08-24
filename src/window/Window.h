@@ -6,6 +6,7 @@
 
 #include "pch.h"
 #include "core/System.h"
+#include <glm/glm.hpp>
 
 namespace tri {
 
@@ -18,6 +19,7 @@ namespace tri {
 
 		void setVSync(int interval);
 		int getVSync();
+		void setBackgroundColor(const glm::vec4 &color);
 
 		void close();
 		bool isOpen();
@@ -28,6 +30,7 @@ namespace tri {
 		void *window;
 		bool inFrameFlag = false;
 		int vsyncInterval = 1;
+		glm::vec4 backgroundColor = {1, 1, 1, 1};
 
 		void updateBegin();
 		void updateEnd();

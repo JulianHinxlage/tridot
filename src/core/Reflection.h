@@ -213,11 +213,13 @@ namespace tri {
 			unregisterClass(getClassId<ClassType>());
 		}
 
-		static void unregisterClass(int classId) {
+		static void unregisterClass(int classId, bool invokeEvent = true) {
 			auto *desc = getDescriptorsImpl()[classId];
 			if (desc) {
 				getDescriptorsByNameImpl().erase(desc->name);
-				onClassUnregister(desc->classId);
+				if (invokeEvent) {
+					onClassUnregister(desc->classId);
+				}
 				for (auto& fdesc : desc->functions) {
 					delete fdesc;
 				}

@@ -12,7 +12,7 @@ namespace tri {
 
     class EditorCamera {
     public:
-        float speed = 2;
+        float speed = 20;
         bool hasStarMousePosition = false;
         glm::vec2 startMousePosition = {0, 0};
 
