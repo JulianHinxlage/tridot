@@ -6,6 +6,7 @@
 
 #include "pch.h"
 #include "core/core.h"
+#include "core/util/Guid.h"
 #include <random>
 #include <glm/glm.hpp>
 
@@ -29,6 +30,7 @@ namespace tri {
 		glm::vec2 getVec2Normal();
 		glm::vec3 getVec3Normal();
 		glm::vec4 getVec4Normal();
+		Guid getGuid();
 
 	private:
 		std::mt19937_64 rng;

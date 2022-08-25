@@ -76,4 +76,13 @@ namespace tri {
 		return { getNormal(), getNormal(), getNormal(), getNormal() };
 	}
 
+	Guid Random::getGuid() {
+		Guid guid;
+		int count = sizeof(guid) / sizeof(uint64_t);
+		for (int i = 0; i < count; i++) {
+			*(((uint64_t*)&guid) + i) = getUint64();
+		}
+		return guid;
+	}
+
 }

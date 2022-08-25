@@ -8,6 +8,7 @@
 #include "engine/AssetManager.h"
 #include "engine/Transform.h"
 #include "engine/EntityEvent.h"
+#include "engine/EntityInfo.h"
 #include "window/Input.h"
 #include <imgui/imgui.h>
 #include <imgui/misc/cpp/imgui_stdlib.h>
@@ -46,11 +47,22 @@ namespace tri {
 		});
 		addClassUI<EntityId>([](const char* label, EntityId* value, EntityId* min, EntityId* max, bool multiEdit) {
 			bool change = false;
-			if (min && max) {
-				change |= ImGui::SliderInt(label, (int*)value, *min, *max);
+
+			std::string name = "";
+			if (*value != -1) {
+				if (auto* info = env->world->getComponent<EntityInfo>(*value)) {
+					name = info->name;
+				}
 			}
-			else {
-				change |= ImGui::DragInt(label, (int*)value);
+
+			ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetStyleColorVec4(ImGuiCol_TextDisabled));
+			ImGui::InputText("", &name, ImGuiInputTextFlags_ReadOnly);
+			ImGui::PopStyleColor();
+			if (ImGui::BeginPopupContextItem()) {
+				if (ImGui::MenuItem("select")) {
+					env->editor->selectionContext->select(*value);
+				}
+				ImGui::EndPopup();
 			}
 			if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenBlockedByActiveItem)) {
 				if (env->input->released(Input::MOUSE_BUTTON_LEFT)) {
@@ -61,6 +73,9 @@ namespace tri {
 					env->editor->dragEntityId = -1;
 				}
 			}
+
+			ImGui::SameLine();
+			ImGui::Text("%s", label);
 			return change;
 		});
 

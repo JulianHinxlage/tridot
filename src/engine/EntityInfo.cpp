@@ -4,14 +4,16 @@
 
 #include "EntityInfo.h"
 #include "core/core.h"
+#include "Random.h"
 
 namespace tri {
 
     EntityInfo::EntityInfo(const std::string &name)
-        : name(name) {}
+        : name(name) {
+        guid = env->random->getGuid();
+    }
 
     TRI_CLASS_FLAGS(EntityInfo, "EntityInfo", "", (ClassDescriptor::Flags)(ClassDescriptor::COMPONENT | ClassDescriptor::HIDDEN));
-    //TRI_COMPONENT(EntityInfo);
-    TRI_PROPERTIES1(EntityInfo, name);
+    TRI_PROPERTIES2(EntityInfo, name, guid);
 
 }

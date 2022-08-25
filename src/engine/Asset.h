@@ -5,12 +5,14 @@
 #pragma once
 
 #include "pch.h"
+#include "core/util/Guid.h"
 
 namespace tri {
 
     class Asset {
     public:
         int assetIndex = -1;
+        Guid guid;
 
         Asset(){}
         virtual ~Asset(){}

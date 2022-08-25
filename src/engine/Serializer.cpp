@@ -282,6 +282,9 @@ namespace tri {
 		addSerializeCallback<EntityId>([](EntityId* v, SerialData& data) {
 			*data.emitter << (int)*v;
 		});
+		addSerializeCallback<Guid>([](Guid* v, SerialData& data) {
+			*data.emitter << v->toString();
+		});
 		addSerializeCallback<float>([](float* v, SerialData& data) {
 			*data.emitter << *v;
 		});
@@ -331,6 +334,9 @@ namespace tri {
 		});
 		addDeserializeCallback<EntityId>([](EntityId* v, SerialData& data) {
 			*v = data.node.as<int>(-1);
+		});
+		addDeserializeCallback<Guid>([](Guid* v, SerialData& data) {
+			v->fromString(data.node.as<std::string>(""));
 		});
 		addDeserializeCallback<float>([](float* v, SerialData& data) {
 			*v = data.node.as<float>(0);

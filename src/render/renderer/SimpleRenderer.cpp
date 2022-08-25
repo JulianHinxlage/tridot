@@ -25,7 +25,7 @@ namespace tri {
 
 	void SimpleRenderer::startup() {
 
-        //glew needts to be initialized in every dll, so for now we do it here
+        //glew needs to be initialized in every dll, so for now we do it here
         //we cant use the RenderContext class, because the functions are implemented in another dll
         glewInit();
 

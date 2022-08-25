@@ -54,7 +54,7 @@ namespace tri {
 
 						editorCameraPersistandHandle = env->editor->setPersistentEntity(editorCameraEntity, editorCameraPersistandHandle);
 
-						bool usingGizmos = false;;
+						bool usingGizmos = false;
 						if (camera) {
 							//camera
 							if (ImGui::IsItemHovered()) {

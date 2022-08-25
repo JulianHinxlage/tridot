@@ -295,7 +295,7 @@ namespace tri {
         World *copy = nullptr;
 
         void init() override {
-            env->jobManager->addJob("Test2", { "Test2" });
+            env->jobManager->addJob("Test", { "Test2" });
             env->runtimeMode->setActiveSystem(RuntimeMode::EDIT, "Test2", true);
 
             //env->eventManager->postTick.addListener([&]() {
