@@ -28,6 +28,7 @@ namespace tri {
 		};
 		Type type;
 		bool invert = false;
+		bool active = true;
 		std::string text = "";
 		int classId = -1;
 		int propertyIndex = -1;
@@ -42,6 +43,7 @@ namespace tri {
 		EntityId lastClicked = -1;
 
 		std::vector<EntityId> list;
+		std::set<EntityId> set;
 		bool needListUpdate = true;
 
 		int onEntityAddListener = -1;
@@ -107,6 +109,10 @@ namespace tri {
 						}
 					}
 
+				}
+
+				if (ImGui::Checkbox("active", &value->active)) {
+					change = true;
 				}
 
 				if (ImGui::Checkbox("invert", &value->invert)) {
@@ -266,7 +272,7 @@ namespace tri {
 				}
 
 				if (show) {
-					entity2(id);
+					entity(id, i);
 				}
 
 				ImGui::PopID();
@@ -274,9 +280,14 @@ namespace tri {
 			ImGui::SetCursorPosY(ImGui::GetCursorPos().y + spacing * (size - end));
 		}
 
+		bool isEntityInList(EntityId id) {
+			return set.contains(id);
+		}
+
 		void updateList() {
 			needListUpdate = false;
 			list.clear();
+			set.clear();
 			env->world->each<>([&](EntityId id) {
 				bool filterd = false;
 
@@ -295,60 +306,63 @@ namespace tri {
 				for (auto& filter : filters) {
 					bool filterHit = false;
 
-					if (filter.type == EntityFilter::NAME) {
-						if (!filter.text.empty()) {
-							if (auto* info = env->world->getComponent<EntityInfo>(id)) {
-								if (StrUtil::isSubstring(info->name, filter.text) == 0) {
-									filterHit = true;
-								}
-							}
-							else {
-								filterHit = true;
-							}
-						}
-					}
-					else if (filter.type == EntityFilter::COMPONENT) {
-						if (filter.classId != -1) {
-							if (!env->world->hasComponent(id, filter.classId)) {
-								filterHit = true;
-							}
-						}
-					}
-					else if (filter.type == EntityFilter::PROPERTY) {
+					if (filter.active) {
 
-						if (filter.classId != -1) {
-							auto* desc = Reflection::getDescriptor(filter.classId);
-							if (desc) {
-
-								if (auto *comp = env->world->getComponent(id, filter.classId)) {
-									if (filter.propertyIndex >= 0 && filter.propertyIndex < desc->properties.size()) {
-										auto &prop = desc->properties[filter.propertyIndex];
+						if (filter.type == EntityFilter::NAME) {
+							if (!filter.text.empty()) {
+								if (auto* info = env->world->getComponent<EntityInfo>(id)) {
+									if (StrUtil::isSubstring(info->name, filter.text) == 0) {
 										filterHit = true;
-										if (prop.type->equals((uint8_t*)comp + prop.offset, filter.propertyValue.get())) {
-											filterHit = false;
-										}
-									}
-									else {
-										filterHit = false;
 									}
 								}
 								else {
 									filterHit = true;
 								}
+							}
+						}
+						else if (filter.type == EntityFilter::COMPONENT) {
+							if (filter.classId != -1) {
+								if (!env->world->hasComponent(id, filter.classId)) {
+									filterHit = true;
+								}
+							}
+						}
+						else if (filter.type == EntityFilter::PROPERTY) {
+
+							if (filter.classId != -1) {
+								auto* desc = Reflection::getDescriptor(filter.classId);
+								if (desc) {
+
+									if (auto *comp = env->world->getComponent(id, filter.classId)) {
+										if (filter.propertyIndex >= 0 && filter.propertyIndex < desc->properties.size()) {
+											auto &prop = desc->properties[filter.propertyIndex];
+											filterHit = true;
+											if (prop.type->equals((uint8_t*)comp + prop.offset, filter.propertyValue.get())) {
+												filterHit = false;
+											}
+										}
+										else {
+											filterHit = false;
+										}
+									}
+									else {
+										filterHit = true;
+									}
 
 
+								}
+							}
+
+						}
+						else if (filter.type == EntityFilter::SELECTION) {
+							if (!env->editor->selectionContext->isSelected(id)) {
+								filterHit = true;
 							}
 						}
 
-					}
-					else if (filter.type == EntityFilter::SELECTION) {
-						if (!env->editor->selectionContext->isSelected(id)) {
-							filterHit = true;
+						if (filterHit == !filter.invert) {
+							filterd = true;
 						}
-					}
-
-					if (filterHit == !filter.invert) {
-						filterd = true;
 					}
 
 				}
@@ -357,8 +371,22 @@ namespace tri {
 					list.push_back(id);
 				}
 			});
-
 	
+			for (auto id : list) {
+				set.insert(id);
+			}
+
+			//add parents if not in list
+			for (auto id : list) {
+				auto* t = env->world->getComponent<Transform>(id);
+				if (t && t->parent != -1) {
+					if (!isEntityInList(t->parent)) {
+						list.push_back(t->parent);
+						set.insert(t->parent);
+					}
+				}
+			}
+
 			//sort by entity hierarchy
 			std::vector<EntityId> newList;
 			std::vector<EntityId> topLevelList;
@@ -381,100 +409,35 @@ namespace tri {
 
 			sortListByHierarchy(topLevelList, newList);
 			list = newList;
+			
+			set.clear();
+			for (auto id : list) {
+				set.insert(id);
+			}
 		}
 
 		void sortListByHierarchy(const std::vector<EntityId>&list, std::vector<EntityId> &newList) {
 			for (auto id : list) {
-				auto childs = Transform::getChilds(id);
+				if (isEntityInList(id)) {
+					auto childs = Transform::getChilds(id);
 
-				//sort alphabetical
-				std::sort(childs.begin(), childs.end(), [](EntityId a, EntityId b) {
-					if (auto* infoa = env->world->getComponent<EntityInfo>(a)) {
-						if (auto* infob = env->world->getComponent<EntityInfo>(b)) {
-							return infoa->name < infob->name;
+					//sort alphabetical
+					std::sort(childs.begin(), childs.end(), [](EntityId a, EntityId b) {
+						if (auto* infoa = env->world->getComponent<EntityInfo>(a)) {
+							if (auto* infob = env->world->getComponent<EntityInfo>(b)) {
+								return infoa->name < infob->name;
+							}
 						}
-					}
-					return a < b;
-				});
+						return a < b;
+					});
 
-				newList.push_back(id);
-				sortListByHierarchy(childs, newList);
+					newList.push_back(id);
+					sortListByHierarchy(childs, newList);
+				}
 			}
 		}
 
-		void entity(EntityId id) {
-			std::string lable = "<" + std::to_string(id) + ">";
-
-			if (auto* info = env->world->getComponent<EntityInfo>(id)) {
-				if (!info->name.empty()) {
-					lable = info->name;
-				}
-			}
-
-			if (ImGui::Selectable(lable.c_str(), env->editor->selectionContext->isSelected(id))) {
-				if (env->input->downShift()) {
-					//range select
-					if (lastClicked != -1 && id != lastClicked) {
-						bool select = env->editor->selectionContext->isSelected(lastClicked);
-						bool inRange = false;
-						for (uint32_t i = 0; i < list.size(); i++) {
-							EntityId iterId = list[i];
-
-							bool iterInRange = inRange;
-							if (iterId == id || iterId == lastClicked) {
-								inRange = !inRange;
-								if (inRange) {
-									iterInRange = true;
-								}
-							}
-
-							if (iterInRange) {
-								if (select) {
-									env->editor->selectionContext->select(iterId, false);
-								}
-								else {
-									env->editor->selectionContext->unselect(iterId);
-								}
-							}
-
-						}
-					}
-
-				}
-				else {
-					//select
-					if (env->editor->selectionContext->isSelected(id)) {
-						if (env->input->downControl()) {
-							env->editor->selectionContext->unselect(id);
-						}
-						else {
-							env->editor->selectionContext->select(id, true);
-						}
-					}
-					else {
-						env->editor->selectionContext->select(id, !env->input->downControl());
-					}
-				}
-				lastClicked = id;
-			}
-
-			if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenBlockedByActiveItem)) {
-				if (env->input->pressed(Input::MOUSE_BUTTON_LEFT)) {
-					env->editor->dragEntityId = id;
-				}
-				if (env->input->released(Input::MOUSE_BUTTON_LEFT)) {
-					if (env->editor->dragEntityId != id && env->editor->dragEntityId != -1) {
-						env->editor->entityOperations->parentEntity(env->editor->dragEntityId, id);
-						needListUpdate = true;
-					}
-					env->editor->dragEntityId = -1;
-				}
-			}
-
-			entityContextMenu(id);
-		}
-
-		void entity2(EntityId id) {
+		void entity(EntityId id, int listIndex) {
 			std::string lable = "<" + std::to_string(id) + ">";
 
 			if (auto* info = env->world->getComponent<EntityInfo>(id)) {
@@ -516,9 +479,11 @@ namespace tri {
 
 			if(open){
 				for (auto& child : childs) {
-					ImGui::PushID(child);
-					entity2(child);
-					ImGui::PopID();
+					if (isEntityInList(child)) {
+						ImGui::PushID(child);
+						entity(child, listIndex);
+						ImGui::PopID();
+					}
 				}
 				ImGui::TreePop();
 			}

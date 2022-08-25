@@ -560,7 +560,7 @@ namespace tri {
 					else if (desc->properties.size() > 0) {
 						for (auto& prop : desc->properties) {
 							if (!(prop.flags & PropertyDescriptor::NO_SERIALIZE)) {
-								create(prop.type->classId, prop.offset);
+								create(prop.type->classId, offset + prop.offset);
 							}
 						}
 					}
@@ -572,10 +572,12 @@ namespace tri {
 							desc->isType<float>() ||
 							desc->isType<double>() ||
 							desc->isType<EntityId>() ||
+							desc->isType<Guid>() ||
 							desc->isType<Color>() ||
 							desc->isType<glm::vec2>() ||
 							desc->isType<glm::vec3>() ||
-							desc->isType<glm::vec4>()
+							desc->isType<glm::vec4>() ||
+							desc->enumValues.size() > 0
 							)) {
 							return;
 						}
