@@ -110,6 +110,7 @@ namespace tri {
 
         bool load(AssetRecord &record);
         bool loadActivate(AssetRecord &record);
+        void reloadAsset(AssetRecord& record);
     };
 
 }

@@ -6,6 +6,7 @@
 #include "core/ThreadManager.h"
 #include "engine/Time.h"
 #include "core/util/StrUtil.h"
+#include "core/FileWatcher.h"
 
 namespace tri {
 
@@ -122,6 +123,20 @@ namespace tri {
         record.preLoad = preLoad;
         record.postLoad = postLoad;
         record.options = options;
+
+        if (hotReloadEnabled) {
+            record.path = searchFile(record.file);
+            if (record.path.empty()) {
+                record.path = record.file;
+            }
+
+            env->fileWatcher->addFile(record.path, [&](const std::string &file) {
+                if (hotReloadEnabled) {
+                    auto& record = assets[minimalFilePath(file)];
+                    reloadAsset(record);
+                }
+            });
+        }
 
         if((record.options & SYNCHRONOUS) || !asynchronousEnabled) {
             load(record);
@@ -243,6 +258,25 @@ namespace tri {
         }
     }
 
+    void AssetManager::reloadAsset(AssetRecord& record) {
+        if (record.options & NO_RELOAD) {
+            return;
+        }
+        if (record.options & NO_RELOAD_ONCE) {
+            record.options = (Options)((int)record.options & ~(int)NO_RELOAD_ONCE);
+            record.timeStamp = getTimeStamp(record.path);
+            return;
+        }
+        record.status = UNLOADED;
+        if (!asynchronousEnabled) {
+            load(record);
+            loadActivate(record);
+        }
+        else {
+            wakeCondition.notify_one();
+        }
+    }
+
     void AssetManager::tick() {
         std::unique_lock<std::mutex> lock(dataMutex);
         Clock clock;
@@ -251,42 +285,6 @@ namespace tri {
             if(loadActivate(record)){
                 if(clock.elapsed() > 0.010){
                     break;
-                }
-            }
-        }
-
-        if(hotReloadEnabled){
-            if(env->time->frameTicks(1.0)) {
-                for (auto &iter : assets) {
-                    auto &record = iter.second;
-                    if((record.status & LOADED) || (record.status & FAILED_TO_LOAD)) {
-                        if(!(record.status & SHOULD_NOT_LOAD) && !(record.status & FILE_NOT_FOUND)) {
-                            if (record.timeStamp != 0) {
-                                if (record.path != "") {
-                                    uint64_t currentTimeStamp = getTimeStamp(record.path);
-                                    if (currentTimeStamp != 0) {
-                                        if (currentTimeStamp != record.timeStamp) {
-                                            if(record.options & NO_RELOAD){
-                                                continue;
-                                            }
-                                            if(record.options & NO_RELOAD_ONCE){
-                                                record.options = (Options)((int)record.options & ~(int)NO_RELOAD_ONCE);
-                                                record.timeStamp = currentTimeStamp;
-                                                continue;
-                                            }
-                                            record.status = UNLOADED;
-                                            if (!asynchronousEnabled) {
-                                                load(record);
-                                                loadActivate(record);
-                                            } else {
-                                                wakeCondition.notify_one();
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
                 }
             }
         }
@@ -328,7 +326,6 @@ namespace tri {
                         } else {
                             record.previousTimeStamp = record.timeStamp;
                             record.timeStamp = getTimeStamp(record.path);
-                            //TRI_PROFILE_PHASE("assets");
                             TRI_PROFILE("load");
                             TRI_PROFILE_INFO(record.file.c_str(), record.file.size());
                             if (record.asset->load(record.path)) {
@@ -354,7 +351,6 @@ namespace tri {
                 if(!(record.status & SHOULD_NOT_LOAD)) {
 
                     if ((record.status & STATE_LOADED) && !(record.status & STATE_ACTIVATED)) {
-                        //TRI_PROFILE_PHASE("assets");
                         TRI_PROFILE("activate");
                         TRI_PROFILE_INFO(record.file.c_str(), record.file.size());
                         if (record.asset->loadActivate()) {

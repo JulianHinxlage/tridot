@@ -137,7 +137,7 @@ file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS src/launch/game/*.cpp)
 add_executable(${PROJECT_NAME} ${SOURCES})
 target_precompile_headers(${PROJECT_NAME} PUBLIC src/pch.h)
 target_include_directories(${PROJECT_NAME} PUBLIC src src/launcher/game)
-target_link_libraries(${PROJECT_NAME} PUBLIC TridotCore)
+target_link_libraries(${PROJECT_NAME} PUBLIC TridotCore TridotEngine)
 add_dependencies(${PROJECT_NAME} TridotWindow TridotEntity TridotDebugMenu TridotEngine TridotRender TridotPhysics TridotTest)
 
 #Fat Launcher Binary

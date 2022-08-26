@@ -19,7 +19,9 @@ namespace tri {
 				for (auto& file : files) {
 					uint64_t time = 0;
 					try {
-						time = std::filesystem::last_write_time(file.path).time_since_epoch().count();
+						if (std::filesystem::exists(file.path)) {
+							time = std::filesystem::last_write_time(file.path).time_since_epoch().count();
+						}
 						if (time != file.time) {
 							file.time = time;
 							if (file.onChange) {
@@ -36,9 +38,11 @@ namespace tri {
 	void FileWatcher::addFile(const std::string& path, const std::function<void(const std::string&)>& onChange) {
 		File file;
 		file.path = path;
-		file.path = std::filesystem::absolute(path).string();
 		file.onChange = onChange;
-		file.time = std::filesystem::last_write_time(file.path).time_since_epoch().count();
+		if (std::filesystem::exists(file.path)) {
+			file.path = std::filesystem::absolute(path).string();
+			file.time = std::filesystem::last_write_time(file.path).time_since_epoch().count();
+		}
 		files.push_back(file);
 	}
 
