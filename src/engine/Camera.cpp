@@ -35,11 +35,11 @@ namespace tri {
     class SCamera : public System {
     public:
         void init() override {
-
+            auto* job = env->jobManager->addJob("Renderer");
+            job->addSystem<SCamera>();
         }
 
         void tick() override {
-
             env->world->each<const Transform, Camera>([](const Transform & transform, Camera & camera) {
                 glm::mat4 t = transform.getMatrix();
                 camera.forward = t * glm::vec4(0, 0, -1, 0);
@@ -55,9 +55,6 @@ namespace tri {
                 camera.transform = t;
                 camera.viewProjection = camera.projection * camera.view;
             });
-
-
-
         }
     };
     TRI_SYSTEM(SCamera);

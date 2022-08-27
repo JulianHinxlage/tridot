@@ -93,13 +93,7 @@ namespace tri {
     void VertexArray::submit(int vertexCount, int instanceCount) {
         bind();
         if(vertexCount == -1){
-            if(indexBuffer.empty()){
-                if(!vertexBuffer.empty()){
-                    vertexCount = vertexBuffer[0].vertexBuffer->getElementCount();
-                }
-            }else{
-                vertexCount = indexBuffer[0].indexBuffer->getElementCount();
-            }
+            vertexCount = getVertexCount();
         }
 
         if(instanceCount == -1) {
@@ -130,6 +124,18 @@ namespace tri {
         nextAttribute = 0;
         vertexBuffer.clear();
         indexBuffer.clear();
+    }
+
+    int VertexArray::getVertexCount() {
+        if (indexBuffer.empty()) {
+            if (!vertexBuffer.empty()) {
+                return vertexBuffer[0].vertexBuffer->getElementCount();
+            }
+        }
+        else {
+            return indexBuffer[0].indexBuffer->getElementCount();
+        }
+        return 0;
     }
 
 }

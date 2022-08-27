@@ -29,6 +29,7 @@ namespace tri {
 		runtimeMode = nullptr;
 		world = nullptr;
 		editor = nullptr;
+		renderPipeline = nullptr;
 
 		worldFile = "";
 	}

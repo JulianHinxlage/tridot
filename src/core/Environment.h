@@ -44,6 +44,10 @@ namespace tri {
 		//editor
 		class Editor* editor;
 
+		//render
+		class RenderPipeline* renderPipeline;
+		class RenderSettings* renderSettings;
+
 		Environment();
 
 		static void init();

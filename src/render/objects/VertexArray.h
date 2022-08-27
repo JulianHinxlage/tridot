@@ -37,6 +37,7 @@ namespace tri {
         void submit(int vertexCount = -1, int instanceCount = -1);
         void setPrimitive(Primitive primitive);
         void clear();
+        int getVertexCount();
 
     private:
         uint32_t id;

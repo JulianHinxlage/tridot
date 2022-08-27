@@ -31,6 +31,7 @@ namespace tri {
 
 	void Window::startup() {
 		TRI_PROFILE_FUNC();
+		vsyncInterval = (int)env->console->addCVar<bool>("vsync", true);
 		int width = env->console->getCVarValue<int>("windowWidth", 800);
 		int height = env->console->getCVarValue<int>("windowHeight", 600);
 		std::string title = env->console->getCVarValue<std::string>("windowTitle", "Tridot Engine");
@@ -41,8 +42,7 @@ namespace tri {
 		window = RenderContext::create();
 		glfwSetWindowSize((GLFWwindow*)window, width, height);
 		glfwSetWindowTitle((GLFWwindow*)window, title.c_str());
-		glfwSwapInterval(1);
-		vsyncInterval = 1;
+		glfwSwapInterval(vsyncInterval);
 
 		//set window position by monitor
 		int monitorCount = 0;
@@ -120,6 +120,11 @@ namespace tri {
 			ImGui_ImplGlfw_NewFrame();
 			ImGui::NewFrame();
 
+			int vsync = env->console->getCVarValue<bool>("vsync", true);
+			if (vsync != vsyncInterval) {
+				setVSync(vsync);
+			}
+
 			int x = 0;
 			int y = 0;
 			glfwGetFramebufferSize((GLFWwindow*)window, &x, &y);
@@ -193,6 +198,7 @@ namespace tri {
 	void Window::setVSync(int interval) {
 		if (vsyncInterval != interval) {
 			glfwSwapInterval(interval);
+			env->console->setCVarValue<bool>("vsync", (bool)interval);
 		}
 		vsyncInterval = interval;
 	}

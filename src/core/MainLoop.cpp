@@ -45,7 +45,7 @@ namespace tri {
 	void MainLoop::run() {
 		while (env->console->getCVarValue("running", false)) {
 			TRI_PROFILE_FRAME;
-			env->systemManager->getSystem<Profiler>()->nextFrame();
+			env->profiler->nextFrame();
 
 			//performe startup of new systems
 			if (env->systemManager->hasPendingStartups()) {
@@ -55,12 +55,16 @@ namespace tri {
 			//tick jobs which will tick systems
 			{
 				TRI_PROFILE("preTick");
+				env->profiler->begin("preTick");
 				env->eventManager->preTick.invoke();
+				env->profiler->end();
 			}
 			env->jobManager->tickJobs();
 			{
 				TRI_PROFILE("postTick");
+				env->profiler->begin("postTick");
 				env->eventManager->postTick.invoke();
+				env->profiler->end();
 			}
 
 			//performe shutdown on systems to be removed

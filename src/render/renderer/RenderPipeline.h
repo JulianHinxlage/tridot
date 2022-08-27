@@ -1,0 +1,119 @@
+//
+// Copyright (c) 2022 Julian Hinxlage. All rights reserved.
+//
+
+#pragma once
+
+#include "pch.h"
+#include "RenderSettings.h"
+#include "render/objects/FrameBuffer.h"
+#include "render/objects/Shader.h"
+#include "render/objects/ShaderState.h"
+#include "render/objects/VertexArray.h"
+#include "render/objects/BatchBuffer.h"
+
+namespace tri {
+
+	class RenderPipeline : public System {
+	public:
+		enum RenderPass {
+			UNDEFINED,
+			PREPARE,
+			OPAQUE,
+			TRANSPARENCY,
+			SHADOWS,
+			LIGHTING,
+			POST_PROCESSING,
+		};
+
+		enum StepType {
+			NONE,
+			COMMAND,
+			DRAW_CALL,
+			CALLBACK,
+		};
+
+		enum Command {
+			NOOP,
+			DEPTH_ON,
+			DEPTH_OFF,
+			BLEND_ON,
+			BLEND_OFF,
+			CULL_OFF,
+			CULL_BACK,
+			CULL_FRONT,
+		};
+
+		class Step {
+		public:
+			RenderPass pass;
+			StepType type;
+			bool fixed;
+			std::string name;
+			std::vector<Ref<Step>> steps;
+
+			Step();
+			virtual Ref<Step> copy(bool copySteps = true, bool copyOnlyFixed = false);
+			virtual void execute(RenderPipeline& pipeline);
+		protected:
+			void copy(Step *result, bool copySteps = true, bool copyOnlyFixed = false);
+		};
+
+		class StepCommand : public Step {
+		public:
+			Command command;
+
+			StepCommand();
+			virtual Ref<Step> copy(bool copySteps = true, bool copyOnlyFixed = false);
+			virtual void execute(RenderPipeline& pipeline);
+		};
+
+		class StepDrawCall : public Step {
+		public:
+			FrameBuffer *frameBuffer;
+			Shader *shader;
+			Ref<ShaderState> shaderState;
+			VertexArray *vertexArray;
+			std::vector<Texture*> textures;
+			std::vector<BatchBuffer*> buffers;
+			int instanceCount;
+
+			StepDrawCall();
+			virtual void execute(RenderPipeline& pipeline);
+			virtual Ref<Step> copy(bool copySteps = true, bool copyOnlyFixed = false);
+		};
+
+		class StepCallback : public Step {
+		public:
+			std::function<void()> callback;
+
+			StepCallback();
+			virtual void execute(RenderPipeline& pipeline);
+			virtual Ref<Step> copy(bool copySteps = true, bool copyOnlyFixed = false);
+		};
+
+		void init() override;
+		void startup() override;
+		void tick() override;
+		void shutdown() override;
+
+		void addStep(Ref<Step> step, RenderPass pass = PREPARE, bool fixed = false, bool sort = true);
+		void addCommandStep(Command command, RenderPass pass = PREPARE, bool fixed = false);
+		void addCallbackStep(const std::function<void()> &callback, RenderPass pass = PREPARE, bool fixed = false);
+		Ref<StepDrawCall> addDrawCallStep(RenderPass pass = PREPARE, bool fixed = false);
+
+		template<typename T>
+		void freeOnThread(Ref<T> t) {
+			freeList.push_back((Ref<void>)t);
+		}
+
+	private:
+		std::vector<Ref<Step>> steps;
+		std::vector<Ref<Step>> preparedSteps;
+		std::vector<Ref<void>> freeList;
+		std::mutex mutex;
+		RenderSettings::Statistics statistics;
+		bool processedPrepared;
+	};
+
+}
