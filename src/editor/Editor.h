@@ -22,6 +22,8 @@ namespace tri {
 		EntityOperations* entityOperations;
 
 		EntityId dragEntityId = -1;
+		bool propertiesNoContext = false;
+		bool propertiesNoScroll = false;
 
 		void init() override;
 		void startup() override;

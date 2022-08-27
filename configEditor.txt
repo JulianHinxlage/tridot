@@ -14,7 +14,7 @@ loadModule TridotPhysics
 loadModule TridotTest
 
 windowWidth = 1920
-windowHeight = 900
+windowHeight = 980
 windowTitle = "Tridot Editor"
 monitor = 0
 

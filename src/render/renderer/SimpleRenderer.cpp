@@ -80,20 +80,39 @@ namespace tri {
 
         RenderContext::setDepth(true);
 
-        if (frameBuffer) {
-            TracyGpuZone("clear");
-            frameBuffer->clear();
-        }
-
+        bool hasPrimary = false;
         env->world->each<Camera>([&](Camera& c) {
-            if (env->viewport->size.y != 0) {
-                c.aspectRatio = (float)env->viewport->size.x / (float)env->viewport->size.y;
+            if (c.active) {
+
+                if (c.isPrimary && !hasPrimary) {
+                    c.output = env->viewport->frameBuffer;
+                    hasPrimary = true;
+                }else if (!c.output || c.output == env->viewport->frameBuffer) {
+                    c.output = Ref<FrameBuffer>::make();
+                    c.output->setAttachment({ COLOR, Color(0, 0, 0, 0) });
+                    c.output->setAttachment({ DEPTH, color::white });
+                    c.output->setAttachment({ (TextureAttachment)(COLOR + 1), color::white });//ID buffer
+                }
+                frameBuffer = c.output;
+                if (frameBuffer) {
+                    if (env->viewport->size != glm::ivec2(frameBuffer->getSize())) {
+                        frameBuffer->resize(env->viewport->size.x, env->viewport->size.y);
+                    }
+                    TracyGpuZone("clear");
+                    frameBuffer->clear();
+                }
+
+                if (env->viewport->size.y != 0) {
+                    c.aspectRatio = (float)env->viewport->size.x / (float)env->viewport->size.y;
+                }
+                projection = c.viewProjection;
+
+                env->world->each<const Transform, const MeshComponent>([&](EntityId id, const Transform& t, const MeshComponent& m) {
+                    submit(t.getMatrix(), m.mesh.get(), m.material.get(), m.color, id);
+                });
             }
-            projection = c.viewProjection;
         });
-		env->world->each<const Transform, const MeshComponent>([&](EntityId id, const Transform &t, const MeshComponent &m) {
-			submit(t.getMatrix(), m.mesh.get(), m.material.get(), m.color, id);
-		});
+
         FrameBuffer::unbind();
 	}
 

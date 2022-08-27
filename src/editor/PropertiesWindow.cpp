@@ -25,14 +25,25 @@ namespace tri {
 		bool selectionLocked = false;
 		SelectionContext lockedSelectionContext;
 		SelectionContext *selectionContext;
+		bool noContext = false;
+		bool noScroll = false;
 
 		void init() override {
 			env->systemManager->getSystem<UIManager>()->addWindow<PropertiesWindow>("Properties");
 		}
 
 		void tick() override {
+			noScroll = env->editor->propertiesNoScroll;
+			noContext = env->editor->propertiesNoContext;
+			env->editor->propertiesNoContext = false;
+			env->editor->propertiesNoScroll = false;
+			
 			if (env->window && env->window->inFrame()) {
-				if (ImGui::Begin("Properties", &active)) {
+				ImGuiWindowFlags flags = ImGuiWindowFlags_None;
+				if (noScroll) {
+					flags |= ImGuiWindowFlags_NoScrollWithMouse;
+				}
+				if (ImGui::Begin("Properties", &active, flags)) {
 					update();
 				}
 				ImGui::End();
@@ -58,18 +69,30 @@ namespace tri {
 					EntityId id = selectionContext->getSelected()[0];
 					if (env->world->hasEntity(id)) {
 						header();
-						if (ImGui::BeginChild("child")) {
+						ImGuiWindowFlags flags = ImGuiWindowFlags_None;
+						if (noScroll) {
+							flags |= ImGuiWindowFlags_NoScrollWithMouse;
+						}
+						if (ImGui::BeginChild("child", ImVec2(0, 0), false, flags)) {
 							singleEdit(id);
-							contextMenu();
+							if (!noContext) {
+								contextMenu();
+							}
 							ImGui::EndChild();
 						}
 					}
 				}
 				else if (selectionContext->isMultiSelection()) {
 					header();
-					if (ImGui::BeginChild("child")) {
+					ImGuiWindowFlags flags = ImGuiWindowFlags_None;
+					if (noScroll) {
+						flags |= ImGuiWindowFlags_NoScrollWithMouse;
+					}
+					if (ImGui::BeginChild("child", ImVec2(0, 0), false, flags)) {
 						multiEdit();
-						contextMenu();
+						if (!noContext) {
+							contextMenu();
+						}
 						ImGui::EndChild();
 					}
 				}

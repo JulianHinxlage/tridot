@@ -11,10 +11,13 @@ namespace tri {
 
 	TRI_SYSTEM_INSTANCE(ThreadManager, env->threadManager);
 
-	void ThreadManager::startup() {
+	void ThreadManager::init() {
+		threadMutex = std::make_shared<std::mutex>();
 		taskMutex = std::make_shared<std::mutex>();
 		taskCondition = std::make_shared<std::condition_variable>();
+	}
 
+	void ThreadManager::startup() {
 		for (int i = 0; i < workerThreadCount; i++) {
 			auto worker = std::make_shared<Worker>();
 			workers.push_back(worker);
@@ -42,6 +45,7 @@ namespace tri {
 	}
 
 	int ThreadManager::addThread(const std::string& name, const std::function<void()>& callback) {
+		std::unique_lock<std::mutex> lock(*threadMutex);
 		Thread thread;
 		thread.threadId = nextThreadId++;
 		thread.name = name;

@@ -4,11 +4,14 @@
 
 #include "ClassUI.h"
 #include "Editor.h"
+#include "EditorCamera.h"
 #include "engine/Color.h"
 #include "engine/AssetManager.h"
 #include "engine/Transform.h"
 #include "engine/EntityEvent.h"
 #include "engine/EntityInfo.h"
+#include "engine/Camera.h"
+#include "render/objects/FrameBuffer.h"
 #include "window/Input.h"
 #include <imgui/imgui.h>
 #include <imgui/misc/cpp/imgui_stdlib.h>
@@ -168,6 +171,95 @@ namespace tri {
 
 			return change;
 		});
+		
+		addClassUI<Ref<FrameBuffer>>([](const char* label, Ref<FrameBuffer>* value, Ref<FrameBuffer>* min, Ref<FrameBuffer>* max, bool multiEdit) {
+			bool change = false;
+			if (ImGui::TreeNode(label)) {
+				if (value->get()) {
+					auto v = value->get();
+					ImGui::Text("size: %i, %i", (int)v->getSize().x, (int)v->getSize().y);
+
+					std::vector<TextureAttachment> attachments;
+					for (int i = 0; i < 16; i++) {
+						attachments.push_back(TextureAttachment(COLOR + i));
+					}
+					attachments.push_back(DEPTH);
+					attachments.push_back(STENCIL);
+
+					for (TextureAttachment attachment : attachments) {
+						auto texture = v->getAttachment(attachment);
+						if (texture) {
+							float aspect = 1;
+							if (texture->getHeight() != 0) {
+								aspect = (float)texture->getWidth() / (float)texture->getHeight();
+							}
+							ImGui::Image((void*)(size_t)texture->getId(), ImVec2(200 * aspect, 200), ImVec2(0, 1), ImVec2(1, 0));
+
+							if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID)) {
+								ImGui::SetDragDropPayload(env->reflection->getDescriptor<Texture>()->name.c_str(), &texture, sizeof(texture));
+								ImGui::Text("Texture");
+								ImGui::EndDragDropSource();
+							}
+
+							ImGui::SameLine();
+							std::string name;
+							if (auto* spec = v->getAttachmentSpec(attachment)) {
+								name = spec->name;
+							}
+							if (name.empty()) {
+								if (attachment == DEPTH) {
+									name = "depth";
+								}
+								else if (attachment == STENCIL) {
+									name = "stencil";
+								}
+								else if (attachment == COLOR) {
+									name = "color";
+								}
+								else {
+									name = "color " + std::to_string((int)attachment - COLOR);
+								}
+							}
+							ImGui::Text("%s", name.c_str());
+						}
+					}
+				}
+				ImGui::TreePop();
+			}
+			return change;
+		});
+		addClassUI<Camera>([](const char* label, Camera* value, Camera* min, Camera* max, bool multiEdit) {
+			bool change = false;
+			env->editor->classUI->draw(env->reflection->getClassId<Camera>(), value, label, min, max, false, false, false);
+			if (value->output) {
+				if (ImGui::TreeNode("View")) {
+					auto texture = value->output->getAttachment(TextureAttachment::COLOR);
+					if (texture) {
+						float aspect = 1;
+						if (texture->getHeight() != 0) {
+							aspect = (float)texture->getWidth() / (float)texture->getHeight();
+						}
+						ImGui::Image((void*)(size_t)texture->getId(), ImVec2(200 * aspect, 200), ImVec2(0, 1), ImVec2(1, 0));
+			
+						EntityId id = env->world->getIdByComponent(value);
+						if (id != -1) {
+							if (env->world->hasComponent<Transform>(id)) {
+								Transform& transform = *env->world->getComponent<Transform>(id);
+								if (ImGui::IsItemHovered()) {
+									static EditorCamera editorCamera;
+									env->editor->propertiesNoContext = true;
+									env->editor->propertiesNoScroll = true;
+									editorCamera.update(*value, transform);
+								}
+							}
+						}
+					}
+					ImGui::TreePop();
+				}
+			}
+			return change;
+		});
+
 	}
 
 	void ClassUI::addClassUI(int classId, const std::function<bool(const char*, void*, void*, void*, bool multiValue)>& callback) {
@@ -177,7 +269,7 @@ namespace tri {
 		callbacks[classId] = callback;
 	}
 
-	bool ClassUI::draw(int classId, void* ptr, const char* label, void* min, void* max, bool multiValue, bool drawHidden) {
+	bool ClassUI::draw(int classId, void* ptr, const char* label, void* min, void* max, bool multiValue, bool drawHidden, bool useClassUICallback) {
 		auto *desc = Reflection::getDescriptor(classId);
 		if (desc && (!(desc->flags & ClassDescriptor::HIDDEN) || drawHidden)) {
 			if (!label) {
@@ -185,7 +277,7 @@ namespace tri {
 			}
 
 			//use a callback if one exists
-			if (callbacks.size() > classId && callbacks[classId]) {
+			if (useClassUICallback && callbacks.size() > classId && callbacks[classId]) {
 				return callbacks[classId](label, ptr, min, max, multiValue);
 			}
 

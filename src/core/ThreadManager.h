@@ -12,6 +12,7 @@ namespace tri {
 	public:
 		int workerThreadCount = std::thread::hardware_concurrency();
 
+		void init() override;
 		void startup() override;
 		void shutdown() override;
 
@@ -34,6 +35,7 @@ namespace tri {
 			int threadId;
 		};
 		std::vector<Thread> threads;
+		std::shared_ptr<std::mutex> threadMutex;
 
 		class Task {
 		public:

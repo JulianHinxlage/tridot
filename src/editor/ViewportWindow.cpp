@@ -46,10 +46,14 @@ namespace tri {
 						//camera
 						Camera* camera = nullptr;
 						Transform* cameraTransform = nullptr;
+						bool hasPrimary = false;
 						env->world->each<const Camera, const Transform>([&](EntityId id, Camera& c, Transform& t) {
-							camera = &c;
-							cameraTransform = &t;
-							editorCameraEntity = id;
+							if (c.isPrimary && !hasPrimary) {
+								camera = &c;
+								cameraTransform = &t;
+								editorCameraEntity = id;
+								hasPrimary = true;
+							}
 						});
 
 						editorCameraPersistandHandle = env->editor->setPersistentEntity(editorCameraEntity, editorCameraPersistandHandle);

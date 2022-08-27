@@ -15,7 +15,7 @@ namespace tri {
 		bool enableReferenceEdit;
 
 		void init() override;
-		bool draw(int classId, void* ptr, const char* label = nullptr, void* min = nullptr, void* max = nullptr, bool multiValue = false, bool drawHidden = false);
+		bool draw(int classId, void* ptr, const char* label = nullptr, void* min = nullptr, void* max = nullptr, bool multiValue = false, bool drawHidden = false, bool useClassUICallback = true);
 		void addClassUI(int classId, const std::function<bool(const char* label, void* value, void* min, void* max, bool multiValue)>& callback);
 
 		template<typename T>
