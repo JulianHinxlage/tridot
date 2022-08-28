@@ -56,6 +56,8 @@ namespace tri {
         std::unordered_map<std::string, uint32_t> locations;
         std::unordered_map<std::string, uint32_t> bufferLocations;
         std::string file;
+
+        bool loadSource(const std::string& file, std::string& source);
     };
 
 }

@@ -44,26 +44,70 @@ namespace tri {
         return id;
     }
 
-    bool Shader::load(const std::string &file) {
+    bool Shader::loadSource(const std::string& file, std::string& source) {
         std::ifstream stream(file);
-        if(!stream.is_open()){
+        if (!stream.is_open()) {
             env->console->warning("shader: file %s not found", file.c_str());
             return false;
         }
+
+        source.clear();
+        std::string line;
+        int lineNumber = 1;
+        while (std::getline(stream, line, '\n')) {
+            if (StrUtil::match(line, "#include") == 8) {
+                auto parts = StrUtil::split(line, " ", false);
+                if (parts.size() >= 2) {
+                    parts = StrUtil::split(parts[1], "\"", false);
+                    if (parts.size() >= 1) {
+                        std::string str;
+                        std::string includeFile = std::filesystem::path(file).parent_path().string() + "/" + parts[0];
+                        if (loadSource(includeFile, str)) {
+                            source += str;
+                            source += "\n";
+                        }
+                    }
+                    else {
+                        env->console->warning("shader: error on line %i in file %s", lineNumber, file.c_str());
+                    }
+                }
+                else {
+                    env->console->warning("shader: error on line %i in file %s", lineNumber, file.c_str());
+                }
+            }
+            else {
+                source += line;
+                source += "\n";
+            }
+            lineNumber++;
+        }
+
+        return true;
+    }
+
+    bool Shader::load(const std::string &file) {
+        std::string source;
+        if (!loadSource(file, source)) {
+            return false;
+        }
+
         this->file = file;
         sources.clear();
-        std::string line;
-        while(std::getline(stream, line, '\n')){
-            if(line == "#type vertex"){
-                sources.push_back({(uint32_t)GL_VERTEX_SHADER, ""});
-            }else if(line == "#type fragment"){
-                sources.push_back({(uint32_t)GL_FRAGMENT_SHADER, ""});
-            }else if(line == "#type geometry"){
-                sources.push_back({(uint32_t)GL_GEOMETRY_SHADER, ""});
-            }else if(line == "#type compute"){
-                sources.push_back({(uint32_t)GL_COMPUTE_SHADER, ""});
-            }else{
-                if(!sources.empty()){
+        for (auto& line : StrUtil::split(source, "\n")) {
+            if (line == "#type vertex") {
+                sources.push_back({ (uint32_t)GL_VERTEX_SHADER, "" });
+            }
+            else if (line == "#type fragment") {
+                sources.push_back({ (uint32_t)GL_FRAGMENT_SHADER, "" });
+            }
+            else if (line == "#type geometry") {
+                sources.push_back({ (uint32_t)GL_GEOMETRY_SHADER, "" });
+            }
+            else if (line == "#type compute") {
+                sources.push_back({ (uint32_t)GL_COMPUTE_SHADER, "" });
+            }
+            else {
+                if (!sources.empty()) {
                     sources.back().second += line;
                     sources.back().second += '\n';
                 }
