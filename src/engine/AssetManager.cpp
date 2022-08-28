@@ -60,12 +60,12 @@ namespace tri {
             std::string path = dir + file.substr(StrUtil::match(file, dir));
             if(std::filesystem::exists(path)){
                 if(std::filesystem::is_regular_file(path)){
-                    return path;
+                    return StrUtil::replace(path, "\\", "/");
                 }
             }
         }
         if (std::filesystem::is_regular_file(file)) {
-            return file;
+            return StrUtil::replace(file, "\\", "/");
         }
         else {
             return "";
@@ -73,13 +73,13 @@ namespace tri {
     }
 
     std::string AssetManager::minimalFilePath(const std::string &file) {
-        std::string minimalPath = file;
-        int minMatch = file.size();
+        std::string minimalPath = StrUtil::replace(file, "\\", "/");
+        int minMatch = minimalPath.size();
         for(auto &dir : searchDirectories){
             std::string min = std::filesystem::relative(file, dir).string();
             if (!min.empty() && min.size() < minMatch) {
-                minMatch = min.size();
-                minimalPath = min;
+                minimalPath = StrUtil::replace(min, "\\", "/");
+                minMatch = minimalPath.size();
             }
         }
         return minimalPath;

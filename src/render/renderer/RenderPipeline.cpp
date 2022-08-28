@@ -53,7 +53,7 @@ namespace tri {
 				env->threadManager->addTask([&]() {
 					freeSteps.clear();
 				});
-				*/
+				*/ 
 
 				steps.clear();
 				for (auto& step : preparedSteps) {
@@ -76,14 +76,16 @@ namespace tri {
 		env->renderSettings->statistics.instanceCount = statistics.instanceCount;
 		env->renderSettings->statistics.drawCallCount = statistics.drawCallCount;
 		
-		freeList.clear();
+		refFreeList.clear();
+		callbackFreeList.clear();
 		FrameBuffer::unbind();
 	}
 
 	void RenderPipeline::shutdown() {
 		steps.clear();
 		preparedSteps.clear();
-		freeList.clear();
+		refFreeList.clear();
+		callbackFreeList.clear();
 	}
 
 	void RenderPipeline::addStep(Ref<Step> step, RenderPass pass, bool fixed, bool sort) {
@@ -190,11 +192,15 @@ namespace tri {
 		}
 
 		for (int i = 0; i < textures.size(); i++) {
-			textures[i]->bind(i);
+			if (textures[i]) {
+				textures[i]->bind(i);
+			}
 		}
 
 		for (int i = 0; i < buffers.size(); i++) {
-			buffers[i]->update();
+			if (buffers[i]) {
+				buffers[i]->update();
+			}
 		}
 
 		{
@@ -273,6 +279,10 @@ namespace tri {
 
 	RenderPipeline::StepCallback::StepCallback() {
 		type = CALLBACK;
+	}
+
+	RenderPipeline::StepCallback::~StepCallback() {
+		env->renderPipeline->freeOnThread(callback);
 	}
 
 	void RenderPipeline::StepCallback::execute(RenderPipeline& pipeline) {

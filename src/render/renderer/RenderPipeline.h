@@ -88,6 +88,7 @@ namespace tri {
 			std::function<void()> callback;
 
 			StepCallback();
+			~StepCallback();
 			virtual void execute(RenderPipeline& pipeline);
 			virtual Ref<Step> copy(bool copySteps = true, bool copyOnlyFixed = false);
 		};
@@ -103,14 +104,19 @@ namespace tri {
 		Ref<StepDrawCall> addDrawCallStep(RenderPass pass = PREPARE, bool fixed = false);
 
 		template<typename T>
-		void freeOnThread(Ref<T> t) {
-			freeList.push_back((Ref<void>)t);
+		void freeOnThread(Ref<T> ref) {
+			refFreeList.push_back((Ref<void>)ref);
+		}
+
+		void freeOnThread(std::function<void()> callback) {
+			callbackFreeList.push_back(callback);
 		}
 
 	private:
 		std::vector<Ref<Step>> steps;
 		std::vector<Ref<Step>> preparedSteps;
-		std::vector<Ref<void>> freeList;
+		std::vector<Ref<void>> refFreeList;
+		std::vector<std::function<void()>> callbackFreeList;
 		std::mutex mutex;
 		RenderSettings::Statistics statistics;
 		bool processedPrepared;
