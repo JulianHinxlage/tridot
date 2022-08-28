@@ -35,7 +35,7 @@ namespace tri {
 
 		void init() override {
 			env->systemManager->addSystem<Editor>();
-			env->systemManager->getSystem<UIManager>()->addWindow<AssetBrowser>("Asset Browser");
+			env->uiManager->addWindow<AssetBrowser>("Asset Browser");
 			fileAssosiations = {
 				{".glsl", Reflection::getClassId<Shader>() },
 				{".png", Reflection::getClassId<Texture>() },

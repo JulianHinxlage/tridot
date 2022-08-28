@@ -21,6 +21,7 @@ namespace tri {
 
 		window = nullptr;
 		viewport = nullptr;
+		uiManager = nullptr;
 		input = nullptr;
 		time = nullptr;
 		random = nullptr;

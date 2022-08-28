@@ -4,13 +4,18 @@
 
 #include "UIManager.h"
 #include "Window.h"
-#include <imgui/imgui.h>
+#include "Input.h"
+#include <imgui.h>
+#include <imgui/backends/imgui_impl_glfw.h>
+#include <imgui/backends/imgui_impl_opengl3.h>
 #include <imgui/imgui_internal.h>
-#include <glfw/glfw3.h>
+#include <GL/glew.h>
+#include <GLFW/glfw3.h>
+#include <tracy/TracyOpenGL.hpp>
 
 namespace tri {
 
-	TRI_SYSTEM(UIManager);
+	TRI_SYSTEM_INSTANCE(UIManager, env->uiManager);
 
 	void UIManager::init() {
 		auto* job = env->jobManager->addJob("Render");
@@ -31,6 +36,56 @@ namespace tri {
 	}
 	
 	void UIManager::startup() {
+		//init imgui
+		IMGUI_CHECKVERSION();
+		ImGui::CreateContext();
+		ImGuiIO& io = ImGui::GetIO(); (void)io;
+		io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+		io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
+		ImGui::StyleColorsDark();
+		ImGuiStyle& style = ImGui::GetStyle();
+		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+		{
+			style.WindowRounding = 0.0f;
+			style.Colors[ImGuiCol_WindowBg].w = 1.0f;
+		}
+
+		ImGui_ImplGlfw_InitForOpenGL((GLFWwindow*)env->window->getContext(), true);
+		const char* glsl_version = "#version 130";
+		ImGui_ImplOpenGL3_Init(glsl_version);
+
+		//set imgui style colors
+		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(1, 1, 1, 0.3));
+		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(1, 1, 1, 0.4));
+		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(1, 1, 1, 0.5));
+		ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(1, 1, 1, 0.2));
+		ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4(1, 1, 1, 0.3));
+		ImGui::PushStyleColor(ImGuiCol_HeaderActive, ImVec4(1, 1, 1, 0.4));
+		ImGui::PushStyleColor(ImGuiCol_Tab, ImVec4(1, 1, 1, 0.1));
+		ImGui::PushStyleColor(ImGuiCol_TabActive, ImVec4(1, 1, 1, 0.25));
+		ImGui::PushStyleColor(ImGuiCol_TabHovered, ImVec4(1, 1, 1, 0.40));
+		ImGui::PushStyleColor(ImGuiCol_TabUnfocused, ImVec4(1, 1, 1, 0.1));
+		ImGui::PushStyleColor(ImGuiCol_TabUnfocusedActive, ImVec4(1, 1, 1, 0.25));
+		ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(1, 1, 1, 0.35));
+		ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, ImVec4(1, 1, 1, 0.45));
+		ImGui::PushStyleColor(ImGuiCol_FrameBgActive, ImVec4(1, 1, 1, 0.55));
+		ImGui::PushStyleColor(ImGuiCol_SliderGrab, ImVec4(1, 1, 1, 0.35));
+		ImGui::PushStyleColor(ImGuiCol_SliderGrabActive, ImVec4(1, 1, 1, 0.35));
+		ImGui::PushStyleColor(ImGuiCol_CheckMark, ImVec4(1, 1, 1, 0.45));
+		ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.116, 0.125, 0.133, 1));
+		ImGui::PushStyleColor(ImGuiCol_TitleBg, ImVec4(0.177, 0.177, 0.177, 1));
+		ImGui::PushStyleColor(ImGuiCol_TitleBgActive, ImVec4(0.238, 0.238, 0.238, 1));
+		ImGui::PushStyleColor(ImGuiCol_DragDropTarget, ImVec4(0.0, 0.32, 1.0, 1));
+
+
+		if (!std::filesystem::exists("layout.ini")) {
+			if (std::filesystem::exists("../layout.ini")) {
+				std::filesystem::copy("../layout.ini", "layout.ini");
+			}
+		}
+		ImGui::GetIO().IniFilename = "layout.ini";
+
+
 		setupFlagHandler();
 		if (ImGui::GetCurrentContext()) {
 			ImGui::LoadIniSettingsFromDisk(ImGui::GetIO().IniFilename);
@@ -105,18 +160,52 @@ namespace tri {
 		}
 	}
 
+	void UIManager::updateBegin() {
+		ImGui_ImplOpenGL3_NewFrame();
+		ImGui_ImplGlfw_NewFrame();
+		ImGui::NewFrame();
+	}
+
+	void UIManager::updateEnd() {
+		env->input->allowInputs = !ImGui::GetIO().WantTextInput;
+		{
+			TracyGpuZone("imgui render");
+			ImGui::Render();
+		}
+
+		{
+			TracyGpuZone("imgui render draw data");
+			ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+		}
+
+		ImGuiIO& io = ImGui::GetIO(); (void)io;
+		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+		{
+			GLFWwindow* backup_current_context = glfwGetCurrentContext();
+			ImGui::UpdatePlatformWindows();
+			ImGui::RenderPlatformWindowsDefault();
+			glfwMakeContextCurrent(backup_current_context);
+		}
+
+		ImGui::GetIO().MouseWheel += env->input->getMouseWheelDelta();
+	}
+
 	void UIManager::shutdown() {
 		if (ImGui::GetCurrentContext()) {
 			ImGui::SaveIniSettingsToDisk(ImGui::GetIO().IniFilename);
-			auto& handlers = ImGui::GetCurrentContext()->SettingsHandlers;
-			for (int i = 0; i < handlers.size(); i++) {
-				auto& handler = handlers[i];
-				if (handler.TypeHash == ImHashStr("WindowFlags")) {
-					handlers.erase(handlers.begin() + i);
-					break;
-				}
-			}
+			//auto& handlers = ImGui::GetCurrentContext()->SettingsHandlers;
+			//for (int i = 0; i < handlers.size(); i++) {
+			//	auto& handler = handlers[i];
+			//	if (handler.TypeHash == ImHashStr("WindowFlags")) {
+			//		handlers.erase(handlers.begin() + i);
+			//		break;
+			//	}
+			//}
 		}
+
+		ImGui_ImplOpenGL3_Shutdown();
+		ImGui_ImplGlfw_Shutdown();
+		ImGui::DestroyContext();
 	}
 
 	void UIManager::addWindow(int classId, const std::string& displayName, const std::string& menu, const std::string& category) {
@@ -158,6 +247,25 @@ namespace tri {
 		}
 	}
 
+	void UIManager::resetLayout() {
+		env->eventManager->postTick.addListener([&]() {
+			for (auto& window : windows) {
+				auto* sys = env->systemManager->getSystemHandle(window.classId);
+				window.window->active = false;
+				sys->active = false;
+			}
+			for (auto& flag : unusedActiveFlags) {
+				flag.second = false;
+			}
+
+			if (std::filesystem::exists("../layout.ini")) {
+				ImGui::LoadIniSettingsFromDisk("../layout.ini");
+				ImGui::GetIO().IniFilename = "layout.ini";
+			}
+			updateActiveFlags();
+		}, true);
+	}
+
 	void UIManager::setupFlagHandler() {
 		ImGuiSettingsHandler handler;
 		handler.TypeName = "WindowFlags";
@@ -171,7 +279,7 @@ namespace tri {
 			}
 		};
 		handler.ReadLineFn = [](ImGuiContext* ctx, ImGuiSettingsHandler* handler, void* entry, const char* line) {
-			auto* ui = env->systemManager->getSystem<UIManager>();
+			auto* ui = env->uiManager;
 			auto parts = StrUtil::split(line, "=");
 			if (parts.size() >= 2) {
 				bool found = false;
@@ -196,7 +304,7 @@ namespace tri {
 			}
 		};
 		handler.WriteAllFn = [](ImGuiContext* ctx, ImGuiSettingsHandler* handler, ImGuiTextBuffer* buf) {
-			auto* ui = env->systemManager->getSystem<UIManager>();
+			auto* ui = env->uiManager;
 			buf->append("[WindowFlags][]\n");
 			for (auto& window : ui->windows) {
 				auto* desc = Reflection::getDescriptor(window.classId);

@@ -45,6 +45,7 @@ namespace tri {
 				std::unique_lock<std::mutex> lock(mutex);
 				preparedSteps.swap(steps);
 
+				/*
 				//the destruction of the steps may take a while on the post tick hot path
 				//thus we move the destruction to a task thread
 				static std::vector<Ref<Step>> freeSteps;
@@ -52,6 +53,7 @@ namespace tri {
 				env->threadManager->addTask([&]() {
 					freeSteps.clear();
 				});
+				*/
 
 				steps.clear();
 				for (auto& step : preparedSteps) {

@@ -18,7 +18,7 @@ namespace tri {
 	class EntitiesInfoWindow : public UIWindow {
 	public:
 		void init() override {
-			env->systemManager->getSystem<UIManager>()->addWindow<EntitiesInfoWindow>("Entities Info", "Debug");
+			env->uiManager->addWindow<EntitiesInfoWindow>("Entities Info", "Debug");
 		}
 
 		void tick() override {

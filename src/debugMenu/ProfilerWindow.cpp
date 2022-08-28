@@ -23,7 +23,7 @@ namespace tri {
 		float max = 0;
 
 		void init() override {
-			env->systemManager->getSystem<UIManager>()->addWindow<ProfilerWindow>("Profiler", "Debug");
+			env->uiManager->addWindow<ProfilerWindow>("Profiler", "Debug");
 		}
 
 		void tick() override {

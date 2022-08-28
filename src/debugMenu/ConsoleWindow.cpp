@@ -29,7 +29,7 @@ namespace tri {
 		LogLevel level = LogLevel::DEBUG;
 
 		void init() override {
-			env->systemManager->addSystem<UIManager>()->addWindow<ConsoleWindow>("Console", "Debug");
+			env->uiManager->addWindow<ConsoleWindow>("Console", "Debug");
 			Console::LogTarget target;
 			target.callback = [&](const std::string& msg, LogLevel level, const std::string& time, const std::string& date, const std::string& source) {
 				LogEntry entry;

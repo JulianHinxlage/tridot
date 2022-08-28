@@ -19,8 +19,11 @@ namespace tri {
 		void init() override;
 		void startup() override;
 		void tick() override;
+		void updateBegin();
+		void updateEnd();
 		void shutdown() override;
 		void updateActiveFlags();
+		void resetLayout();
 
 		template<typename T>
 		void addWindow(const std::string& displayName, const std::string& menu = "View", const std::string& category = "") {

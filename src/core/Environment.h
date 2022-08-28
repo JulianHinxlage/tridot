@@ -28,6 +28,7 @@ namespace tri {
 		//window
 		class Window* window;
 		class Viewport* viewport;
+		class UIManager* uiManager;
 
 		//engine
 		class Input* input;

@@ -68,7 +68,7 @@ namespace tri {
 					}
 				}
 			}, true);
-			env->systemManager->getSystem<UIManager>()->updateActiveFlags();
+			env->uiManager->updateActiveFlags();
 		});
 
 		std::vector<std::string> systems1 = { "Time", "Input", "AssetManager", "STransform", "SCamera", "FileWatcher", "JobManager"};
@@ -148,6 +148,9 @@ namespace tri {
 				if (ImGui::BeginMenu("Extra")) {
 					if (ImGui::MenuItem("About")) {
 						openAbout = true;
+					}
+					if (ImGui::MenuItem("Reset Layout")) {
+						env->uiManager->resetLayout();
 					}
 					ImGui::EndMenu();
 				}

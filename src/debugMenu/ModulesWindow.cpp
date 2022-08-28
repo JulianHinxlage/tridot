@@ -15,7 +15,7 @@ namespace tri {
 	class ModulesWindow : public UIWindow {
 	public:
 		void init() override {
-			env->systemManager->getSystem<UIManager>()->addWindow<ModulesWindow>("Modules", "Debug");
+			env->uiManager->addWindow<ModulesWindow>("Modules", "Debug");
 		}
 
 		void tick() override {

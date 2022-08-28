@@ -16,7 +16,7 @@ namespace tri {
 		Ref<Material> material;
 
 		void init() override {
-			env->systemManager->getSystem<UIManager>()->addWindow<MaterialWindow>("Materials");
+			env->uiManager->addWindow<MaterialWindow>("Materials");
 		}
 
 		void shutdown() override {

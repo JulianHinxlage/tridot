@@ -29,7 +29,7 @@ namespace tri {
 		bool noScroll = false;
 
 		void init() override {
-			env->systemManager->getSystem<UIManager>()->addWindow<PropertiesWindow>("Properties");
+			env->uiManager->addWindow<PropertiesWindow>("Properties");
 		}
 
 		void tick() override {
@@ -396,7 +396,7 @@ namespace tri {
 	class PropertiesWindow2 : public PropertiesWindow {
 	public:
 		void init() override {
-			env->systemManager->getSystem<UIManager>()->addWindow<PropertiesWindow2>("Properties 2");
+			env->uiManager->addWindow<PropertiesWindow2>("Properties 2");
 		}
 
 		void tick() override {

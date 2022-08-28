@@ -53,7 +53,7 @@ namespace tri {
 		std::vector<EntityFilter> filters;
 
 		void init() override {
-			env->systemManager->getSystem<UIManager>()->addWindow<EntitiesWindow>("Entities");
+			env->uiManager->addWindow<EntitiesWindow>("Entities");
 			onEntityAddListener = env->eventManager->onEntityAdd.addListener([&](World *world, EntityId id) {
 				needListUpdate = true;
 			});
