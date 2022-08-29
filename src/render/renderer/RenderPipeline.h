@@ -75,6 +75,7 @@ namespace tri {
 			Ref<ShaderState> shaderState;
 			VertexArray *vertexArray;
 			std::vector<Texture*> textures;
+			std::vector<Texture*> images;
 			std::vector<BatchBuffer*> buffers;
 			int instanceCount;
 

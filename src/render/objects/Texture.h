@@ -16,6 +16,7 @@ namespace tri {
         Texture();
         ~Texture();
 
+        void bindAsImage(int32_t slot);
         void bind(int32_t slot);
         void unbind();
         uint32_t getId();

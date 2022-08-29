@@ -51,6 +51,10 @@ namespace tri {
         }
     }
 
+    void Texture::bindAsImage(int32_t slot) {
+        glBindImageTexture(slot, id, 0, GL_FALSE, 0, GL_READ_WRITE, internalEnum(format));
+    }
+
     void Texture::bind(int32_t slot) {
         bindTexture(id, slot, type);
         this->slot = slot;

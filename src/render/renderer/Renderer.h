@@ -9,6 +9,9 @@
 #include "DrawList.h"
 #include "RenderBatch.h"
 #include "ShaderStructs.h"
+#include "engine/Camera.h"
+#include "engine/Light.h"
+#include "engine/Transform.h"
 #include "render/objects/Mesh.h"
 #include "render/objects/Material.h"
 #include "render/objects/FrameBuffer.h"
@@ -28,16 +31,31 @@ namespace tri {
 		Ref<Mesh> defaultMesh;
 		Ref<Texture> defaultTexture;
 		Ref<Material> defaultMaterial;
-		Ref<Shader> defaultShader;
-		glm::mat4 projection;
-		Ref<FrameBuffer> frameBuffer;
 
 		DrawList drawList;
 		RenderBatchList batches;
 		EnvironmentData envData;
 		Ref<Buffer> envBuffer;
+		glm::vec3 eyePosition;
 
-		void setupFrameBuffer(Ref<FrameBuffer>& frameBuffer);
+		Ref<Shader> geometryShader;
+		Ref<Shader> ambientLightShader;
+		Ref<Shader> directionalLightShader;
+		Ref<Shader> pointLightShader;
+		Ref<Mesh> sphereMesh;
+
+		Ref<FrameBuffer> gBuffer;
+		Ref<FrameBuffer> lightAccumulationBuffer;
+
+		std::vector<FrameBufferAttachmentSpec> gBufferSpec;
+		std::vector<FrameBufferAttachmentSpec> lightAccumulationSpec;
+
+		void setupSpecs();
+		bool updateFrameBuffer(Ref<FrameBuffer>& frameBuffer, const std::vector<FrameBufferAttachmentSpec> &spec);
+		void submitMeshes();
+		void submitBatches(Camera& c, FrameBuffer* frameBuffer);
+		void submitLights(const Camera &camera);
+		bool submitLight(FrameBuffer* lightBuffer, FrameBuffer* gBuffer, const Light &light, const Transform& transform, const Camera& camera);
 	};
 
 }

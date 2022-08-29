@@ -60,12 +60,12 @@ namespace tri {
             std::string path = dir + file.substr(StrUtil::match(file, dir));
             if(std::filesystem::exists(path)){
                 if(std::filesystem::is_regular_file(path)){
-                    return StrUtil::replace(path, "\\", "/");
+                    return StrUtil::toLower(StrUtil::replace(path, "\\", "/"));
                 }
             }
         }
         if (std::filesystem::is_regular_file(file)) {
-            return StrUtil::replace(file, "\\", "/");
+            return StrUtil::toLower(StrUtil::replace(file, "\\", "/"));
         }
         else {
             return "";
@@ -82,7 +82,7 @@ namespace tri {
                 minMatch = minimalPath.size();
             }
         }
-        return minimalPath;
+        return StrUtil::toLower(minimalPath);
     }
 
     Ref<Asset> AssetManager::get(int typeId, const std::string &file, Options options,

@@ -8,6 +8,7 @@
 #include "engine/MeshComponent.h"
 #include "engine/Transform.h"
 #include "engine/Camera.h"
+#include "engine/Light.h"
 #include "window/RenderContext.h"
 #include "window/Viewport.h"
 #include "RenderPipeline.h"
@@ -27,6 +28,8 @@ namespace tri {
     }
 
     void Renderer::startup() {
+        setupSpecs();
+
         env->renderPipeline->addCallbackStep([&]() {
             Image image;
             image.init(1, 1, 4, 8);
@@ -47,10 +50,15 @@ namespace tri {
             };
             defaultMesh->create(quadVertices, sizeof(quadVertices) / sizeof(quadVertices[0]), quadIndices, sizeof(quadIndices) / sizeof(quadIndices[0]), { {FLOAT, 3}, {FLOAT, 3} ,{FLOAT, 2} });
 
-            defaultShader = env->assetManager->get<Shader>("shaders/geometry.glsl");
-            projection = glm::mat4(1);
             envBuffer = Ref<Buffer>::make();
             envBuffer->init(nullptr, 0, sizeof(envData), BufferType::UNIFORM_BUFFER, true);
+
+
+            geometryShader = env->assetManager->get<Shader>("shaders/geometry.glsl");
+            ambientLightShader = env->assetManager->get<Shader>("shaders/ambientLight.glsl");
+            directionalLightShader = env->assetManager->get<Shader>("shaders/directionalLight.glsl");
+            pointLightShader = env->assetManager->get<Shader>("shaders/pointLight.glsl");
+            sphereMesh = env->assetManager->get<Mesh>("models/sphere.obj");
         });
     }
 
@@ -58,16 +66,26 @@ namespace tri {
         env->renderPipeline->freeOnThread(defaultTexture);
         env->renderPipeline->freeOnThread(defaultMaterial);
         env->renderPipeline->freeOnThread(defaultMesh);
-        env->renderPipeline->freeOnThread(defaultShader);
-        env->renderPipeline->freeOnThread(frameBuffer);
+        env->renderPipeline->freeOnThread(geometryShader);
+        env->renderPipeline->freeOnThread(ambientLightShader);
+        env->renderPipeline->freeOnThread(directionalLightShader);
+        env->renderPipeline->freeOnThread(pointLightShader);
         env->renderPipeline->freeOnThread(envBuffer);
+        env->renderPipeline->freeOnThread(gBuffer);
+        env->renderPipeline->freeOnThread(lightAccumulationBuffer);
+        env->renderPipeline->freeOnThread(sphereMesh);
 
         defaultTexture = nullptr;
         defaultMaterial = nullptr;
         defaultMesh = nullptr;
-        defaultShader = nullptr;
-        frameBuffer = nullptr;
+        geometryShader = nullptr;
+        ambientLightShader = nullptr;
+        directionalLightShader = nullptr;
+        pointLightShader = nullptr;
         envBuffer = nullptr;
+        gBuffer = nullptr;
+        lightAccumulationBuffer = nullptr;
+        sphereMesh = nullptr;
 
         drawList.reset();
 
@@ -80,90 +98,43 @@ namespace tri {
     }
 
     void Renderer::tick() {
-        if (!defaultShader) {
+        if (!geometryShader) {
             return;
         }
 
-        if (!env->viewport->displayInWindow) {
-            env->renderPipeline->addCallbackStep([&]() {
-                if (!env->viewport->frameBuffer) {
-                    setupFrameBuffer(env->viewport->frameBuffer);
-                }
-                if (env->viewport->size != glm::ivec2(env->viewport->frameBuffer->getSize())) {
-                    env->viewport->frameBuffer->resize(env->viewport->size.x, env->viewport->size.y);
-                }
-                });
-            frameBuffer = env->viewport->frameBuffer;
-        }
-        else {
-            frameBuffer = nullptr;
-        }
+        env->renderPipeline->addCommandStep(RenderPipeline::Command::DEPTH_ON, RenderPipeline::OPAQUE);
 
-        env->renderPipeline->addCommandStep(RenderPipeline::Command::DEPTH_ON);
+        if (!updateFrameBuffer(gBuffer, gBufferSpec)) {
+            return;
+        }
+        if (!updateFrameBuffer(lightAccumulationBuffer, lightAccumulationSpec)) {
+            return;
+        }
 
         bool hasPrimary = false;
-        env->world->each<Camera>([&](Camera& c) {
-            if (c.active) {
-
-                if (c.isPrimary && !hasPrimary) {
-                    env->renderPipeline->freeOnThread(c.output);
-                    c.output = env->viewport->frameBuffer;
-                    hasPrimary = true;
-                }
-                else if (!c.output || c.output == env->viewport->frameBuffer) {
-                    env->renderPipeline->addCallbackStep([&]() {
-                        setupFrameBuffer(c.output);
-                    });
-                }
-                frameBuffer = c.output;
-                if (frameBuffer) {
-                    if (env->viewport->size != glm::ivec2(frameBuffer->getSize())) {
-                        env->renderPipeline->addCallbackStep([frameBuffer = frameBuffer]() {
-                            frameBuffer->resize(env->viewport->size.x, env->viewport->size.y);
-                        });
-                    }
-
-                    env->renderPipeline->addCallbackStep([frameBuffer = frameBuffer]() {
-                        TracyGpuZone("clear");
-                        frameBuffer->clear();
-                    });
-                }
-
+        env->world->each<Camera>([&](Camera& camera) {
+            if (camera.active) {
                 if (env->viewport->size.y != 0) {
-                    c.aspectRatio = (float)env->viewport->size.x / (float)env->viewport->size.y;
+                    camera.aspectRatio = (float)env->viewport->size.x / (float)env->viewport->size.y;
                 }
-                projection = c.viewProjection;
 
-                env->world->each<const Transform, const MeshComponent>([&](EntityId id, const Transform& t, const MeshComponent& m) {
-                    submit(t.getMatrix(), m.mesh.get(), m.material.get(), m.color, id);
-                });
-
-                
-                envData.projection = c.projection;
-                envData.viewProjection = c.viewProjection;
-                envData.view = c.view;
                 Transform eye;
-                eye.decompose(c.transform);
-                envData.eyePosition = eye.position;
-                envData.lightCount = 0;
-                envData.radianceMapIndex = -1;
-                envData.irradianceMapIndex = -1;
-                env->renderPipeline->addCallbackStep([&]() {
-                    envBuffer->setData(&envData, sizeof(envData));
-                });
+                eye.decompose(camera.transform);
+                eyePosition = eye.position;
 
-                drawList.sort();
-                drawList.submit(batches);
-                drawList.reset();
-                for (auto& i : batches.batches) {
-                    for (auto& j : i.second) {
-                        if (j.second->isInitialized()) {
-                            j.second->environmentBuffer = envBuffer;
-                            j.second->defaultTexture = defaultTexture.get();
-                            j.second->submit(frameBuffer.get(), RenderPipeline::OPAQUE);
-                            j.second->reset();
-                        }
-                    }
+                submitMeshes();
+                submitBatches(camera, gBuffer.get());
+                env->renderPipeline->addCommandStep(RenderPipeline::Command::DEPTH_OFF, RenderPipeline::LIGHTING);
+                env->renderPipeline->addCommandStep(RenderPipeline::Command::CULL_FRONT, RenderPipeline::LIGHTING);
+                submitLights(camera);
+                camera.output = lightAccumulationBuffer;
+                env->renderPipeline->addCommandStep(RenderPipeline::Command::DEPTH_ON, RenderPipeline::LIGHTING);
+                env->renderPipeline->addCommandStep(RenderPipeline::Command::CULL_BACK, RenderPipeline::LIGHTING);
+
+                if (camera.isPrimary && !hasPrimary) {
+                    env->renderPipeline->freeOnThread(env->viewport->frameBuffer);
+                    env->viewport->frameBuffer = camera.output;
+                    hasPrimary = true;
                 }
             }
         });
@@ -178,9 +149,12 @@ namespace tri {
         }
         Shader* shader = material->shader.get();
         if (!shader) {
-            shader = defaultShader.get();
+            shader = geometryShader.get();
         }
         if (shader->getId() == 0) {
+            return;
+        }
+        if (mesh->vertexArray.getId() == 0) {
             return;
         }
 
@@ -194,7 +168,68 @@ namespace tri {
         drawList.add(entry);
     }
 
-    void Renderer::setupFrameBuffer(Ref<FrameBuffer> &frameBuffer) {
+    bool Renderer::updateFrameBuffer(Ref<FrameBuffer>& frameBuffer, const std::vector<FrameBufferAttachmentSpec>& spec) {
+        TRI_PROFILE_FUNC();
+        if (frameBuffer == nullptr) {
+            env->renderPipeline->freeOnThread(frameBuffer);
+            env->renderPipeline->addCallbackStep([&]() {
+                frameBuffer = Ref<FrameBuffer>::make();
+                frameBuffer->init(0, 0, spec);
+                frameBuffer->resize(env->viewport->size.x, env->viewport->size.y);
+            });
+            return false;
+        }
+        else {
+            if (env->viewport->size != glm::ivec2(frameBuffer->getSize())) {
+                env->renderPipeline->addCallbackStep([frameBuffer = frameBuffer]() {
+                    TracyGpuZone("resize");
+                    frameBuffer->resize(env->viewport->size.x, env->viewport->size.y);
+                });
+            }
+            env->renderPipeline->addCallbackStep([frameBuffer = frameBuffer]() {
+                TracyGpuZone("clear");
+                frameBuffer->clear();
+            });
+            return true;
+        }
+    }
+
+    void Renderer::submitMeshes() {
+        TRI_PROFILE_FUNC();
+        env->world->each<const Transform, const MeshComponent>([&](EntityId id, const Transform& t, const MeshComponent& m) {
+            submit(t.getMatrix(), m.mesh.get(), m.material.get(), m.color, id);
+        });
+    }
+
+    void Renderer::submitBatches(Camera &c, FrameBuffer *frameBuffer) {
+        TRI_PROFILE_FUNC();
+        envData.projection = c.projection;
+        envData.viewProjection = c.viewProjection;
+        envData.view = c.view;
+        envData.eyePosition = eyePosition;
+        envData.lightCount = 0;
+        envData.radianceMapIndex = -1;
+        envData.irradianceMapIndex = -1;
+        env->renderPipeline->addCallbackStep([&]() {
+            envBuffer->setData(&envData, sizeof(envData));
+        });
+
+        drawList.sort();
+        drawList.submit(batches);
+        drawList.reset();
+        for (auto& i : batches.batches) {
+            for (auto& j : i.second) {
+                if (j.second->isInitialized()) {
+                    j.second->environmentBuffer = envBuffer;
+                    j.second->defaultTexture = defaultTexture.get();
+                    j.second->submit(frameBuffer, RenderPipeline::OPAQUE);
+                    j.second->reset();
+                }
+            }
+        }
+    }
+
+    void Renderer::setupSpecs() {
         FrameBufferAttachmentSpec albedo;
         albedo.type = (TextureAttachment)(COLOR);
         albedo.clearColor = color::transparent;
@@ -235,9 +270,164 @@ namespace tri {
         depth.clearColor = color::white;
         depth.name = "Depth";
         depth.textureFormat = TextureFormat::DEPTH24STENCIL8;
-        
-        frameBuffer = Ref<FrameBuffer>::make();
-        frameBuffer->init(0, 0, { albedo, id, normal, position, rme, depth });
+
+        gBufferSpec = { albedo, id, normal, position, rme, depth };
+
+        FrameBufferAttachmentSpec light;
+        light.type = (TextureAttachment)(COLOR);
+        light.clearColor = color::black;
+        light.mipMapping = false;
+        light.name = "Light";
+        light.textureFormat = TextureFormat::RGBA8;
+
+        lightAccumulationSpec = { light, id};
+    }
+
+    void Renderer::submitLights(const Camera& camera) {
+        TRI_PROFILE_FUNC();
+
+        bool hasLight = false;
+        env->world->each<const Transform, const Light>([&](EntityId id, const Transform& t, const Light& light) {
+            if (submitLight(lightAccumulationBuffer.get(), gBuffer.get(), light, t, camera)) {
+                hasLight = true;
+            }
+        });
+
+        if (!hasLight) {
+            Light light;
+            light.type = Light::AMBIENT_LIGHT;
+            light.intensity = 1.0f;
+            light.color = color::white;
+            Transform t;
+            if (submitLight(lightAccumulationBuffer.get(), gBuffer.get(), light, t, camera)) {
+                hasLight = true;
+            }
+        }
+    }
+    
+    bool Renderer::submitLight(FrameBuffer* lightBuffer, FrameBuffer* gBuffer, const Light& light, const Transform &transform, const Camera& camera) {
+        TRI_PROFILE_FUNC();
+        switch (light.type) {
+        case Light::AMBIENT_LIGHT: {
+            auto dc = env->renderPipeline->addDrawCallStep(RenderPipeline::LIGHTING);
+
+            dc->vertexArray = &defaultMesh->vertexArray;
+            dc->shader = ambientLightShader.get();
+            dc->frameBuffer = lightAccumulationBuffer.get();
+            dc->images.push_back(lightAccumulationBuffer->getAttachment(TextureAttachment::COLOR).get());
+            dc->textures.push_back(nullptr);
+            dc->textures.push_back(gBuffer->getAttachment(TextureAttachment::COLOR).get());
+            dc->textures.push_back(gBuffer->getAttachment((TextureAttachment)(TextureAttachment::COLOR + 1)).get());
+            dc->textures.push_back(gBuffer->getAttachment((TextureAttachment)(TextureAttachment::COLOR + 2)).get());
+            dc->textures.push_back(gBuffer->getAttachment((TextureAttachment)(TextureAttachment::COLOR + 3)).get());
+            dc->textures.push_back(gBuffer->getAttachment((TextureAttachment)(TextureAttachment::COLOR + 4)).get());
+            dc->textures.push_back(gBuffer->getAttachment(TextureAttachment::DEPTH).get());
+
+            Transform quadTransform;
+            quadTransform.rotation.x = glm::radians(90.0f);
+            quadTransform.scale = { 2, 2, -2 };
+
+            dc->shaderState = Ref<ShaderState>::make();
+            dc->shaderState->set("uTransform", quadTransform.calculateLocalMatrix());
+            dc->shaderState->set("uColor", light.color.vec());
+            dc->shaderState->set("uIntesity", light.intensity);
+
+            std::vector<int> textureSlots;
+            for (int i = 0; i < dc->textures.size(); i++) {
+                textureSlots.push_back(i);
+            }
+            dc->shaderState->set("uTextures", textureSlots.data(), textureSlots.size());
+            dc->shaderState->set("uLightBuffer", 0);
+            return true;
+        }
+        case Light::DIRECTIONAL_LIGHT: {
+            auto dc = env->renderPipeline->addDrawCallStep(RenderPipeline::LIGHTING);
+
+            dc->vertexArray = &defaultMesh->vertexArray;
+            dc->shader = directionalLightShader.get();
+            dc->frameBuffer = lightAccumulationBuffer.get();
+            dc->images.push_back(lightAccumulationBuffer->getAttachment(TextureAttachment::COLOR).get());
+            dc->textures.push_back(nullptr);
+            dc->textures.push_back(gBuffer->getAttachment(TextureAttachment::COLOR).get());
+            dc->textures.push_back(gBuffer->getAttachment((TextureAttachment)(TextureAttachment::COLOR + 1)).get());
+            dc->textures.push_back(gBuffer->getAttachment((TextureAttachment)(TextureAttachment::COLOR + 2)).get());
+            dc->textures.push_back(gBuffer->getAttachment((TextureAttachment)(TextureAttachment::COLOR + 3)).get());
+            dc->textures.push_back(gBuffer->getAttachment((TextureAttachment)(TextureAttachment::COLOR + 4)).get());
+            dc->textures.push_back(gBuffer->getAttachment(TextureAttachment::DEPTH).get());
+
+            Transform quadTransform;
+            quadTransform.rotation.x = glm::radians(90.0f);
+            quadTransform.scale = { 2, 2, -2 };
+
+            dc->shaderState = Ref<ShaderState>::make();
+            dc->shaderState->set("uTransform", quadTransform.calculateLocalMatrix());
+            dc->shaderState->set("uColor", light.color.vec());
+            dc->shaderState->set("uIntesity", light.intensity);
+
+            Transform directionTransform;
+            directionTransform.rotation = transform.rotation;
+            glm::vec3 direction = directionTransform.calculateLocalMatrix() * glm::vec4(1, 0, 0, 1);
+            dc->shaderState->set("uDirection", direction);
+
+            std::vector<int> textureSlots;
+            for (int i = 0; i < dc->textures.size(); i++) {
+                textureSlots.push_back(i);
+            }
+            dc->shaderState->set("uTextures", textureSlots.data(), textureSlots.size());
+
+            dc->shaderState->set("uEyePosition", eyePosition);
+            dc->shaderState->set("uLightBuffer", 0);
+            return true;
+        }
+        case Light::POINT_LIGHT: {
+            auto dc = env->renderPipeline->addDrawCallStep(RenderPipeline::LIGHTING);
+
+            dc->vertexArray = &sphereMesh->vertexArray;
+            dc->shader = pointLightShader.get();
+            dc->frameBuffer = lightAccumulationBuffer.get();
+            dc->images.push_back(lightAccumulationBuffer->getAttachment(TextureAttachment::COLOR).get());
+
+            dc->textures.push_back(nullptr);
+            dc->textures.push_back(gBuffer->getAttachment(TextureAttachment::COLOR).get());
+            dc->textures.push_back(gBuffer->getAttachment((TextureAttachment)(TextureAttachment::COLOR + 1)).get());
+            dc->textures.push_back(gBuffer->getAttachment((TextureAttachment)(TextureAttachment::COLOR + 2)).get());
+            dc->textures.push_back(gBuffer->getAttachment((TextureAttachment)(TextureAttachment::COLOR + 3)).get());
+            dc->textures.push_back(gBuffer->getAttachment((TextureAttachment)(TextureAttachment::COLOR + 4)).get());
+            dc->textures.push_back(gBuffer->getAttachment(TextureAttachment::DEPTH).get());
+
+            Transform positionTransform;
+            positionTransform.position = transform.position;
+            positionTransform.decompose(transform.getMatrix());
+
+            Transform sphereTransform;
+            sphereTransform.position = positionTransform.position;
+            sphereTransform.scale = glm::vec3(2, 2, 2) *  light.range;
+            glm::mat sphereMatrix = camera.viewProjection * sphereTransform.calculateLocalMatrix();
+
+            dc->shaderState = Ref<ShaderState>::make();
+            dc->shaderState->set("uTransform", sphereMatrix);
+            dc->shaderState->set("uColor", light.color.vec());
+            dc->shaderState->set("uIntesity", light.intensity);
+            dc->shaderState->set("uRange", light.range);
+            dc->shaderState->set("uFalloff", light.falloff);
+            dc->shaderState->set("uPosition", positionTransform.position);
+
+            std::vector<int> textureSlots;
+            for (int i = 0; i < dc->textures.size(); i++) {
+                textureSlots.push_back(i);
+            }
+            dc->shaderState->set("uTextures", textureSlots.data(), textureSlots.size());
+
+            dc->shaderState->set("uEyePosition", eyePosition);
+            dc->shaderState->set("uLightBuffer", 0);
+            return true;
+        }
+        case Light::SPOT_LIGHT: {
+            return false;
+        }
+        default:
+            return false;
+        }
     }
 
 }

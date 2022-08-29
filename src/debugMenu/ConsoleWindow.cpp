@@ -60,8 +60,8 @@ namespace tri {
 						if (ImGui::GetScrollY() >= ImGui::GetScrollMaxY()) {
 							ImGui::SetScrollHereY(1.0f);
 						}
-						ImGui::EndChild();
 					}
+					ImGui::EndChild();
 
 					ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth());
 					if (ImGui::InputTextWithHint("", "command", &command, ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CallbackCompletion | ImGuiInputTextFlags_CallbackHistory, [](ImGuiInputTextCallbackData *data) {

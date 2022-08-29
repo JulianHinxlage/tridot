@@ -5,6 +5,7 @@
 #include "Shader.h"
 #include "core/core.h"
 #include "ShaderState.h"
+#include "engine/AssetManager.h"
 #include "GL/glew.h"
 #include <fstream>
 
@@ -62,6 +63,14 @@ namespace tri {
                     if (parts.size() >= 1) {
                         std::string str;
                         std::string includeFile = std::filesystem::path(file).parent_path().string() + "/" + parts[0];
+
+                        if (!std::filesystem::exists(includeFile)) {
+                            std::string searchFile = env->assetManager->searchFile(parts[0]);
+                            if (!searchFile.empty()) {
+                                includeFile = searchFile;
+                            }
+                        }
+
                         if (loadSource(includeFile, str)) {
                             source += str;
                             source += "\n";

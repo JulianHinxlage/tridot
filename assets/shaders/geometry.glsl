@@ -98,7 +98,7 @@ void main(){
     oId = vec4(fId.xyz, 1.0);
     
     //world space
-    oNormal = vec4(normal + 1.0 * 0.5, 1.0);
+    oNormal = vec4((normal + 1.0) * 0.5, 1.0);
     oPosition = vec4(fPosition, 1.0);
 
     oRoughnessMetallicEmissive = vec4(roughness, metallic, material.emissive, 1.0);
