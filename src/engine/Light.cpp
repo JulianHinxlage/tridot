@@ -16,7 +16,7 @@ namespace tri {
 	Light::Light() {
 		type = AMBIENT_LIGHT;
 		color = color::white;
-		intensity = 20;
+		intensity = 0.5;
 		range = 5;
 		falloff = 2;
 		spotAngle = 15;

@@ -172,6 +172,15 @@ namespace tri {
 	}
 
 	void RenderPipeline::StepDrawCall::execute(RenderPipeline& pipeline) {
+		for (int i = 0; i < buffers.size(); i++) {
+			if (buffers[i]) {
+				buffers[i]->update();
+			}
+		}
+
+		if (instanceCount == 0) {
+			return;
+		}
 		if (!shader) {
 			return;
 		}
@@ -200,12 +209,6 @@ namespace tri {
 		for (int i = 0; i < images.size(); i++) {
 			if (images[i]) {
 				images[i]->bindAsImage(i);
-			}
-		}
-
-		for (int i = 0; i < buffers.size(); i++) {
-			if (buffers[i]) {
-				buffers[i]->update();
 			}
 		}
 

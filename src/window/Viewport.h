@@ -11,11 +11,13 @@
 namespace tri {
 
 	class FrameBuffer;
+	class Texture;
 	class Viewport : public System {
 	public:
 		glm::ivec2 size = {0, 0};
 		bool displayInWindow = true;
 		Ref<FrameBuffer> frameBuffer;
+		Ref<Texture> idMap;
 
 		void init() override;
 		void shutdown() override;

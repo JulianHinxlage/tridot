@@ -72,7 +72,7 @@ namespace tri {
 		});
 
 		std::vector<std::string> systems1 = { "Time", "Input", "AssetManager", "STransform", "SCamera", "FileWatcher", "JobManager"};
-		std::vector<std::string> systems2 = { "Window", "SimpleRenderer", "UIManager"};
+		std::vector<std::string> systems2 = { "Window", "Renderer", "UIManager"};
 		std::vector<std::string> systems3 = { "Gizmos", "UndoSystem", "Editor"};
 		env->runtimeMode->setActiveSystems(RuntimeMode::EDIT, systems1, true);
 		env->runtimeMode->setActiveSystems(RuntimeMode::EDIT, systems2, true);

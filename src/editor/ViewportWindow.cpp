@@ -77,13 +77,15 @@ namespace tri {
 									pos.y = env->viewport->size.y - pos.y;
 									if (pos.x >= 0 && pos.y >= 0) {
 										if (pos.x < env->viewport->size.x && pos.y < env->viewport->size.y) {
-											Color idColor = env->viewport->frameBuffer->getAttachment((TextureAttachment)(COLOR + 1))->getPixel(pos.x, pos.y);
-											if (idColor.value != -1) {
-												EntityId id = idColor.value & ~(0xff << 24);
-												env->editor->selectionContext->select(id, !env->input->downControl());
-											}
-											else {
-												env->editor->selectionContext->unselectAll();
+											if (env->viewport->idMap) {
+												Color idColor = env->viewport->idMap->getPixel(pos.x, pos.y);
+												if (idColor.value != -1) {
+													EntityId id = idColor.value & ~(0xff << 24);
+													env->editor->selectionContext->select(id, !env->input->downControl());
+												}
+												else {
+													env->editor->selectionContext->unselectAll();
+												}
 											}
 										}
 									}

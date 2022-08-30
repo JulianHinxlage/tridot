@@ -50,12 +50,31 @@ namespace tri {
 		std::vector<FrameBufferAttachmentSpec> gBufferSpec;
 		std::vector<FrameBufferAttachmentSpec> lightAccumulationSpec;
 
+		class PointLightBatch {
+		public:
+			class Instance {
+			public:
+				glm::mat4 transform;
+				glm::vec3 position;
+				Color color;
+				float intensity;
+				float range;
+				float falloff;
+			};
+
+			Ref<BatchBuffer> instanceBuffer;
+			Ref<VertexArray> vertexArray;
+		};
+		PointLightBatch pointLightBatch;
+
+
 		void setupSpecs();
 		bool updateFrameBuffer(Ref<FrameBuffer>& frameBuffer, const std::vector<FrameBufferAttachmentSpec> &spec);
 		void submitMeshes();
 		void submitBatches(Camera& c, FrameBuffer* frameBuffer);
 		void submitLights(const Camera &camera);
 		bool submitLight(FrameBuffer* lightBuffer, FrameBuffer* gBuffer, const Light &light, const Transform& transform, const Camera& camera);
+		void submitPointLightBatch();
 	};
 
 }
