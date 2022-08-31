@@ -30,9 +30,6 @@ void main(){
         return;
     }
 
-    vec4 color;
-    color.rgb = albedo.rgb * uColor.rgb * uIntesity;
-    color.a = 1.0;
-
-    oColor = color;
+    oColor.rgb = albedo.rgb * uColor.rgb * uIntesity;
+    oColor.a = 1.0;
 }

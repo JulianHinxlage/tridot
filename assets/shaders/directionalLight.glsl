@@ -45,9 +45,6 @@ void main(){
     float ndotl = max(0.0, dot(normal, lightDirection));
 
     vec3 radiance = uColor.rgb * uIntesity;
-    vec4 color;
-    color.rgb = pbrLighting(albedo.rgb, normal, viewDirection, lightDirection, metallic, roughness) * radiance;
-    color.a = 1.0;
-
-    oColor = color;
+    oColor.rgb = pbrLighting(albedo.rgb, normal, viewDirection, lightDirection, metallic, roughness) * radiance;
+    oColor.a = 1.0;
 }

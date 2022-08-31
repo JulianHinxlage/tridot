@@ -117,7 +117,7 @@ namespace tri {
             defaultTexture = Ref<Texture>::make();
             defaultTexture->load(image);
             defaultMaterial = Ref<Material>::make();
-            defaultMesh = Ref<Mesh>::make();
+            quadMesh = Ref<Mesh>::make();
             float quadVertices[] = {
                 -0.5, +0.0, -0.5, 0.0, 1.0, 0.0, 0.0, 0.0,
                 +0.5, +0.0, -0.5, 0.0, 1.0, 0.0, 1.0, 0.0,
@@ -128,7 +128,7 @@ namespace tri {
                 0, 2, 1,
                 0, 3, 2,
             };
-            defaultMesh->create(quadVertices, sizeof(quadVertices) / sizeof(quadVertices[0]), quadIndices, sizeof(quadIndices) / sizeof(quadIndices[0]), { {FLOAT, 3}, {FLOAT, 3} ,{FLOAT, 2} });
+            quadMesh->create(quadVertices, sizeof(quadVertices) / sizeof(quadVertices[0]), quadIndices, sizeof(quadIndices) / sizeof(quadIndices[0]), { {FLOAT, 3}, {FLOAT, 3} ,{FLOAT, 2} });
 
             envBuffer = Ref<Buffer>::make();
             envBuffer->init(nullptr, 0, sizeof(envData), BufferType::UNIFORM_BUFFER, true);
@@ -137,42 +137,55 @@ namespace tri {
             ambientLightShader = env->assetManager->get<Shader>("shaders/ambientLight.glsl");
             directionalLightShader = env->assetManager->get<Shader>("shaders/directionalLight.glsl");
             pointLightShader = env->assetManager->get<Shader>("shaders/pointLight.glsl");
+            spotLightShader = env->assetManager->get<Shader>("shaders/spotLight.glsl");
+            coneMesh = env->assetManager->get<Mesh>("models/cone.obj");
             
             generateCubeSphere(sphereMesh, 4);
             
             pointLightBatch.instanceBuffer = Ref<BatchBuffer>::make();
-            pointLightBatch.instanceBuffer->init(sizeof(PointLightBatch::Instance));
+            pointLightBatch.instanceBuffer->init(sizeof(LightBatch::Instance));
+        
+            spotLightBatch.instanceBuffer = Ref<BatchBuffer>::make();
+            spotLightBatch.instanceBuffer->init(sizeof(LightBatch::Instance));
         });
     }
 
     void Renderer::shutdown() {
         env->renderPipeline->freeOnThread(defaultTexture);
         env->renderPipeline->freeOnThread(defaultMaterial);
-        env->renderPipeline->freeOnThread(defaultMesh);
+        env->renderPipeline->freeOnThread(quadMesh);
         env->renderPipeline->freeOnThread(geometryShader);
         env->renderPipeline->freeOnThread(ambientLightShader);
         env->renderPipeline->freeOnThread(directionalLightShader);
         env->renderPipeline->freeOnThread(pointLightShader);
+        env->renderPipeline->freeOnThread(spotLightShader);
         env->renderPipeline->freeOnThread(envBuffer);
         env->renderPipeline->freeOnThread(gBuffer);
         env->renderPipeline->freeOnThread(lightAccumulationBuffer);
         env->renderPipeline->freeOnThread(sphereMesh);
+        env->renderPipeline->freeOnThread(coneMesh);
         env->renderPipeline->freeOnThread(pointLightBatch.vertexArray);
         env->renderPipeline->freeOnThread(pointLightBatch.instanceBuffer);
+        env->renderPipeline->freeOnThread(spotLightBatch.vertexArray);
+        env->renderPipeline->freeOnThread(spotLightBatch.instanceBuffer);
 
         defaultTexture = nullptr;
         defaultMaterial = nullptr;
-        defaultMesh = nullptr;
+        quadMesh = nullptr;
         geometryShader = nullptr;
         ambientLightShader = nullptr;
         directionalLightShader = nullptr;
         pointLightShader = nullptr;
+        spotLightShader = nullptr;
         envBuffer = nullptr;
         gBuffer = nullptr;
         lightAccumulationBuffer = nullptr;
         sphereMesh = nullptr;
+        coneMesh = nullptr;
         pointLightBatch.vertexArray = nullptr;
         pointLightBatch.instanceBuffer = nullptr;
+        spotLightBatch.vertexArray = nullptr;
+        spotLightBatch.instanceBuffer = nullptr;
 
         drawList.reset();
 
@@ -185,46 +198,13 @@ namespace tri {
     }
 
     void Renderer::tick() {
-        if (!geometryShader || !defaultMesh) {
-            return;
-        }
-        if (!sphereMesh || sphereMesh->vertexArray.getId() == 0) {
-            return;
-        }
+        updateFrameBuffer(gBuffer, gBufferSpec);
+        updateFrameBuffer(lightAccumulationBuffer, lightAccumulationSpec);
+        prepareLightBatches();
+
 
         env->renderPipeline->addCommandStep(RenderPipeline::Command::DEPTH_ON, RenderPipeline::OPAQUE);
         env->renderPipeline->addCommandStep(RenderPipeline::Command::CULL_BACK, RenderPipeline::OPAQUE);
-
-        bool needsPrepare = false;
-        if (!updateFrameBuffer(gBuffer, gBufferSpec)) {
-            needsPrepare = true;
-        }
-        if (!updateFrameBuffer(lightAccumulationBuffer, lightAccumulationSpec)) {
-            needsPrepare = true;
-        }
-        if (!pointLightBatch.vertexArray) {
-            env->renderPipeline->addCallbackStep([&]() {
-                pointLightBatch.vertexArray = Ref<VertexArray>::make(sphereMesh->vertexArray);
-                pointLightBatch.vertexArray->addVertexBuffer(pointLightBatch.instanceBuffer->buffer, {
-                    //transform
-                    {FLOAT, 4}, {FLOAT, 4}, {FLOAT, 4}, {FLOAT, 4},
-                    //position
-                    {FLOAT, 3},
-                    //color
-                    {UINT8, 4, true},
-                    //intensity
-                    {FLOAT, 1},
-                    //range
-                    {FLOAT, 1},
-                    //falloff
-                    {FLOAT, 1},
-                    }, 1);
-                });
-            needsPrepare = true;
-        }
-        if (needsPrepare) {
-            return;
-        }
 
         bool hasPrimary = false;
         env->world->each<Camera>([&](Camera& camera) {
@@ -251,6 +231,7 @@ namespace tri {
 
                 submitLights(camera);
                 submitPointLightBatch();
+                submitSpotLightBatch();
 
                 camera.output = lightAccumulationBuffer;
                 env->renderPipeline->addCommandStep(RenderPipeline::Command::DEPTH_ON, RenderPipeline::LIGHTING);
@@ -269,7 +250,7 @@ namespace tri {
 
     void Renderer::submit(const glm::mat4& transform, Mesh* mesh, Material* material, Color color, EntityId id) {
         if (!mesh) {
-            mesh = defaultMesh.get();
+            mesh = quadMesh.get();
         }
         if (!material) {
             material = defaultMaterial.get();
@@ -411,6 +392,69 @@ namespace tri {
         lightAccumulationSpec = { light };
     }
 
+    bool Renderer::prepareLightBatches() {
+        bool needsPrepare = false;
+        if (!pointLightBatch.vertexArray && !pointLightBatch.hasPrepared) {
+            if (sphereMesh && sphereMesh->vertexArray.getId() != 0) {
+                TRI_PROFILE("add prepare point light batch");
+                env->renderPipeline->addCallbackStep([&]() {
+                    TRI_PROFILE("prepare point light batch");
+                    pointLightBatch.vertexArray = Ref<VertexArray>::make(sphereMesh->vertexArray);
+                    pointLightBatch.vertexArray->addVertexBuffer(pointLightBatch.instanceBuffer->buffer, {
+                        //transform
+                        {FLOAT, 4}, {FLOAT, 4}, {FLOAT, 4}, {FLOAT, 4},
+                        //position
+                        {FLOAT, 3},
+                        //direction
+                        {FLOAT, 3},
+                        //color
+                        {UINT8, 4, true},
+                        //intensity
+                        {FLOAT, 1},
+                        //range
+                        {FLOAT, 1},
+                        //falloff
+                        {FLOAT, 1},
+                        //spot angle
+                        {FLOAT, 1},
+                        }, 1);
+                });
+                pointLightBatch.hasPrepared = true;
+                needsPrepare = true;
+            }
+        }
+        if (!spotLightBatch.vertexArray && !spotLightBatch.hasPrepared) {
+            if (coneMesh && coneMesh->vertexArray.getId() != 0) {
+                TRI_PROFILE("add prepare spot light batch");
+                env->renderPipeline->addCallbackStep([&]() {
+                    TRI_PROFILE("prepare spot light batch");
+                    spotLightBatch.vertexArray = Ref<VertexArray>::make(coneMesh->vertexArray);
+                    spotLightBatch.vertexArray->addVertexBuffer(spotLightBatch.instanceBuffer->buffer, {
+                        //transform
+                        {FLOAT, 4}, {FLOAT, 4}, {FLOAT, 4}, {FLOAT, 4},
+                        //position
+                        {FLOAT, 3},
+                        //direction
+                        {FLOAT, 3},
+                        //color
+                        {UINT8, 4, true},
+                        //intensity
+                        {FLOAT, 1},
+                        //range
+                        {FLOAT, 1},
+                        //falloff
+                        {FLOAT, 1},
+                        //spot angle
+                        {FLOAT, 1},
+                        }, 1);
+                });
+                spotLightBatch.hasPrepared = true;
+                needsPrepare = true;
+            }
+        }
+        return !needsPrepare;
+    }
+
     void Renderer::submitPointLightBatch(){
         auto dc = env->renderPipeline->addDrawCallStep(RenderPipeline::LIGHTING);
 
@@ -430,6 +474,33 @@ namespace tri {
 
         dc->shaderState = Ref<ShaderState>::make();
         
+        std::vector<int> textureSlots;
+        for (int i = 0; i < dc->textures.size(); i++) {
+            textureSlots.push_back(i);
+        }
+        dc->shaderState->set("uTextures", textureSlots.data(), textureSlots.size());
+        dc->shaderState->set("uEyePosition", eyePosition);
+    }
+
+    void Renderer::submitSpotLightBatch() {
+        auto dc = env->renderPipeline->addDrawCallStep(RenderPipeline::LIGHTING);
+
+        dc->vertexArray = spotLightBatch.vertexArray.get();
+        dc->instanceCount = spotLightBatch.instanceBuffer->size();
+        dc->buffers.push_back(spotLightBatch.instanceBuffer.get());
+        spotLightBatch.instanceBuffer->swapBuffers();
+
+        dc->shader = spotLightShader.get();
+        dc->frameBuffer = lightAccumulationBuffer.get();
+
+        dc->textures.push_back(gBuffer->getAttachment(TextureAttachment::COLOR).get());
+        dc->textures.push_back(gBuffer->getAttachment((TextureAttachment)(TextureAttachment::COLOR + 1)).get());
+        dc->textures.push_back(gBuffer->getAttachment((TextureAttachment)(TextureAttachment::COLOR + 2)).get());
+        dc->textures.push_back(gBuffer->getAttachment((TextureAttachment)(TextureAttachment::COLOR + 3)).get());
+        dc->textures.push_back(gBuffer->getAttachment(TextureAttachment::DEPTH).get());
+
+        dc->shaderState = Ref<ShaderState>::make();
+
         std::vector<int> textureSlots;
         for (int i = 0; i < dc->textures.size(); i++) {
             textureSlots.push_back(i);
@@ -465,7 +536,7 @@ namespace tri {
         case Light::AMBIENT_LIGHT: {
             auto dc = env->renderPipeline->addDrawCallStep(RenderPipeline::LIGHTING);
 
-            dc->vertexArray = &defaultMesh->vertexArray;
+            dc->vertexArray = &quadMesh->vertexArray;
             dc->shader = ambientLightShader.get();
             dc->frameBuffer = lightAccumulationBuffer.get();
             dc->textures.push_back(gBuffer->getAttachment(TextureAttachment::COLOR).get());
@@ -493,7 +564,7 @@ namespace tri {
         case Light::DIRECTIONAL_LIGHT: {
             auto dc = env->renderPipeline->addDrawCallStep(RenderPipeline::LIGHTING);
 
-            dc->vertexArray = &defaultMesh->vertexArray;
+            dc->vertexArray = &quadMesh->vertexArray;
             dc->shader = directionalLightShader.get();
             dc->frameBuffer = lightAccumulationBuffer.get();
             dc->textures.push_back(gBuffer->getAttachment(TextureAttachment::COLOR).get());
@@ -525,10 +596,9 @@ namespace tri {
             return true;
         }
         case Light::POINT_LIGHT: {
-            PointLightBatch::Instance* iData = (PointLightBatch::Instance*)pointLightBatch.instanceBuffer->next();
+            LightBatch::Instance* iData = (LightBatch::Instance*)pointLightBatch.instanceBuffer->next();
 
             Transform positionTransform;
-            positionTransform.position = transform.position;
             positionTransform.decompose(transform.getMatrix());
 
             Transform sphereTransform;
@@ -536,16 +606,50 @@ namespace tri {
             sphereTransform.scale = glm::vec3(2, 2, 2) * light.range;
             glm::mat sphereMatrix = camera.viewProjection * sphereTransform.calculateLocalMatrix();
 
+            Transform directionTransform;
+            directionTransform.rotation = transform.rotation;
+            glm::vec3 direction = directionTransform.calculateLocalMatrix() * glm::vec4(1, 0, 0, 1);
+
             iData->transform = sphereMatrix;
             iData->position = positionTransform.position;
+            iData->direction = direction;
             iData->color = light.color;
             iData->intensity = light.intensity;
             iData->range = light.range;
             iData->falloff = light.falloff;
+            iData->spotAngle = glm::radians(light.spotAngle);
             return true;
         }
         case Light::SPOT_LIGHT: {
-            return false;
+            LightBatch::Instance* iData = (LightBatch::Instance*)spotLightBatch.instanceBuffer->next();
+
+            Transform positionTransform;
+            positionTransform.decompose(transform.getMatrix());
+
+            Transform directionTransform;
+            directionTransform.rotation = positionTransform.rotation;
+            glm::vec3 direction = directionTransform.calculateLocalMatrix() * glm::vec4(1, 0, 0, 1);
+
+            Transform coneTransform;
+            coneTransform.position = positionTransform.position;
+            float scale = glm::tan(glm::radians(light.spotAngle)) * 3.0f;
+            coneTransform.scale = glm::vec3(1, scale, scale) * light.range;
+            coneTransform.rotation = positionTransform.rotation;
+            
+            Transform offset;
+            offset.position.x = -0.5f;
+            offset.rotation.z = glm::radians(-90.0f);
+            glm::mat coneMatrix = camera.viewProjection * (coneTransform.calculateLocalMatrix() * offset.calculateLocalMatrix());
+
+            iData->transform = coneMatrix;
+            iData->position = positionTransform.position;
+            iData->direction = direction;
+            iData->color = light.color;
+            iData->intensity = light.intensity;
+            iData->range = light.range;
+            iData->falloff = light.falloff;
+            iData->spotAngle = glm::radians(light.spotAngle);
+            return true;
         }
         default:
             return false;

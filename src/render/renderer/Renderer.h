@@ -28,7 +28,7 @@ namespace tri {
 		void submit(const glm::mat4& transform, Mesh* mesh, Material* material, Color color = color::white, EntityId id = -1);
 
 	private:
-		Ref<Mesh> defaultMesh;
+		Ref<Mesh> quadMesh;
 		Ref<Texture> defaultTexture;
 		Ref<Material> defaultMaterial;
 
@@ -42,7 +42,9 @@ namespace tri {
 		Ref<Shader> ambientLightShader;
 		Ref<Shader> directionalLightShader;
 		Ref<Shader> pointLightShader;
+		Ref<Shader> spotLightShader;
 		Ref<Mesh> sphereMesh;
+		Ref<Mesh> coneMesh;
 
 		Ref<FrameBuffer> gBuffer;
 		Ref<FrameBuffer> lightAccumulationBuffer;
@@ -50,31 +52,37 @@ namespace tri {
 		std::vector<FrameBufferAttachmentSpec> gBufferSpec;
 		std::vector<FrameBufferAttachmentSpec> lightAccumulationSpec;
 
-		class PointLightBatch {
+		class LightBatch {
 		public:
 			class Instance {
 			public:
 				glm::mat4 transform;
 				glm::vec3 position;
+				glm::vec3 direction;
 				Color color;
 				float intensity;
 				float range;
 				float falloff;
+				float spotAngle;
 			};
 
 			Ref<BatchBuffer> instanceBuffer;
 			Ref<VertexArray> vertexArray;
+			bool hasPrepared = false;
 		};
-		PointLightBatch pointLightBatch;
+		LightBatch pointLightBatch;
+		LightBatch spotLightBatch;
 
 
 		void setupSpecs();
 		bool updateFrameBuffer(Ref<FrameBuffer>& frameBuffer, const std::vector<FrameBufferAttachmentSpec> &spec);
+		bool prepareLightBatches();
 		void submitMeshes();
 		void submitBatches(Camera& c, FrameBuffer* frameBuffer);
 		void submitLights(const Camera &camera);
 		bool submitLight(FrameBuffer* lightBuffer, FrameBuffer* gBuffer, const Light &light, const Transform& transform, const Camera& camera);
 		void submitPointLightBatch();
+		void submitSpotLightBatch();
 	};
 
 }

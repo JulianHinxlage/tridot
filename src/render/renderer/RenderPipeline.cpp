@@ -19,8 +19,6 @@ namespace tri {
 	void RenderPipeline::init() {
 		auto* job = env->jobManager->addJob("Render");
 		job->addSystem<RenderPipeline>();
-		env->runtimeMode->setActiveSystem(RuntimeMode::EDIT, "RenderPipeline", true);
-		env->runtimeMode->setActiveSystem(RuntimeMode::PAUSED, "RenderPipeline", true);
 
 		addStep(Ref<Step>::make(), RenderPass::PREPARE, true, false);
 		addStep(Ref<Step>::make(), RenderPass::OPAQUE, true, false);

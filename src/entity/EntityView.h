@@ -48,11 +48,15 @@ namespace tri {
             int storageCount = 0;
             ComponentStorage* storages[sizeof...(Components) + 1];
             ((storages[storageCount++] = world->getComponentStorage<Components>()), ...);
+
             for (int i = 0; i < storageCount; i++) {
                 if (!storages[i]) {
                     //if a storage is not present, there are no entities to iterate
                     return;
                 }
+            }
+
+            for (int i = 0; i < storageCount; i++) {
                 if (shouldLock[i]) {
                     storages[i]->lock();
                 }

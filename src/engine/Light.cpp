@@ -12,6 +12,7 @@ namespace tri {
 
 	TRI_COMPONENT(Light);
 	TRI_PROPERTIES6(Light, type, color, intensity, range, falloff, spotAngle);
+	TRI_PROPERTY_RANGE(Light, spotAngle, 0, 90);
 
 	Light::Light() {
 		type = AMBIENT_LIGHT;

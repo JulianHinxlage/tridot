@@ -15,18 +15,22 @@ layout (location=13) in float iSpotAngle;
 uniform mat4 uProjection = mat4(1);
 
 flat out vec3 fPosition;
+flat out vec3 fDirection;
 flat out vec4 fColor;
 flat out float fIntesity;
 flat out float fRange;
 flat out float fFalloff;
+flat out float fSpotAngle;
 
 void main(){
     gl_Position = uProjection * iTransform * vec4(vPosition, 1.0);
     fPosition = iPosition;
+    fDirection = iDirection;
     fColor = iColor;
     fIntesity = iIntesity;
     fRange = iRange;
     fFalloff = iFalloff;
+    fSpotAngle = iSpotAngle;
 }
 
 #type fragment
@@ -38,10 +42,12 @@ uniform sampler2D uTextures[32];
 uniform vec3 uEyePosition = vec3(0);
 
 flat in vec3 fPosition;
+flat in vec3 fDirection;
 flat in vec4 fColor;
 flat in float fIntesity;
 flat in float fRange;
 flat in float fFalloff;
+flat in float fSpotAngle;
 
 out vec4 oColor;
 
@@ -68,10 +74,14 @@ void main(){
     float attenuation = 1.0 / pow(lightDistance + 1, fFalloff);
     attenuation *= max(0.0, min(1.0, (fRange - lightDistance) * fRange * 0.1));
 
+    float lightAngle = dot(normalize(lightDirection), normalize(fDirection));
+    attenuation *= max(0.0, min(1.0, -(cos(fSpotAngle) - lightAngle) * 20));
+
     vec3 viewDirection = normalize(uEyePosition - position);
     float ndotl = max(0.0, dot(normal, lightDirection));
 
     vec3 radiance = fColor.rgb * fIntesity;
     oColor.rgb = pbrLighting(albedo.rgb, normal, viewDirection, lightDirection, metallic, roughness) * radiance * attenuation;
     oColor.a = 1.0;
+    //oColor.r = 1;
 }
