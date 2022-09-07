@@ -26,11 +26,11 @@ namespace tri {
 	void Window::init() {
 		window = nullptr;
 		env->jobManager->addJob("Render", { "Window" });
+		vsyncInterval = (int)env->console->addCVar<bool>("vsync", true)->get<bool>();
 	}
 
 	void Window::startup() {
 		TRI_PROFILE_FUNC();
-		vsyncInterval = (int)env->console->addCVar<bool>("vsync", true);
 		int width = env->console->getCVarValue<int>("windowWidth", 800);
 		int height = env->console->getCVarValue<int>("windowHeight", 600);
 		std::string title = env->console->getCVarValue<std::string>("windowTitle", "Tridot Engine");

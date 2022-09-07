@@ -25,7 +25,7 @@ namespace tri {
 		void startup() override;
 		void tick() override;
 		void shutdown() override;
-		void submit(const glm::mat4& transform, Mesh* mesh, Material* material, Color color = color::white, EntityId id = -1);
+		Ref<FrameBuffer> &getGBuffer();
 
 	private:
 		Ref<Mesh> quadMesh;
@@ -33,7 +33,9 @@ namespace tri {
 		Ref<Material> defaultMaterial;
 
 		DrawList drawList;
+		DrawList transparencyDrawList;
 		RenderBatchList batches;
+		RenderBatchList transparencyBatches;
 		EnvironmentData envData;
 		Ref<Buffer> envBuffer;
 		glm::vec3 eyePosition;
@@ -48,6 +50,7 @@ namespace tri {
 
 		Ref<FrameBuffer> gBuffer;
 		Ref<FrameBuffer> lightAccumulationBuffer;
+		Ref<FrameBuffer> transparencyBuffer;
 
 		std::vector<FrameBufferAttachmentSpec> gBufferSpec;
 		std::vector<FrameBufferAttachmentSpec> lightAccumulationSpec;
@@ -76,9 +79,11 @@ namespace tri {
 
 		void setupSpecs();
 		bool updateFrameBuffer(Ref<FrameBuffer>& frameBuffer, const std::vector<FrameBufferAttachmentSpec> &spec);
+		void prepareTransparencyBuffer();
 		bool prepareLightBatches();
+		void submit(const glm::mat4& transform, Mesh* mesh, Material* material, Color color = color::white, EntityId id = -1);
 		void submitMeshes();
-		void submitBatches(Camera& c, FrameBuffer* frameBuffer);
+		void submitBatches(Camera& c);
 		void submitLights(const Camera &camera);
 		bool submitLight(FrameBuffer* lightBuffer, FrameBuffer* gBuffer, const Light &light, const Transform& transform, const Camera& camera);
 		void submitPointLightBatch();

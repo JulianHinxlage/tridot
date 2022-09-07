@@ -21,11 +21,17 @@ namespace tri {
 		job->addSystem<RenderPipeline>();
 
 		addStep(Ref<Step>::make(), RenderPass::PREPARE, true, false);
-		addStep(Ref<Step>::make(), RenderPass::OPAQUE, true, false);
-		addStep(Ref<Step>::make(), RenderPass::TRANSPARENCY, true, false);
+		steps.back()->name = "prepare";
+		addStep(Ref<Step>::make(), RenderPass::GEOMETRY, true, false);
+		steps.back()->name = "geometry";
 		addStep(Ref<Step>::make(), RenderPass::SHADOWS, true, false);
+		steps.back()->name = "shadows";
 		addStep(Ref<Step>::make(), RenderPass::LIGHTING, true, false);
+		steps.back()->name = "lighting";
+		addStep(Ref<Step>::make(), RenderPass::TRANSPARENCY, true, false);
+		steps.back()->name = "transparency";
 		addStep(Ref<Step>::make(), RenderPass::POST_PROCESSING, true, false);
+		steps.back()->name = "post process";
 
 		processedPrepared = true;
 	}
@@ -159,8 +165,13 @@ namespace tri {
 	}
 
 	void RenderPipeline::Step::execute(RenderPipeline& pipeline) {
-		for (auto& step : steps) {
-			step->execute(pipeline);
+		if (steps.size() > 0) {
+			TRI_PROFILE("step");
+			TRI_PROFILE_INFO(name.c_str(), name.size());
+
+			for (auto& step : steps) {
+				step->execute(pipeline);
+			}
 		}
 	}
 
@@ -170,6 +181,9 @@ namespace tri {
 	}
 
 	void RenderPipeline::StepDrawCall::execute(RenderPipeline& pipeline) {
+		TRI_PROFILE("draw call");
+		TRI_PROFILE_INFO(name.c_str(), name.size());
+
 		for (int i = 0; i < buffers.size(); i++) {
 			if (buffers[i]) {
 				buffers[i]->update();

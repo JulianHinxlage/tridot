@@ -9,6 +9,7 @@ namespace tri {
 	TRI_SYSTEM_INSTANCE(RenderSettings, env->renderSettings);
 
     void RenderSettings::init() {
+        env->console->addCVar("enableTransparency", &enableTransparency);
         env->console->addCVar("enableShadows", &enableShadows);
         env->console->addCVar("enableBloom", &enableBloom);
         env->console->addCVar("enableSSAO", &enableSSAO);

@@ -4,6 +4,7 @@
 
 #include "RenderBatch.h"
 #include "ShaderStructs.h"
+#include "engine/AssetManager.h"
 
 namespace tri {
 
@@ -97,6 +98,8 @@ namespace tri {
 		}
 
 		auto dc = env->renderPipeline->addDrawCallStep(pass);
+		dc->name = env->assetManager->getFile(mesh);
+
 		dc->frameBuffer = frameBuffer;
 		dc->shader = shader;
 		dc->vertexArray = vertexArray.get();
@@ -147,6 +150,11 @@ namespace tri {
 	}
 
 	void RenderBatchList::clear() {
+		for (auto& i : batches) {
+			for (auto& j : i.second) {
+				env->renderPipeline->freeOnThread(j.second);
+			}
+		}
 		batches.clear();
 	}
 

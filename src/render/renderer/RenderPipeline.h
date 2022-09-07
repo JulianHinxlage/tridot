@@ -19,10 +19,10 @@ namespace tri {
 		enum RenderPass {
 			UNDEFINED,
 			PREPARE,
-			OPAQUE,
-			TRANSPARENCY,
+			GEOMETRY,
 			SHADOWS,
 			LIGHTING,
+			TRANSPARENCY,
 			POST_PROCESSING,
 		};
 

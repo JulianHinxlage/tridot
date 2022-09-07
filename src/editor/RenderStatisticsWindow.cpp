@@ -5,6 +5,8 @@
 #include "window/UIManager.h"
 #include "window/Window.h"
 #include "render/renderer/RenderSettings.h"
+#include "render/renderer/Renderer.h"
+#include "editor/Editor.h"
 #include <imgui/imgui.h>
 
 namespace tri {
@@ -26,6 +28,8 @@ namespace tri {
 					ImGui::Text("lights:     %i", env->renderSettings->statistics.lightCount);
 					ImGui::Text("cameras:    %i", env->renderSettings->statistics.cameraCount);
 					ImGui::Text("materials:  %i", env->renderSettings->statistics.materialCount);
+
+					env->editor->classUI->draw(env->systemManager->getSystem<Renderer>()->getGBuffer(), "GBuffer");
 				}
 				ImGui::End();
 			}

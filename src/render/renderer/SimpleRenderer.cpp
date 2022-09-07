@@ -151,7 +151,7 @@ namespace tri {
             return;
         }
 
-        Ref<RenderPipeline::StepDrawCall> dc = env->renderPipeline->addDrawCallStep(RenderPipeline::OPAQUE);
+        Ref<RenderPipeline::StepDrawCall> dc = env->renderPipeline->addDrawCallStep(RenderPipeline::GEOMETRY);
 
         dc->shader = shader;
         dc->frameBuffer = frameBuffer.get();

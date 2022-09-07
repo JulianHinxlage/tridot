@@ -162,6 +162,7 @@ namespace tri {
         env->renderPipeline->freeOnThread(envBuffer);
         env->renderPipeline->freeOnThread(gBuffer);
         env->renderPipeline->freeOnThread(lightAccumulationBuffer);
+        env->renderPipeline->freeOnThread(transparencyBuffer);
         env->renderPipeline->freeOnThread(sphereMesh);
         env->renderPipeline->freeOnThread(coneMesh);
         env->renderPipeline->freeOnThread(pointLightBatch.vertexArray);
@@ -180,6 +181,7 @@ namespace tri {
         envBuffer = nullptr;
         gBuffer = nullptr;
         lightAccumulationBuffer = nullptr;
+        transparencyBuffer = nullptr;
         sphereMesh = nullptr;
         coneMesh = nullptr;
         pointLightBatch.vertexArray = nullptr;
@@ -188,23 +190,21 @@ namespace tri {
         spotLightBatch.instanceBuffer = nullptr;
 
         drawList.reset();
-
-        for (auto& i : batches.batches) {
-            for (auto& j : i.second) {
-                env->renderPipeline->freeOnThread(j.second);
-            }
-        }
         batches.clear();
+        transparencyBatches.clear();
     }
 
     void Renderer::tick() {
         updateFrameBuffer(gBuffer, gBufferSpec);
         updateFrameBuffer(lightAccumulationBuffer, lightAccumulationSpec);
+
+
+        prepareTransparencyBuffer();
         prepareLightBatches();
 
 
-        env->renderPipeline->addCommandStep(RenderPipeline::Command::DEPTH_ON, RenderPipeline::OPAQUE);
-        env->renderPipeline->addCommandStep(RenderPipeline::Command::CULL_BACK, RenderPipeline::OPAQUE);
+        env->renderPipeline->addCommandStep(RenderPipeline::Command::DEPTH_ON, RenderPipeline::GEOMETRY);
+        env->renderPipeline->addCommandStep(RenderPipeline::Command::CULL_BACK, RenderPipeline::GEOMETRY);
 
         bool hasPrimary = false;
         env->world->each<Camera>([&](Camera& camera) {
@@ -217,8 +217,15 @@ namespace tri {
                 eye.decompose(camera.transform);
                 eyePosition = eye.position;
 
+                drawList.eyePosition = eyePosition;
+                transparencyDrawList.eyePosition = eyePosition;
                 submitMeshes();
-                submitBatches(camera, gBuffer.get());
+
+                env->renderPipeline->addCommandStep(RenderPipeline::Command::DEPTH_ON, RenderPipeline::TRANSPARENCY);
+                env->renderPipeline->addCommandStep(RenderPipeline::Command::CULL_BACK, RenderPipeline::TRANSPARENCY);
+
+
+                submitBatches(camera);
                 env->renderPipeline->addCommandStep(RenderPipeline::Command::DEPTH_OFF, RenderPipeline::LIGHTING);
                 env->renderPipeline->addCommandStep(RenderPipeline::Command::CULL_FRONT, RenderPipeline::LIGHTING);
                 
@@ -273,7 +280,37 @@ namespace tri {
         entry.material = material;
         entry.color = color.vec();
         entry.id = id;
-        drawList.add(entry);
+
+        bool opaque = entry.color.a == 255 && entry.material->color.a == 255;
+        if (opaque) {
+            drawList.add(entry);
+        }
+        else {
+            transparencyDrawList.add(entry);
+        }
+    }
+
+    Ref<FrameBuffer> &Renderer::getGBuffer() {
+        return gBuffer;
+    }
+
+    void Renderer::prepareTransparencyBuffer() {
+        if (!transparencyBuffer && gBuffer && lightAccumulationBuffer) {
+            env->renderPipeline->addCallbackStep([&]() {
+                transparencyBuffer = Ref<FrameBuffer>::make();
+                transparencyBuffer->init(0, 0, {});
+            });
+        }
+        if (transparencyBuffer) {
+            env->renderPipeline->addCallbackStep([&]() {
+                transparencyBuffer->setAttachment((FrameBufferAttachmentSpec)(TextureAttachment)(TextureAttachment::COLOR + 0), lightAccumulationBuffer->getAttachment((TextureAttachment)(TextureAttachment::COLOR + 0)));
+                transparencyBuffer->setAttachment((FrameBufferAttachmentSpec)(TextureAttachment)(TextureAttachment::COLOR + 1), gBuffer->getAttachment((TextureAttachment)(TextureAttachment::COLOR + 1)));
+                transparencyBuffer->setAttachment((FrameBufferAttachmentSpec)(TextureAttachment)(TextureAttachment::COLOR + 2), gBuffer->getAttachment((TextureAttachment)(TextureAttachment::COLOR + 2)));
+                transparencyBuffer->setAttachment((FrameBufferAttachmentSpec)(TextureAttachment)(TextureAttachment::COLOR + 3), gBuffer->getAttachment((TextureAttachment)(TextureAttachment::COLOR + 3)));
+                transparencyBuffer->setAttachment((FrameBufferAttachmentSpec)(TextureAttachment)(TextureAttachment::COLOR + 4), gBuffer->getAttachment((TextureAttachment)(TextureAttachment::COLOR + 4)));
+                transparencyBuffer->setAttachment((FrameBufferAttachmentSpec)(TextureAttachment)(TextureAttachment::DEPTH), gBuffer->getAttachment((TextureAttachment)(TextureAttachment::DEPTH)));
+            });
+        }
     }
 
     bool Renderer::updateFrameBuffer(Ref<FrameBuffer>& frameBuffer, const std::vector<FrameBufferAttachmentSpec>& spec) {
@@ -308,7 +345,7 @@ namespace tri {
         });
     }
 
-    void Renderer::submitBatches(Camera &c, FrameBuffer *frameBuffer) {
+    void Renderer::submitBatches(Camera &c) {
         TRI_PROFILE_FUNC();
         envData.projection = c.projection;
         envData.viewProjection = c.viewProjection;
@@ -329,10 +366,29 @@ namespace tri {
                 if (j.second->isInitialized()) {
                     j.second->environmentBuffer = envBuffer;
                     j.second->defaultTexture = defaultTexture.get();
-                    j.second->submit(frameBuffer, RenderPipeline::OPAQUE);
+                    j.second->submit(gBuffer.get(), RenderPipeline::GEOMETRY);
                     j.second->reset();
                 }
             }
+        }
+
+        if (env->renderSettings->enableTransparency) {
+            transparencyDrawList.sort();
+            transparencyDrawList.submit(transparencyBatches);
+            transparencyDrawList.reset();
+            for (auto& i : transparencyBatches.batches) {
+                for (auto& j : i.second) {
+                    if (j.second->isInitialized()) {
+                        j.second->environmentBuffer = envBuffer;
+                        j.second->defaultTexture = defaultTexture.get();
+                        j.second->submit(transparencyBuffer.get(), RenderPipeline::TRANSPARENCY);
+                        j.second->reset();
+                    }
+                }
+            }
+        }
+        else {
+            transparencyDrawList.reset();
         }
     }
 
@@ -457,6 +513,7 @@ namespace tri {
 
     void Renderer::submitPointLightBatch(){
         auto dc = env->renderPipeline->addDrawCallStep(RenderPipeline::LIGHTING);
+        dc->name = "point lights";
 
         dc->vertexArray = pointLightBatch.vertexArray.get();
         dc->instanceCount = pointLightBatch.instanceBuffer->size();
@@ -484,6 +541,7 @@ namespace tri {
 
     void Renderer::submitSpotLightBatch() {
         auto dc = env->renderPipeline->addDrawCallStep(RenderPipeline::LIGHTING);
+        dc->name = "spot lights";
 
         dc->vertexArray = spotLightBatch.vertexArray.get();
         dc->instanceCount = spotLightBatch.instanceBuffer->size();
@@ -535,6 +593,7 @@ namespace tri {
         switch (light.type) {
         case Light::AMBIENT_LIGHT: {
             auto dc = env->renderPipeline->addDrawCallStep(RenderPipeline::LIGHTING);
+            dc->name = "ambient light";
 
             dc->vertexArray = &quadMesh->vertexArray;
             dc->shader = ambientLightShader.get();
@@ -563,6 +622,7 @@ namespace tri {
         }
         case Light::DIRECTIONAL_LIGHT: {
             auto dc = env->renderPipeline->addDrawCallStep(RenderPipeline::LIGHTING);
+            dc->name = "directional light";
 
             dc->vertexArray = &quadMesh->vertexArray;
             dc->shader = directionalLightShader.get();

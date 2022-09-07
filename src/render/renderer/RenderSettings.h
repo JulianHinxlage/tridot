@@ -11,6 +11,7 @@ namespace tri {
 
     class RenderSettings : public System {
     public:
+        bool enableTransparency = true;
         bool enableShadows = false;
         bool enableBloom = false;
         bool enableSSAO = false;

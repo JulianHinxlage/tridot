@@ -12,6 +12,8 @@ namespace tri {
 
 	class DrawList {
 	public:
+		glm::vec3 eyePosition;
+
 		class Entry {
 		public:
 			Shader* shader;
@@ -30,6 +32,9 @@ namespace tri {
 	private:
 		std::vector<std::pair<uint64_t, Entry>> entries;
 		std::vector<int> ordering;
+
+		IndexMap<Shader> shaderIds;
+		IndexMap<Mesh> meshIds;
 	};
 
 }
