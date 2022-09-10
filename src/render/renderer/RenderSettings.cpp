@@ -12,8 +12,9 @@ namespace tri {
         env->console->addCVar("enableTransparency", &enableTransparency);
         env->console->addCVar("enablePointLights", &enablePointLights);
         env->console->addCVar("enableSpotLights", &enableSpotLights);
-        env->console->addCVar("enableShadows", &enableShadows);
+        env->console->addCVar("enableFrustumCulling", &enableFrustumCulling);
         env->console->addCVar("enableBloom", &enableBloom);
+        env->console->addCVar("enableShadows", &enableShadows);
         env->console->addCVar("enableSSAO", &enableSSAO);
 
         env->console->addCVar("bloomThreshold", &bloomThreshold);

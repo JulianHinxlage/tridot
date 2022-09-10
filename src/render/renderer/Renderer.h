@@ -9,6 +9,7 @@
 #include "DrawList.h"
 #include "RenderBatch.h"
 #include "ShaderStructs.h"
+#include "ViewFrustum.h"
 #include "engine/Camera.h"
 #include "engine/Light.h"
 #include "engine/Transform.h"
@@ -57,6 +58,8 @@ namespace tri {
 		Ref<FrameBuffer> transparencyBuffer;
 		Ref<FrameBuffer> bloomBuffer1;
 		Ref<FrameBuffer> bloomBuffer2;
+
+		ViewFrustum frustum;
 
 		std::vector<FrameBufferAttachmentSpec> gBufferSpec;
 		std::vector<FrameBufferAttachmentSpec> lightAccumulationSpec;

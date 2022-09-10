@@ -15,6 +15,7 @@ namespace tri {
         bool enablePointLights = true;
         bool enableSpotLights = true;
         bool enableBloom = true;
+        bool enableFrustumCulling = true;
         bool enableShadows = false;
         bool enableSSAO = false;
 

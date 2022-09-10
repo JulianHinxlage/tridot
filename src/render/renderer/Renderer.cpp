@@ -146,6 +146,8 @@ namespace tri {
                 drawList.eyePosition = eyePosition;
                 transparencyDrawList.eyePosition = eyePosition;
                 
+                frustum.viewProjectionMatrix = camera.viewProjection;
+
                 submitMeshes();
 
                 env->renderPipeline->addCommandStep(RenderPipeline::Command::DEPTH_ON, RenderPipeline::TRANSPARENCY);
@@ -192,6 +194,11 @@ namespace tri {
         if (!mesh) {
             mesh = quadMesh.get();
         }
+
+        if (env->renderSettings->enableFrustumCulling && !frustum.inFrustum(transform, mesh)) {
+            return;
+        }
+
         if (!material) {
             material = defaultMaterial.get();
         }
@@ -602,20 +609,25 @@ namespace tri {
             return true;
         }
         case Light::POINT_LIGHT: {
-            LightBatch::Instance* iData = (LightBatch::Instance*)pointLightBatch.instanceBuffer->next();
-
             Transform positionTransform;
             positionTransform.decompose(transform.getMatrix());
 
             Transform sphereTransform;
             sphereTransform.position = positionTransform.position;
             sphereTransform.scale = glm::vec3(1.1, 1.1, 1.1) * light.range;
-            glm::mat sphereMatrix = camera.viewProjection * sphereTransform.calculateLocalMatrix();
+            glm::mat4 sphereMatrix = sphereTransform.calculateLocalMatrix();
 
             Transform directionTransform;
             directionTransform.rotation = transform.rotation;
             glm::vec3 direction = directionTransform.calculateLocalMatrix() * glm::vec4(1, 0, 0, 1);
+            
+            if (env->renderSettings->enableFrustumCulling && !frustum.inFrustum(sphereMatrix, sphereMesh.get())) {
+                return true;
+            }
 
+            sphereMatrix = camera.viewProjection * sphereMatrix;
+
+            LightBatch::Instance* iData = (LightBatch::Instance*)pointLightBatch.instanceBuffer->next();
             iData->transform = sphereMatrix;
             iData->position = positionTransform.position;
             iData->direction = direction;
@@ -645,7 +657,13 @@ namespace tri {
             Transform offset;
             offset.position.x = -0.5f;
             offset.rotation.z = glm::radians(-90.0f);
-            glm::mat coneMatrix = camera.viewProjection * (coneTransform.calculateLocalMatrix() * offset.calculateLocalMatrix());
+            glm::mat4 coneMatrix = coneTransform.calculateLocalMatrix() * offset.calculateLocalMatrix();
+
+            if (env->renderSettings->enableFrustumCulling && !frustum.inFrustum(coneMatrix, coneMesh.get())) {
+                return true;
+            }
+
+            coneMatrix = camera.viewProjection * coneMatrix;
 
             iData->transform = coneMatrix;
             iData->position = positionTransform.position;
