@@ -83,5 +83,4 @@ void main(){
     vec3 radiance = fColor.rgb * fIntesity;
     oColor.rgb = pbrLighting(albedo.rgb, normal, viewDirection, lightDirection, metallic, roughness) * radiance * attenuation;
     oColor.a = 1.0;
-    //oColor.r = 1;
 }

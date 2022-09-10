@@ -78,7 +78,9 @@ namespace tri {
                 int width = 0;
                 int height = 0;
                 glfwGetWindowSize(window, &width, &height);
-                glViewport(0, 0, width, height);
+                if (width != 0 && height != 0) {
+                    glViewport(0, 0, width, height);
+                }
             }
         }
     }

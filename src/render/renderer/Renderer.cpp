@@ -12,7 +12,7 @@
 #include "window/RenderContext.h"
 #include "window/Viewport.h"
 #include "RenderPipeline.h"
-#include "engine/RuntimeMode.h"
+#include "MeshFactory.h"
 #include <GL/glew.h>
 #include <tracy/TracyOpenGL.hpp>
 
@@ -24,91 +24,18 @@ namespace tri {
         env->jobManager->addJob("Renderer", {"Renderer"});
     }
 
-    void generateCubeSphere(Ref<Mesh> &mesh, int faceSections = 2) {
-        glm::vec3 faceCenters[6] = {
-            {1, 0, 0},
-            {-1, 0, 0},
-            {0, 1, 0},
-            {0, -1, 0},
-            {0, 0, 1},
-            {0, 0, -1},
-        };
-        glm::vec3 faceX[6] = {
-            {0, 1, 0},
-            {0, 1, 0},
-            {0, 0, 1},
-            {0, 0, 1},
-            {1, 0, 0},
-            {1, 0, 0},
-        };
-        glm::vec3 faceY[6] = {
-            {0, 0, 1},
-            {0, 0, -1},
-            {1, 0, 0},
-            {-1, 0, 0},
-            {0, 1, 0},
-            {0, -1, 0},
-        };
-
-        std::vector<float> vs;
-
-        auto add = [&](glm::vec3 v) {
-            vs.push_back(v.x);
-            vs.push_back(v.y);
-            vs.push_back(v.z);
-            for (int i = 0; i < 5; i++) {
-                vs.push_back(0);
-            }
-        };
-
-        for (int face = 0; face < 6; face++) {
-            glm::vec3 c = faceCenters[face];
-            glm::vec3 x = faceX[face];
-            glm::vec3 y = faceY[face];
-
-            for (int i = 0; i < faceSections; i++) {
-                for (int j = 0; j < faceSections; j++) {
-                    glm::vec3 v0 = c * 0.5f - x * 0.5f - y * 0.5f;
-                    v0 += x / (float)faceSections * (float)i;
-                    v0 += y / (float)faceSections * (float)j;
-
-                    glm::vec3 v1 = v0 + x / (float)faceSections;
-                    glm::vec3 v2 = v0 + x / (float)faceSections + y / (float)faceSections;
-                    glm::vec3 v3 = v0 + y / (float)faceSections;
-    
-                    add(v0);
-                    add(v1);
-                    add(v3);
-
-                    add(v1);
-                    add(v2);
-                    add(v3);
-                }
-            }
-        }
-
-        std::vector<int> is;
-        for (int i = 0; i < vs.size(); i += 8) {
-           glm::vec3 v = { vs[i + 0], vs[i + 1], vs[i + 2] };
-           v = glm::normalize(v);
-
-           vs[i + 0] = v.x;
-           vs[i + 1] = v.y;
-           vs[i + 2] = v.z;
-
-           vs[i + 3] = v.x;
-           vs[i + 4] = v.y;
-           vs[i + 5] = v.z;
-
-           is.push_back(i / 8);
-        }
-
-        mesh = Ref<Mesh>::make();
-        mesh->create(vs.data(), vs.size(), is.data(), is.size(), {{FLOAT, 3}, {FLOAT, 3} ,{FLOAT, 2}});
-    }
-
     void Renderer::startup() {
         setupSpecs();
+
+        geometryShader = env->assetManager->get<Shader>("shaders/geometry.glsl");
+        ambientLightShader = env->assetManager->get<Shader>("shaders/ambientLight.glsl");
+        directionalLightShader = env->assetManager->get<Shader>("shaders/directionalLight.glsl");
+        pointLightShader = env->assetManager->get<Shader>("shaders/pointLight.glsl");
+        spotLightShader = env->assetManager->get<Shader>("shaders/spotLight.glsl");
+        bloomShader = env->assetManager->get<Shader>("shaders/bloom.glsl");
+        blurShader = env->assetManager->get<Shader>("shaders/gaussianBlur.glsl");
+        compositShader = env->assetManager->get<Shader>("shaders/composit.glsl");
+        coneMesh = env->assetManager->get<Mesh>("models/cone.obj");
 
         env->renderPipeline->addCallbackStep([&]() {
             Image image;
@@ -117,31 +44,13 @@ namespace tri {
             defaultTexture = Ref<Texture>::make();
             defaultTexture->load(image);
             defaultMaterial = Ref<Material>::make();
-            quadMesh = Ref<Mesh>::make();
-            float quadVertices[] = {
-                -0.5, +0.0, -0.5, 0.0, 1.0, 0.0, 0.0, 0.0,
-                +0.5, +0.0, -0.5, 0.0, 1.0, 0.0, 1.0, 0.0,
-                +0.5, +0.0, +0.5, 0.0, 1.0, 0.0, 1.0, 1.0,
-                -0.5, +0.0, +0.5, 0.0, 1.0, 0.0, 0.0, 1.0,
-            };
-            int quadIndices[] = {
-                0, 2, 1,
-                0, 3, 2,
-            };
-            quadMesh->create(quadVertices, sizeof(quadVertices) / sizeof(quadVertices[0]), quadIndices, sizeof(quadIndices) / sizeof(quadIndices[0]), { {FLOAT, 3}, {FLOAT, 3} ,{FLOAT, 2} });
+
+            quadMesh = env->systemManager->getSystem<MeshFactory>()->generateQuad();
+            sphereMesh = env->systemManager->getSystem<MeshFactory>()->generateCubeSphere(3);
 
             envBuffer = Ref<Buffer>::make();
             envBuffer->init(nullptr, 0, sizeof(envData), BufferType::UNIFORM_BUFFER, true);
 
-            geometryShader = env->assetManager->get<Shader>("shaders/geometry.glsl");
-            ambientLightShader = env->assetManager->get<Shader>("shaders/ambientLight.glsl");
-            directionalLightShader = env->assetManager->get<Shader>("shaders/directionalLight.glsl");
-            pointLightShader = env->assetManager->get<Shader>("shaders/pointLight.glsl");
-            spotLightShader = env->assetManager->get<Shader>("shaders/spotLight.glsl");
-            coneMesh = env->assetManager->get<Mesh>("models/cone.obj");
-            
-            generateCubeSphere(sphereMesh, 4);
-            
             pointLightBatch.instanceBuffer = Ref<BatchBuffer>::make();
             pointLightBatch.instanceBuffer->init(sizeof(LightBatch::Instance));
         
@@ -159,10 +68,15 @@ namespace tri {
         env->renderPipeline->freeOnThread(directionalLightShader);
         env->renderPipeline->freeOnThread(pointLightShader);
         env->renderPipeline->freeOnThread(spotLightShader);
+        env->renderPipeline->freeOnThread(bloomShader);
+        env->renderPipeline->freeOnThread(blurShader);
+        env->renderPipeline->freeOnThread(compositShader);
         env->renderPipeline->freeOnThread(envBuffer);
         env->renderPipeline->freeOnThread(gBuffer);
         env->renderPipeline->freeOnThread(lightAccumulationBuffer);
         env->renderPipeline->freeOnThread(transparencyBuffer);
+        env->renderPipeline->freeOnThread(bloomBuffer1);
+        env->renderPipeline->freeOnThread(bloomBuffer2);
         env->renderPipeline->freeOnThread(sphereMesh);
         env->renderPipeline->freeOnThread(coneMesh);
         env->renderPipeline->freeOnThread(pointLightBatch.vertexArray);
@@ -178,10 +92,15 @@ namespace tri {
         directionalLightShader = nullptr;
         pointLightShader = nullptr;
         spotLightShader = nullptr;
+        bloomShader = nullptr;
+        blurShader = nullptr;
+        compositShader = nullptr;
         envBuffer = nullptr;
         gBuffer = nullptr;
         lightAccumulationBuffer = nullptr;
         transparencyBuffer = nullptr;
+        bloomBuffer1 = nullptr;
+        bloomBuffer2 = nullptr;
         sphereMesh = nullptr;
         coneMesh = nullptr;
         pointLightBatch.vertexArray = nullptr;
@@ -190,6 +109,7 @@ namespace tri {
         spotLightBatch.instanceBuffer = nullptr;
 
         drawList.reset();
+        transparencyDrawList.reset();
         batches.clear();
         transparencyBatches.clear();
     }
@@ -197,11 +117,18 @@ namespace tri {
     void Renderer::tick() {
         updateFrameBuffer(gBuffer, gBufferSpec);
         updateFrameBuffer(lightAccumulationBuffer, lightAccumulationSpec);
-
+        updateFrameBuffer(bloomBuffer1, bloomBufferSpec);
+        updateFrameBuffer(bloomBuffer2, bloomBufferSpec);
 
         prepareTransparencyBuffer();
         prepareLightBatches();
 
+        if (!defaultMaterial) {
+            return;
+        }
+        if (!gBuffer) {
+            return;
+        }
 
         env->renderPipeline->addCommandStep(RenderPipeline::Command::DEPTH_ON, RenderPipeline::GEOMETRY);
         env->renderPipeline->addCommandStep(RenderPipeline::Command::CULL_BACK, RenderPipeline::GEOMETRY);
@@ -216,9 +143,9 @@ namespace tri {
                 Transform eye;
                 eye.decompose(camera.transform);
                 eyePosition = eye.position;
-
                 drawList.eyePosition = eyePosition;
                 transparencyDrawList.eyePosition = eyePosition;
+                
                 submitMeshes();
 
                 env->renderPipeline->addCommandStep(RenderPipeline::Command::DEPTH_ON, RenderPipeline::TRANSPARENCY);
@@ -228,17 +155,19 @@ namespace tri {
                 submitBatches(camera);
                 env->renderPipeline->addCommandStep(RenderPipeline::Command::DEPTH_OFF, RenderPipeline::LIGHTING);
                 env->renderPipeline->addCommandStep(RenderPipeline::Command::CULL_FRONT, RenderPipeline::LIGHTING);
-                
-                //addetive blending with no alpha
-                env->renderPipeline->addCallbackStep([]() {
-                    glEnable(GL_BLEND);
-                    glBlendEquation(GL_FUNC_ADD);
-                    glBlendFunc(GL_ONE, GL_ONE);
-                }, RenderPipeline::LIGHTING);
+                env->renderPipeline->addCommandStep(RenderPipeline::Command::BLEND_ADDITIVE, RenderPipeline::LIGHTING);
 
                 submitLights(camera);
-                submitPointLightBatch();
-                submitSpotLightBatch();
+
+                if (env->renderSettings->enablePointLights) {
+                    submitPointLightBatch();
+                }
+                if (env->renderSettings->enableSpotLights) {
+                    submitSpotLightBatch();
+                }
+                if (env->renderSettings->enableBloom) {
+                    submitBloom();
+                }
 
                 camera.output = lightAccumulationBuffer;
                 env->renderPipeline->addCommandStep(RenderPipeline::Command::DEPTH_ON, RenderPipeline::LIGHTING);
@@ -253,6 +182,10 @@ namespace tri {
                 }
             }
         });
+
+        if (env->viewport->frameBuffer && env->viewport->displayInWindow) {
+            submitDisplay();
+        }
     }
 
     void Renderer::submit(const glm::mat4& transform, Mesh* mesh, Material* material, Color color, EntityId id) {
@@ -294,6 +227,10 @@ namespace tri {
         return gBuffer;
     }
 
+    Ref<FrameBuffer>& Renderer::getBloomBuffer() {
+        return bloomBuffer1;
+    }
+
     void Renderer::prepareTransparencyBuffer() {
         if (!transparencyBuffer && gBuffer && lightAccumulationBuffer) {
             env->renderPipeline->addCallbackStep([&]() {
@@ -319,7 +256,7 @@ namespace tri {
             env->renderPipeline->freeOnThread(frameBuffer);
             env->renderPipeline->addCallbackStep([&]() {
                 frameBuffer = Ref<FrameBuffer>::make();
-                frameBuffer->init(env->viewport->size.x, env->viewport->size.y, spec);
+                frameBuffer->init(0, 0, spec);
             });
             return false;
         }
@@ -400,7 +337,6 @@ namespace tri {
         albedo.name = "Albedo";
         albedo.textureFormat = TextureFormat::RGBA8;
 
-
         FrameBufferAttachmentSpec normal;
         normal.type = (TextureAttachment)(COLOR + 1);
         normal.clearColor = color::black;
@@ -435,17 +371,27 @@ namespace tri {
         depth.name = "Depth";
         depth.textureFormat = TextureFormat::DEPTH24STENCIL8;
 
-
         gBufferSpec = { albedo, normal, position, rme, id, depth };
+
 
         FrameBufferAttachmentSpec light;
         light.type = (TextureAttachment)(COLOR);
         light.clearColor = color::black;
         light.mipMapping = false;
         light.name = "Light";
-        light.textureFormat = TextureFormat::RGBA8;
+        light.textureFormat = TextureFormat::RGBA16F;
 
         lightAccumulationSpec = { light };
+
+
+        FrameBufferAttachmentSpec bloom;
+        bloom.type = (TextureAttachment)(COLOR);
+        bloom.clearColor = color::black;
+        bloom.mipMapping = false;
+        bloom.name = "Bloom";
+        bloom.textureFormat = TextureFormat::RGBA8;
+
+        bloomBufferSpec = { bloom };
     }
 
     bool Renderer::prepareLightBatches() {
@@ -663,7 +609,7 @@ namespace tri {
 
             Transform sphereTransform;
             sphereTransform.position = positionTransform.position;
-            sphereTransform.scale = glm::vec3(2, 2, 2) * light.range;
+            sphereTransform.scale = glm::vec3(1.1, 1.1, 1.1) * light.range;
             glm::mat sphereMatrix = camera.viewProjection * sphereTransform.calculateLocalMatrix();
 
             Transform directionTransform;
@@ -714,6 +660,147 @@ namespace tri {
         default:
             return false;
         }
+    }
+
+    void Renderer::submitBloom() {
+        env->renderPipeline->addCommandStep(RenderPipeline::Command::BLEND_OFF, RenderPipeline::LIGHTING);
+        {
+            auto dc = env->renderPipeline->addDrawCallStep(RenderPipeline::LIGHTING);
+            dc->name = "bloom";
+
+            dc->vertexArray = &quadMesh->vertexArray;
+            dc->shader = bloomShader.get();
+            dc->frameBuffer = bloomBuffer1.get();
+            dc->textures.push_back(gBuffer->getAttachment(TextureAttachment::COLOR).get());
+            dc->textures.push_back(gBuffer->getAttachment((TextureAttachment)(TextureAttachment::COLOR + 1)).get());
+            dc->textures.push_back(gBuffer->getAttachment((TextureAttachment)(TextureAttachment::COLOR + 2)).get());
+            dc->textures.push_back(gBuffer->getAttachment((TextureAttachment)(TextureAttachment::COLOR + 3)).get());
+            dc->textures.push_back(gBuffer->getAttachment(TextureAttachment::DEPTH).get());
+            dc->textures.push_back(lightAccumulationBuffer->getAttachment(TextureAttachment::COLOR).get());
+
+            Transform quadTransform;
+            quadTransform.rotation.x = glm::radians(90.0f);
+            quadTransform.scale = { 2, 2, -2 };
+
+            dc->shaderState = Ref<ShaderState>::make();
+            dc->shaderState->set("uTransform", quadTransform.calculateLocalMatrix());
+            dc->shaderState->set("bloomThreshold", env->renderSettings->bloomThreshold);
+            
+            std::vector<int> textureSlots;
+            for (int i = 0; i < dc->textures.size(); i++) {
+                textureSlots.push_back(i);
+            }
+            dc->shaderState->set("uTextures", textureSlots.data(), textureSlots.size());
+        }
+
+
+        {
+            auto dc = env->renderPipeline->addDrawCallStep(RenderPipeline::LIGHTING);
+            dc->name = "bloom vblur";
+
+            dc->vertexArray = &quadMesh->vertexArray;
+            dc->shader = blurShader.get();
+            dc->frameBuffer = bloomBuffer2.get();
+            dc->textures.push_back(bloomBuffer1->getAttachment(TextureAttachment::COLOR).get());
+
+            Transform quadTransform;
+            quadTransform.rotation.x = glm::radians(90.0f);
+            quadTransform.scale = { 2, 2, -2 };
+
+            dc->shaderState = Ref<ShaderState>::make();
+            dc->shaderState->set("uTransform", quadTransform.calculateLocalMatrix());
+            dc->shaderState->set("spread", glm::vec2(1, 0));
+            dc->shaderState->set("steps", env->renderSettings->bloomSpread);
+
+            std::vector<int> textureSlots;
+            for (int i = 0; i < dc->textures.size(); i++) {
+                textureSlots.push_back(i);
+            }
+            dc->shaderState->set("uTextures", textureSlots.data(), textureSlots.size());
+        }
+
+        env->renderPipeline->addCommandStep(RenderPipeline::Command::BLEND_ADDITIVE, RenderPipeline::LIGHTING);
+        {
+            auto dc = env->renderPipeline->addDrawCallStep(RenderPipeline::LIGHTING);
+            dc->name = "bloom hblur";
+
+            dc->vertexArray = &quadMesh->vertexArray;
+            dc->shader = blurShader.get();
+            dc->frameBuffer = bloomBuffer1.get();
+            dc->textures.push_back(bloomBuffer2->getAttachment(TextureAttachment::COLOR).get());
+
+            Transform quadTransform;
+            quadTransform.rotation.x = glm::radians(90.0f);
+            quadTransform.scale = { 2, 2, -2 };
+
+            dc->shaderState = Ref<ShaderState>::make();
+            dc->shaderState->set("uTransform", quadTransform.calculateLocalMatrix());
+            dc->shaderState->set("spread", glm::vec2(0, 1));
+            dc->shaderState->set("steps", env->renderSettings->bloomSpread);
+
+            std::vector<int> textureSlots;
+            for (int i = 0; i < dc->textures.size(); i++) {
+                textureSlots.push_back(i);
+            }
+            dc->shaderState->set("uTextures", textureSlots.data(), textureSlots.size());
+        }
+
+        {
+            auto dc = env->renderPipeline->addDrawCallStep(RenderPipeline::LIGHTING);
+            dc->name = "bloom composit";
+
+            dc->vertexArray = &quadMesh->vertexArray;
+            dc->shader = compositShader.get();
+            dc->frameBuffer = lightAccumulationBuffer.get();
+            dc->textures.push_back(bloomBuffer1->getAttachment(TextureAttachment::COLOR).get());
+
+            Transform quadTransform;
+            quadTransform.rotation.x = glm::radians(90.0f);
+            quadTransform.scale = { 2, 2, -2 };
+
+            dc->shaderState = Ref<ShaderState>::make();
+            dc->shaderState->set("uTransform", quadTransform.calculateLocalMatrix());
+            dc->shaderState->set("factor1", env->renderSettings->bloomIntesity);
+            dc->shaderState->set("factor2", 0.0f);
+
+            std::vector<int> textureSlots;
+            for (int i = 0; i < dc->textures.size(); i++) {
+                textureSlots.push_back(i);
+            }
+            dc->shaderState->set("uTextures", textureSlots.data(), textureSlots.size());
+        }
+
+    }
+
+    void Renderer::submitDisplay() {
+        env->renderPipeline->addCommandStep(RenderPipeline::Command::DEPTH_OFF, RenderPipeline::DISPLAY);
+        env->renderPipeline->addCommandStep(RenderPipeline::Command::BLEND_OFF, RenderPipeline::DISPLAY);
+        env->renderPipeline->addCommandStep(RenderPipeline::Command::CULL_OFF, RenderPipeline::DISPLAY);
+
+        auto dc = env->renderPipeline->addDrawCallStep(RenderPipeline::DISPLAY);
+        dc->name = "display";
+
+        dc->vertexArray = &quadMesh->vertexArray;
+        dc->shader = compositShader.get();
+        dc->frameBuffer = nullptr;
+        dc->textures.push_back(env->viewport->frameBuffer->getAttachment(TextureAttachment::COLOR).get());
+
+        Transform quadTransform;
+        quadTransform.rotation.x = glm::radians(90.0f);
+        quadTransform.scale = { 2, 2, -2 };
+
+        dc->shaderState = Ref<ShaderState>::make();
+        dc->shaderState->set("uTransform", quadTransform.calculateLocalMatrix());
+        dc->shaderState->set("uProjection", glm::mat4(1));
+
+        dc->shaderState->set("factor1", 1.0f);
+        dc->shaderState->set("factor2", 0.0f);
+
+        std::vector<int> textureSlots;
+        for (int i = 0; i < dc->textures.size(); i++) {
+            textureSlots.push_back(i);
+        }
+        dc->shaderState->set("uTextures", textureSlots.data(), textureSlots.size());
     }
 
 }

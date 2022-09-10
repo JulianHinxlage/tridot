@@ -25,7 +25,8 @@ namespace tri {
 		void startup() override;
 		void tick() override;
 		void shutdown() override;
-		Ref<FrameBuffer> &getGBuffer();
+		Ref<FrameBuffer>& getGBuffer();
+		Ref<FrameBuffer> &getBloomBuffer();
 
 	private:
 		Ref<Mesh> quadMesh;
@@ -45,15 +46,21 @@ namespace tri {
 		Ref<Shader> directionalLightShader;
 		Ref<Shader> pointLightShader;
 		Ref<Shader> spotLightShader;
+		Ref<Shader> bloomShader;
+		Ref<Shader> blurShader;
+		Ref<Shader> compositShader;
 		Ref<Mesh> sphereMesh;
 		Ref<Mesh> coneMesh;
 
 		Ref<FrameBuffer> gBuffer;
 		Ref<FrameBuffer> lightAccumulationBuffer;
 		Ref<FrameBuffer> transparencyBuffer;
+		Ref<FrameBuffer> bloomBuffer1;
+		Ref<FrameBuffer> bloomBuffer2;
 
 		std::vector<FrameBufferAttachmentSpec> gBufferSpec;
 		std::vector<FrameBufferAttachmentSpec> lightAccumulationSpec;
+		std::vector<FrameBufferAttachmentSpec> bloomBufferSpec;
 
 		class LightBatch {
 		public:
@@ -88,6 +95,8 @@ namespace tri {
 		bool submitLight(FrameBuffer* lightBuffer, FrameBuffer* gBuffer, const Light &light, const Transform& transform, const Camera& camera);
 		void submitPointLightBatch();
 		void submitSpotLightBatch();
+		void submitBloom();
+		void submitDisplay();
 	};
 
 }

@@ -12,9 +12,15 @@ namespace tri {
     class RenderSettings : public System {
     public:
         bool enableTransparency = true;
+        bool enablePointLights = true;
+        bool enableSpotLights = true;
+        bool enableBloom = true;
         bool enableShadows = false;
-        bool enableBloom = false;
         bool enableSSAO = false;
+
+        float bloomThreshold = 1;
+        float bloomIntesity = 1;
+        int bloomSpread = 20;
 
         virtual void init() override;
 

@@ -24,6 +24,7 @@ namespace tri {
 			LIGHTING,
 			TRANSPARENCY,
 			POST_PROCESSING,
+			DISPLAY,
 		};
 
 		enum StepType {
@@ -39,6 +40,7 @@ namespace tri {
 			DEPTH_OFF,
 			BLEND_ON,
 			BLEND_OFF,
+			BLEND_ADDITIVE,
 			CULL_OFF,
 			CULL_BACK,
 			CULL_FRONT,

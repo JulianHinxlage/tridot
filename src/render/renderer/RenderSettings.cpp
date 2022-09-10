@@ -10,9 +10,15 @@ namespace tri {
 
     void RenderSettings::init() {
         env->console->addCVar("enableTransparency", &enableTransparency);
+        env->console->addCVar("enablePointLights", &enablePointLights);
+        env->console->addCVar("enableSpotLights", &enableSpotLights);
         env->console->addCVar("enableShadows", &enableShadows);
         env->console->addCVar("enableBloom", &enableBloom);
         env->console->addCVar("enableSSAO", &enableSSAO);
+
+        env->console->addCVar("bloomThreshold", &bloomThreshold);
+        env->console->addCVar("bloomIntesity", &bloomIntesity);
+        env->console->addCVar("bloomSpread", &bloomSpread);
     }
 
 	RenderSettings::Statistics::Statistics() {

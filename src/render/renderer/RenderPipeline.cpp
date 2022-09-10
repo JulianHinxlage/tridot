@@ -32,6 +32,8 @@ namespace tri {
 		steps.back()->name = "transparency";
 		addStep(Ref<Step>::make(), RenderPass::POST_PROCESSING, true, false);
 		steps.back()->name = "post process";
+		addStep(Ref<Step>::make(), RenderPass::DISPLAY, true, false);
+		steps.back()->name = "display";
 
 		processedPrepared = true;
 	}
@@ -199,6 +201,9 @@ namespace tri {
 		if (!vertexArray) {
 			return;
 		}
+		if (frameBuffer && frameBuffer->getId() == 0) {
+			return;
+		}
 
 		if (frameBuffer) {
 			frameBuffer->bind();
@@ -283,6 +288,11 @@ namespace tri {
 		case Command::BLEND_OFF:
 			RenderContext::setBlend(false);
 			break; 
+		case Command::BLEND_ADDITIVE:
+			glEnable(GL_BLEND);
+			glBlendEquation(GL_FUNC_ADD);
+			glBlendFunc(GL_ONE, GL_ONE);
+			break;
 		case Command::CULL_FRONT:
 			RenderContext::setCull(true, true);
 			break; 

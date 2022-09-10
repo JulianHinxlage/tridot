@@ -29,7 +29,20 @@ namespace tri {
 					ImGui::Text("cameras:    %i", env->renderSettings->statistics.cameraCount);
 					ImGui::Text("materials:  %i", env->renderSettings->statistics.materialCount);
 
+					ImGui::Separator();
+
+					ImGui::Checkbox("enableTransparency", &env->renderSettings->enableTransparency);
+					ImGui::Checkbox("enablePointLights", &env->renderSettings->enablePointLights);
+					ImGui::Checkbox("enableSpotLights", &env->renderSettings->enableSpotLights);
+					ImGui::Checkbox("enableBloom", &env->renderSettings->enableBloom);
+					ImGui::SliderFloat("bloomThreshold", &env->renderSettings->bloomThreshold, 0, 2);
+					ImGui::SliderFloat("bloomIntesity", &env->renderSettings->bloomIntesity, 0, 2);
+					ImGui::SliderInt("bloomSpread", &env->renderSettings->bloomSpread, 0, 50);
+					
+					ImGui::Separator();
+
 					env->editor->classUI->draw(env->systemManager->getSystem<Renderer>()->getGBuffer(), "GBuffer");
+					env->editor->classUI->draw(env->systemManager->getSystem<Renderer>()->getBloomBuffer(), "Bloom Buffer");
 				}
 				ImGui::End();
 			}

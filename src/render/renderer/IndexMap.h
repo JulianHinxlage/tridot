@@ -15,7 +15,10 @@ namespace tri {
 		std::vector<T*> elements;
 		std::unordered_map<T*, int> indexMap;
 
-		int getIndex(T *element) {
+		int getIndex(T *element, bool allowNull = true) {
+			if (element == nullptr && !allowNull) {
+				return -1;
+			}
 			auto entry = indexMap.find(element);
 			if (entry != indexMap.end()) {
 				return entry->second;

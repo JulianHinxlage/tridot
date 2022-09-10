@@ -22,5 +22,6 @@ enableAssetHotReloading = true
 
 addAssetDirectory ../assets
 addAssetDirectory ./
+addAssetDirectory ../local/data
 
 loadMap autosave.tmap

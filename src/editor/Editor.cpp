@@ -71,21 +71,6 @@ namespace tri {
 			env->uiManager->updateActiveFlags();
 		});
 
-		std::vector<std::string> systems1 = { "Time", "Input", "AssetManager", "STransform", "SCamera", "FileWatcher", "JobManager"};
-		std::vector<std::string> systems2 = { "Window", "Renderer", "UIManager", "RenderPipeline"};
-		std::vector<std::string> systems3 = { "Gizmos", "UndoSystem", "Editor"};
-		env->runtimeMode->setActiveSystems(RuntimeMode::EDIT, systems1, true);
-		env->runtimeMode->setActiveSystems(RuntimeMode::EDIT, systems2, true);
-		env->runtimeMode->setActiveSystems(RuntimeMode::EDIT, systems3, true);
-
-		env->runtimeMode->setActiveSystems(RuntimeMode::PAUSED, systems1, true);
-		env->runtimeMode->setActiveSystems(RuntimeMode::PAUSED, systems2, true);
-		env->runtimeMode->setActiveSystems(RuntimeMode::PAUSED, systems3, true);
-
-		env->runtimeMode->setActiveSystems(RuntimeMode::LOADING, systems1, true);
-		env->runtimeMode->setActiveSystems(RuntimeMode::LOADING, systems2, true);
-		env->runtimeMode->setActiveSystems(RuntimeMode::LOADING, systems3, true);
-
 		env->runtimeMode->setMode(RuntimeMode::EDIT);
 	}
 

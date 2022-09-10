@@ -55,7 +55,7 @@ namespace tri {
 			MaterialData *mData = (MaterialData*)materialBuffer->next();
 
 			mData->texture = textures.getIndex(material->texture.get());
-			mData->normalMap = textures.getIndex(material->normalMap.get());
+			mData->normalMap = textures.getIndex(material->normalMap.get(), false);
 			mData->roughnessMap = textures.getIndex(material->roughnessMap.get());
 			mData->metallicMap = textures.getIndex(material->metallicMap.get());
 			mData->ambientOcclusionMap = textures.getIndex(material->ambientOcclusionMap.get());

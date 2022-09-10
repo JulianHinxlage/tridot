@@ -19,6 +19,7 @@ namespace tri {
 		};
 
 		void init() override;
+		void startup() override;
 		void shutdown() override;
 		Mode getMode();
 		void setMode(Mode mode);
