@@ -440,9 +440,15 @@ namespace tri {
 			}
 		});
 
-		env->world->getComponentStorage<RigidBody>()->lock();
-		env->world->getComponentStorage<Collider>()->lock();
-		env->world->getComponentStorage<Transform>()->lock();
+		if (auto* store = env->world->getComponentStorage<RigidBody>()) {
+			store->lock();
+		}
+		if (auto* store = env->world->getComponentStorage<Collider>()) {
+			store->lock();
+		}
+		if (auto* store = env->world->getComponentStorage<Transform>()) {
+			store->lock();
+		}
 
 		impl->tick();
 
@@ -502,11 +508,17 @@ namespace tri {
 				rigidBody.lastVelocity = rigidBody.velocity;
 				rigidBody.lastAngular = rigidBody.angular;
 			}
-			});
+		});
 
-		env->world->getComponentStorage<RigidBody>()->unlock();
-		env->world->getComponentStorage<Collider>()->unlock();
-		env->world->getComponentStorage<Transform>()->unlock();
+		if (auto* store = env->world->getComponentStorage<RigidBody>()) {
+			store->unlock();
+		}
+		if (auto* store = env->world->getComponentStorage<Collider>()) {
+			store->unlock();
+		}
+		if (auto* store = env->world->getComponentStorage<Transform>()) {
+			store->unlock();
+		}
 
 		wasLoadingLastFrame = env->runtimeMode->getMode() == RuntimeMode::LOADING;
 	}

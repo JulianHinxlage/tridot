@@ -14,6 +14,13 @@
 #include "engine/RuntimeMode.h"
 #include "engine/Map.h"
 #include "engine/Time.h"
+#include "engine/Transform.h"
+#include "engine/Camera.h"
+#include "engine/Light.h"
+#include "engine/MeshComponent.h"
+#include "engine/AssetManager.h"
+#include "engine/EntityInfo.h"
+#include "render/objects/Mesh.h"
 #include <imgui.h>
 #include <imgui/imgui_internal.h>
 
@@ -85,7 +92,17 @@ namespace tri {
 			bool openAbout = false;
 			if (ImGui::BeginMainMenuBar()) {
 				if (ImGui::BeginMenu("File")) {
-
+					if (ImGui::MenuItem("New")) {
+						env->world->clear();
+						env->world->addEntity(EntityInfo("Camera"), 
+							Transform({ -2.5, 2, 2 }, { 1, 1, 1 }, glm::radians(glm::vec3(-30.0f, -50.0f, 0.0f))),
+							Camera(Camera::PERSPECTIVE, true));
+						env->world->addEntity(EntityInfo("AmbientLight"), Transform(), AmbientLight());
+						env->world->addEntity(EntityInfo("DirectionalLight"), 
+							Transform({ 0, 0, 0 }, { 1, 1, 1 }, glm::radians(glm::vec3(10.0f, 25.0f, -50.0f))),
+							DirectionalLight());
+						env->world->addEntity(EntityInfo("Cube"), Transform(), MeshComponent(env->assetManager->get<Mesh>("models/cube.obj")));
+					}
 					if (ImGui::MenuItem("Open", "Ctrl+O")) {
 						std::string file = openFileDialog(".tmap\0*.tmap\0.*\0*.*\0");
 						if (!file.empty()) {
@@ -102,7 +119,7 @@ namespace tri {
 						}, true);
 					}
 					if (ImGui::MenuItem("Save As", "Ctrl+Shift+S")) {
-						std::string file = openFileDialog(".tmap\0*.tmap\0.*\0*.*\0");
+						std::string file = openFileDialog(".tmap\0*.tmap\0.*\0*.*\0", true);
 						if (!file.empty()) {
 							env->eventManager->postTick.addListener([&, file]() {
 								saveMap(file);
@@ -171,7 +188,7 @@ namespace tri {
 
 				if (env->input->downShift()) {
 					if (env->input->pressed('S')) {
-						std::string file = openFileDialog(".tmap\0*.tmap\0.*\0*.*\0");
+						std::string file = openFileDialog(".tmap\0*.tmap\0.*\0*.*\0", true);
 						if (!file.empty()) {
 							env->eventManager->postTick.addListener([&, file]() {
 								saveMap(file);
@@ -293,7 +310,7 @@ namespace tri {
 		}
 	}
 
-	std::string Editor::openFileDialog(const char *pattern) {
+	std::string Editor::openFileDialog(const char *pattern, bool allowNewFile) {
 		TRI_PROFILE_FUNC();
 #if TRI_WINDOWS
 		OPENFILENAME ofn = { 0 };
@@ -307,8 +324,13 @@ namespace tri {
 		ofn.lpstrFileTitle = NULL;
 		ofn.nMaxFileTitle = 0;
 		ofn.lpstrInitialDir = NULL;
-		ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR;
-		
+
+		if (allowNewFile) {
+			ofn.Flags = OFN_NOCHANGEDIR;
+		}
+		else {
+			ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR;
+		}
 
 		if (GetOpenFileName(&ofn) == TRUE) {
 			std::string file = ofn.lpstrFile;

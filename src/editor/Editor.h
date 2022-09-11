@@ -31,7 +31,7 @@ namespace tri {
 		void shutdown() override;
 
 		int setPersistentEntity(EntityId id, int handle = -1);
-		std::string openFileDialog(const char* pattern);
+		std::string openFileDialog(const char* pattern, bool allowNewFile = false);
 	private:
 		int autoSaveListener;
 		int crashSaveListener;

@@ -428,7 +428,7 @@ namespace tri {
 	ComponentStorage* World::getComponentStorage(int classId) {
 		if (storages.size() <= classId) {
 			if (enablePendingOperations) {
-				//resizing while an other thread is accessing a store can cause a raise condition on the stores array, so only resize when pending is disabled
+				//resizing while an other thread is accessing a store can cause a race condition on the stores array, so only resize when pending is disabled
 				// => maybe add store requests as pending operation?
 				return nullptr;
 			}

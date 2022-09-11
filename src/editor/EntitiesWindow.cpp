@@ -202,8 +202,9 @@ namespace tri {
 							if (desc->category.empty() || ImGui::BeginMenu(desc->category.c_str())) {
 								if (ImGui::MenuItem(desc->name.c_str())) {
 									EntityId id = env->world->addEntity();
-									env->world->addComponent(id, desc->classId);
 									env->world->addComponent<EntityInfo>(id).name = getUniqueEntityName(desc->name);
+									env->world->addComponent<Transform>(id);
+									env->world->addComponent(id, desc->classId);
 									env->editor->selectionContext->select(id);
 									env->editor->undo->entityAdded(id);
 								}
