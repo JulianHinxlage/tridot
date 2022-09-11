@@ -11,7 +11,7 @@
 namespace tri {
 
 	TRI_CLASS(EntityEvent::Listener);
-	TRI_PROPERTIES3(EntityEvent::Listener, entityId, classId, func);
+	TRI_PROPERTIES2(EntityEvent::Listener, entityId, function);
 
 	TRI_CLASS(EntityEvent);
 	TRI_PROPERTIES1(EntityEvent, listeners);
@@ -19,20 +19,21 @@ namespace tri {
 
 	void EntityEvent::invoke() {
 		for (auto& listener : listeners) {
-			void* comp = env->world->getComponent(listener.entityId, listener.classId);
+			void* comp = env->world->getComponent(listener.entityId, listener.function.classId);
 			if (comp) {
-				if (listener.func) {
-					listener.func->invoke(comp);
+				auto *desc = listener.function.getFunctionDescriptor();
+				if (desc) {
+					desc->invoke(comp);
 				}
 			}
 		}
 	}
 
-	void EntityEvent::addListener(EntityId id, int classId, FunctionDescriptor* func) {
+	void EntityEvent::addListener(EntityId id, int classId, int functionIndex) {
 		Listener listener;
 		listener.entityId = id;
-		listener.classId = classId;
-		listener.func = func;
+		listener.function.classId = classId;
+		listener.function.functionIndex = functionIndex;
 		listeners.push_back(listener);
 	}
 

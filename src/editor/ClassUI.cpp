@@ -11,6 +11,7 @@
 #include "engine/EntityEvent.h"
 #include "engine/EntityInfo.h"
 #include "engine/Camera.h"
+#include "engine/MetaTypes.h"
 #include "render/objects/FrameBuffer.h"
 #include "window/Input.h"
 #include <imgui/imgui.h>
@@ -51,7 +52,7 @@ namespace tri {
 		addClassUI<EntityId>([](const char* label, EntityId* value, EntityId* min, EntityId* max, bool multiEdit) {
 			bool change = false;
 
-			std::string name = "";
+			std::string name = "None";
 			if (*value != -1) {
 				if (auto* info = env->world->getComponent<EntityInfo>(*value)) {
 					name = info->name;
@@ -64,6 +65,9 @@ namespace tri {
 			if (ImGui::BeginPopupContextItem()) {
 				if (ImGui::MenuItem("select")) {
 					env->editor->selectionContext->select(*value);
+				}
+				if (ImGui::MenuItem("clear")) {
+					*value = -1;
 				}
 				ImGui::EndPopup();
 			}
@@ -130,13 +134,6 @@ namespace tri {
 			}
 			return change;
 		});
-		addClassUI<EntityEvent::Listener>([](const char* label, EntityEvent::Listener* value, EntityEvent::Listener* min, EntityEvent::Listener* max, bool multiEdit) {
-			bool change = false;
-			change |= env->editor->classUI->draw(value->entityId, "entityId");
-			change |= env->editor->classUI->componentCombo(value->classId, "component");
-			change |= env->editor->classUI->funcPropertyCombo(value->classId, &value->func, "function");
-			return change;
-		});
 		addClassUI<EntityEvent>([](const char* label, EntityEvent* value, EntityEvent* min, EntityEvent* max, bool multiEdit) {
 			bool change = false;
 
@@ -144,15 +141,15 @@ namespace tri {
 				//drag target
 				EntityEvent::Listener l;
 				std::string func;
-				if (env->editor->classUI->dragTargetFunc(l.classId, func, l.entityId)) {
-					auto* desc = env->reflection->getDescriptor(l.classId);
+				if (env->editor->classUI->dragTargetFunc(l.function.classId, func, l.entityId)) {
+					auto* desc = env->reflection->getDescriptor(l.function.classId);
 					if (desc) {
-						for (auto& f : desc->functions) {
-							if (f->name == func) {
-								l.func = f;
+						for (int i = 0; i < desc->functions.size(); i++) {
+							if (desc->functions[i]->name == func) {
+								l.function.functionIndex = i;
 							}
 						}
-						value->addListener(l.entityId, l.classId, l.func);
+						value->addListener(l.entityId, l.function.classId, l.function.functionIndex);
 					}
 				}
 			};
@@ -172,6 +169,43 @@ namespace tri {
 			return change;
 		});
 		
+		addClassUI<ComponentIdentifier>([](const char* label, ComponentIdentifier* value, ComponentIdentifier* min, ComponentIdentifier* max, bool multiEdit) {
+			bool change = false;
+			change |= env->editor->classUI->componentCombo(value->classId, "component");
+			return change;
+		});
+		addClassUI<PropertyIdentifier>([](const char* label, PropertyIdentifier* value, PropertyIdentifier* min, PropertyIdentifier* max, bool multiEdit) {
+			bool change = false;
+			change |= env->editor->classUI->componentCombo(value->classId, "component");
+			change |= env->editor->classUI->propertyCombo(value->classId, value->propertyIndex, "property");
+			return change;
+		});
+		addClassUI<FunctionIdentifier>([](const char* label, FunctionIdentifier* value, FunctionIdentifier* min, FunctionIdentifier* max, bool multiEdit) {
+			bool change = false;
+			change |= env->editor->classUI->componentCombo(value->classId, "component");
+			change |= env->editor->classUI->funcPropertyCombo(value->classId, value->functionIndex, "function");
+			return change;
+		});
+		addClassUI<PropertyValueIdentifier>([](const char* label, PropertyValueIdentifier* value, PropertyValueIdentifier* min, PropertyValueIdentifier* max, bool multiEdit) {
+			bool change = false;
+			change |= env->editor->classUI->componentCombo(value->classId, "component");
+			change |= env->editor->classUI->propertyCombo(value->classId, value->propertyIndex, "property");
+			
+			if (value->classId != -1) {
+				if (auto* desc = Reflection::getDescriptor(value->classId)) {
+					if (value->propertyIndex >= 0 && value->propertyIndex < desc->properties.size()) {
+						auto& prop = desc->properties[value->propertyIndex];
+						if (value->value.classId != prop.type->classId) {
+							value->value.clear();
+							value->value.set(prop.type->classId);
+						}
+						change |= env->editor->classUI->draw(prop.type->classId, value->value.get(), "value");
+					}
+				}
+			}
+			return change;
+		});
+
 		addClassUI<Ref<FrameBuffer>>([](const char* label, Ref<FrameBuffer>* value, Ref<FrameBuffer>* min, Ref<FrameBuffer>* max, bool multiEdit) {
 			bool change = false;
 			if (ImGui::TreeNode(label)) {
@@ -468,6 +502,9 @@ namespace tri {
 	}
 
 	bool ClassUI::funcPropertyCombo(int classId, FunctionDescriptor** func, const char* label) {
+		if (classId < 0) {
+			return false;
+		}
 		bool change = false;
 		if (auto* desc = Reflection::getDescriptor(classId)) {
 			std::string preview = "";
@@ -488,7 +525,34 @@ namespace tri {
 		return change;
 	}
 
+	bool ClassUI::funcPropertyCombo(int classId, int& functionIndex, const char* label) {
+		if (classId < 0) {
+			return false;
+		}
+		bool change = false;
+		if (auto* desc = Reflection::getDescriptor(classId)) {
+			std::string preview = "";
+			if (functionIndex >= 0 && functionIndex < desc->functions.size()) {
+				preview = desc->functions[functionIndex]->name;
+			}
+			if (ImGui::BeginCombo(label, preview.c_str())) {
+				for (int i = 0; i < desc->functions.size(); i++) {
+					auto* func = desc->functions[i];
+					if (ImGui::Selectable(func->name.c_str(), preview == func->name)) {
+						functionIndex = i;
+						change = true;
+					}
+				}
+				ImGui::EndCombo();
+			}
+		}
+		return change;
+	}
+
 	bool ClassUI::propertyCombo(int classId, int& propertyIndex, const char* label) {
+		if (classId < 0) {
+			return false;
+		}
 		bool change = false;
 		if (auto* desc = Reflection::getDescriptor(classId)) {
 			std::string preview = "";

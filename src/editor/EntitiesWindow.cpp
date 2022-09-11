@@ -13,6 +13,7 @@
 #include "engine/Random.h"
 #include "engine/Time.h"
 #include "engine/EntityInfo.h"
+#include "engine/MetaTypes.h"
 #include <imgui/imgui.h>
 #include <imgui/misc/cpp/imgui_stdlib.h>
 
@@ -30,9 +31,7 @@ namespace tri {
 		bool invert = false;
 		bool active = true;
 		std::string text = "";
-		int classId = -1;
-		int propertyIndex = -1;
-		DynamicObjectBuffer propertyValue;
+		PropertyValueIdentifier property;
 	};
 	TRI_CLASS(EntityFilter);
 	TRI_CLASS(EntityFilter::Type);
@@ -71,44 +70,11 @@ namespace tri {
 				if (value->type == EntityFilter::NAME) {
 					change |= env->editor->classUI->draw(Reflection::getClassId<decltype(value->text)>(), &value->text, "name");
 				}
-				else if (value->type == EntityFilter::COMPONENT || value->type == EntityFilter::PROPERTY) {
-
-					env->editor->classUI->componentCombo(value->classId, "component");
-
-					if (value->type == EntityFilter::PROPERTY) {
-						if (value->classId != -1) {
-							if (auto* desc = Reflection::getDescriptor(value->classId)) {
-								std::string preview = "";
-								if (value->propertyIndex >= 0 && value->propertyIndex < desc->properties.size()) {
-									preview = desc->properties[value->propertyIndex].name;
-								}
-								if (ImGui::BeginCombo("property", preview.c_str())) {
-									for (int i = 0; i < desc->properties.size(); i++) {
-										auto& prop = desc->properties[i];
-										if (!(prop.flags & PropertyDescriptor::HIDDEN)) {
-											if (ImGui::Selectable(prop.name.c_str(), preview == prop.name)) {
-												value->propertyIndex = i;
-												change = true;
-											}
-										}
-									}
-									ImGui::EndCombo();
-								}
-
-								if (value->propertyIndex >= 0 && value->propertyIndex < desc->properties.size()) {
-									auto &prop =desc->properties[value->propertyIndex];
-									if (value->propertyValue.classId != prop.type->classId) {
-										value->propertyValue.clear();
-										value->propertyValue.set(prop.type->classId);
-									}
-									change |= env->editor->classUI->draw(prop.type->classId, value->propertyValue.get(), "value");
-								}
-
-
-							}
-						}
-					}
-
+				else if (value->type == EntityFilter::COMPONENT) {
+					env->editor->classUI->draw(*((ComponentIdentifier*)&value->property), "");
+				}
+				else if (value->type == EntityFilter::PROPERTY) {
+					env->editor->classUI->draw(value->property, "");
 				}
 
 				if (ImGui::Checkbox("active", &value->active)) {
@@ -203,8 +169,10 @@ namespace tri {
 								if (ImGui::MenuItem(desc->name.c_str())) {
 									EntityId id = env->world->addEntity();
 									env->world->addComponent<EntityInfo>(id).name = getUniqueEntityName(desc->name);
-									env->world->addComponent<Transform>(id);
 									env->world->addComponent(id, desc->classId);
+									if (desc->classId != Reflection::getClassId<Transform>()) {
+										env->world->addComponent<Transform>(id);
+									}
 									env->editor->selectionContext->select(id);
 									env->editor->undo->entityAdded(id);
 								}
@@ -322,23 +290,23 @@ namespace tri {
 							}
 						}
 						else if (filter.type == EntityFilter::COMPONENT) {
-							if (filter.classId != -1) {
-								if (!env->world->hasComponent(id, filter.classId)) {
+							if (filter.property.classId != -1) {
+								if (!env->world->hasComponent(id, filter.property.classId)) {
 									filterHit = true;
 								}
 							}
 						}
 						else if (filter.type == EntityFilter::PROPERTY) {
 
-							if (filter.classId != -1) {
-								auto* desc = Reflection::getDescriptor(filter.classId);
+							if (filter.property.classId != -1) {
+								auto* desc = Reflection::getDescriptor(filter.property.classId);
 								if (desc) {
 
-									if (auto *comp = env->world->getComponent(id, filter.classId)) {
-										if (filter.propertyIndex >= 0 && filter.propertyIndex < desc->properties.size()) {
-											auto &prop = desc->properties[filter.propertyIndex];
+									if (auto *comp = env->world->getComponent(id, filter.property.classId)) {
+										if (filter.property.propertyIndex >= 0 && filter.property.propertyIndex < desc->properties.size()) {
+											auto &prop = desc->properties[filter.property.propertyIndex];
 											filterHit = true;
-											if (prop.type->equals((uint8_t*)comp + prop.offset, filter.propertyValue.get())) {
+											if (prop.type->equals((uint8_t*)comp + prop.offset, filter.property.value.get())) {
 												filterHit = false;
 											}
 										}

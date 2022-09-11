@@ -46,6 +46,15 @@ namespace tri {
 		bool deserializeWorldBinary(World* world, const std::string& file);
 
 		template<typename T>
+		void serializeClass(T* ptr, SerialData& data) {
+			serializeClass(Reflection::getClassId<T>(), ptr, data);
+		}
+		template<typename T>
+		void deserializeClass(T* ptr, SerialData& data) {
+			deserializeClass(Reflection::getClassId<T>(), ptr, data);
+		}
+
+		template<typename T>
 		void addSerializeCallback(const std::function<void(T* ptr, SerialData& data)>& callback) {
 			addSerializeCallback(Reflection::getClassId<T>(), [callback](void* ptr, SerialData& data) {
 				callback((T*)ptr, data);

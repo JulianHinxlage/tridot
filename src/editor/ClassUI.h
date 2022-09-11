@@ -32,6 +32,7 @@ namespace tri {
 
 		bool componentCombo(int& classId, const char* label);
 		bool funcPropertyCombo(int classId, FunctionDescriptor** func, const char* label);
+		bool funcPropertyCombo(int classId, int &functionIndex, const char* label);
 		bool propertyCombo(int classId, int &propertyIndex, const char* label);
 
 		bool dragTarget(int classId, void* ptr);

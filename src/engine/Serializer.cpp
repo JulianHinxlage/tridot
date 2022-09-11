@@ -9,6 +9,7 @@
 #include "engine/ComponentCache.h"
 #include "engine/EntityEvent.h"
 #include "engine/Map.h"
+#include "engine/MetaTypes.h"
 #include <glm/glm.hpp>
 
 namespace tri {
@@ -16,6 +17,9 @@ namespace tri {
 	TRI_SYSTEM_INSTANCE(Serializer, env->serializer);
 
 	void Serializer::serializeClass(int classId, void* ptr, SerialData& data) {
+		if (classId < 0) {
+			return;
+		}
 		if (serializeCallbacks.size() > classId) {
 			if (serializeCallbacks[classId]) {
 				serializeCallbacks[classId](ptr, data);
@@ -69,6 +73,9 @@ namespace tri {
 	}
 
 	void Serializer::deserializeClass(int classId, void* ptr, SerialData& data) {
+		if (classId < 0) {
+			return;
+		}
 		if (deserializeCallbacks.size() > classId) {
 			if (deserializeCallbacks[classId]) {
 				deserializeCallbacks[classId](ptr, data);
@@ -309,25 +316,60 @@ namespace tri {
 		addSerializeCallback<Color>([](Color* v, SerialData& data) {
 			*data.emitter << YAML::Flow << YAML::BeginSeq << (int)v->r << (int)v->g << (int)v->b << (int)v->a << YAML::EndSeq;
 		});
-		addSerializeCallback<EntityEvent>([](EntityEvent* v, SerialData& data) {
-			*data.emitter << YAML::BeginSeq;
-			for (auto& l : v->listeners) {
-				*data.emitter << YAML::BeginMap;
-				*data.emitter << YAML::Key << "id" << YAML::Value << (int)l.entityId;
-				if (l.classId != -1) {
-					auto* desc = Reflection::getDescriptor(l.classId);
-					if (desc) {
-						*data.emitter << YAML::Key << "component" << YAML::Value << desc->name;
+
+
+		addSerializeCallback<ComponentIdentifier>([](ComponentIdentifier* v, SerialData& data) {
+			if (v->classId != -1) {
+				auto* desc = Reflection::getDescriptor(v->classId);
+				if (desc) {
+					*data.emitter << YAML::Key << "component" << YAML::Value << desc->name;
+				}
+			}
+		});
+		addSerializeCallback<PropertyIdentifier>([](PropertyIdentifier* v, SerialData& data) {
+			*data.emitter << YAML::BeginMap;
+			env->serializer->serializeClass((ComponentIdentifier*)v, data);
+			if (v->classId != -1) {
+				auto* desc = Reflection::getDescriptor(v->classId);
+				if (desc) {
+					if (v->propertyIndex >= 0 && v->propertyIndex < desc->properties.size()) {
+						auto property = desc->properties[v->propertyIndex];
+						*data.emitter << YAML::Key << "property" << YAML::Value << property.name;
 					}
 				}
-				if (l.func) {
-					*data.emitter << YAML::Key << "function" << YAML::Value << l.func->name;
-				}
-				*data.emitter << YAML::EndMap;
 			}
-			*data.emitter << YAML::EndSeq;
+			*data.emitter << YAML::EndMap;
 		});
-
+		addSerializeCallback<PropertyValueIdentifier>([](PropertyValueIdentifier* v, SerialData& data) {
+			*data.emitter << YAML::BeginMap;
+			env->serializer->serializeClass((ComponentIdentifier*)v, data);
+			if (v->classId != -1) {
+				auto* desc = Reflection::getDescriptor(v->classId);
+				if (desc) {
+					if (v->propertyIndex >= 0 && v->propertyIndex < desc->properties.size()) {
+						auto property = desc->properties[v->propertyIndex];
+						*data.emitter << YAML::Key << "property" << YAML::Value << property.name;
+					}
+				}
+			}
+			*data.emitter << YAML::Key << "value";
+			env->serializer->serializeClass(v->value.classId, v->value.get(), data);
+			*data.emitter << YAML::EndMap;
+		});
+		addSerializeCallback<FunctionIdentifier>([](FunctionIdentifier* v, SerialData& data) {
+			*data.emitter << YAML::BeginMap;
+			env->serializer->serializeClass((ComponentIdentifier*)v, data);
+			if (v->classId != -1) {
+				auto* desc = Reflection::getDescriptor(v->classId);
+				if (desc) {
+					if (v->functionIndex >= 0 && v->functionIndex < desc->functions.size()) {
+						auto *function = desc->functions[v->functionIndex];
+						*data.emitter << YAML::Key << "function" << YAML::Value << function->name;
+					}
+				}
+			}
+			*data.emitter << YAML::EndMap;
+		});
 		
 		addDeserializeCallback<int>([](int* v, SerialData& data) {
 			*v = data.node.as<int>(0);
@@ -371,23 +413,57 @@ namespace tri {
 			v->b = data.node[2].as<int>(255);
 			v->a = data.node[3].as<int>(255);
 		});
-		addDeserializeCallback<EntityEvent>([](EntityEvent* v, SerialData& data) {
-			for (auto i : data.node) {
-				EntityId id = i["id"].as<int>(-1);
-				std::string component = i["component"].as<std::string>("");
-				std::string function = i["function"].as<std::string>("");
-				EntityEvent::Listener l;
-				l.entityId = id;
-				auto* desc = Reflection::getDescriptor(component);
+
+		addDeserializeCallback<ComponentIdentifier>([](ComponentIdentifier* v, SerialData& data) {
+			std::string component = data.node["component"].as<std::string>("");
+			auto* desc = Reflection::getDescriptor(component);
+			if (desc) {
+				v->classId = desc->classId;
+			}
+		});
+		addDeserializeCallback<PropertyIdentifier>([](PropertyIdentifier* v, SerialData& data) {
+			env->serializer->deserializeClass((ComponentIdentifier*)v, data);
+			std::string property = data.node["property"].as<std::string>("");
+			if (v->classId != -1) {
+				auto* desc = Reflection::getDescriptor(v->classId);
 				if (desc) {
-					l.classId = desc->classId;
-					for (auto* f : desc->functions) {
-						if (f->name == function) {
-							l.func = f;
+					for (int i = 0; i < desc->properties.size(); i++) {
+						if (desc->properties[i].name == property) {
+							v->propertyIndex = i;
+							break;
 						}
 					}
 				}
-				v->listeners.push_back(l);
+			}
+		});
+		addDeserializeCallback<PropertyValueIdentifier>([](PropertyValueIdentifier* v, SerialData& data) {
+			env->serializer->deserializeClass((PropertyIdentifier*)v, data);
+			SerialData d;
+			d.node = data.node["value"];
+			if (d.node) {
+				if (v->classId != -1) {
+					auto* desc = Reflection::getDescriptor(v->classId);
+					if (desc) {
+						if (v->propertyIndex >= 0 && v->propertyIndex < desc->properties.size()) {
+							auto &property = desc->properties[v->propertyIndex];
+							v->value.set(property.type->classId);
+						}
+					}
+				}
+				env->serializer->deserializeClass(v->value.classId, v->value.get(), d);
+			}
+		});
+		addDeserializeCallback<FunctionIdentifier>([](FunctionIdentifier* v, SerialData& data) {
+			env->serializer->deserializeClass((ComponentIdentifier*)v, data);
+			std::string function = data.node["function"].as<std::string>("");
+			auto* desc = Reflection::getDescriptor(v->classId);
+			if (desc) {
+				for (int i = 0; i < desc->functions.size(); i++) {
+					if (desc->functions[i]->name == function) {
+						v->functionIndex = i;
+						break;
+					}
+				}
 			}
 		});
 
