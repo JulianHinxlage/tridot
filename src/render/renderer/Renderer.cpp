@@ -524,15 +524,29 @@ namespace tri {
         TRI_PROFILE_FUNC();
 
         bool hasLight = false;
-        env->world->each<const Transform, const Light>([&](EntityId id, const Transform& t, const Light& light) {
+        env->world->each<const Transform, const AmbientLight>([&](EntityId id, const Transform& t, const AmbientLight& light) {
+            if (submitLight(lightAccumulationBuffer.get(), gBuffer.get(), light, t, camera)) {
+                hasLight = true;
+            }
+        });
+        env->world->each<const Transform, const DirectionalLight>([&](EntityId id, const Transform& t, const DirectionalLight& light) {
+            if (submitLight(lightAccumulationBuffer.get(), gBuffer.get(), light, t, camera)) {
+                hasLight = true;
+            }
+        });
+        env->world->each<const Transform, const PointLight>([&](EntityId id, const Transform& t, const PointLight& light) {
+            if (submitLight(lightAccumulationBuffer.get(), gBuffer.get(), light, t, camera)) {
+                hasLight = true;
+            }
+        });
+        env->world->each<const Transform, const SpotLight>([&](EntityId id, const Transform& t, const SpotLight& light) {
             if (submitLight(lightAccumulationBuffer.get(), gBuffer.get(), light, t, camera)) {
                 hasLight = true;
             }
         });
 
         if (!hasLight) {
-            Light light;
-            light.type = Light::AMBIENT_LIGHT;
+            AmbientLight light;
             light.intensity = 1.0f;
             light.color = color::white;
             Transform t;
@@ -542,142 +556,139 @@ namespace tri {
         }
     }
     
-    bool Renderer::submitLight(FrameBuffer* lightBuffer, FrameBuffer* gBuffer, const Light& light, const Transform &transform, const Camera& camera) {
-        switch (light.type) {
-        case Light::AMBIENT_LIGHT: {
-            auto dc = env->renderPipeline->addDrawCallStep(RenderPipeline::LIGHTING);
-            dc->name = "ambient light";
+    bool Renderer::submitLight(FrameBuffer* lightBuffer, FrameBuffer* gBuffer, const AmbientLight& light, const Transform& transform, const Camera& camera) {
+        auto dc = env->renderPipeline->addDrawCallStep(RenderPipeline::LIGHTING);
+        dc->name = "ambient light";
 
-            dc->vertexArray = &quadMesh->vertexArray;
-            dc->shader = ambientLightShader.get();
-            dc->frameBuffer = lightAccumulationBuffer.get();
-            dc->textures.push_back(gBuffer->getAttachment(TextureAttachment::COLOR).get());
-            dc->textures.push_back(gBuffer->getAttachment((TextureAttachment)(TextureAttachment::COLOR + 1)).get());
-            dc->textures.push_back(gBuffer->getAttachment((TextureAttachment)(TextureAttachment::COLOR + 2)).get());
-            dc->textures.push_back(gBuffer->getAttachment((TextureAttachment)(TextureAttachment::COLOR + 3)).get());
-            dc->textures.push_back(gBuffer->getAttachment(TextureAttachment::DEPTH).get());
+        dc->vertexArray = &quadMesh->vertexArray;
+        dc->shader = ambientLightShader.get();
+        dc->frameBuffer = lightAccumulationBuffer.get();
+        dc->textures.push_back(gBuffer->getAttachment(TextureAttachment::COLOR).get());
+        dc->textures.push_back(gBuffer->getAttachment((TextureAttachment)(TextureAttachment::COLOR + 1)).get());
+        dc->textures.push_back(gBuffer->getAttachment((TextureAttachment)(TextureAttachment::COLOR + 2)).get());
+        dc->textures.push_back(gBuffer->getAttachment((TextureAttachment)(TextureAttachment::COLOR + 3)).get());
+        dc->textures.push_back(gBuffer->getAttachment(TextureAttachment::DEPTH).get());
 
-            Transform quadTransform;
-            quadTransform.rotation.x = glm::radians(90.0f);
-            quadTransform.scale = { 2, 2, -2 };
+        Transform quadTransform;
+        quadTransform.rotation.x = glm::radians(90.0f);
+        quadTransform.scale = { 2, 2, -2 };
 
-            dc->shaderState = Ref<ShaderState>::make();
-            dc->shaderState->set("uTransform", quadTransform.calculateLocalMatrix());
-            dc->shaderState->set("uColor", light.color.vec());
-            dc->shaderState->set("uIntesity", light.intensity);
+        dc->shaderState = Ref<ShaderState>::make();
+        dc->shaderState->set("uTransform", quadTransform.calculateLocalMatrix());
+        dc->shaderState->set("uColor", light.color.vec());
+        dc->shaderState->set("uIntesity", light.intensity);
 
-            std::vector<int> textureSlots;
-            for (int i = 0; i < dc->textures.size(); i++) {
-                textureSlots.push_back(i);
-            }
-            dc->shaderState->set("uTextures", textureSlots.data(), textureSlots.size());
+        std::vector<int> textureSlots;
+        for (int i = 0; i < dc->textures.size(); i++) {
+            textureSlots.push_back(i);
+        }
+        dc->shaderState->set("uTextures", textureSlots.data(), textureSlots.size());
+        return true;
+    }
+    
+    bool Renderer::submitLight(FrameBuffer* lightBuffer, FrameBuffer* gBuffer, const DirectionalLight& light, const Transform& transform, const Camera& camera) {
+        auto dc = env->renderPipeline->addDrawCallStep(RenderPipeline::LIGHTING);
+        dc->name = "directional light";
+
+        dc->vertexArray = &quadMesh->vertexArray;
+        dc->shader = directionalLightShader.get();
+        dc->frameBuffer = lightAccumulationBuffer.get();
+        dc->textures.push_back(gBuffer->getAttachment(TextureAttachment::COLOR).get());
+        dc->textures.push_back(gBuffer->getAttachment((TextureAttachment)(TextureAttachment::COLOR + 1)).get());
+        dc->textures.push_back(gBuffer->getAttachment((TextureAttachment)(TextureAttachment::COLOR + 2)).get());
+        dc->textures.push_back(gBuffer->getAttachment((TextureAttachment)(TextureAttachment::COLOR + 3)).get());
+        dc->textures.push_back(gBuffer->getAttachment(TextureAttachment::DEPTH).get());
+
+        Transform quadTransform;
+        quadTransform.rotation.x = glm::radians(90.0f);
+        quadTransform.scale = { 2, 2, -2 };
+
+        dc->shaderState = Ref<ShaderState>::make();
+        dc->shaderState->set("uTransform", quadTransform.calculateLocalMatrix());
+        dc->shaderState->set("uColor", light.color.vec());
+        dc->shaderState->set("uIntesity", light.intensity);
+
+        Transform directionTransform;
+        directionTransform.rotation = transform.rotation;
+        glm::vec3 direction = directionTransform.calculateLocalMatrix() * glm::vec4(1, 0, 0, 1);
+        dc->shaderState->set("uDirection", direction);
+
+        std::vector<int> textureSlots;
+        for (int i = 0; i < dc->textures.size(); i++) {
+            textureSlots.push_back(i);
+        }
+        dc->shaderState->set("uTextures", textureSlots.data(), textureSlots.size());
+        dc->shaderState->set("uEyePosition", eyePosition);
+        return true;
+    }
+
+    bool Renderer::submitLight(FrameBuffer* lightBuffer, FrameBuffer* gBuffer, const PointLight& light, const Transform& transform, const Camera& camera) {
+        Transform positionTransform;
+        positionTransform.decompose(transform.getMatrix());
+
+        Transform sphereTransform;
+        sphereTransform.position = positionTransform.position;
+        sphereTransform.scale = glm::vec3(1.1, 1.1, 1.1) * light.range;
+        glm::mat4 sphereMatrix = sphereTransform.calculateLocalMatrix();
+
+        Transform directionTransform;
+        directionTransform.rotation = transform.rotation;
+        glm::vec3 direction = directionTransform.calculateLocalMatrix() * glm::vec4(1, 0, 0, 1);
+
+        if (env->renderSettings->enableFrustumCulling && !frustum.inFrustum(sphereMatrix, sphereMesh.get())) {
             return true;
         }
-        case Light::DIRECTIONAL_LIGHT: {
-            auto dc = env->renderPipeline->addDrawCallStep(RenderPipeline::LIGHTING);
-            dc->name = "directional light";
 
-            dc->vertexArray = &quadMesh->vertexArray;
-            dc->shader = directionalLightShader.get();
-            dc->frameBuffer = lightAccumulationBuffer.get();
-            dc->textures.push_back(gBuffer->getAttachment(TextureAttachment::COLOR).get());
-            dc->textures.push_back(gBuffer->getAttachment((TextureAttachment)(TextureAttachment::COLOR + 1)).get());
-            dc->textures.push_back(gBuffer->getAttachment((TextureAttachment)(TextureAttachment::COLOR + 2)).get());
-            dc->textures.push_back(gBuffer->getAttachment((TextureAttachment)(TextureAttachment::COLOR + 3)).get());
-            dc->textures.push_back(gBuffer->getAttachment(TextureAttachment::DEPTH).get());
+        sphereMatrix = camera.viewProjection * sphereMatrix;
 
-            Transform quadTransform;
-            quadTransform.rotation.x = glm::radians(90.0f);
-            quadTransform.scale = { 2, 2, -2 };
+        LightBatch::Instance* iData = (LightBatch::Instance*)pointLightBatch.instanceBuffer->next();
+        iData->transform = sphereMatrix;
+        iData->position = positionTransform.position;
+        iData->direction = direction;
+        iData->color = light.color;
+        iData->intensity = light.intensity;
+        iData->range = light.range;
+        iData->falloff = light.falloff;
+        iData->spotAngle = 0;
+        return true;
+    }
 
-            dc->shaderState = Ref<ShaderState>::make();
-            dc->shaderState->set("uTransform", quadTransform.calculateLocalMatrix());
-            dc->shaderState->set("uColor", light.color.vec());
-            dc->shaderState->set("uIntesity", light.intensity);
+    bool Renderer::submitLight(FrameBuffer* lightBuffer, FrameBuffer* gBuffer, const SpotLight& light, const Transform& transform, const Camera& camera) {
+        LightBatch::Instance* iData = (LightBatch::Instance*)spotLightBatch.instanceBuffer->next();
 
-            Transform directionTransform;
-            directionTransform.rotation = transform.rotation;
-            glm::vec3 direction = directionTransform.calculateLocalMatrix() * glm::vec4(1, 0, 0, 1);
-            dc->shaderState->set("uDirection", direction);
+        Transform positionTransform;
+        positionTransform.decompose(transform.getMatrix());
 
-            std::vector<int> textureSlots;
-            for (int i = 0; i < dc->textures.size(); i++) {
-                textureSlots.push_back(i);
-            }
-            dc->shaderState->set("uTextures", textureSlots.data(), textureSlots.size());
-            dc->shaderState->set("uEyePosition", eyePosition);
+        Transform directionTransform;
+        directionTransform.rotation = positionTransform.rotation;
+        glm::vec3 direction = directionTransform.calculateLocalMatrix() * glm::vec4(1, 0, 0, 1);
+
+        Transform coneTransform;
+        coneTransform.position = positionTransform.position;
+        float scale = glm::tan(glm::radians(light.spotAngle)) * 3.0f;
+        coneTransform.scale = glm::vec3(1, scale, scale) * light.range;
+        coneTransform.rotation = positionTransform.rotation;
+
+        Transform offset;
+        offset.position.x = -0.5f;
+        offset.rotation.z = glm::radians(-90.0f);
+        glm::mat4 coneMatrix = coneTransform.calculateLocalMatrix() * offset.calculateLocalMatrix();
+
+        if (env->renderSettings->enableFrustumCulling && !frustum.inFrustum(coneMatrix, coneMesh.get())) {
             return true;
         }
-        case Light::POINT_LIGHT: {
-            Transform positionTransform;
-            positionTransform.decompose(transform.getMatrix());
 
-            Transform sphereTransform;
-            sphereTransform.position = positionTransform.position;
-            sphereTransform.scale = glm::vec3(1.1, 1.1, 1.1) * light.range;
-            glm::mat4 sphereMatrix = sphereTransform.calculateLocalMatrix();
+        coneMatrix = camera.viewProjection * coneMatrix;
 
-            Transform directionTransform;
-            directionTransform.rotation = transform.rotation;
-            glm::vec3 direction = directionTransform.calculateLocalMatrix() * glm::vec4(1, 0, 0, 1);
-            
-            if (env->renderSettings->enableFrustumCulling && !frustum.inFrustum(sphereMatrix, sphereMesh.get())) {
-                return true;
-            }
-
-            sphereMatrix = camera.viewProjection * sphereMatrix;
-
-            LightBatch::Instance* iData = (LightBatch::Instance*)pointLightBatch.instanceBuffer->next();
-            iData->transform = sphereMatrix;
-            iData->position = positionTransform.position;
-            iData->direction = direction;
-            iData->color = light.color;
-            iData->intensity = light.intensity;
-            iData->range = light.range;
-            iData->falloff = light.falloff;
-            iData->spotAngle = glm::radians(light.spotAngle);
-            return true;
-        }
-        case Light::SPOT_LIGHT: {
-            LightBatch::Instance* iData = (LightBatch::Instance*)spotLightBatch.instanceBuffer->next();
-
-            Transform positionTransform;
-            positionTransform.decompose(transform.getMatrix());
-
-            Transform directionTransform;
-            directionTransform.rotation = positionTransform.rotation;
-            glm::vec3 direction = directionTransform.calculateLocalMatrix() * glm::vec4(1, 0, 0, 1);
-
-            Transform coneTransform;
-            coneTransform.position = positionTransform.position;
-            float scale = glm::tan(glm::radians(light.spotAngle)) * 3.0f;
-            coneTransform.scale = glm::vec3(1, scale, scale) * light.range;
-            coneTransform.rotation = positionTransform.rotation;
-            
-            Transform offset;
-            offset.position.x = -0.5f;
-            offset.rotation.z = glm::radians(-90.0f);
-            glm::mat4 coneMatrix = coneTransform.calculateLocalMatrix() * offset.calculateLocalMatrix();
-
-            if (env->renderSettings->enableFrustumCulling && !frustum.inFrustum(coneMatrix, coneMesh.get())) {
-                return true;
-            }
-
-            coneMatrix = camera.viewProjection * coneMatrix;
-
-            iData->transform = coneMatrix;
-            iData->position = positionTransform.position;
-            iData->direction = direction;
-            iData->color = light.color;
-            iData->intensity = light.intensity;
-            iData->range = light.range;
-            iData->falloff = light.falloff;
-            iData->spotAngle = glm::radians(light.spotAngle);
-            return true;
-        }
-        default:
-            return false;
-        }
+        iData->transform = coneMatrix;
+        iData->position = positionTransform.position;
+        iData->direction = direction;
+        iData->color = light.color;
+        iData->intensity = light.intensity;
+        iData->range = light.range;
+        iData->falloff = light.falloff;
+        iData->spotAngle = glm::radians(light.spotAngle);
+        return true;
     }
 
     void Renderer::submitBloom() {

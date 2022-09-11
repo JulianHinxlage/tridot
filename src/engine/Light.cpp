@@ -7,20 +7,17 @@
 
 namespace tri {
 
-	TRI_CLASS(Light::Type);
-	TRI_ENUM4(Light::Type, AMBIENT_LIGHT, DIRECTIONAL_LIGHT, POINT_LIGHT, SPOT_LIGHT);
+	TRI_COMPONENT_CATEGORY(AmbientLight, "Light");
+	TRI_PROPERTIES2(AmbientLight, color, intensity);
 
-	TRI_COMPONENT(Light);
-	TRI_PROPERTIES6(Light, type, color, intensity, range, falloff, spotAngle);
-	TRI_PROPERTY_RANGE(Light, spotAngle, 0, 90);
+	TRI_COMPONENT_CATEGORY(DirectionalLight, "Light");
+	TRI_PROPERTIES2(DirectionalLight, color, intensity);
 
-	Light::Light() {
-		type = AMBIENT_LIGHT;
-		color = color::white;
-		intensity = 0.5;
-		range = 5;
-		falloff = 2;
-		spotAngle = 15;
-	}
+	TRI_COMPONENT_CATEGORY(PointLight, "Light");
+	TRI_PROPERTIES4(PointLight, color, intensity, range, falloff);
+
+	TRI_COMPONENT_CATEGORY(SpotLight, "Light");
+	TRI_PROPERTIES5(SpotLight, color, intensity, range, falloff, spotAngle);
+	TRI_PROPERTY_RANGE(SpotLight, spotAngle, 0, 90);
 
 }

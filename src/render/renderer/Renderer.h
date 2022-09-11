@@ -95,7 +95,11 @@ namespace tri {
 		void submitMeshes();
 		void submitBatches(Camera& c);
 		void submitLights(const Camera &camera);
-		bool submitLight(FrameBuffer* lightBuffer, FrameBuffer* gBuffer, const Light &light, const Transform& transform, const Camera& camera);
+		bool submitLight(FrameBuffer* lightBuffer, FrameBuffer* gBuffer, const AmbientLight& light, const Transform& transform, const Camera& camera);
+		bool submitLight(FrameBuffer* lightBuffer, FrameBuffer* gBuffer, const DirectionalLight& light, const Transform& transform, const Camera& camera);
+		bool submitLight(FrameBuffer* lightBuffer, FrameBuffer* gBuffer, const PointLight& light, const Transform& transform, const Camera& camera);
+		bool submitLight(FrameBuffer* lightBuffer, FrameBuffer* gBuffer, const SpotLight& light, const Transform& transform, const Camera& camera);
+
 		void submitPointLightBatch();
 		void submitSpotLightBatch();
 		void submitBloom();
