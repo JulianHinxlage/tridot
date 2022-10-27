@@ -33,6 +33,9 @@ namespace tri {
 		if (module->runtimeName == file) {
 			return true;
 		}
+		if (module->runtimeFile == file) {
+			return true;
+		}
 		if (module->runtimePath == file) {
 			return true;
 		}
@@ -147,6 +150,9 @@ namespace tri {
 				env->moduleManager->loadModule(path, true);
 			});
 		}
+
+		//a short delay prevents the crash handler from crashing when this module is unloaded
+		std::this_thread::sleep_for(std::chrono::milliseconds(10));
 
 		currentlyLoading = nullptr;
 		return module.get();

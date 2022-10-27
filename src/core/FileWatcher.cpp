@@ -19,8 +19,8 @@ namespace tri {
 				for (auto& file : files) {
 					uint64_t time = 0;
 					try {
-						if (std::filesystem::exists(file.path)) {
-							time = std::filesystem::last_write_time(file.path).time_since_epoch().count();
+						if (std::filesystem::exists(file.absolutePath)) {
+							time = std::filesystem::last_write_time(file.absolutePath).time_since_epoch().count();
 						}
 						if (time != file.time) {
 							file.time = time;
@@ -40,8 +40,8 @@ namespace tri {
 		file.path = path;
 		file.onChange = onChange;
 		if (std::filesystem::exists(file.path)) {
-			file.path = std::filesystem::absolute(path).string();
-			file.time = std::filesystem::last_write_time(file.path).time_since_epoch().count();
+			file.absolutePath = std::filesystem::absolute(path).string();
+			file.time = std::filesystem::last_write_time(file.absolutePath).time_since_epoch().count();
 		}
 		files.push_back(file);
 	}

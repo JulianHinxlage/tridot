@@ -155,7 +155,7 @@ namespace tri {
 							EntityId propId = seq.entityId == -1 ? id : seq.entityId;
 
 							void* prop = prev->value.getProperty(propId, env->world);
-							if (key->value.value.classId >= 0) {
+							if (prop && key->value.value.classId >= 0) {
 								setProperty(key->value.value.classId, prop, prev->value.value.get(), key->value.value.get(), factor, key->blend);
 							}
 						}

@@ -20,6 +20,7 @@ namespace tri {
 		class File {
 		public:
 			std::string path;
+			std::string absolutePath;
 			std::function<void(const std::string&)> onChange;
 			uint64_t time;
 		};
