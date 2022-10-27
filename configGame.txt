@@ -11,7 +11,6 @@ loadModule TridotDebugMenu
 loadModule TridotRender
 loadModule TridotPhysics
 loadModule TridotAnimation
-loadModule TridotTest
 
 windowWidth = 1600
 windowHeight = 900
