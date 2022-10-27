@@ -107,6 +107,9 @@ namespace tri {
 		}
 
 		static const ClassDescriptor* getDescriptor(int classId) {
+			if (classId < 0 || classId >= getDescriptorsImpl().size()) {
+				return nullptr;
+			}
 			return getDescriptorsImpl()[classId];
 		}
 		

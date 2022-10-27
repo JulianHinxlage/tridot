@@ -20,7 +20,6 @@ namespace tri {
 
 	class AssetBrowser : public UIWindow {
 	public:
-		std::unordered_map<std::string, int> fileAssosiations;
 		std::mutex mutex;
 		double checkTimeInterval = 4;
 
@@ -36,14 +35,13 @@ namespace tri {
 		void init() override {
 			env->systemManager->addSystem<Editor>();
 			env->uiManager->addWindow<AssetBrowser>("Asset Browser");
-			fileAssosiations = {
-				{".glsl", Reflection::getClassId<Shader>() },
-				{".png", Reflection::getClassId<Texture>() },
-				{".jpg", Reflection::getClassId<Texture>() },
-				{".mat", Reflection::getClassId<Material>() },
-				{".obj", Reflection::getClassId<Mesh>() },
-				{".tmap", Reflection::getClassId<World>() },
-			};
+			
+			env->editor->fileAssosiations[".glsl"] = Reflection::getClassId<Shader>();
+			env->editor->fileAssosiations[".png"] = Reflection::getClassId<Texture>();
+			env->editor->fileAssosiations[".jpg"] = Reflection::getClassId<Texture>();
+			env->editor->fileAssosiations[".mat"] = Reflection::getClassId<Material>();
+			env->editor->fileAssosiations[".obj"] = Reflection::getClassId<Mesh>();
+			env->editor->fileAssosiations[".tmap"] = Reflection::getClassId<World>();
 		}
 
 		void updateTreeStep(Node &parent) {
@@ -94,8 +92,8 @@ namespace tri {
 
 		void file(const std::string& name, const std::string& path) {
 			int id = -1;
-			auto i = fileAssosiations.find(std::filesystem::path(name).extension().string());
-			if (i != fileAssosiations.end()) {
+			auto i = env->editor->fileAssosiations.find(std::filesystem::path(name).extension().string());
+			if (i != env->editor->fileAssosiations.end()) {
 				id = i->second;
 			}
 			if (id != -1) {

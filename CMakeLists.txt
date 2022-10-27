@@ -94,7 +94,7 @@ file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS src/editor/*.cpp)
 add_library(${PROJECT_NAME} SHARED ${SOURCES})
 target_precompile_headers(${PROJECT_NAME} PUBLIC src/pch.h)
 target_include_directories(${PROJECT_NAME} PRIVATE src/editor)
-target_link_libraries(${PROJECT_NAME} PUBLIC TridotCore TridotWindow TridotEntity TridotEngine TridotRender)
+target_link_libraries(${PROJECT_NAME} PUBLIC TridotCore TridotWindow TridotEntity TridotEngine TridotRender TridotAnimation)
 
 #Tridot Render
 project(TridotRender)
@@ -113,6 +113,22 @@ target_include_directories(${PROJECT_NAME} PRIVATE src/physics extern/bullet3/sr
 add_subdirectory(extern/bullet3)
 target_link_libraries(${PROJECT_NAME} PUBLIC TridotCore TridotEngine BulletDynamics BulletCollision LinearMath)
 
+#Tridot Animation
+project(TridotAnimation)
+file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS src/animation/*.cpp)
+add_library(${PROJECT_NAME} SHARED ${SOURCES})
+target_precompile_headers(${PROJECT_NAME} PUBLIC src/pch.h)
+target_include_directories(${PROJECT_NAME} PRIVATE src/animation)
+target_link_libraries(${PROJECT_NAME} PUBLIC TridotCore TridotEntity TridotEngine)
+
+#Tridot Animation Editor
+project(TridotAnimationEditor)
+file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS src/animationEditor/*.cpp)
+add_library(${PROJECT_NAME} SHARED ${SOURCES})
+target_precompile_headers(${PROJECT_NAME} PUBLIC src/pch.h)
+target_include_directories(${PROJECT_NAME} PRIVATE src/animationEditor)
+target_link_libraries(${PROJECT_NAME} PUBLIC TridotCore TridotAnimation TridotEditorLib)
+
 
 #Tridot Test
 project(TridotTest)
@@ -129,7 +145,7 @@ add_executable(${PROJECT_NAME} ${SOURCES})
 target_precompile_headers(${PROJECT_NAME} PUBLIC src/pch.h)
 target_include_directories(${PROJECT_NAME} PUBLIC src src/launch/editor)
 target_link_libraries(${PROJECT_NAME} PUBLIC TridotCore)
-add_dependencies(${PROJECT_NAME} TridotWindow TridotEntity TridotEditorLib TridotDebugMenu TridotEngine TridotRender TridotPhysics TridotTest)
+add_dependencies(${PROJECT_NAME} TridotWindow TridotEntity TridotEditorLib TridotDebugMenu TridotEngine TridotRender TridotPhysics TridotTest TridotAnimation TridotAnimationEditor)
 
 #Tridot Game Executable
 project(TridotGame)
@@ -138,7 +154,7 @@ add_executable(${PROJECT_NAME} ${SOURCES})
 target_precompile_headers(${PROJECT_NAME} PUBLIC src/pch.h)
 target_include_directories(${PROJECT_NAME} PUBLIC src src/launcher/game)
 target_link_libraries(${PROJECT_NAME} PUBLIC TridotCore TridotEngine)
-add_dependencies(${PROJECT_NAME} TridotWindow TridotEntity TridotDebugMenu TridotEngine TridotRender TridotPhysics TridotTest)
+add_dependencies(${PROJECT_NAME} TridotWindow TridotEntity TridotDebugMenu TridotEngine TridotRender TridotPhysics TridotTest TridotAnimation)
 
 #Fat Launcher Binary
 project(TridotGameFull)

@@ -20,6 +20,7 @@ namespace tri {
 		UndoSystem* undo;
 		SelectionContext* selectionContext;
 		EntityOperations* entityOperations;
+		std::unordered_map<std::string, int> fileAssosiations;
 
 		EntityId dragEntityId = -1;
 		bool propertiesNoContext = false;

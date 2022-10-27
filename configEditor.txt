@@ -11,6 +11,8 @@ loadModule TridotDebugMenu
 loadModule TridotRender
 loadModule TridotEditorLib
 loadModule TridotPhysics
+loadModule TridotAnimation
+loadModule TridotAnimationEditor
 loadModule TridotTest
 
 windowWidth = 1920
