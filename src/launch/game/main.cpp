@@ -8,7 +8,7 @@ using namespace tri;
 
 int main(int argc, char* argv[]) {
     MainLoop::init();
-    env->config->loadConfigSearchList({ "configGame.txt", "../configGame.txt" });
+    env->config->loadConfigFileFirstFound({ "configGame.txt", "../configGame.txt", "../../configGame.txt" });
     MainLoop::startup();
 
     //wait for all assets to be loaded before starting the scene

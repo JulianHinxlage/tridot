@@ -46,6 +46,12 @@ namespace tri {
 				env->moduleManager->unloadModule(args[0], isPostStartup);
 			}
 		});
+		env->console->addCommand("addModuleDirectory", [&](auto& args) {
+			if (args.size() > 0) {
+				env->moduleManager->addModuleDirectory(args[0]);
+			}
+		});
+
 		env->console->addCommand("loadConfig", [&](auto& args) {
 			if (args.size() > 0) {
 				loadConfigFile(args[0]);
@@ -76,15 +82,32 @@ namespace tri {
 			return;
 		}
 		env->console->info("loading config file \"%s\"", file.c_str());
+
 		std::string config = StrUtil::readFile(file);
-		for (auto& line : StrUtil::split(config, "\n", false)) {
+
+		std::filesystem::path currentPath = std::filesystem::current_path();
+		std::filesystem::current_path(std::filesystem::path(file).parent_path());
+		
+		bool isOriginalPath = originalPath.empty();
+		if (isOriginalPath) {
+			originalPath = currentPath.string();
+		}
+
+		for (auto line : StrUtil::split(config, "\n", false)) {
 			if (line.size() > 0 && line[0] != '#') {
+				line = StrUtil::replace(line, "$", originalPath);
 				env->console->executeCommand(line);
 			}
 		}
+
+		if (isOriginalPath) {
+			originalPath = "";
+		}
+
+		std::filesystem::current_path(currentPath);
 	}
 
-	void Config::loadConfigSearchList(const std::vector<std::string>& fileList) {
+	void Config::loadConfigFileFirstFound(const std::vector<std::string>& fileList) {
 		for (auto& file : fileList) {
 			if (std::filesystem::exists(file)) {
 				loadConfigFile(file);

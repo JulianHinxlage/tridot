@@ -44,6 +44,8 @@ namespace tri {
 
 	void ModuleManager::init() {
 		currentlyLoading = nullptr;
+		addModuleDirectory(std::filesystem::current_path().string());
+
 		env->eventManager->onClassRegister.addListener([this](int classId) {
 			auto name = getModuleNameByAddress(Reflection::getDescriptor(classId)->registrationSourceAddress);
 			if (!getModule(name)) {
@@ -60,6 +62,41 @@ namespace tri {
 		});
 	}
 
+	void ModuleManager::addModuleDirectory(const std::string& directory) {
+		std::string path = std::filesystem::absolute(directory).string();
+		
+#if TRI_WINDOWS
+		path = StrUtil::toLower(path);
+#endif
+
+		if (!std::filesystem::exists(path)) {
+			env->console->warning("module directory %s not found", directory.c_str());
+		}
+		else {
+			if (!path.empty() && path.back() != '/' && path.back() != '\\') {
+				moduleDirectories.push_back(path + "/");
+			}
+			else {
+				moduleDirectories.push_back(path);
+			}
+		}
+	}
+
+	void ModuleManager::removeModuleDirectory(const std::string& directory) {
+		std::string path = std::filesystem::absolute(directory).string();
+		for (int i = 0; i < moduleDirectories.size(); i++) {
+			auto& dir = moduleDirectories[i];
+			if (directory == dir || path == dir) {
+				moduleDirectories.erase(moduleDirectories.begin() + i);
+				break;
+			}
+		}
+	}
+
+	const std::vector<std::string>& ModuleManager::getModuleDirectories() {
+		return moduleDirectories;
+	}
+
 	Module* ModuleManager::loadModule(const std::string& name, bool pending) {
 		if (pending) {
 			pendingLoads.push_back(name);
@@ -67,12 +104,21 @@ namespace tri {
 		}
 		
 		std::string filePath = name;
-		if (std::filesystem::path(name).extension() == "") {
+		if (std::filesystem::path(filePath).extension() == "") {
 #if TRI_WINDOWS
-			filePath = name + ".dll";
+			filePath = filePath + ".dll";
 #else
-			filePath = name + ".so";
+			filePath = filePath + ".so";
 #endif
+		}
+
+		if (!std::filesystem::exists(filePath)) {
+			for (auto& dir : moduleDirectories) {
+				if (std::filesystem::exists(dir + filePath)) {
+					filePath = dir + filePath;
+					break;
+				}
+			}
 		}
 
 		TRI_PROFILE_FUNC();
@@ -144,7 +190,7 @@ namespace tri {
 		env->eventManager->onModuleLoad.invoke(module->name);
 
 		if (enableModuleHotReloading) {
-			env->fileWatcher->addFile(module->path, [](const std::string& path) {
+			env->fileWatcher->addFile(module->path, [&](const std::string& path) {
 				env->console->info("reloading module \"%s\"", std::filesystem::path(path).filename().stem().string().c_str());
 				env->moduleManager->unloadModule(path, true);
 				env->moduleManager->loadModule(path, true);

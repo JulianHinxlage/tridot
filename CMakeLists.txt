@@ -36,9 +36,7 @@ else()
 endif()
 
 if (NOT CMAKE_BUILD_TYPE MATCHES "Release")
-    target_compile_definitions(${PROJECT_NAME} PUBLIC TRI_PROFILE_ENABLED TRACY_ENABLE TRI_DEBUG)
-else()
-    target_compile_definitions(${PROJECT_NAME} PUBLIC TRI_RELEASE)
+    target_compile_definitions(${PROJECT_NAME} PUBLIC TRI_PROFILE_ENABLED TRACY_ENABLE)
 endif()
 
 

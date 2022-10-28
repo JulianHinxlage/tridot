@@ -34,7 +34,7 @@ namespace tri {
 #endif
 
         if (!std::filesystem::exists(path)) {
-            env->console->warning("asset directory %s not found", path.c_str());
+            env->console->warning("asset directory %s not found", directory.c_str());
         }
         else {
             if(path.size() > 0 && (path.back() == '/' || path.back() == '\\')){

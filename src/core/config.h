@@ -16,11 +16,12 @@ namespace tri {
 	public:
 		void init() override;
 		void loadConfigFile(const std::string& file);
-		void loadConfigSearchList(const std::vector<std::string>& fileList);
+		void loadConfigFileFirstFound(const std::vector<std::string>& fileList);
 
 	private:
 		std::vector<std::string> postStartupCommands;
 		bool isPostStartup = false;
+		std::string originalPath;
 	};
 
 }
@@ -69,3 +70,5 @@ namespace tri::impl {
 #else
 #define TRI_ASSERT(expr, msg)
 #endif
+
+#define TRI_CRASH *(int*)nullptr = 0;

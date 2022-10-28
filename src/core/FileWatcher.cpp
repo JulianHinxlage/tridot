@@ -36,11 +36,17 @@ namespace tri {
 	}
 
 	void FileWatcher::addFile(const std::string& path, const std::function<void(const std::string&)>& onChange) {
+		std::string absolutePath = std::filesystem::absolute(path).string();
+		for (auto& file : files) {
+			if (file.path == path || file.absolutePath == absolutePath) {
+				return;
+			}
+		}
 		File file;
 		file.path = path;
 		file.onChange = onChange;
 		if (std::filesystem::exists(file.path)) {
-			file.absolutePath = std::filesystem::absolute(path).string();
+			file.absolutePath = absolutePath;
 			file.time = std::filesystem::last_write_time(file.absolutePath).time_since_epoch().count();
 		}
 		files.push_back(file);

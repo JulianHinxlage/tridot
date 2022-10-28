@@ -32,6 +32,10 @@ namespace tri {
 		void unloadModule(Module *module, bool pending = true);
 		void performePending();
 
+		void addModuleDirectory(const std::string& directory);
+		void removeModuleDirectory(const std::string &directory);
+		const std::vector<std::string>& getModuleDirectories();
+
 		const std::vector<std::shared_ptr<Module>> &getModules();
 		static std::string getModuleNameByAddress(void* address);
 	private:
@@ -39,6 +43,7 @@ namespace tri {
 		std::vector<std::string> pendingLoads;
 		std::vector<std::string> pendingUnloads;
 		Module* currentlyLoading;
+		std::vector<std::string> moduleDirectories;
 	};
 
 }

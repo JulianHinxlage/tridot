@@ -154,7 +154,7 @@ namespace tri {
 				}
 			}
 			else {
-				info("Command or CVar \"%s\" not found", name.c_str());
+				warning("Command or CVar \"%s\" not found", name.c_str());
 			}
 		}
 	}

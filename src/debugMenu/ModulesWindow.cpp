@@ -28,12 +28,14 @@ namespace tri {
 					ImGui::Separator();
 					if (ImGui::BeginPopup("load")) {
 
-						for (auto& file : std::filesystem::directory_iterator(".")) {
-							if (file.is_regular_file()) {
-								if (file.path().extension() == ".dll") {
+						for (auto& dir : env->moduleManager->getModuleDirectories()) {
+							for (auto& file : std::filesystem::directory_iterator(dir)) {
+								if (file.is_regular_file()) {
+									if (file.path().extension() == ".dll") {
 
-									if (ImGui::Selectable(file.path().filename().string().c_str())) {
-										env->moduleManager->loadModule(file.path().filename().string(), true);
+										if (ImGui::Selectable(file.path().filename().string().c_str())) {
+											env->moduleManager->loadModule(file.path().filename().string(), true);
+										}
 									}
 								}
 							}
