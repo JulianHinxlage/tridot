@@ -100,6 +100,7 @@ namespace tri {
 
         std::vector<std::string> searchDirectories;
         std::unordered_map<std::string, AssetRecord> assets;
+        std::unordered_map<std::string, std::string> minimalPathLookupTable;
 
         std::vector<int> threadIds;
         bool running;

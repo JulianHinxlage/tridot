@@ -91,11 +91,21 @@ namespace tri {
         static std::mutex mutex;
         std::unique_lock<std::mutex> lock(mutex);
 
+        std::string minimalPath;
+        auto lookup = minimalPathLookupTable.find(file);
+        if (lookup != minimalPathLookupTable.end()) {
+            minimalPath = lookup->second;
+        }
+        else {
 #if TRI_WINDOWS
-        std::string minimalPath = minimalFilePath(StrUtil::toLower(file));
+            minimalPath = minimalFilePath(StrUtil::toLower(file));
 #else
-        std::string minimalPath = minimalFilePath(file);
+            minimalPath = minimalFilePath(file);
 #endif
+            minimalPathLookupTable[file] = minimalPath;
+        }
+
+
         auto x = assets.find(minimalPath);
         if(x != assets.end()){
             if(x->second.typeId == typeId){

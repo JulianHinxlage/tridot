@@ -178,8 +178,8 @@ else()
 endif()
 
 
-
-
 #folders
 set_target_properties(TridotCore TridotWindow TridotEntity TridotEngine TridotDebugMenu TridotRender TridotEditorLib TridotEditor TridotGame TridotGameFull PROPERTIES FOLDER Tridot)
 set_target_properties(glfw uninstall PROPERTIES FOLDER Libs)
+
+project(Tridot)

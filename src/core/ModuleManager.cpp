@@ -173,7 +173,7 @@ namespace tri {
 		TRI_PROFILE("loadDLL");
 		module->handle = (void*)LoadLibrary(runtimePath.c_str());
 		if (!module->handle) {
-			env->console->info("faild to load module \"%s\" (code %i)", name.c_str(), GetLastError());
+			env->console->warning("faild to load module \"%s\" (code %i)", name.c_str(), GetLastError());
 		}
 #else
 		TRI_PROFILE("loadSharedLibrary");
@@ -242,6 +242,10 @@ namespace tri {
 
 				TRI_PROFILE_FUNC();
 				TRI_PROFILE_INFO(m->file.c_str(), m->file.size());
+
+				for (auto* autoLoaded : module->autoLoaded) {
+					unloadModule(autoLoaded, false);
+				}
 
 				env->eventManager->onModuleUnload.invoke(module->name);
 

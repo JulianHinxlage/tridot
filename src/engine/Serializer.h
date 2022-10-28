@@ -12,9 +12,13 @@ namespace tri {
 
 	class SerialData {
 	public:
-		YAML::Node node;
+		YAML::Node ownigNode;
+		YAML::Node& node;
 		std::shared_ptr<YAML::Emitter> emitter;
 		std::shared_ptr<std::ostream> stream;
+
+		SerialData() : node(ownigNode) {}
+		SerialData(YAML::Node& node) : node(node) {}
 	};
 
 	class Serializer : public System {

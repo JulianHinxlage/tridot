@@ -115,8 +115,7 @@ namespace tri {
 					desc->vectorInsert(ptr, index, nullptr);
 					void* element = desc->vectorGet(ptr, index);
 					index++;
-					SerialData d;
-					d.node = (YAML::Node)node;
+					SerialData d(node);
 					deserializeClass(desc->elementType->classId, element, d);
 				}
 				return;
@@ -125,8 +124,7 @@ namespace tri {
 			for (auto& prop : desc->properties) {
 				if (data.node.IsMap()) {
 					if (auto i = data.node[prop.name]) {
-						SerialData d;
-						d.node = i;
+						SerialData d(i);
 						deserializeClass(prop.type->classId, (uint8_t*)ptr + prop.offset, d);
 					}
 				}
@@ -162,8 +160,7 @@ namespace tri {
 				auto* desc = Reflection::getDescriptor(i.first.Scalar());
 				if (desc) {
 					void* comp = world->addComponent(id, desc->classId);
-					SerialData d;
-					d.node = i.second;
+					SerialData d(i.second);
 					deserializeClass(desc->classId, comp, d);
 				}
 				else {
@@ -231,8 +228,7 @@ namespace tri {
 		if (auto body = data.node["Body"]) {
 			for (auto entity : body) {
 				if (entity) {
-					SerialData d;
-					d.node = (YAML::Node)entity;
+					SerialData d(entity);
 					deserializeEntity(world, d);
 				}
 			}
@@ -257,22 +253,25 @@ namespace tri {
 
 
 	void Serializer::serializeWorld(World* world, const std::string& file) {
+		Clock clock;
 		SerialData data;
 		//saveToFile(data, file);
 		std::ofstream stream(file);
 		data.emitter = std::make_shared<YAML::Emitter>(stream);
 		serializeWorld(world, data);
-		env->console->info("save world to \"%s\"", file.c_str());
+		env->console->info("saving world to \"%s\" took %f s", std::filesystem::path(file).filename().string().c_str(), clock.elapsed());
 	}
 
 	bool Serializer::deserializeWorld(World* world, const std::string& file) {
 		if (std::filesystem::exists(file)) {
+			Clock clock;
 			SerialData data;
 			if (!loadFromFile(data, file)) {
 				env->console->warning("failed to load file %s", file.c_str());
 				return false;
 			}
 			deserializeWorld(world, data);
+			env->console->info("loading world \"%s\" took %f s", std::filesystem::path(file).filename().string().c_str(), clock.elapsed());
 		}
 		else {
 			env->console->warning("file %s not found", file.c_str());

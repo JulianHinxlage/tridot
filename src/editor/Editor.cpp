@@ -345,14 +345,12 @@ namespace tri {
 	}
 
 	void Editor::saveMap(const std::string& file) {
-		Clock clock;
 		if (env->runtimeMode->getMode() != RuntimeMode::EDIT) {
 			env->serializer->serializeWorld(playBuffer, file);
 		}
 		else {
 			env->serializer->serializeWorld(env->world, file);
 		}
-		env->console->info("save world took %f s", clock.elapsed());
 	}
 
 }
