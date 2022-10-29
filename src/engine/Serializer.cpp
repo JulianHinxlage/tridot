@@ -249,7 +249,7 @@ namespace tri {
 		}
 
 		if (prefab->getChilds().size() > 0) {
-			*data.emitter << YAML::Key << "childs" << YAML::Value;
+			*data.emitter << YAML::Key << "Childs" << YAML::Value;
 			*data.emitter << YAML::BeginSeq;
 			for (auto& child : prefab->getChilds()) {
 				if (child) {
@@ -264,8 +264,7 @@ namespace tri {
 
 	void Serializer::deserializePrefab(Prefab* prefab, SerialData& data) {
 		for (auto i : data.node) {
-
-			if (i.first.Scalar() != "childs") {
+			if (i.first.Scalar() != "Childs") {
 				auto* desc = Reflection::getDescriptor(i.first.Scalar());
 				if (desc) {
 					void *comp = prefab->addComponent(desc->classId);
@@ -275,7 +274,7 @@ namespace tri {
 			}
 		}
 
-		if (auto childs = data.node["childs"]) {
+		if (auto childs = data.node["Childs"]) {
 			for (auto i : childs) {
 				SerialData d(i);
 				deserializePrefab(prefab->addChild(), d);

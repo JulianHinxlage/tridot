@@ -16,6 +16,8 @@ namespace tri {
 		void init() override;
 
 		EntityId duplicateEntity(EntityId id, World *world = nullptr);
+		void duplicateSelection();
+
 		void copyEntity(EntityId id, World* world = nullptr);
 		EntityId pastEntity(World* world = nullptr);
 		void removeEntity(EntityId id, World* world = nullptr);

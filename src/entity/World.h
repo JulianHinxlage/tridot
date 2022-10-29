@@ -59,6 +59,11 @@ namespace tri {
 		}
 
 		template<typename Component>
+		Component* getComponentPending(EntityId id) {
+			return (Component*)getComponentPending(id, Reflection::getClassId<Component>());
+		}
+
+		template<typename Component>
 		bool hasComponent(EntityId id) {
 			return hasComponent(id, Reflection::getClassId<Component>());
 		}

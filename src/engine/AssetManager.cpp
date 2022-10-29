@@ -149,6 +149,7 @@ namespace tri {
         }
 
         if((record.options & SYNCHRONOUS) || !asynchronousEnabled) {
+            lock.unlock();
             load(record);
             loadActivate(record);
         }else{

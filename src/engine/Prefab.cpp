@@ -5,6 +5,7 @@
 #include "pch.h"
 #include "Prefab.h"
 #include "Serializer.h"
+#include "Transform.h"
 
 namespace tri {
 
@@ -15,11 +16,11 @@ namespace tri {
 			world = env->world;
 		}
 		EntityId id = world->addEntity(hint);
-		copyIntoEntity(id, world);
+		copyIntoEntity(id, world, true);
 		return id;
 	}
 
-	void Prefab::copyEntity(EntityId id, World* world) {
+	void Prefab::copyEntity(EntityId id, World* world, bool includeChilds) {
 		if (!world) {
 			world = env->world;
 		}
@@ -32,9 +33,14 @@ namespace tri {
 				}
 			}
 		}
+		if (includeChilds && world == env->world) {
+			for (auto &child : Transform::getChilds(id)) {
+				addChild()->copyEntity(child, world, includeChilds);
+			}
+		}
 	}
 
-	void Prefab::copyIntoEntity(EntityId id, World* world) {
+	void Prefab::copyIntoEntity(EntityId id, World* world, bool includeChilds) {
 		if (!world) {
 			world = env->world;
 		}
@@ -45,6 +51,17 @@ namespace tri {
 			}
 			else {
 				world->addComponent(id, classId, components[i].data);
+			}
+		}
+		if (includeChilds) {
+			for (auto& child : childs) {
+				if (child) {
+					EntityId childId = world->addEntity();
+					child->copyIntoEntity(childId, world, includeChilds);
+					if (Transform* t = world->getComponentPending<Transform>(childId)) {
+						t->parent = id;
+					}
+				}
 			}
 		}
 	}

@@ -228,13 +228,7 @@ namespace tri {
 					}
 				}
 				if (env->input->pressed('D')) {
-					env->editor->undo->beginAction();
-					auto selected = env->editor->selectionContext->getSelected();
-					env->editor->selectionContext->unselectAll();
-					for (EntityId id : selected) {
-						env->editor->selectionContext->select(env->editor->entityOperations->duplicateEntity(id), false);
-					}
-					env->editor->undo->endAction();
+					env->editor->entityOperations->duplicateSelection();
 				}
 			}
 			if (env->input->pressed(Input::KEY_DELETE)) {

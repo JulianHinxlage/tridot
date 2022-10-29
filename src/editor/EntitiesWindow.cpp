@@ -530,20 +530,12 @@ namespace tri {
 					env->editor->selectionContext->select(env->editor->entityOperations->pastEntity());
 				}
 				if (ImGui::MenuItem("Duplicate", "Ctrl+D")) {
-
 					if (env->editor->selectionContext->isSelected(id)) {
-						env->editor->undo->beginAction();
-						auto selected = env->editor->selectionContext->getSelected();
-						env->editor->selectionContext->unselectAll();
-						for (EntityId id : selected) {
-							env->editor->selectionContext->select(env->editor->entityOperations->duplicateEntity(id), false);
-						}
-						env->editor->undo->endAction();
+						env->editor->entityOperations->duplicateSelection();
 					}
 					else {
 						env->editor->selectionContext->select(env->editor->entityOperations->duplicateEntity(id));
 					}
-
 				}
 				bool canParent = (env->editor->selectionContext->isSelected(id) && env->editor->selectionContext->isMultiSelection())
 					|| !env->editor->selectionContext->isSelected(id);
@@ -568,6 +560,12 @@ namespace tri {
 					else {
 						env->editor->entityOperations->parentEntity(id, -1);
 					}
+				}
+				if (ImGui::MenuItem("Save as Prefab")) {
+					std::string file = env->editor->openFileDialog(".prefab", true);
+					Prefab prefab;
+					prefab.copyEntity(id, env->world, true);
+					prefab.save(file);
 				}
 				ImGui::EndPopup();
 			}

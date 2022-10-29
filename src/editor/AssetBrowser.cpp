@@ -143,6 +143,18 @@ namespace tri {
 							ImGui::EndPopup();
 						}
 					}
+					else if (id == Reflection::getClassId<Prefab>()) {
+						if (ImGui::BeginPopupContextItem()) {
+							if (ImGui::MenuItem("Add Entity")) {
+								auto prefab = env->assetManager->get<Prefab>(path, AssetManager::Options::SYNCHRONOUS);
+								if (prefab) {
+									EntityId id = prefab->createEntity(env->world);
+									env->editor->selectionContext->select(id);
+								}
+							}
+							ImGui::EndPopup();
+						}
+					}
 					else {
 						if (ImGui::BeginPopupContextItem()) {
 							if (ImGui::MenuItem("Load")) {

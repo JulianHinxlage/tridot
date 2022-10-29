@@ -25,6 +25,36 @@ namespace tri {
 		return newId;
 	}
 
+	void EntityOperations::duplicateSelection() {
+		if (env->editor->selectionContext->isMultiSelection()) {
+			std::map<EntityId, EntityId> idMap;
+
+			env->editor->undo->beginAction();
+			auto selected = env->editor->selectionContext->getSelected();
+			env->editor->selectionContext->unselectAll();
+			for (EntityId id : selected) {
+				EntityId newId = env->editor->entityOperations->duplicateEntity(id);
+				env->editor->selectionContext->select(newId, false);
+				idMap[id] = newId;
+			}
+			env->editor->undo->endAction();
+
+			for (auto& i : idMap) {
+				Transform* t = env->world->getComponentPending<Transform>(i.second);
+				if (t) {
+					auto j = idMap.find(t->parent);
+					if (j != idMap.end()) {
+						t->parent = j->second;
+					}
+				}
+			}
+		}
+		else if (env->editor->selectionContext->isSingleSelection()) {
+			EntityId id = env->editor->selectionContext->getSelected()[0];
+			env->editor->selectionContext->select(env->editor->entityOperations->duplicateEntity(id));
+		}
+	}
+
 	void EntityOperations::copyEntity(EntityId id, World* world) {
 		entityBuffer.copyEntity(id, world);
 		hasEntityInBuffer = true;

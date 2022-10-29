@@ -14,8 +14,8 @@ namespace tri {
 	class Prefab : public Asset {
 	public:
 		EntityId createEntity(World* world = nullptr, EntityId hint = -1);
-		void copyEntity(EntityId id, World* world = nullptr);
-		void copyIntoEntity(EntityId id, World* world = nullptr);
+		void copyEntity(EntityId id, World* world = nullptr, bool includeChilds = false);
+		void copyIntoEntity(EntityId id, World* world = nullptr, bool includeChilds = false);
 
 		template<typename T>
 		T* addComponent(const T& t = T()) {
