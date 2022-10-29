@@ -5,7 +5,7 @@
 #pragma once
 
 #include "pch.h"
-#include "entity/Prefab.h"
+#include "engine/Prefab.h"
 
 namespace tri {
 

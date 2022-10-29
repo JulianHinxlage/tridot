@@ -6,7 +6,7 @@
 
 #include "pch.h"
 #include "engine/MetaTypes.h"
-#include "entity/Prefab.h"
+#include "engine/Prefab.h"
 #include "engine/Asset.h"
 
 namespace tri {

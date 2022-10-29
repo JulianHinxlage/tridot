@@ -4,11 +4,13 @@
 
 #include "Map.h"
 #include "AssetManager.h"
-#include "Serializer.h"
+#include "engine/Serializer.h"
 #include "ComponentCache.h"
 #include "RuntimeMode.h"
 
 namespace tri {
+
+    TRI_ASSET(Map);
 
     void Map::setToActiveWorld() {
         if (world) {
@@ -63,6 +65,9 @@ namespace tri {
     }
 
     bool Map::save(const std::string& file) {
+        if (!world) {
+            world = std::make_shared<World>();
+        }
         env->serializer->serializeWorld(world.get(), file);
         return true;
     }

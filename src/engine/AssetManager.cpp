@@ -229,12 +229,20 @@ namespace tri {
         job->addSystem<AssetManager>();
         job->orderSystems({"Window", "AssetManager"});
 
+        env->console->addCVar("enableAssetHotReloading", &hotReloadEnabled);
         env->console->addCommand("addAssetDirectory", [](auto& args) {
             if (args.size() > 0) {
                 env->assetManager->addSearchDirectory(args[0]);
             }
         });
-        env->console->addCVar("enableAssetHotReloading", &hotReloadEnabled);
+        env->console->addCommand("waitForAllAssetsLoaded", [](auto& args) {
+            while (env->assetManager->isLoadingInProcess()) {
+                env->jobManager->tickJobs();
+                if (!env->console->getCVarValue("running", false)) {
+                    break;
+                }
+            }
+        });
     }
 
     void AssetManager::startup() {

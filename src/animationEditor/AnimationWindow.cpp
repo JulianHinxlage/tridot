@@ -90,62 +90,62 @@ namespace tri {
 		void tick() override {
 			if (env->window && env->window->inFrame()) {
 				if (ImGui::Begin("Animations", &active)) {
-					selection();
+					if (env->editor) {
+						selection();
 
-					if (ImGui::Button("Record")) {
-						recordEntityId = -1;
-						if (env->editor->selectionContext->isSingleSelection()) {
-							recordEntityId = env->editor->selectionContext->getSelected()[0];
-							animation = getAnimationFromEntity(recordEntityId);
-							if (animation && animation->timeline.size() > 0) {
-								currentFrame = animation->timeline[0].frames.size() - 1;
-								applyFrame(currentFrame);
-							}
-							else {
-								applyFrame(0);
-								currentFrame = -1;
-							}
-						}
-					}
-
-					if (recordEntityId != -1) {
-						ImGui::InputFloat("key timing", &keyTiming);
-
-						if (ImGui::Button("Next Frame")) {
-							applyFrame(currentFrame + 1);
-						}
-
-						if (ImGui::Button("Prev Frame")) {
-							applyFrame(currentFrame - 1);
-						}
-
-						if (ImGui::Button("Add Frame")) {
-							if (animation) {
-								for (auto& s : animation->timeline) {
-									if (s.frames.size() > 0){
-										auto &f = s.frames[s.frames.size() - 1];
-
-										PropertyFrame frame;
-										frame.blend = f.blend;
-										frame.time = f.time + keyTiming;
-										frame.relativeValue = f.relativeValue;
-										frame.value.classId = f.value.classId;
-										frame.value.propertyIndex = f.value.propertyIndex;
-										void *prop = nullptr;
-										prop = frame.value.getProperty(recordEntityId, env->world);
-										if (auto* desc = frame.value.getPropertyDescriptor()) {
-											frame.value.value.set(desc->type->classId, prop);
-										}
-										s.frames.push_back(frame);
-									}
+						if (ImGui::Button("Record")) {
+							recordEntityId = -1;
+							if (env->editor->selectionContext->isSingleSelection()) {
+								recordEntityId = env->editor->selectionContext->getSelected()[0];
+								animation = getAnimationFromEntity(recordEntityId);
+								if (animation && animation->timeline.size() > 0) {
+									currentFrame = animation->timeline[0].frames.size() - 1;
+									applyFrame(currentFrame);
 								}
-								currentFrame++;
+								else {
+									applyFrame(0);
+									currentFrame = -1;
+								}
 							}
 						}
 
+						if (recordEntityId != -1) {
+							ImGui::InputFloat("key timing", &keyTiming);
+
+							if (ImGui::Button("Next Frame")) {
+								applyFrame(currentFrame + 1);
+							}
+
+							if (ImGui::Button("Prev Frame")) {
+								applyFrame(currentFrame - 1);
+							}
+
+							if (ImGui::Button("Add Frame")) {
+								if (animation) {
+									for (auto& s : animation->timeline) {
+										if (s.frames.size() > 0){
+											auto &f = s.frames[s.frames.size() - 1];
+
+											PropertyFrame frame;
+											frame.blend = f.blend;
+											frame.time = f.time + keyTiming;
+											frame.relativeValue = f.relativeValue;
+											frame.value.classId = f.value.classId;
+											frame.value.propertyIndex = f.value.propertyIndex;
+											void *prop = nullptr;
+											prop = frame.value.getProperty(recordEntityId, env->world);
+											if (auto* desc = frame.value.getPropertyDescriptor()) {
+												frame.value.value.set(desc->type->classId, prop);
+											}
+											s.frames.push_back(frame);
+										}
+									}
+									currentFrame++;
+								}
+							}
+
+						}
 					}
-
-
 				}
 				ImGui::End();
 			}

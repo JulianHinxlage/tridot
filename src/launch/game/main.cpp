@@ -3,21 +3,15 @@
 //
 
 #include "core.h"
-#include "engine/AssetManager.h"
 using namespace tri;
 
 int main(int argc, char* argv[]) {
     MainLoop::init();
-    env->config->loadConfigFileFirstFound({ "configGame.txt", "../configGame.txt", "../../configGame.txt" });
+    env->config->loadConfigFileFirstFound({ "./configGame.txt", "../configGame.txt", "../../configGame.txt" });
     MainLoop::startup();
 
     //wait for all assets to be loaded before starting the scene
-    while (env->assetManager->isLoadingInProcess()) {
-        env->jobManager->tickJobs();
-        if (!env->console->getCVarValue("running", false)) {
-            break;
-        }
-    }
+    env->console->executeCommand("waitForAllAssetsLoaded");
 
     MainLoop::run();
     MainLoop::shutdown();

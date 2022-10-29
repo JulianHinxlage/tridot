@@ -5,26 +5,13 @@
 #pragma once
 
 #include "pch.h"
-#include "World.h"
+#include "entity/World.h"
+#include "engine/Asset.h"
+#include "entity/DynamicObjectBuffer.h"
 
 namespace tri {
 
-	class DynamicObjectBuffer {
-	public:
-		int classId;
-		uint8_t* data;
-		int count;
-
-		DynamicObjectBuffer();
-		DynamicObjectBuffer(const DynamicObjectBuffer &buffer);
-		~DynamicObjectBuffer();
-		void set(int classId, const void* ptr = nullptr, int count = 1);
-		void get(void* ptr) const;
-		void *get() const;
-		void clear();
-	};
-
-	class Prefab {
+	class Prefab : public Asset {
 	public:
 		EntityId createEntity(World* world = nullptr, EntityId hint = -1);
 		void copyEntity(EntityId id, World* world = nullptr);
@@ -49,6 +36,10 @@ namespace tri {
 		Prefab* addChild();
 		void clear();
 		const std::vector<DynamicObjectBuffer>& getComponents();
+		const std::vector<Ref<Prefab>>& getChilds();
+
+		virtual bool load(const std::string &file);
+		virtual bool save(const std::string& file);
 
 	private:
 		std::vector<DynamicObjectBuffer> components;

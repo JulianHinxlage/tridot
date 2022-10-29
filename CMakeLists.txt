@@ -144,26 +144,38 @@ file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS src/launch/game/*.cpp)
 add_executable(${PROJECT_NAME} ${SOURCES})
 target_precompile_headers(${PROJECT_NAME} PUBLIC src/pch.h)
 target_include_directories(${PROJECT_NAME} PUBLIC src src/launcher/game)
-target_link_libraries(${PROJECT_NAME} PUBLIC TridotCore TridotEngine)
+target_link_libraries(${PROJECT_NAME} PUBLIC TridotCore)
 add_dependencies(${PROJECT_NAME} TridotWindow TridotEntity TridotDebugMenu TridotEngine TridotRender TridotPhysics TridotAnimation)
 
-#Fat Launcher Binary
+#Fat Game Binary
 project(TridotGameFull)
-file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS src/core/*.cpp src/entity/*.cpp src/engine/*.cpp src/window/*.cpp src/render/*.cpp src/debugMenu/*.cpp src/test/*.cpp src/launch/game/*.cpp)
+file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS 
+    src/core/*.cpp 
+    src/entity/*.cpp 
+    src/engine/*.cpp 
+    src/window/*.cpp 
+    src/render/*.cpp 
+    src/debugMenu/*.cpp 
+    src/physics/*.cpp 
+    src/animation/*.cpp 
+    src/launch/game/*.cpp
+)
+
 if (NOT CMAKE_BUILD_TYPE MATCHES "Release")
     file(GLOB_RECURSE SOURCES2 CONFIGURE_DEPENDS extern/tracy/TracyClient.cpp)
 endif()
 file(GLOB IMGUI_SOURCES CONFIGURE_DEPENDS extern/imgui/*.cpp extern/imgui/misc/cpp/imgui_stdlib.cpp extern/imgui/backends/imgui_impl_glfw.cpp extern/imgui/backends/imgui_impl_opengl3.cpp extern/imguizmo/ImGuizmo.cpp)
 add_executable(${PROJECT_NAME} ${SOURCES} ${SOURCES2} ${IMGUI_SOURCES})
 target_precompile_headers(${PROJECT_NAME} PUBLIC src/pch.h)
-target_include_directories(${PROJECT_NAME} PUBLIC src src/launche src/render src/window)
+target_include_directories(${PROJECT_NAME} PUBLIC src src/core src/launche src/render src/window)
 
 if(WIN32)
-    target_link_libraries(${PROJECT_NAME} TridotCore glm glfw opengl32 glew_s yaml-cpp imm32)
+    target_link_libraries(${PROJECT_NAME} glm glfw opengl32 glew_s yaml-cpp imm32)
 else()
-    target_link_libraries(${PROJECT_NAME} TridotCore glm glfw GL glew yaml-cpp pthread stdc++fs)
+    target_link_libraries(${PROJECT_NAME} glm glfw GL glew yaml-cpp pthread stdc++fs)
 endif()
-target_include_directories(${PROJECT_NAME} PUBLIC extern extern/glm extern/glfw/include extern/glew/include extern/imgui extern/yaml-cpp/include)
+target_include_directories(${PROJECT_NAME} PUBLIC extern extern/glm extern/glfw/include extern/glew/include extern/imgui extern/yaml-cpp/include extern/bullet3/src)
+target_link_libraries(${PROJECT_NAME} BulletDynamics BulletCollision LinearMath)
 
 if (NOT CMAKE_BUILD_TYPE MATCHES "Debug")
     target_compile_definitions(${PROJECT_NAME} PUBLIC TRI_DEBUG)
@@ -172,9 +184,7 @@ else()
 endif()
 
 if (NOT CMAKE_BUILD_TYPE MATCHES "Release")
-    target_compile_definitions(${PROJECT_NAME} PUBLIC TRI_PROFILE_ENABLED TRACY_ENABLE TRI_DEBUG)
-else()
-    target_compile_definitions(${PROJECT_NAME} PUBLIC TRI_RELEASE)
+    target_compile_definitions(${PROJECT_NAME} PUBLIC TRI_PROFILE_ENABLED TRACY_ENABLE)
 endif()
 
 

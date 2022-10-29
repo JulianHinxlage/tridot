@@ -4,66 +4,11 @@
 
 #include "pch.h"
 #include "Prefab.h"
+#include "Serializer.h"
 
 namespace tri {
 
-	DynamicObjectBuffer::DynamicObjectBuffer() {
-		data = nullptr;
-		classId = -1;
-		count = 0;
-	}
-
-	DynamicObjectBuffer::DynamicObjectBuffer(const DynamicObjectBuffer& buffer) {
-		data = nullptr;
-		classId = -1;
-		count = 0;
-		set(buffer.classId, buffer.data, buffer.count);
-	}
-
-	DynamicObjectBuffer::~DynamicObjectBuffer() {
-		clear();
-	}
-
-	void DynamicObjectBuffer::set(int classId, const void* ptr, int count) {
-		clear();
-		if (classId != -1) {
-			this->classId = classId;
-			this->count = count;
-			auto* desc = Reflection::getDescriptor(classId);
-			data = new uint8_t[count * desc->size];
-			if (ptr) {
-				desc->copy(ptr, data, count);
-			}
-			else {
-				desc->construct(data, count);
-			}
-		}
-	}
-
-	void DynamicObjectBuffer::get(void* ptr) const {
-		auto* desc = Reflection::getDescriptor(classId);
-		desc->copy(data, ptr);
-	}
-
-	void* DynamicObjectBuffer::get() const {
-		return data;
-	}
-
-	void DynamicObjectBuffer::clear() {
-		if (data) {
-			auto* desc = Reflection::getDescriptor(classId);
-			if (desc) {
-				desc->destruct(data, count);
-			}
-			else {
-				env->console->warning("can't properly free memory for component");
-			}
-			delete data;
-		}
-		data = nullptr;
-		count = 0;
-		classId = -1;
-	}
+	TRI_ASSET(Prefab);
 
 	EntityId Prefab::createEntity(World* world, EntityId hint) {
 		if (!world) {
@@ -150,6 +95,27 @@ namespace tri {
 
 	const std::vector<DynamicObjectBuffer>& Prefab::getComponents() {
 		return components;
+	}
+
+	const std::vector<Ref<Prefab>>& Prefab::getChilds() {
+		return childs;
+	}
+
+	bool Prefab::load(const std::string& file) {
+		SerialData data;
+		if (env->serializer->loadFromFile(data, file)) {
+			env->serializer->deserializePrefab(this, data);
+			return true;
+		}
+		return false;
+	}
+
+	bool Prefab::save(const std::string& file) {
+		SerialData data;
+		env->serializer->saveToFile(data, file);
+		env->serializer->serializePrefab(this, data);
+		return true;
+		return false;
 	}
 
 }

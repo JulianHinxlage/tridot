@@ -237,6 +237,51 @@ namespace tri {
 		world->enablePendingOperations = enablePending;
 	}
 
+	void Serializer::serializePrefab(Prefab* prefab, SerialData& data) {
+		*data.emitter << YAML::BeginMap;
+
+		for (auto& comp : prefab->getComponents()) {
+			auto* desc = Reflection::getDescriptor(comp.classId);
+			if (desc) {
+				*data.emitter << YAML::Key << desc->name << YAML::Value;
+				serializeClass(comp.classId, comp.data, data);
+			}
+		}
+
+		if (prefab->getChilds().size() > 0) {
+			*data.emitter << YAML::Key << "childs" << YAML::Value;
+			*data.emitter << YAML::BeginSeq;
+			for (auto& child : prefab->getChilds()) {
+				if (child) {
+					serializePrefab(child.get(), data);
+				}
+			}
+			*data.emitter << YAML::EndSeq;
+		}
+
+		*data.emitter << YAML::EndMap;
+	}
+
+	void Serializer::deserializePrefab(Prefab* prefab, SerialData& data) {
+		for (auto i : data.node) {
+
+			if (i.first.Scalar() != "childs") {
+				auto* desc = Reflection::getDescriptor(i.first.Scalar());
+				if (desc) {
+					void *comp = prefab->addComponent(desc->classId);
+					SerialData d(i.second);
+					deserializeClass(desc->classId, comp, d);
+				}
+			}
+		}
+
+		if (auto childs = data.node["childs"]) {
+			for (auto i : childs) {
+				SerialData d(i);
+				deserializePrefab(prefab->addChild(), d);
+			}
+		}
+	}
 
 	void Serializer::saveToFile(SerialData& data, const std::string& file) {
 		data.stream = std::make_shared<std::ofstream>(file);

@@ -6,6 +6,7 @@
 
 #include "pch.h"
 #include "core/core.h"
+#include "Prefab.h"
 #include <yaml-cpp/yaml.h>
 
 namespace tri {
@@ -31,8 +32,8 @@ namespace tri {
 		void serializeEntity(EntityId id, World *world, SerialData& data);
 		void deserializeEntity(World* world, SerialData& data);
 
-		void serializePrefab(SerialData& data);
-		void deserializePrefab(SerialData& data);
+		void serializePrefab(Prefab *prefab, SerialData& data);
+		void deserializePrefab(Prefab* prefab, SerialData& data);
 		
 		void serializeWorld(World* world, SerialData& data);
 		void deserializeWorld(World* world, SerialData& data);

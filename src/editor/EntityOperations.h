@@ -6,7 +6,8 @@
 
 #include "pch.h"
 #include "core/core.h"
-#include "entity/Prefab.h"
+#include "engine/Prefab.h"
+#include "entity/DynamicObjectBuffer.h"
 
 namespace tri {
 

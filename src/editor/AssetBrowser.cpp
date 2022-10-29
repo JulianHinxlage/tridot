@@ -15,6 +15,7 @@
 #include "render/objects/Mesh.h"
 
 #include <imgui/imgui.h>
+#include <imgui/misc/cpp/imgui_stdlib.h>
 
 namespace tri {
 
@@ -22,6 +23,9 @@ namespace tri {
 	public:
 		std::mutex mutex;
 		double checkTimeInterval = 4;
+		bool needsUpdateTree = false;
+		int updateTreeThreadId = -1;
+		int updateTreeThreadRunning = false;
 
 		class Node {
 		public:
@@ -31,6 +35,25 @@ namespace tri {
 			std::vector<Node> childs;
 		};
 		std::vector<Node> nodes;
+		
+
+		class TextBox {
+		public:
+			enum Mode {
+				FILE,
+				FOLDER,
+				RENAME,
+			};
+
+			Mode mode;
+			bool open;
+			bool openLast;
+			std::string text;
+			std::string original;
+			std::string directory;
+			int newFileClassId;
+		};
+		TextBox textBox;
 
 		void init() override {
 			env->systemManager->addSystem<Editor>();
@@ -41,7 +64,8 @@ namespace tri {
 			env->editor->fileAssosiations[".jpg"] = Reflection::getClassId<Texture>();
 			env->editor->fileAssosiations[".mat"] = Reflection::getClassId<Material>();
 			env->editor->fileAssosiations[".obj"] = Reflection::getClassId<Mesh>();
-			env->editor->fileAssosiations[".tmap"] = Reflection::getClassId<World>();
+			env->editor->fileAssosiations[".tmap"] = Reflection::getClassId<Map>();
+			env->editor->fileAssosiations[".prefab"] = Reflection::getClassId<Prefab>();
 		}
 
 		void updateTreeStep(Node &parent) {
@@ -79,8 +103,9 @@ namespace tri {
 		}
 
 		void startup() {
-			env->threadManager->addThread("File Tree Update", [&]() {
-				while (true) {
+			updateTreeThreadRunning = true;
+			updateTreeThreadId = env->threadManager->addThread("File Tree Update", [&]() {
+				while (updateTreeThreadRunning) {
 					{
 						TRI_PROFILE("FileTreeUpdate");
 						updateTree();
@@ -88,6 +113,12 @@ namespace tri {
 					std::this_thread::sleep_for(std::chrono::milliseconds((long long)(checkTimeInterval * 1000.0)));
 				}
 			});
+		}
+
+		void shutdown() {
+			updateTreeThreadRunning = false;
+			env->threadManager->joinThread(updateTreeThreadId);
+			env->threadManager->terminateThread(updateTreeThreadId);
 		}
 
 		void file(const std::string& name, const std::string& path) {
@@ -100,7 +131,7 @@ namespace tri {
 
 				if (ImGui::TreeNodeEx(name.c_str(), ImGuiTreeNodeFlags_Leaf)) {
 
-					if (id == Reflection::getClassId<World>()) {
+					if (id == Reflection::getClassId<Map>()) {
 						if (ImGui::BeginPopupContextItem()) {
 							if (ImGui::MenuItem("Load")) {
 								Map::loadAndSetToActiveWorld(path);
@@ -125,6 +156,26 @@ namespace tri {
 						}
 					}
 
+					if (ImGui::BeginPopupContextItem()) {
+						if (ImGui::MenuItem("Rename")) {
+							textBox.mode = TextBox::RENAME;
+							textBox.open = true;
+							textBox.text = name;
+							textBox.original = name;
+							textBox.directory = std::filesystem::path(path).parent_path().string();
+							textBox.newFileClassId = -1;
+						}
+						if (ImGui::MenuItem("Delete")) {
+							//todo: are your sure dialog
+							try {
+								std::filesystem::remove(path);
+							}
+							catch (...) {}
+							needsUpdateTree = true;
+						}
+						ImGui::EndPopup();
+					}
+
 					ImGui::TreePop();
 				}
 			}
@@ -134,17 +185,74 @@ namespace tri {
 			}
 		}
 
-		void directory(const std::string &dir, const std::string& path) {
-			if (ImGui::TreeNodeEx(dir.c_str())) {
-				for (auto& i : std::filesystem::directory_iterator(path)) {
-					if (i.is_directory()) {
-						directory(i.path().filename().string(), i.path().string());
-					}
-					else {
-						file(i.path().filename().string(), i.path().string());
+		void updateTextBox() {
+			if (!textBox.openLast) {
+				ImGui::SetKeyboardFocusHere();
+			}
+			if (ImGui::InputText("name", &textBox.text, ImGuiInputTextFlags_EnterReturnsTrue)) {
+				std::string file = textBox.directory + "/" + textBox.text;
+
+				if (textBox.mode == TextBox::FILE) {
+					if (!std::filesystem::exists(file)) {
+						env->assetManager->get(textBox.newFileClassId, file, (AssetManager::Options)(AssetManager::SYNCHRONOUS | AssetManager::DO_NOT_LOAD))->save(file);
+						needsUpdateTree = true;
 					}
 				}
-				ImGui::TreePop();
+				else if (textBox.mode == TextBox::FOLDER) {
+					if (!std::filesystem::exists(file)) {
+						std::filesystem::create_directories(file);
+						needsUpdateTree = true;
+					}
+				}
+				else if (textBox.mode == TextBox::RENAME) {
+					try {
+						std::filesystem::rename(textBox.directory + "/" + textBox.original, file);
+					}
+					catch (...) {}
+					needsUpdateTree = true;
+				}
+				textBox.open = false;
+			}
+			textBox.openLast = textBox.open;
+		}
+
+		void directoryMenu(Node& node) {
+			if (ImGui::BeginPopupContextItem()) {
+				if (ImGui::BeginMenu("New File")) {
+
+					for (auto& assosiation : env->editor->fileAssosiations) {
+						if (auto* desc = Reflection::getDescriptor(assosiation.second)) {
+							if (ImGui::MenuItem(desc->name.c_str())) {
+								textBox.mode = TextBox::FILE;
+								textBox.open = true;
+								textBox.text = assosiation.first;
+								textBox.directory = node.path;
+								textBox.newFileClassId = assosiation.second;
+							}
+						}
+					}
+
+					ImGui::EndMenu();
+				}
+
+				if (ImGui::MenuItem("New Folder")) {
+					textBox.mode = TextBox::FOLDER;
+					textBox.open = true;
+					textBox.text = "";
+					textBox.directory = node.path;
+					textBox.newFileClassId = -1;
+				}
+
+				if (ImGui::MenuItem("Delete")) {
+					//todo: are your sure dialog
+					try {
+						std::filesystem::remove_all(node.path);
+					}
+					catch (...) {}
+					needsUpdateTree = true;
+				}
+
+				ImGui::EndPopup();
 			}
 		}
 
@@ -154,15 +262,25 @@ namespace tri {
 			}
 			else {
 				if (ImGui::TreeNodeEx(node.name.c_str())) {
+					directoryMenu(node);
 					for (auto& child : node.childs) {
 						step(child);
 					}
+
+					if (textBox.open && textBox.directory == node.path) {
+						updateTextBox();
+					}
+
 					ImGui::TreePop();
+				}
+				else {
+					directoryMenu(node);
 				}
 			}
 		}
 
 		void tick() override {
+			needsUpdateTree = false;
 			if (env->window && env->window->inFrame()) {
 				if (ImGui::Begin("Asset Browser", &active)) {
 					std::unique_lock<std::mutex> lock(mutex);
@@ -171,6 +289,9 @@ namespace tri {
 					}
 				}
 				ImGui::End();
+			}
+			if (needsUpdateTree) {
+				updateTree();
 			}
 		}
 	};
