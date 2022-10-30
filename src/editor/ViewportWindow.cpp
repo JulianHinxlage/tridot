@@ -38,6 +38,7 @@ namespace tri {
 				if (ImGui::Begin("Viewport", &active)) {
 					if (!env->viewport->displayInWindow) {
 						env->viewport->size = { ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y };
+						env->viewport->position = { ImGui::GetCursorScreenPos().x, ImGui::GetCursorScreenPos().y};
 					}
 					if (env->viewport->frameBuffer) {
 						//draw rendered image
@@ -62,7 +63,9 @@ namespace tri {
 						if (camera) {
 							//camera
 							if (ImGui::IsItemHovered()) {
-								editorCamera.update(*camera, *cameraTransform);
+								if (env->editor->viewportCameraInPlay || env->runtimeMode->getMode() != RuntimeMode::PLAY) {
+									editorCamera.update(*camera, *cameraTransform);
+								}
 							}
 							//gizmos
 							glm::vec2 viewportPos = { ImGui::GetWindowPos().x, ImGui::GetWindowPos().y };
@@ -71,20 +74,22 @@ namespace tri {
 
 						if (!usingGizmos) {
 							//mouse picking
-							if (env->input->pressed(Input::MOUSE_BUTTON_LEFT)) {
-								if (ImGui::IsItemHovered()) {
-									glm::vec2 pos = { ImGui::GetMousePos().x - ImGui::GetItemRectMin().x, ImGui::GetMousePos().y - ImGui::GetItemRectMin().y };
-									pos.y = env->viewport->size.y - pos.y;
-									if (pos.x >= 0 && pos.y >= 0) {
-										if (pos.x < env->viewport->size.x && pos.y < env->viewport->size.y) {
-											if (env->viewport->idMap) {
-												Color idColor = env->viewport->idMap->getPixel(pos.x, pos.y);
-												if (idColor.value != -1) {
-													EntityId id = idColor.value & ~(0xff << 24);
-													env->editor->selectionContext->select(id, !env->input->downControl());
-												}
-												else {
-													env->editor->selectionContext->unselectAll();
+							if (env->editor->viewportCameraInPlay || env->runtimeMode->getMode() != RuntimeMode::PLAY) {
+								if (env->input->pressed(Input::MOUSE_BUTTON_LEFT)) {
+									if (ImGui::IsItemHovered()) {
+										glm::vec2 pos = { ImGui::GetMousePos().x - ImGui::GetItemRectMin().x, ImGui::GetMousePos().y - ImGui::GetItemRectMin().y };
+										pos.y = env->viewport->size.y - pos.y;
+										if (pos.x >= 0 && pos.y >= 0) {
+											if (pos.x < env->viewport->size.x && pos.y < env->viewport->size.y) {
+												if (env->viewport->idMap) {
+													Color idColor = env->viewport->idMap->getPixel(pos.x, pos.y);
+													if (idColor.value != -1) {
+														EntityId id = idColor.value & ~(0xff << 24);
+														env->editor->selectionContext->select(id, !env->input->downControl());
+													}
+													else {
+														env->editor->selectionContext->unselectAll();
+													}
 												}
 											}
 										}

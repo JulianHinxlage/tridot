@@ -36,6 +36,8 @@ namespace tri {
 					if (ImGui::Checkbox("Pause", &paused)) {
 						env->runtimeMode->setMode(paused ? RuntimeMode::PAUSED : RuntimeMode::PLAY);
 					}
+					
+					ImGui::Checkbox("Editor Camera in Play", &env->editor->viewportCameraInPlay);
 
 					env->systemManager->getSystem<Gizmos>()->updateSettings();
 				}

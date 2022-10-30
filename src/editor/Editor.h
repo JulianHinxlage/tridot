@@ -25,6 +25,7 @@ namespace tri {
 		EntityId dragEntityId = -1;
 		bool propertiesNoContext = false;
 		bool propertiesNoScroll = false;
+		bool viewportCameraInPlay = true;
 
 		void init() override;
 		void startup() override;
@@ -42,6 +43,7 @@ namespace tri {
 		float lastUnhandledExceptionTime = -1;
 
 		void saveMap(const std::string& file);
+		void setupIniHandler();
 	};
 
 }

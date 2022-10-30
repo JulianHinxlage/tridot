@@ -3,6 +3,7 @@
 //
 
 #include "Editor.h"
+#include "Gizmos.h"
 #include "core/Reflection.h"
 #include "core/Environment.h"
 #include "core/JobManager.h"
@@ -37,6 +38,7 @@ namespace tri {
 		job->addSystem<Editor>();
 		autoSaveListener = -1;
 		playBufferListener = -1;
+
 	}
 
 	void Editor::startup() {
@@ -77,6 +79,11 @@ namespace tri {
 			}, true);
 			env->uiManager->updateActiveFlags();
 		});
+
+		setupIniHandler();
+		if (ImGui::GetCurrentContext()) {
+			ImGui::LoadIniSettingsFromDisk(ImGui::GetIO().IniFilename);
+		}
 
 		env->runtimeMode->setMode(RuntimeMode::EDIT);
 	}
@@ -347,4 +354,94 @@ namespace tri {
 		}
 	}
 
+	void Editor::setupIniHandler() {
+		ImGuiSettingsHandler handler;
+		handler.TypeName = "Editor";
+		handler.TypeHash = ImHashStr("Editor");
+		handler.ReadOpenFn = [](ImGuiContext* ctx, ImGuiSettingsHandler* handler, const char* name) -> void* {
+			if (std::string(name) == "") {
+				return (void*)1;
+			}
+			else {
+				return nullptr;
+			}
+		};
+		handler.ReadLineFn = [](ImGuiContext* ctx, ImGuiSettingsHandler* handler, void* entry, const char* line) {
+			auto parts = StrUtil::split(line, "=");
+			if (parts.size() >= 2) {
+				auto* gizmos = env->systemManager->getSystem<Gizmos>();
+				if (parts[0] == "CameraInPlay") {
+					env->editor->viewportCameraInPlay = std::stoi(parts[1]);
+				}
+				else if (parts[0] == "GizmoOperation") {
+					gizmos->operation = (Gizmos::Operation)std::stoi(parts[1]);
+				}
+				else if (parts[0] == "GizmoMode") {
+					gizmos->mode = (Gizmos::Mode)std::stoi(parts[1]);
+				}
+				else if (parts[0] == "GizmoPivots") {
+					gizmos->pivots = (Gizmos::Pivots)std::stoi(parts[1]);
+				}
+				else if (parts[0] == "GizmoSnapping") {
+					gizmos->snapping = std::stoi(parts[1]);
+				}
+
+				else if (parts[0] == "GizmoSnapPosX") {
+					gizmos->translateSnapValues.x = std::stof(parts[1]);
+				}
+				else if (parts[0] == "GizmoSnapPosY") {
+					gizmos->translateSnapValues.y = std::stof(parts[1]);
+				}
+				else if (parts[0] == "GizmoSnapPosZ") {
+					gizmos->translateSnapValues.z = std::stof(parts[1]);
+				}
+
+				else if (parts[0] == "GizmoSnapScaleX") {
+					gizmos->scaleSnapValues.x = std::stof(parts[1]);
+				}
+				else if (parts[0] == "GizmoSnapScaleY") {
+					gizmos->scaleSnapValues.y = std::stof(parts[1]);
+				}
+				else if (parts[0] == "GizmoSnapScaleZ") {
+					gizmos->scaleSnapValues.z = std::stof(parts[1]);
+				}
+
+				else if (parts[0] == "GizmoSnapRotX") {
+					gizmos->rotateSnapValues.x = std::stof(parts[1]);
+				}
+				else if (parts[0] == "GizmoSnapRotY") {
+					gizmos->rotateSnapValues.y = std::stof(parts[1]);
+				}
+				else if (parts[0] == "GizmoSnapRotZ") {
+					gizmos->rotateSnapValues.z = std::stof(parts[1]);
+				}
+			}
+		};
+		handler.WriteAllFn = [](ImGuiContext* ctx, ImGuiSettingsHandler* handler, ImGuiTextBuffer* buf) {
+			auto* ui = env->uiManager;
+			buf->append("[Editor][]\n");
+			buf->appendf("%s=%i\n", "CameraInPlay", (int)env->editor->viewportCameraInPlay);
+			
+			auto *gizmos = env->systemManager->getSystem<Gizmos>();
+			buf->appendf("%s=%i\n", "GizmoOperation", (int)gizmos->operation);
+			buf->appendf("%s=%i\n", "GizmoMode", (int)gizmos->mode);
+			buf->appendf("%s=%i\n", "GizmoPivots", (int)gizmos->pivots);
+
+			buf->appendf("%s=%i\n", "GizmoSnapping", (int)gizmos->snapping);
+			buf->appendf("%s=%f\n", "GizmoSnapPosX", (float)gizmos->translateSnapValues.x);
+			buf->appendf("%s=%f\n", "GizmoSnapPosY", (float)gizmos->translateSnapValues.y);
+			buf->appendf("%s=%f\n", "GizmoSnapPosZ", (float)gizmos->translateSnapValues.z);
+			buf->appendf("%s=%f\n", "GizmoSnapScaleX", (float)gizmos->scaleSnapValues.x);
+			buf->appendf("%s=%f\n", "GizmoSnapScaleY", (float)gizmos->scaleSnapValues.y);
+			buf->appendf("%s=%f\n", "GizmoSnapScaleZ", (float)gizmos->scaleSnapValues.z);
+			buf->appendf("%s=%f\n", "GizmoSnapRotX", (float)gizmos->rotateSnapValues.x);
+			buf->appendf("%s=%f\n", "GizmoSnapRotY", (float)gizmos->rotateSnapValues.y);
+			buf->appendf("%s=%f\n", "GizmoSnapRotZ", (float)gizmos->rotateSnapValues.z);
+
+			buf->appendf("\n");
+		};
+		if (ImGui::GetCurrentContext()) {
+			ImGui::GetCurrentContext()->SettingsHandlers.push_back(handler);
+		}
+	}
 }

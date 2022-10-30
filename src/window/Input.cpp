@@ -17,6 +17,7 @@ namespace tri {
         wheel = 0;
         wheelUpdate = 0;
         allowInputs = true;
+        mousePositionUpdate = { -1, -1 };
     }
 
     void Input::init() {
@@ -78,9 +79,9 @@ namespace tri {
             double y = 0;
             glfwGetCursorPos(window, &x, &y);
             mousePosition = { x, y };
-            if (mousePositionUpdate != glm::vec2(0, 0)) {
+            if (mousePositionUpdate != glm::vec2(-1, -1)) {
                 glfwSetCursorPos(window, mousePositionUpdate.x, mousePositionUpdate.y);
-                mousePositionUpdate = { 0, 0 };
+                mousePositionUpdate = { -1, -1 };
             }
         }
 
