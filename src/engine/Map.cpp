@@ -65,6 +65,7 @@ namespace tri {
     }
 
     bool Map::save(const std::string& file) {
+        env->assetManager->setOptions(file, AssetManager::Options::NO_RELOAD_ONCE);
         if (!world) {
             world = std::make_shared<World>();
         }

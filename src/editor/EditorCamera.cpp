@@ -37,13 +37,13 @@ namespace tri {
 
         //WASD EQ
         if(camera.type == Camera::PERSPECTIVE) {
-            move *= speed * env->time->deltaTime;
+            move *= speed * env->time->frameTime;
             move /= transform.scale;
             transform.position += camera.forward * -move.z;
             transform.position += camera.right * move.x;
             transform.position += camera.up * move.y;
         }else{
-            move *= env->time->deltaTime * 1.0f;
+            move *= env->time->frameTime * 1.0f;
             move.z *= transform.scale.y;
             move.x *= transform.scale.x;
             transform.position += camera.up * -move.z;

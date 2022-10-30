@@ -379,8 +379,26 @@ namespace tri {
 					if (enableReferenceEdit && asset) {
 						if (desc->elementType->properties.size() > 0) {
 							if (ImGui::TreeNodeEx(desc->elementType->name.c_str())) {
+								if (ImGui::BeginPopupContextItem()) {
+									if (ImGui::MenuItem("Save")) {
+										if (asset) {
+											asset->save(env->assetManager->searchFile(file));
+										}
+									}
+									ImGui::EndPopup();
+								}
 								change |= draw(id, asset.get());
 								ImGui::TreePop();
+							}
+							else {
+								if (ImGui::BeginPopupContextItem()) {
+									if (ImGui::MenuItem("Save")) {
+										if (asset) {
+											asset->save(env->assetManager->searchFile(file));
+										}
+									}
+									ImGui::EndPopup();
+								}
 							}
 						}
 					}

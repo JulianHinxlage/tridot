@@ -262,7 +262,7 @@ namespace tri {
 		}
 	}
 
-	EntityId ComponentStorage::getIdByComponent(void* comp) {
+	EntityId ComponentStorage::getIdByComponent(const void* comp) {
 		int offset = (uint8_t*)comp - componentData;
 		if (offset < 0) {
 			return -1;

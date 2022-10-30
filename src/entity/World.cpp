@@ -234,7 +234,7 @@ namespace tri {
 		}
 	}
 
-	EntityId World::getIdByComponent(void* comp, int classId) {
+	EntityId World::getIdByComponent(const void* comp, int classId) {
 		if (storages.size() <= classId) {
 			return -1;
 		}

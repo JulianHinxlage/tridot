@@ -78,12 +78,20 @@ namespace tri {
 		ImGui::PushStyleColor(ImGuiCol_DragDropTarget, ImVec4(0.0, 0.32, 1.0, 1));
 
 
-		if (!std::filesystem::exists("layout.ini")) {
-			if (std::filesystem::exists("../layout.ini")) {
-				std::filesystem::copy("../layout.ini", "layout.ini");
+
+		layoutFiles = { "layout.ini" , "../layout.ini" , "../../layout.ini" };
+		if (!env->editor) {
+			layoutFiles = { "layout2.ini" , "../layout2.ini" , "../../layout2.ini" };
+		}
+		if (!std::filesystem::exists(layoutFiles[0])) {
+			for (int i = 1; i < layoutFiles.size(); i++) {
+				if (std::filesystem::exists(layoutFiles[i])) {
+					std::filesystem::copy(layoutFiles[i], layoutFiles[0]);
+					break;
+				}
 			}
 		}
-		ImGui::GetIO().IniFilename = "layout.ini";
+		ImGui::GetIO().IniFilename = layoutFiles[0];
 
 
 		setupFlagHandler();
@@ -258,10 +266,13 @@ namespace tri {
 				flag.second = false;
 			}
 
-			if (std::filesystem::exists("../layout.ini")) {
-				ImGui::LoadIniSettingsFromDisk("../layout.ini");
-				ImGui::GetIO().IniFilename = "layout.ini";
+			for (int i = 1; i < layoutFiles.size(); i++) {
+				if (std::filesystem::exists(layoutFiles[i])) {
+					ImGui::LoadIniSettingsFromDisk(layoutFiles[i]);
+					break;
+				}
 			}
+
 			updateActiveFlags();
 		}, true);
 	}

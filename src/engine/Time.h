@@ -15,6 +15,7 @@ namespace tri {
         float deltaTime;
         float frameTime;
         float time;
+        float inGameTime;
         float frameCounter;
 
         //options

@@ -6,6 +6,7 @@
 #include "Prefab.h"
 #include "Serializer.h"
 #include "Transform.h"
+#include "AssetManager.h"
 
 namespace tri {
 
@@ -128,11 +129,11 @@ namespace tri {
 	}
 
 	bool Prefab::save(const std::string& file) {
+		env->assetManager->setOptions(file, AssetManager::Options::NO_RELOAD_ONCE);
 		SerialData data;
 		env->serializer->saveToFile(data, file);
 		env->serializer->serializePrefab(this, data);
 		return true;
-		return false;
 	}
 
 }

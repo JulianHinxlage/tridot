@@ -84,7 +84,7 @@ namespace tri {
 		}
 
 		template<typename Component>
-		EntityId getIdByComponent(Component *comp) {
+		EntityId getIdByComponent(const Component *comp) {
 			return getIdByComponent(comp, Reflection::getClassId<Component>());
 		}
 
@@ -132,7 +132,7 @@ namespace tri {
 		bool hasComponent(EntityId id, int classId);
 		void removeComponent(EntityId id, int classId);
 		void* getOrAddComponent(EntityId id, int classId);
-		EntityId getIdByComponent(void* comp, int classId);
+		EntityId getIdByComponent(const void* comp, int classId);
 
 		void copy(World& from);
 		void clear();

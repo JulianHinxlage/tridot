@@ -5,6 +5,7 @@
 #include "Material.h"
 #include "core/core.h"
 #include "engine/Serializer.h"
+#include "engine/AssetManager.h"
 
 namespace tri {
 
@@ -62,6 +63,7 @@ namespace tri {
     }
 
     bool Material::save(const std::string &file) {
+        env->assetManager->setOptions(file, AssetManager::Options::NO_RELOAD_ONCE);
         SerialData data;
         std::ofstream stream(file);
         data.emitter = std::make_shared<YAML::Emitter>(stream);

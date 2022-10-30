@@ -33,7 +33,7 @@ namespace tri {
 		bool hasComponent(EntityId id);
 		void* addComponent(EntityId id, const void *ptr = nullptr);
 		void removeComponent(EntityId id);
-		EntityId getIdByComponent(void* comp);
+		EntityId getIdByComponent(const void* comp);
 
 		int size();
 		EntityId* getIdData();

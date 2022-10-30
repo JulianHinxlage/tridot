@@ -14,6 +14,7 @@
 #include "engine/Time.h"
 #include "engine/EntityInfo.h"
 #include "engine/MetaTypes.h"
+#include "engine/AssetManager.h"
 #include <imgui/imgui.h>
 #include <imgui/misc/cpp/imgui_stdlib.h>
 
@@ -563,9 +564,12 @@ namespace tri {
 				}
 				if (ImGui::MenuItem("Save as Prefab")) {
 					std::string file = env->editor->openFileDialog(".prefab", true);
-					Prefab prefab;
-					prefab.copyEntity(id, env->world, true);
-					prefab.save(file);
+					auto prefab = env->assetManager->get<Prefab>(file, AssetManager::Options::SYNCHRONOUS);
+					if (prefab) {
+						prefab->copyEntity(id, env->world, true);
+						prefab->save(file);
+						env->console->info("saved prefab to \"%s\"", file.c_str());
+					}
 				}
 				ImGui::EndPopup();
 			}

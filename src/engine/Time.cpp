@@ -3,6 +3,7 @@
 //
 
 #include "Time.h"
+#include "RuntimeMode.h"
 #include <cmath>
 #include <algorithm>
 
@@ -15,6 +16,7 @@ namespace tri {
         deltaTime = 0;
         frameTime = 0;
         time = 0;
+        inGameTime = 0;
         frameCounter = 0;
 
         //options
@@ -47,7 +49,14 @@ namespace tri {
     void Time::tick() {
         //frame/delta time
         frameTime = (float)clock.round();
-        deltaTime = pause ? 0.0f : std::min(maxDeltaTime, frameTime * deltaTimeFactor);
+        
+        if (env->runtimeMode->getMode() == RuntimeMode::PLAY) {
+            deltaTime = pause ? 0.0f : std::min(maxDeltaTime, frameTime * deltaTimeFactor);
+        }
+        else {
+            deltaTime = 0;
+        }
+
         frameCounter++;
 
         //accumulation
@@ -56,6 +65,7 @@ namespace tri {
         deltaTimeAccumulator += deltaTime;
         frameTimeAccumulator += frameTime;
         time = frameTimeAccumulator;
+        inGameTime = deltaTimeAccumulator;
 
         //stats
         frameTimes.push_back(frameTime);

@@ -13,6 +13,7 @@ loadModule TridotEditorLib
 loadModule TridotPhysics
 loadModule TridotAnimation
 loadModule TridotAnimationEditor
+loadModule TridotParticleSystem
 
 windowWidth = 1920
 windowHeight = 980

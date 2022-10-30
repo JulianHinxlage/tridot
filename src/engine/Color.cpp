@@ -18,16 +18,16 @@ namespace tri {
     }
 
     Color::Color(const glm::vec4 &color) {
-        this->r = color.r * 255;
-        this->g = color.g * 255;
-        this->b = color.b * 255;
-        this->a = color.a * 255;
+        this->r = glm::clamp(color.r, 0.0f, 1.0f) * 255;
+        this->g = glm::clamp(color.g, 0.0f, 1.0f) * 255;
+        this->b = glm::clamp(color.b, 0.0f, 1.0f) * 255;
+        this->a = glm::clamp(color.a, 0.0f, 1.0f) * 255;
     }
 
     Color::Color(const glm::vec3 &color) {
-        this->r = color.r * 255;
-        this->g = color.g * 255;
-        this->b = color.b * 255;
+        this->r = glm::clamp(color.r, 0.0f, 1.0f) * 255;
+        this->g = glm::clamp(color.g, 0.0f, 1.0f) * 255;
+        this->b = glm::clamp(color.b, 0.0f, 1.0f) * 255;
         this->a = 255;
     }
 

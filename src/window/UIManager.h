@@ -47,6 +47,7 @@ namespace tri {
 		std::vector<Window> windows;
 		std::vector<std::string> menus;
 		std::vector<std::pair<std::string, bool>> unusedActiveFlags;
+		std::vector<const char*> layoutFiles;
 
 		void setupFlagHandler();
 	};

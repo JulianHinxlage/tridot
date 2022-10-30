@@ -186,12 +186,26 @@ namespace tri {
 		template<typename ClassType>
 		static void registerEnumValue(const std::string& name, int value) {
 			auto* desc = getDescriptorsImpl()[getClassId<ClassType>()];
+
+			for (auto& e : desc->enumValues) {
+				if (e.first == name) {
+					return;
+				}
+			}
+
 			desc->enumValues.push_back({ name, value });
 		}
 
 		template<typename ClassType>
 		static void registerFunction(const std::string& name, void (ClassType::*func)()) {
 			auto* desc = getDescriptorsImpl()[getClassId<ClassType>()];
+			
+			for (auto& f : desc->functions) {
+				if (f && f->name == name) {
+					return;
+				}
+			}
+			
 			auto fdesc = new FunctionDescriptorT<ClassType>();
 			fdesc->function = func;
 			fdesc->name = name;
@@ -483,7 +497,7 @@ namespace tri::impl {
 #define TRI_UNIQUE_IDENTIFIER_IMPL(base, counter, line) TRI_UNIQUE_IDENTIFIER_IMPL_2(base, counter, line)
 #define TRI_UNIQUE_IDENTIFIER(base) TRI_UNIQUE_IDENTIFIER_IMPL(base, __COUNTER__, __LINE__)
 
-#define TRI_CLASS_FLAGS(T, name, category, flags) static tri::impl::GlobalInitializationCallback TRI_UNIQUE_IDENTIFIER(init)([](){ tri::Reflection::registerClass<T>(name, flags, category); }, [](){ tri::Reflection::unregisterClass<T>(); });
+#define TRI_CLASS_FLAGS(T, name, category, flags) static tri::impl::GlobalInitializationCallback TRI_UNIQUE_IDENTIFIER(init)([](){ tri::Reflection::registerClass<T>(name, (tri::ClassDescriptor::Flags)(flags), category); }, [](){ tri::Reflection::unregisterClass<T>(); });
 #define TRI_CLASS(T) TRI_CLASS_FLAGS(T, #T, "", tri::ClassDescriptor::Flags::NONE)
 
 #define TRI_SYSTEM(T) TRI_CLASS_FLAGS(T, #T, "", tri::ClassDescriptor::Flags::SYSTEM)
