@@ -197,6 +197,11 @@ namespace tri {
         }
     }
 
+    void AssetManager::reload(const std::string& file) {
+        auto& record = assets[minimalFilePath(file)];
+        reloadAsset(record);
+    }
+
     void AssetManager::unloadAllUnused() {
         std::unique_lock<std::mutex> lock(dataMutex);
         bool change = true;

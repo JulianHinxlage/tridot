@@ -9,7 +9,7 @@
 namespace tri {
 
 	TRI_COMPONENT(AnimationComponent);
-	TRI_PROPERTIES6(AnimationComponent, animation, speed, playing, reversed, looping, pingPong);
+	TRI_PROPERTIES7(AnimationComponent, animation, speed, playing, reversed, looping, pingPong, time);
 	TRI_FUNCTION(AnimationComponent, play);
 	TRI_FUNCTION(AnimationComponent, stop);
 	TRI_FUNCTION(AnimationComponent, unpause);
@@ -17,18 +17,10 @@ namespace tri {
 
 	void AnimationComponent::play() {
 		playing = true;
-
 		if (animation) {
 			maxTime = animation->calculateMaxTime();
 		}
-
 		reversed = false;
-		//if (reversed) {
-		//	time = maxTime;
-		//}
-		//else {
-		//	time = 0;
-		//}
 	}
 
 	void AnimationComponent::stop() {
@@ -41,18 +33,10 @@ namespace tri {
 
 	void AnimationComponent::playReverse() {
 		playing = true;
-
 		if (animation) {
 			maxTime = animation->calculateMaxTime();
 		}
-
 		reversed = true;
-		//if (reversed) {
-		//	time = maxTime;
-		//}
-		//else {
-		//	time = 0;
-		//}
 	}
 
 }

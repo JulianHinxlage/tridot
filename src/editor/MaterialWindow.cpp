@@ -50,6 +50,16 @@ namespace tri {
 							}
 						}
 					}
+					ImGui::SameLine();
+					if (ImGui::Button("Reload")) {
+						if (material) {
+							auto file = env->assetManager->getFile(material);
+							if (!file.empty()) {
+								env->assetManager->reload(file);
+							}
+						}
+					}
+
 					ImGui::Separator();
 					if (material) {
 						env->editor->classUI->draw(*material.get());

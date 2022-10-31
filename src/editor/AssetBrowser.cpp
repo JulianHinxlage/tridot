@@ -148,8 +148,14 @@ namespace tri {
 							if (ImGui::MenuItem("Add Entity")) {
 								auto prefab = env->assetManager->get<Prefab>(path, AssetManager::Options::SYNCHRONOUS);
 								if (prefab) {
-									EntityId id = prefab->createEntity(env->world);
-									env->editor->selectionContext->select(id);
+									std::map<EntityId, EntityId> idMap;
+									EntityId id = prefab->createEntity(env->world, -1, &idMap);
+									env->editor->undo->beginAction();
+									for (auto &i : idMap) {
+										env->editor->undo->entityAdded(i.second);
+										env->editor->selectionContext->select(i.second);
+									}
+									env->editor->undo->endAction();
 								}
 							}
 							ImGui::EndPopup();

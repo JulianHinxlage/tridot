@@ -13,7 +13,7 @@ namespace tri {
 
 	class Prefab : public Asset {
 	public:
-		EntityId createEntity(World* world = nullptr, EntityId hint = -1);
+		EntityId createEntity(World* world = nullptr, EntityId hint = -1, std::map<EntityId, EntityId>* idMap = nullptr);
 		void copyEntity(EntityId id, World* world = nullptr, bool includeChilds = false);
 		void copyIntoEntity(EntityId id, World* world = nullptr, bool includeChilds = false, std::map<EntityId, EntityId>* idMap = nullptr);
 

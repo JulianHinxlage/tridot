@@ -14,14 +14,27 @@ namespace tri {
 	}
 
 	DynamicObjectBuffer::DynamicObjectBuffer(const DynamicObjectBuffer& buffer) {
-		data = nullptr;
-		classId = -1;
-		count = 0;
-		set(buffer.classId, buffer.data, buffer.count);
+		operator=(buffer);
+	}
+
+	DynamicObjectBuffer::DynamicObjectBuffer(DynamicObjectBuffer&& buffer) {
+		data = buffer.data;
+		classId = buffer.classId;
+		count = buffer.count;
+		buffer.data = nullptr;
+		buffer.count = 0;
+		buffer.classId = -1;
 	}
 
 	DynamicObjectBuffer::~DynamicObjectBuffer() {
 		clear();
+	}
+
+	void DynamicObjectBuffer::operator=(const DynamicObjectBuffer& buffer) {
+		data = nullptr;
+		classId = -1;
+		count = 0;
+		set(buffer.classId, buffer.data, buffer.count);
 	}
 
 	void DynamicObjectBuffer::set(int classId, const void* ptr, int count) {

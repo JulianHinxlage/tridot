@@ -54,6 +54,16 @@ namespace tri {
 					}
 				}
 			}
+			ImGui::SameLine();
+			if (ImGui::Button("Reload")) {
+				if (animation) {
+					auto file = env->assetManager->getFile(animation);
+					if (!file.empty()) {
+						env->assetManager->reload(file);
+					}
+				}
+			}
+
 			ImGui::Separator();
 			if (animation) {
 				env->editor->classUI->draw(*animation.get());

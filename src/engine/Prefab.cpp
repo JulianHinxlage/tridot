@@ -8,20 +8,32 @@
 #include "Transform.h"
 #include "AssetManager.h"
 #include "EntityUtil.h"
+#include "EntityInfo.h"
+#include "Random.h"
 
 namespace tri {
 
 	TRI_ASSET(Prefab);
 
-	EntityId Prefab::createEntity(World* world, EntityId hint) {
+	EntityId Prefab::createEntity(World* world, EntityId hint, std::map<EntityId, EntityId>* idMap) {
 		if (!world) {
 			world = env->world;
 		}
 		EntityId id = world->addEntity(hint);
 
-		std::map<EntityId, EntityId> idMap;
-		copyIntoEntity(id, world, true, &idMap);
-		EntityUtil::replaceIds(idMap, world);
+		std::map<EntityId, EntityId> idMapLocal;
+		if (!idMap) {
+			idMap = &idMapLocal;
+		}
+
+		copyIntoEntity(id, world, true, idMap);
+		EntityUtil::replaceIds(*idMap, world);
+
+		for (auto& i : *idMap) {
+			if (auto *info = world->getComponentPending<EntityInfo>(i.second)) {
+				info->guid = env->random->getGuid();
+			}
+		}
 		return id;
 	}
 

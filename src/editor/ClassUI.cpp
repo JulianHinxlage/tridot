@@ -426,6 +426,25 @@ namespace tri {
 						ImGui::PopID();
 						break;
 					}
+
+					if (ImGui::BeginPopupContextItem()) {
+						if (ImGui::MenuItem("Move Up", nullptr, nullptr, i > 0)) {
+							void *v1 = desc->vectorGet(ptr, i - 1);
+							void *v2 = desc->vectorGet(ptr, i);
+							desc->elementType->swap(v1, v2);
+						}
+						if (ImGui::MenuItem("Move Down", nullptr, nullptr, i < size - 1)) {
+							void* v1 = desc->vectorGet(ptr, i);
+							void* v2 = desc->vectorGet(ptr, i + 1);
+							desc->elementType->swap(v1, v2);
+						}
+						if (ImGui::MenuItem("Duplicate")) {
+							void* v = desc->vectorGet(ptr, i);
+							desc->vectorInsert(ptr, i, v);
+						}
+						ImGui::EndPopup();
+					}
+
 					ImGui::SameLine();
 					std::string label = std::to_string(i);
 					ImGui::TreePush();

@@ -68,7 +68,8 @@ namespace tri {
         std::string getFile(Ref<Asset> asset);
         Status getStatus(const std::string &file);
         void setOptions(const std::string &file, Options options);
-        void unload(const std::string &file);
+        void unload(const std::string& file);
+        void reload(const std::string &file);
         std::vector<std::string> getAssetList(int typeId = -1);
 
         //unload all assets that are not in use

@@ -76,7 +76,7 @@ namespace tri {
         glm::mat4 transform(1);
         transform = glm::translate(transform, position);
         if (rotation.z != 0) {
-            transform = glm::rotate(transform, rotation.z, { 0, 0, 1 });
+            transform = glm::rotate(transform, rotation.z, {0, 0, 1});
         }
         if (rotation.y != 0) {
             transform = glm::rotate(transform, rotation.y, {0, 1, 0});

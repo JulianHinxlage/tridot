@@ -16,7 +16,10 @@ namespace tri {
 
 		DynamicObjectBuffer();
 		DynamicObjectBuffer(const DynamicObjectBuffer& buffer);
+		DynamicObjectBuffer(DynamicObjectBuffer&& buffer);
 		~DynamicObjectBuffer();
+		void operator=(const DynamicObjectBuffer& buffer);
+
 		void set(int classId, const void* ptr = nullptr, int count = 1);
 		void get(void* ptr) const;
 		void* get() const;
