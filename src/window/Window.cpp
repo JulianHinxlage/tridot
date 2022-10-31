@@ -140,6 +140,12 @@ namespace tri {
 		backgroundColor = color;
 	}
 
+	glm::vec2 Window::getPosition() {
+		int x, y;
+		glfwGetWindowPos((GLFWwindow*)window, &x, &y);
+		return glm::vec2(x, y);
+	}
+
 	void Window::close() {
 		glfwSetWindowShouldClose((GLFWwindow*)window, 1);
 	}

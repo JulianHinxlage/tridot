@@ -21,8 +21,16 @@ namespace tri {
         Transform(const glm::vec3 &position = {0, 0, 0}, const glm::vec3 &scale = {1, 1, 1}, const glm::vec3 &rotation = {0, 0, 0})
             : position(position), scale(scale), rotation(rotation) {
             parent = -1;
-            matrix = glm::mat4(1);
+            matrix = glm::mat4(0);
         }
+
+        glm::vec3 getWorldPosition() const;
+        glm::vec3 getWorldScale() const;
+        glm::vec3 getWorldRotation() const;
+        void setWorldPosition(const glm::vec3& position);
+        void setWorldScale(const glm::vec3& scale);
+        void setWorldRotation(const glm::vec3& rotation);
+
 
         glm::mat4 calculateLocalMatrix() const;
         const glm::mat4& getMatrix() const;

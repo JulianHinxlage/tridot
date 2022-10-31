@@ -135,6 +135,15 @@ target_precompile_headers(${PROJECT_NAME} PUBLIC src/pch.h)
 target_include_directories(${PROJECT_NAME} PRIVATE src/particleSystem)
 target_link_libraries(${PROJECT_NAME} PUBLIC TridotCore TridotEntity TridotEngine)
 
+#Tridot Gameplay
+project(TridotGameplay)
+file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS src/gameplay/*.cpp)
+add_library(${PROJECT_NAME} SHARED ${SOURCES})
+target_precompile_headers(${PROJECT_NAME} PUBLIC src/pch.h)
+target_include_directories(${PROJECT_NAME} PRIVATE src/gameplay)
+target_link_libraries(${PROJECT_NAME} PUBLIC TridotCore TridotEntity TridotEngine TridotWindow)
+
+
 
 #Tridot Editor Executable
 project(TridotEditor)
@@ -143,7 +152,7 @@ add_executable(${PROJECT_NAME} ${SOURCES})
 target_precompile_headers(${PROJECT_NAME} PUBLIC src/pch.h)
 target_include_directories(${PROJECT_NAME} PUBLIC src src/launch/editor)
 target_link_libraries(${PROJECT_NAME} PUBLIC TridotCore)
-add_dependencies(${PROJECT_NAME} TridotWindow TridotEntity TridotEditorLib TridotDebugMenu TridotEngine TridotRender TridotPhysics TridotAnimation TridotParticleSystem TridotAnimationEditor)
+add_dependencies(${PROJECT_NAME} TridotWindow TridotEntity TridotEditorLib TridotDebugMenu TridotEngine TridotRender TridotPhysics TridotAnimation TridotParticleSystem TridotAnimationEditor TridotGameplay)
 
 #Tridot Game Executable
 project(TridotGame)
@@ -151,8 +160,8 @@ file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS src/launch/game/*.cpp)
 add_executable(${PROJECT_NAME} ${SOURCES})
 target_precompile_headers(${PROJECT_NAME} PUBLIC src/pch.h)
 target_include_directories(${PROJECT_NAME} PUBLIC src src/launcher/game)
-target_link_libraries(${PROJECT_NAME} PUBLIC TridotCore)
-add_dependencies(${PROJECT_NAME} TridotWindow TridotEntity TridotDebugMenu TridotEngine TridotRender TridotPhysics TridotAnimation TridotParticleSystem)
+target_link_libraries(${PROJECT_NAME} PUBLIC TridotCore TridotWindow)
+add_dependencies(${PROJECT_NAME} TridotWindow TridotEntity TridotDebugMenu TridotEngine TridotRender TridotPhysics TridotAnimation TridotParticleSystem TridotGameplay)
 
 #Fat Game Binary
 project(TridotGameFull)

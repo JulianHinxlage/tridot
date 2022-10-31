@@ -118,21 +118,20 @@ namespace tri {
 				}
 			});
 
-			Transform cameraTransform;
+			const Transform *cameraTransform = nullptr;
 			env->world->each<const Camera, const Transform>([&](const Camera& c, const Transform& t) {
 				if (c.isPrimary && c.active) {
-					cameraTransform = t;
+					cameraTransform = &t;
 				}
 			});
 
 			env->world->each<const Particle, Transform>([&](EntityId id, const Particle& p, Transform& t) {
 				t.position += p.velocity * env->time->deltaTime;
 
-				if (p.faceCamera) {
+				if (p.faceCamera && cameraTransform) {
 					//todo: use a faster formular
 					Transform t2;
-					t2.decompose(t.getMatrix());
-					glm::mat mat = glm::lookAt(t2.position, cameraTransform.position, { 0, 0, 1 });
+					glm::mat mat = glm::lookAt(t.getWorldPosition(), cameraTransform->getWorldPosition(), {0, 0, 1});
 					t2.decompose(glm::rotate(glm::inverse(mat), glm::radians(-90.0f), {1, 0, 0}));
 					t.rotation = t2.rotation;
 				}

@@ -21,6 +21,8 @@ namespace tri {
 		int getVSync();
 		void setBackgroundColor(const glm::vec4 &color);
 
+		glm::vec2 getPosition();
+
 		void close();
 		bool isOpen();
 		bool inFrame();

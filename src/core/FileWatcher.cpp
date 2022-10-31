@@ -47,7 +47,9 @@ namespace tri {
 		file.onChange = onChange;
 		if (std::filesystem::exists(file.path)) {
 			file.absolutePath = absolutePath;
-			file.time = std::filesystem::last_write_time(file.absolutePath).time_since_epoch().count();
+			try {
+				file.time = std::filesystem::last_write_time(file.absolutePath).time_since_epoch().count();
+			}catch(...){}
 		}
 		files.push_back(file);
 	}

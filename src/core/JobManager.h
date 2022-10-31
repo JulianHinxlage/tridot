@@ -34,6 +34,10 @@ namespace tri {
 			void addSystem(const std::string& name);
 			void addSystems(const std::vector<std::string>& names);
 
+			template<typename T>
+			void removeSystem() {
+				removeSystem(Reflection::getDescriptor<T>()->name);
+			}
 			void removeSystem(const std::string& name);
 			void orderSystems(const std::vector<std::string>& systems);
 			void addJobExclusion(const std::string& name);

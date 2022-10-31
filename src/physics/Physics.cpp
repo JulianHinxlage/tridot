@@ -293,6 +293,7 @@ namespace tri {
 			if (mode == RuntimeMode::PLAY) {
 				impl->clock.reset();
 			}
+			lastFrameRuntimeMode = (RuntimeMode::Mode)previous;
 		});
 
 		endMapListener = env->eventManager->onMapEnd.addListener([&](World* world, std::string mapName) {
@@ -405,11 +406,6 @@ namespace tri {
 
 
 	void Physics::tick() {
-		//if (gravity != impl->lastGravity) {
-		//	impl->lastGravity = gravity;
-		//	impl->world->setGravity(conv(impl->lastGravity));
-		//}
-
 		env->world->view<RigidBody, Collider, Transform>().each([this](EntityId id, RigidBody& rigidBody, Collider& collider, Transform& transform) {
 			if (rigidBody.reference) {
 				btRigidBody* body = (btRigidBody*)rigidBody.reference;
@@ -467,7 +463,7 @@ namespace tri {
 			}
 
 			if (rigidBody.reference == nullptr) {
-				if (!wasLoadingLastFrame) {
+				if (lastFrameRuntimeMode != RuntimeMode::LOADING && lastFrameRuntimeMode != RuntimeMode::EDIT) {
 					addRigidBody(id, rigidBody, transform);
 				}
 			}
@@ -499,10 +495,6 @@ namespace tri {
 				rigidBody.velocity = conv(body->getLinearVelocity());
 				rigidBody.angular = conv(body->getAngularVelocity());
 
-
-				//rigidBody.lastPosition = conv(bodyTransform.getOrigin());
-				//rigidBody.lastRotation = convQuaternion(bodyTransform.getRotation());
-
 				rigidBody.lastPosition = transform.position;
 				rigidBody.lastRotation = transform.rotation;
 				rigidBody.lastVelocity = rigidBody.velocity;
@@ -520,7 +512,7 @@ namespace tri {
 			store->unlock();
 		}
 
-		wasLoadingLastFrame = env->runtimeMode->getMode() == RuntimeMode::LOADING;
+		lastFrameRuntimeMode = env->runtimeMode->getMode();
 	}
 
 }

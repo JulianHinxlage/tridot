@@ -12,6 +12,7 @@
 #include "Gizmos.h"
 #include "engine/RuntimeMode.h"
 #include <imgui/imgui.h>
+#include <imgui/imgui_internal.h>
 
 namespace tri {
 
@@ -20,6 +21,7 @@ namespace tri {
 		EditorCamera editorCamera;
 		EntityId editorCameraEntity;
 		int editorCameraPersistandHandle;
+		std::vector<int> persistentHandles;
 
 		void init() override {
 			env->systemManager->addSystem<Viewport>();
@@ -37,8 +39,10 @@ namespace tri {
 				ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
 				if (ImGui::Begin("Viewport", &active)) {
 					if (!env->viewport->displayInWindow) {
-						env->viewport->size = { ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y };
-						env->viewport->position = { ImGui::GetCursorScreenPos().x, ImGui::GetCursorScreenPos().y};
+						env->viewport->size = glm::vec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y);
+						env->viewport->position = glm::vec2(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y);
+						env->viewport->position += glm::vec2(ImGui::GetCursorPos().x, ImGui::GetCursorPos().y);
+						env->viewport->position -= env->window->getPosition();
 					}
 					if (env->viewport->frameBuffer) {
 						//draw rendered image
@@ -57,7 +61,28 @@ namespace tri {
 							}
 						});
 
-						editorCameraPersistandHandle = env->editor->setPersistentEntity(editorCameraEntity, editorCameraPersistandHandle);
+						{
+							//make camera persistent
+							editorCameraPersistandHandle = env->editor->setPersistentEntity(editorCameraEntity, editorCameraPersistandHandle);
+							EntityId id = editorCameraEntity;
+							int i = 0;
+							while (true) {
+								if (auto* t = env->world->getComponent<Transform>(id)) {
+									if (t && t->parent != -1) {
+										id = t->parent;
+										if (persistentHandles.size() <= i) {
+											persistentHandles.resize(i + 1, -1);
+										}
+										persistentHandles[i] = env->editor->setPersistentEntity(id, persistentHandles[i]);
+										i++;
+										continue;
+									}
+								}
+								break;
+							}
+						}
+
+
 
 						bool usingGizmos = false;
 						if (camera) {

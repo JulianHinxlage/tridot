@@ -6,6 +6,7 @@
 #include "core/core.h"
 #include "window/Input.h"
 #include "engine/Time.h"
+#include "entity/World.h"
 
 namespace tri {
 
@@ -35,19 +36,21 @@ namespace tri {
             }
         }
 
+        glm::vec3 position = transform.getWorldPosition();
+
         //WASD EQ
         if(camera.type == Camera::PERSPECTIVE) {
             move *= speed * env->time->frameTime;
             move /= transform.scale;
-            transform.position += camera.forward * -move.z;
-            transform.position += camera.right * move.x;
-            transform.position += camera.up * move.y;
+            position += camera.forward * -move.z;
+            position += camera.right * move.x;
+            position += camera.up * move.y;
         }else{
             move *= env->time->frameTime * 1.0f;
             move.z *= transform.scale.y;
             move.x *= transform.scale.x;
-            transform.position += camera.up * -move.z;
-            transform.position += camera.right * move.x;
+            position += camera.up * -move.z;
+            position += camera.right * move.x;
         }
 
         //mouse wheel
@@ -56,7 +59,7 @@ namespace tri {
             speed *= std::pow(1.2, wheelDelta);
         }else{
             if(camera.type == Camera::PERSPECTIVE) {
-                transform.position += wheelDelta * camera.forward * speed * 0.1f;
+                position += wheelDelta * camera.forward * speed * 0.1f;
             }else{
                 transform.scale /= std::pow(1.1, wheelDelta);
             }
@@ -82,6 +85,7 @@ namespace tri {
                 transform.rotation.y -= delta.x * 0.001 / transform.scale.z;
                 transform.rotation.x -= delta.y * 0.001 / transform.scale.z;
                 transform.rotation.x = glm::radians( std::min(89.0f, std::max(-89.0f, glm::degrees(transform.rotation.x))));
+                transform.rotation.z = 0;
                 env->input->setMousePosition(startMousePosition);
             }
         }
@@ -92,10 +96,24 @@ namespace tri {
             }
             //pan move
             glm::vec2 delta = mousePosition - startMousePosition;
-            transform.position += delta.y * camera.up * 0.001f * speed * transform.scale.y;
-            transform.position -= delta.x * camera.right * 0.001f * speed * transform.scale.x;
+            position += delta.y * camera.up * 0.001f * speed * transform.scale.y;
+            position -= delta.x * camera.right * 0.001f * speed * transform.scale.x;
             env->input->setMousePosition(startMousePosition);
         }
+
+        if (transform.parent == -1) {
+            transform.setWorldPosition(position);
+        }
+        else {
+            Transform *parent = env->world->getComponent<Transform>(transform.parent);
+            if (parent) {
+                parent->setWorldPosition(position - glm::vec3(parent->getMatrix() * glm::vec4(transform.position, 0)));
+            }
+            else {
+                transform.setWorldPosition(position);
+            }
+        }
+
 
     }
 

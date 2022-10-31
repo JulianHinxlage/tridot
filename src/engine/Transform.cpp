@@ -12,6 +12,60 @@
 
 namespace tri {
 
+    glm::vec3 Transform::getWorldPosition() const {
+        Transform t;
+        t.decompose(getMatrix());
+        return t.position;
+    }
+
+    glm::vec3 Transform::getWorldScale() const {
+        Transform t;
+        t.decompose(getMatrix());
+        return t.scale;
+    }
+
+    glm::vec3 Transform::getWorldRotation() const {
+        Transform t;
+        t.decompose(getMatrix());
+        return t.rotation;
+    }
+
+    void Transform::setWorldPosition(const glm::vec3& position) {
+        if (parent == -1) {
+            this->position = position;
+        }
+        else {
+            glm::mat4 parentMatrix = getMatrix() * glm::inverse(calculateLocalMatrix());
+            this->position = glm::inverse(parentMatrix) * glm::vec4(position, 1);
+        }
+    }
+
+    void Transform::setWorldScale(const glm::vec3& scale) {
+        glm::mat4 parentMatrix = getMatrix() * glm::inverse(calculateLocalMatrix());
+        Transform t;
+        t.decompose(glm::inverse(parentMatrix) * glm::scale(glm::mat4(1), scale));
+        this->scale = t.scale;
+    }
+
+    void Transform::setWorldRotation(const glm::vec3& rotation) {
+        glm::mat4 parentMatrix = getMatrix() * glm::inverse(calculateLocalMatrix());
+        Transform t;
+
+        glm::mat4 rot(1);
+        if (rotation.z != 0) {
+            rot = glm::rotate(rot, rotation.z, { 0, 0, 1 });
+        }
+        if (rotation.y != 0) {
+            rot = glm::rotate(rot, rotation.y, { 0, 1, 0 });
+        }
+        if (rotation.x != 0) {
+            rot = glm::rotate(rot, rotation.x, { 1, 0, 0 });
+        }
+
+        t.decompose(glm::inverse(parentMatrix) * rot);
+        this->rotation = t.rotation;
+    }
+
     glm::mat4 Transform::calculateLocalMatrix() const {
         glm::mat4 transform(1);
         transform = glm::translate(transform, position);

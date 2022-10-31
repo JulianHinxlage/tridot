@@ -6,6 +6,7 @@
 #include "Collider.h"
 #include "RigidBody.h"
 #include "engine/Transform.h"
+#include "engine/RuntimeMode.h"
 
 namespace tri {
 
@@ -26,7 +27,7 @@ namespace tri {
 		int entityRemoveListener;
 		int modeChangeListener;
 		int endMapListener;
-		bool wasLoadingLastFrame = true;
+		RuntimeMode::Mode lastFrameRuntimeMode = RuntimeMode::LOADING;
 	};
 
 }

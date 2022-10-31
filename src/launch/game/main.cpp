@@ -3,6 +3,8 @@
 //
 
 #include "core.h"
+#include "window/Input.h"
+#include "window/Window.h"
 using namespace tri;
 
 int main(int argc, char* argv[]) {
@@ -12,6 +14,12 @@ int main(int argc, char* argv[]) {
 
     //wait for all assets to be loaded before starting the scene
     env->console->executeCommand("waitForAllAssetsLoaded");
+
+    env->eventManager->postTick.addListener([]() {
+        if (env->input->down(Input::KEY_ESCAPE)) {
+            env->window->close();
+        }
+    });
 
     MainLoop::run();
     MainLoop::shutdown();
