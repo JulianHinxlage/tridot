@@ -239,6 +239,7 @@ namespace tri {
 
 	void Serializer::serializePrefab(Prefab* prefab, SerialData& data) {
 		*data.emitter << YAML::BeginMap;
+		*data.emitter << YAML::Key << "id" << YAML::Value << prefab->getEntityId();
 
 		for (auto& comp : prefab->getComponents()) {
 			auto* desc = Reflection::getDescriptor(comp.classId);
@@ -263,6 +264,8 @@ namespace tri {
 	}
 
 	void Serializer::deserializePrefab(Prefab* prefab, SerialData& data) {
+		prefab->setEntityId(data.node["id"].as<int>(-1));
+
 		for (auto i : data.node) {
 			if (i.first.Scalar() != "Childs") {
 				auto* desc = Reflection::getDescriptor(i.first.Scalar());

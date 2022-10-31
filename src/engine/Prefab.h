@@ -15,7 +15,7 @@ namespace tri {
 	public:
 		EntityId createEntity(World* world = nullptr, EntityId hint = -1);
 		void copyEntity(EntityId id, World* world = nullptr, bool includeChilds = false);
-		void copyIntoEntity(EntityId id, World* world = nullptr, bool includeChilds = false);
+		void copyIntoEntity(EntityId id, World* world = nullptr, bool includeChilds = false, std::map<EntityId, EntityId>* idMap = nullptr);
 
 		template<typename T>
 		T* addComponent(const T& t = T()) {
@@ -37,6 +37,8 @@ namespace tri {
 		void clear();
 		const std::vector<DynamicObjectBuffer>& getComponents();
 		const std::vector<Ref<Prefab>>& getChilds();
+		EntityId getEntityId();
+		void setEntityId(EntityId id);
 
 		virtual bool load(const std::string &file);
 		virtual bool save(const std::string& file);
@@ -44,6 +46,7 @@ namespace tri {
 	private:
 		std::vector<DynamicObjectBuffer> components;
 		std::vector<Ref<Prefab>> childs;
+		EntityId entityId;
 	};
 
 }

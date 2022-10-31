@@ -21,7 +21,9 @@ namespace tri {
     }
 
     void Input::init() {
-        env->jobManager->addJob("Render")->addSystem<Input>();
+        auto* job = env->jobManager->addJob("Render");
+        job->addSystem<Input>();
+        job->orderSystems({"Window", "Input"});
     }
 
     void Input::startup() {

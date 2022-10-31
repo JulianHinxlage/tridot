@@ -7,6 +7,7 @@
 #include "Serializer.h"
 #include "Transform.h"
 #include "AssetManager.h"
+#include "EntityUtil.h"
 
 namespace tri {
 
@@ -17,7 +18,10 @@ namespace tri {
 			world = env->world;
 		}
 		EntityId id = world->addEntity(hint);
-		copyIntoEntity(id, world, true);
+
+		std::map<EntityId, EntityId> idMap;
+		copyIntoEntity(id, world, true, &idMap);
+		EntityUtil::replaceIds(idMap, world);
 		return id;
 	}
 
@@ -26,6 +30,7 @@ namespace tri {
 			world = env->world;
 		}
 		clear();
+		entityId = id;
 		for (auto* desc : Reflection::getDescriptors()) {
 			if (desc && desc->flags & ClassDescriptor::COMPONENT) {
 				void *comp = world->getComponent(id, desc->classId);
@@ -41,9 +46,12 @@ namespace tri {
 		}
 	}
 
-	void Prefab::copyIntoEntity(EntityId id, World* world, bool includeChilds) {
+	void Prefab::copyIntoEntity(EntityId id, World* world, bool includeChilds, std::map<EntityId, EntityId> *idMap) {
 		if (!world) {
 			world = env->world;
+		}
+		if (idMap && entityId != -1) {
+			(*idMap)[entityId] = id;
 		}
 		for (int i = 0; i < components.size(); i++) {
 			int classId = components[i].classId;
@@ -58,7 +66,7 @@ namespace tri {
 			for (auto& child : childs) {
 				if (child) {
 					EntityId childId = world->addEntity();
-					child->copyIntoEntity(childId, world, includeChilds);
+					child->copyIntoEntity(childId, world, includeChilds, idMap);
 					if (Transform* t = world->getComponentPending<Transform>(childId)) {
 						t->parent = id;
 					}
@@ -117,6 +125,14 @@ namespace tri {
 
 	const std::vector<Ref<Prefab>>& Prefab::getChilds() {
 		return childs;
+	}
+
+	EntityId Prefab::getEntityId() {
+		return entityId;
+	}
+
+	void Prefab::setEntityId(EntityId id) {
+		entityId = id;
 	}
 
 	bool Prefab::load(const std::string& file) {

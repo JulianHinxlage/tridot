@@ -17,7 +17,7 @@ namespace tri {
 
 	TRI_COMPONENT_CATEGORY(ThirdPersonCameraController, "Gameplay");
     TRI_PROPERTIES8(ThirdPersonCameraController, followEntity, followPoint, followSpeed, distance, playerSpeed, drag, maxFallSpeed, useWASD);
-    TRI_PROPERTIES1(ThirdPersonCameraController, active);
+    TRI_PROPERTIES2(ThirdPersonCameraController, mouseActive, active);
 
     //ThirdPersonCameraControlerSystem
 	class TPCCSystem : public System {
@@ -51,7 +51,6 @@ namespace tri {
 
             env->world->each<ThirdPersonCameraController, const Camera, Transform>([&](EntityId id, ThirdPersonCameraController &controller, const Camera &camera, Transform &transform) {
                 if (controller.active) {
-                    env->input->setMousePosition(center, false);
                     if (controller.followEntity != -1) {
                         Transform* followTransform = env->world->getComponent<Transform>(controller.followEntity);
                         if (followTransform) {
@@ -118,15 +117,23 @@ namespace tri {
                                 }
                             }
 
-                            //mouse wheel
-                            float wheelDelta = env->input->getMouseWheelDelta();
-                            controller.distance *= 1.0f - wheelDelta * 0.1f;
+                            if (env->input->pressed(Input::Key::KEY_TAB)) {
+                                controller.mouseActive = !controller.mouseActive;
+                            }
 
-                            //look around
-                            transform.rotation.y -= delta.x * 0.001 / transform.scale.z;
-                            transform.rotation.x -= delta.y * 0.001 / transform.scale.z;
-                            transform.rotation.x = glm::radians(std::min(89.0f, std::max(-89.0f, glm::degrees(transform.rotation.x))));
-                            transform.rotation.z = 0;
+                            if (controller.mouseActive) {
+                                env->input->setMousePosition(center, false);
+
+                                //mouse wheel
+                                float wheelDelta = env->input->getMouseWheelDelta();
+                                controller.distance *= 1.0f - wheelDelta * 0.1f;
+
+                                //look around
+                                transform.rotation.y -= delta.x * 0.001 / transform.scale.z;
+                                transform.rotation.x -= delta.y * 0.001 / transform.scale.z;
+                                transform.rotation.x = glm::radians(std::min(89.0f, std::max(-89.0f, glm::degrees(transform.rotation.x))));
+                                transform.rotation.z = 0;
+                            }
 
                             //follow
                             glm::vec3 forward = transform.calculateLocalMatrix() * glm::vec4(0, 0, -1, 0);

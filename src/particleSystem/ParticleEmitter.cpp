@@ -153,7 +153,7 @@ namespace tri {
 	TRI_SYSTEM(ParticleSystem);
 
 	void ParticleEmitter::trigger() {
-		if (active && effect) {
+		if (effect) {
 			env->systemManager->getSystem<ParticleSystem>()->trigger(*effect, env->world->getIdByComponent(this));
 		}
 	}

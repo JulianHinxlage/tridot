@@ -5,6 +5,7 @@
 #include "EntityOperations.h"
 #include "Editor.h"
 #include "engine/Transform.h"
+#include "engine/EntityUtil.h"
 
 namespace tri {
 
@@ -25,47 +26,6 @@ namespace tri {
 		return newId;
 	}
 
-	void eachProperty(int classId, void* comp, std::function<void(void* prop, int classId)> callback) {
-		auto* desc = Reflection::getDescriptor(classId);
-		if (desc) {
-			if (desc->flags & ClassDescriptor::VECTOR) {
-				int size = desc->vectorSize(comp);
-				for (int i = 0; i < size; i++) {
-					void* elm = desc->vectorGet(comp, i);
-					callback((uint8_t*)elm, desc->elementType->classId);
-					eachProperty(desc->elementType->classId, elm, callback);
-				}
-			}
-			for (auto& prop : desc->properties) {
-				callback((uint8_t*)comp + prop.offset, prop.type->classId);
-				eachProperty(prop.type->classId, (uint8_t*)comp + prop.offset, callback);
-			}
-		}
-	}
-
-	void replaceEntityIds(const std::map<EntityId, EntityId> &idMap) {
-		for (auto& i : idMap) {
-			for (auto* desc : Reflection::getDescriptors()) {
-				if (desc) {
-					if (desc->flags & ClassDescriptor::COMPONENT) {
-						void* comp = env->world->getComponentPending(i.second, desc->classId);
-						if (comp) {
-							eachProperty(desc->classId, comp, [&](void* prop, int classId) {
-								if (classId == Reflection::getClassId<EntityId>()) {
-									EntityId* id = (EntityId*)prop;
-									auto j = idMap.find(*id);
-									if (j != idMap.end()) {
-										*id = j->second;
-									}
-								}
-								});
-						}
-					}
-				}
-			}
-		}
-	}
-
 	void EntityOperations::duplicateSelection() {
 		if (env->editor->selectionContext->isMultiSelection()) {
 			std::map<EntityId, EntityId> idMap;
@@ -80,18 +40,7 @@ namespace tri {
 			}
 			env->editor->undo->endAction();
 
-			//reparenting
-			/*for (auto& i : idMap) {
-				Transform* t = env->world->getComponentPending<Transform>(i.second);
-				if (t) {
-					auto j = idMap.find(t->parent);
-					if (j != idMap.end()) {
-						t->parent = j->second;
-					}
-				}
-			}*/
-
-			replaceEntityIds(idMap);
+			EntityUtil::replaceIds(idMap, env->world);
 		}
 		else if (env->editor->selectionContext->isSingleSelection()) {
 			EntityId id = env->editor->selectionContext->getSelected()[0];

@@ -18,11 +18,7 @@ namespace tri {
         glm::vec3 rotation;
         EntityId parent = -1;
 
-        Transform(const glm::vec3 &position = {0, 0, 0}, const glm::vec3 &scale = {1, 1, 1}, const glm::vec3 &rotation = {0, 0, 0})
-            : position(position), scale(scale), rotation(rotation) {
-            parent = -1;
-            matrix = glm::mat4(0);
-        }
+        Transform(const glm::vec3& position = { 0, 0, 0 }, const glm::vec3& scale = { 1, 1, 1 }, const glm::vec3& rotation = { 0, 0, 0 });
 
         glm::vec3 getWorldPosition() const;
         glm::vec3 getWorldScale() const;

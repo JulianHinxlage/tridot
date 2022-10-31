@@ -57,7 +57,7 @@ namespace tri {
 	class ParticleEmitter {
 	public:
 		bool active = true;
-		Ref< ParticleEffect> effect;
+		Ref<ParticleEffect> effect;
 
 		void trigger();
 	};

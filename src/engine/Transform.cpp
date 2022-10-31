@@ -12,6 +12,12 @@
 
 namespace tri {
 
+    Transform::Transform(const glm::vec3& position, const glm::vec3& scale, const glm::vec3& rotation)
+        : position(position), scale(scale), rotation(rotation) {
+        parent = -1;
+        matrix = glm::mat4(0);
+    }
+
     glm::vec3 Transform::getWorldPosition() const {
         Transform t;
         t.decompose(getMatrix());
@@ -131,6 +137,12 @@ namespace tri {
                     if (t && t->parent != -1) {
                         childs[t->parent].clear();
                     }
+                }
+            });
+            env->eventManager->onEntityAdd.addListener([](World* world, EntityId id) {
+                Transform* t = env->world->getComponent<Transform>(id);
+                if (t) {
+                    t->setMatrix(t->calculateLocalMatrix());
                 }
             });
         }

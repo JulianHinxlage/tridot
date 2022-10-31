@@ -71,9 +71,11 @@ namespace tri {
 					else {
 						if (anim.reversed != anim.pingPong) {
 							anim.animation->apply(0, id);
+							anim.time = 0;
 						}
 						else {
 							anim.animation->apply(anim.maxTime, id);
+							anim.time = anim.maxTime;
 						}
 					}
 

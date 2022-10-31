@@ -16,6 +16,8 @@ namespace tri {
 		float maxFallSpeed = 40;
 		glm::vec3 lastRotation;
 		bool useWASD = true;
+		bool mouseActive = true;
+		bool active = true;
 	};
 
 }

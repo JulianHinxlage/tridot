@@ -23,12 +23,12 @@ namespace tri {
 		}
 
 		reversed = false;
-		if (reversed) {
-			time = maxTime;
-		}
-		else {
-			time = 0;
-		}
+		//if (reversed) {
+		//	time = maxTime;
+		//}
+		//else {
+		//	time = 0;
+		//}
 	}
 
 	void AnimationComponent::stop() {
@@ -47,12 +47,12 @@ namespace tri {
 		}
 
 		reversed = true;
-		if (reversed) {
-			time = maxTime;
-		}
-		else {
-			time = 0;
-		}
+		//if (reversed) {
+		//	time = maxTime;
+		//}
+		//else {
+		//	time = 0;
+		//}
 	}
 
 }
