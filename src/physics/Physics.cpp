@@ -28,7 +28,7 @@
 
 namespace tri {
 
-	TRI_SYSTEM(Physics);
+	TRI_SYSTEM_INSTANCE(Physics, env->physics);
 
 	btVector3 conv(const glm::vec3& vec) {
 		return btVector3(vec.x, vec.y, vec.z);
@@ -245,8 +245,6 @@ namespace tri {
 			if (compount) {
 				*shape = compount;
 				compount->calculateLocalInertia(mass, *localInertia);
-				//glm::vec3 offset = conv(RigidBody_TransformCompoundRecursive(compount, mass).getOrigin());
-				//return offset;
 				return { 0, 0, 0 };
 			}
 			else {
@@ -310,8 +308,6 @@ namespace tri {
 		env->eventManager->onMapEnd.removeListener(endMapListener);
 	}
 
-	
-
 	void Physics::addRigidBody(EntityId& id, RigidBody& rigidBody, Transform& transform) {
 		btVector3 localInertia(0, 0, 0);
 		btCollisionShape* shape;
@@ -323,28 +319,13 @@ namespace tri {
 
 		glm::vec3 offset = impl->createShape(id, mass, &localInertia, &shape);
 
-		//auto lm = transform.calculateLocalMatrix();
-		//transform.position += offset;
-		//auto m = transform.getMatrix() * glm::inverse(lm) * transform.calculateLocalMatrix();
-		//
-		//for (auto& child : Transform::getChilds(id)) {
-		//	if (env->world->hasComponents<Transform>(child)) {
-		//		Transform& transform = *env->world->getComponent<Transform>(child);
-		//		transform.position -= offset;
-		//	}
-		//}
-
 		btTransform bodyTransform;
 		bodyTransform.setIdentity();
 
 		Transform worldTransform;
-		//worldTransform.decompose(m);
 		worldTransform.decompose(transform.getMatrix());
 		bodyTransform.setOrigin(conv(worldTransform.position));
 		bodyTransform.setRotation(convQuaternion(worldTransform.rotation));
-
-		//bodyTransform.setOrigin(conv(transform.position));
-		//bodyTransform.setRotation(convQuaternion(transform.rotation));
 
 		btDefaultMotionState* motionState = new btDefaultMotionState(bodyTransform);
 		btRigidBody::btRigidBodyConstructionInfo info(mass, motionState, shape, localInertia);
@@ -353,13 +334,10 @@ namespace tri {
 			body->setCollisionFlags(body->getCollisionFlags() | btCollisionObject::CF_KINEMATIC_OBJECT);
 		}
 
-		//btTransform comOffset;
-		//comOffset = bodyTransform;
-		//comOffset.setIdentity();
-		//comOffset.setOrigin(comOffset.getOrigin() - conv(offset));
-		//body->setCenterOfMassTransform(comOffset);
+		if (rigidBody.isTrigger) {
+			body->setCollisionFlags(body->getCollisionFlags() | btCollisionObject::CF_NO_CONTACT_RESPONSE);
+		}
 
-		//motionState->m_centerOfMassOffset = comOffset;
 
 		body->setFriction(rigidBody.friction);
 		body->setRestitution(rigidBody.restitution);
@@ -404,22 +382,38 @@ namespace tri {
 		}
 	}
 
-
 	void Physics::tick() {
 		env->world->view<RigidBody, Collider, Transform>().each([this](EntityId id, RigidBody& rigidBody, Collider& collider, Transform& transform) {
 			if (rigidBody.reference) {
 				btRigidBody* body = (btRigidBody*)rigidBody.reference;
 
-				if (rigidBody.type == RigidBody::STATIC) {
-					return;
-				}
+				//if (rigidBody.type == RigidBody::STATIC) {
+				//	return;
+				//}
 
 				Transform worldTransform;
 				worldTransform.decompose(transform.getMatrix());
 
 				if (transform.position != rigidBody.lastPosition) {
-					body->getWorldTransform().setOrigin(conv(worldTransform.position));
-					body->setActivationState(ACTIVE_TAG);
+					if (rigidBody.type == RigidBody::STATIC) {
+						impl->world->removeRigidBody(body);
+
+						btTransform bodyTransform;
+						bodyTransform.setIdentity();
+
+						Transform worldTransform;
+						worldTransform.decompose(transform.getMatrix());
+						bodyTransform.setOrigin(conv(worldTransform.position));
+						bodyTransform.setRotation(convQuaternion(worldTransform.rotation));
+
+						body->setWorldTransform(bodyTransform);
+
+						impl->world->addRigidBody(body);
+					}
+					else {
+						body->getWorldTransform().setOrigin(conv(worldTransform.position));
+						body->setActivationState(ACTIVE_TAG);
+					}
 				}
 				if (transform.rotation != rigidBody.lastRotation) {
 					body->getWorldTransform().setRotation(convQuaternion(worldTransform.rotation));
@@ -433,6 +427,11 @@ namespace tri {
 					body->setAngularVelocity(conv(rigidBody.angular));
 					body->setActivationState(ACTIVE_TAG);
 				}
+
+				rigidBody.lastPosition = transform.position;
+				rigidBody.lastRotation = transform.rotation;
+				rigidBody.lastVelocity = rigidBody.velocity;
+				rigidBody.lastAngular = rigidBody.angular;
 			}
 		});
 
@@ -468,6 +467,14 @@ namespace tri {
 				}
 			}
 			else {
+
+				if (rigidBody.type == RigidBody::STATIC) {
+					return;
+				}
+				if (rigidBody.type == RigidBody::KINEMATIC) {
+					return;
+				}
+
 				btRigidBody* body = (btRigidBody*)rigidBody.reference;
 				btTransform bodyTransform;
 				if (body->getMotionState()) {
@@ -513,6 +520,52 @@ namespace tri {
 		}
 
 		lastFrameRuntimeMode = env->runtimeMode->getMode();
+	}
+
+	void Physics::rayCast(glm::vec3 from, glm::vec3 to, bool firstOnly, std::function<void(const glm::vec3& pos, EntityId id)> callback) {
+		if (firstOnly) {
+			btCollisionWorld::ClosestRayResultCallback results(conv(from), conv(to));
+			impl->world->rayTest(conv(from), conv(to), results);
+			if (results.hasHit()) {
+				glm::vec3 pos = conv(conv(from).lerp(conv(to), results.m_closestHitFraction));
+				callback(pos, results.m_collisionObject->getUserIndex());
+			}
+		}
+		else {
+			btCollisionWorld::AllHitsRayResultCallback results(conv(from), conv(to));
+			impl->world->rayTest(conv(from), conv(to), results);
+			for (int i = 0; i < results.m_hitFractions.size(); i++) {
+				glm::vec3 pos = conv(conv(from).lerp(conv(to), results.m_hitFractions[i]));
+				callback(pos, results.m_collisionObjects[i]->getUserIndex());
+			}
+		}
+	}
+
+	class ContactCallback : public btCollisionWorld::ContactResultCallback {
+	public:
+		btRigidBody* source;
+		std::vector<std::pair<glm::vec3, btCollisionObject*>> contacts;
+
+		virtual btScalar addSingleResult(btManifoldPoint& cp, const btCollisionObjectWrapper* colObj0Wrap, int partId0, int index0, const btCollisionObjectWrapper* colObj1Wrap, int partId1, int index1) {
+			if (colObj0Wrap->m_collisionObject == source) {
+				contacts.push_back({ (glm::vec3)conv(cp.getPositionWorldOnA()), (btCollisionObject*)colObj1Wrap->m_collisionObject });
+			}
+			else {
+				contacts.push_back({ (glm::vec3)conv(cp.getPositionWorldOnB()), (btCollisionObject*)colObj0Wrap->m_collisionObject });
+			}
+			return 0;
+		}
+	};
+
+	void Physics::contacts(RigidBody& rigidBody, std::function<void(const glm::vec3& pos, EntityId id)> callback) {
+		if (rigidBody.reference != nullptr) {
+			ContactCallback result;
+			result.source = (btRigidBody*)rigidBody.reference;
+			impl->world->contactTest((btRigidBody*)rigidBody.reference, result);
+			for (auto& c : result.contacts) {
+				callback(c.first, c.second->getUserIndex());
+			}
+		}
 	}
 
 }

@@ -20,6 +20,7 @@ namespace tri {
 		float drag = 5;
 		float maxFallSpeed = 40;
 		bool useWASD = true;
+		bool active = true;
 		glm::vec3 followPointVelocity;
 	};
 

@@ -49,6 +49,9 @@ namespace tri {
 		class RenderPipeline* renderPipeline;
 		class RenderSettings* renderSettings;
 
+		//Physics
+		class Physics* physics;
+
 		Environment();
 
 		static void init();

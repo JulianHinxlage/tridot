@@ -141,7 +141,7 @@ file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS src/gameplay/*.cpp)
 add_library(${PROJECT_NAME} SHARED ${SOURCES})
 target_precompile_headers(${PROJECT_NAME} PUBLIC src/pch.h)
 target_include_directories(${PROJECT_NAME} PRIVATE src/gameplay)
-target_link_libraries(${PROJECT_NAME} PUBLIC TridotCore TridotEntity TridotEngine TridotWindow)
+target_link_libraries(${PROJECT_NAME} PUBLIC TridotCore TridotEntity TridotEngine TridotWindow TridotPhysics)
 
 
 

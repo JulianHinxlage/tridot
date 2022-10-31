@@ -25,6 +25,7 @@ namespace tri {
 		float angularDamping = 0;
 
 		bool enablePhysics = true;
+		bool isTrigger = false;
 		void* reference = nullptr;
 
 		glm::vec3 lastPosition = { 0, 0, 0 };

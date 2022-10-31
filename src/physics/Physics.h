@@ -17,8 +17,8 @@ namespace tri {
 		void tick() override;
 		void shutdown() override;
 
-		void addRigidBody(EntityId& id, RigidBody& rigidBody, Transform& transform);
-		void removeRigidBody(EntityId& id, RigidBody& rigidBody, Transform& transform);
+		void rayCast(glm::vec3 from, glm::vec3 to, bool firstOnly, std::function<void(const glm::vec3& pos, EntityId id)> callback);
+		void contacts(RigidBody& rigidBody, std::function<void(const glm::vec3& pos, EntityId id)> callback);
 
 	private:
 		class Impl;
@@ -28,6 +28,9 @@ namespace tri {
 		int modeChangeListener;
 		int endMapListener;
 		RuntimeMode::Mode lastFrameRuntimeMode = RuntimeMode::LOADING;
+
+		void addRigidBody(EntityId& id, RigidBody& rigidBody, Transform& transform);
+		void removeRigidBody(EntityId& id, RigidBody& rigidBody, Transform& transform);
 	};
 
 }
