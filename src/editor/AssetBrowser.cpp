@@ -231,6 +231,9 @@ namespace tri {
 				}
 				textBox.open = false;
 			}
+			if (ImGui::IsItemDeactivated()) {
+				textBox.open = false;
+			}
 			textBox.openLast = textBox.open;
 		}
 
