@@ -96,6 +96,7 @@ namespace tri {
 
 		void init() override {
 			env->console->addCVar("maxParticles", &maxParticels);
+			env->jobManager->addJob("ParticleSystem")->addSystem<ParticleSystem>();
 		}
 
 		virtual void startup() override {
@@ -125,7 +126,7 @@ namespace tri {
 				}
 			});
 
-			env->world->each<const Particle, Transform>([&](EntityId id, const Particle& p, Transform& t) {
+			env->world->each<const Particle, const Transform>([&](EntityId id, const Particle& p, Transform& t) {
 				t.position += p.velocity * env->time->deltaTime;
 
 				if (p.faceCamera && cameraTransform) {

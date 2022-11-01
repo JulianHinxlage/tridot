@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2021 Julian Hinxlage. All rights reserved.
+// Copyright (c) 2022 Julian Hinxlage. All rights reserved.
 //
 
 #pragma once
@@ -12,17 +12,16 @@ namespace tri {
 
 	class ThirdPersonCameraController {
 	public:
-		EntityId followEntity = -1;
-		glm::vec3 followPoint;
-		float followSpeed = 10;
-		float distance = 10;
-		float playerSpeed = 10;
-		float drag = 5;
-		float maxFallSpeed = 40;
-		bool useWASD = true;
-		bool mouseActive = true;
 		bool active = true;
-		glm::vec3 followPointVelocity;
+		EntityId followEntity = -1;
+		float speed = 10;
+		float distance = 10;
+		float minDistance = 1;
+		float maxDistance = 100;
+		glm::vec3 offset = {0, 0, 0};
+		bool mouseActive = true;
+		bool mouseScrollActive = true;
+		glm::vec3 followPoint;
 	};
 
 }

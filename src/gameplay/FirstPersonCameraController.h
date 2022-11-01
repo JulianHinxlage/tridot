@@ -1,23 +1,22 @@
 //
-// Copyright (c) 2021 Julian Hinxlage. All rights reserved.
+// Copyright (c) 2022 Julian Hinxlage. All rights reserved.
 //
 
 #pragma once
 
 #include "pch.h"
+#include "entity/World.h"
 #include <glm/glm.hpp>
 
 namespace tri {
 
 	class FirstPersonCameraController {
 	public:
-		float speed = 5;
-		float drag = 5;
-		float maxFallSpeed = 40;
-		glm::vec3 lastRotation;
-		bool useWASD = true;
-		bool mouseActive = true;
 		bool active = true;
+		EntityId followEntity = -1;
+		glm::vec3 offset = {0, 0, 0};
+		bool mouseActive = true;
+		glm::vec3 lastRotation = {0, 0, 0};
 	};
 
 }
