@@ -9,6 +9,8 @@
 #include "window/Viewport.h"
 #include "window/Input.h"
 #include "render/objects/FrameBuffer.h"
+#include "engine/MeshComponent.h"
+#include "render/renderer/OutlineRenderer.h"
 #include "Gizmos.h"
 #include "engine/RuntimeMode.h"
 #include <imgui/imgui.h>
@@ -46,6 +48,7 @@ namespace tri {
 					}
 					if (env->viewport->frameBuffer) {
 						//draw rendered image
+						auto curserPos = ImGui::GetCursorPos();
 						ImGui::Image((ImTextureID)(size_t)env->viewport->frameBuffer->getAttachment(TextureAttachment::COLOR)->getId(), ImGui::GetContentRegionAvail(), ImVec2(0, 1), ImVec2(1, 0));
 						
 						//camera
@@ -120,6 +123,29 @@ namespace tri {
 										}
 									}
 								}
+							}
+						}
+
+						//outlines
+						OutlineRenderer *renderer = env->systemManager->getSystem<OutlineRenderer>();
+						if (renderer) {
+							for (auto &id : env->editor->selectionContext->getSelected()) {
+								auto* transform = env->world->getComponent<Transform>(id);
+								auto* mesh = env->world->getComponent<MeshComponent>(id);
+								if (transform && mesh) {
+									if (mesh->mesh) {
+										renderer->submit(transform->getMatrix(), mesh->mesh.get());
+									}
+								}
+							}
+
+							if (camera) {
+								renderer->submitBatches(camera->viewProjection);
+							}
+							auto& frameBuffer = renderer->getFrameBuffer();
+							if (frameBuffer) {
+								ImGui::SetCursorPos(curserPos);
+								ImGui::Image((ImTextureID)(size_t)frameBuffer->getAttachment(TextureAttachment::COLOR)->getId(), ImGui::GetContentRegionAvail(), ImVec2(0, 1), ImVec2(1, 0));
 							}
 						}
 
