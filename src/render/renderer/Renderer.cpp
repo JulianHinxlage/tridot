@@ -9,6 +9,7 @@
 #include "engine/Transform.h"
 #include "engine/Camera.h"
 #include "engine/Light.h"
+#include "engine/Skybox.h"
 #include "window/RenderContext.h"
 #include "window/Viewport.h"
 #include "RenderPipeline.h"
@@ -35,7 +36,9 @@ namespace tri {
         bloomShader = env->assetManager->get<Shader>("shaders/bloom.glsl");
         blurShader = env->assetManager->get<Shader>("shaders/gaussianBlur.glsl");
         compositShader = env->assetManager->get<Shader>("shaders/composit.glsl");
+        skyboxShader = env->assetManager->get<Shader>("shaders/skybox.glsl");
         coneMesh = env->assetManager->get<Mesh>("models/cone.obj");
+        cubeMesh = env->assetManager->get<Mesh>("models/cube.obj");
 
         env->renderPipeline->addCallbackStep([&]() {
             Image image;
@@ -71,6 +74,7 @@ namespace tri {
         env->renderPipeline->freeOnThread(bloomShader);
         env->renderPipeline->freeOnThread(blurShader);
         env->renderPipeline->freeOnThread(compositShader);
+        env->renderPipeline->freeOnThread(skyboxShader);
         env->renderPipeline->freeOnThread(envBuffer);
         env->renderPipeline->freeOnThread(gBuffer);
         env->renderPipeline->freeOnThread(lightAccumulationBuffer);
@@ -79,6 +83,7 @@ namespace tri {
         env->renderPipeline->freeOnThread(bloomBuffer2);
         env->renderPipeline->freeOnThread(sphereMesh);
         env->renderPipeline->freeOnThread(coneMesh);
+        env->renderPipeline->freeOnThread(cubeMesh);
         env->renderPipeline->freeOnThread(pointLightBatch.vertexArray);
         env->renderPipeline->freeOnThread(pointLightBatch.instanceBuffer);
         env->renderPipeline->freeOnThread(spotLightBatch.vertexArray);
@@ -94,6 +99,7 @@ namespace tri {
         spotLightShader = nullptr;
         bloomShader = nullptr;
         blurShader = nullptr;
+        skyboxShader = nullptr;
         compositShader = nullptr;
         envBuffer = nullptr;
         gBuffer = nullptr;
@@ -103,6 +109,7 @@ namespace tri {
         bloomBuffer2 = nullptr;
         sphereMesh = nullptr;
         coneMesh = nullptr;
+        cubeMesh = nullptr;
         pointLightBatch.vertexArray = nullptr;
         pointLightBatch.instanceBuffer = nullptr;
         spotLightBatch.vertexArray = nullptr;
@@ -130,9 +137,6 @@ namespace tri {
             return;
         }
 
-        env->renderPipeline->addCommandStep(RenderPipeline::Command::DEPTH_ON, RenderPipeline::GEOMETRY);
-        env->renderPipeline->addCommandStep(RenderPipeline::Command::CULL_BACK, RenderPipeline::GEOMETRY);
-
         bool hasPrimary = false;
         env->world->each<Camera>([&](Camera& camera) {
             if (camera.active) {
@@ -148,16 +152,11 @@ namespace tri {
                 
                 frustum.viewProjectionMatrix = camera.viewProjection;
 
+                submitSkyBox(camera);
+
                 submitMeshes();
 
-                env->renderPipeline->addCommandStep(RenderPipeline::Command::DEPTH_ON, RenderPipeline::TRANSPARENCY);
-                env->renderPipeline->addCommandStep(RenderPipeline::Command::CULL_BACK, RenderPipeline::TRANSPARENCY);
-
-
                 submitBatches(camera);
-                env->renderPipeline->addCommandStep(RenderPipeline::Command::DEPTH_OFF, RenderPipeline::LIGHTING);
-                env->renderPipeline->addCommandStep(RenderPipeline::Command::CULL_FRONT, RenderPipeline::LIGHTING);
-                env->renderPipeline->addCommandStep(RenderPipeline::Command::BLEND_ADDITIVE, RenderPipeline::LIGHTING);
 
                 submitLights(camera);
 
@@ -291,6 +290,12 @@ namespace tri {
 
     void Renderer::submitBatches(Camera &c) {
         TRI_PROFILE_FUNC();
+        env->renderPipeline->addCommandStep(RenderPipeline::Command::DEPTH_ON, RenderPipeline::GEOMETRY);
+        env->renderPipeline->addCommandStep(RenderPipeline::Command::CULL_BACK, RenderPipeline::GEOMETRY);
+
+        env->renderPipeline->addCommandStep(RenderPipeline::Command::DEPTH_ON, RenderPipeline::TRANSPARENCY);
+        env->renderPipeline->addCommandStep(RenderPipeline::Command::CULL_BACK, RenderPipeline::TRANSPARENCY);
+
         envData.projection = c.projection;
         envData.viewProjection = c.viewProjection;
         envData.view = c.view;
@@ -522,6 +527,10 @@ namespace tri {
 
     void Renderer::submitLights(const Camera& camera) {
         TRI_PROFILE_FUNC();
+
+        env->renderPipeline->addCommandStep(RenderPipeline::Command::DEPTH_OFF, RenderPipeline::LIGHTING);
+        env->renderPipeline->addCommandStep(RenderPipeline::Command::CULL_FRONT, RenderPipeline::LIGHTING);
+        env->renderPipeline->addCommandStep(RenderPipeline::Command::BLEND_ADDITIVE, RenderPipeline::LIGHTING);
 
         bool hasLight = false;
         env->world->each<const Transform, const AmbientLight>([&](EntityId id, const Transform& t, const AmbientLight& light) {
@@ -830,6 +839,43 @@ namespace tri {
             textureSlots.push_back(i);
         }
         dc->shaderState->set("uTextures", textureSlots.data(), textureSlots.size());
+    }
+
+    void Renderer::submitSkyBox(const Camera &camera) {
+        env->renderPipeline->addCommandStep(RenderPipeline::Command::DEPTH_OFF, RenderPipeline::GEOMETRY);
+        env->renderPipeline->addCommandStep(RenderPipeline::Command::CULL_OFF, RenderPipeline::GEOMETRY);
+        env->renderPipeline->addCommandStep(RenderPipeline::Command::BLEND_OFF, RenderPipeline::GEOMETRY);
+
+        env->world->each<Skybox>([&](EntityId id, Skybox &skyBox) {
+            if (skyBox.texture) {
+                if (skyBox.texture->getType() != TextureType::TEXTURE_CUBE_MAP) {
+                    env->renderPipeline->addCallbackStep([&]() {
+                        skyBox.texture->setCubeMap(true);
+                    });
+                }
+
+                auto dc = env->renderPipeline->addDrawCallStep(RenderPipeline::GEOMETRY);
+                dc->shader = skyboxShader.get();
+                dc->frameBuffer = gBuffer.get();
+                dc->textures.push_back(skyBox.texture.get());
+                dc->vertexArray = &cubeMesh->vertexArray;
+                dc->shaderState = Ref<ShaderState>::make();
+                dc->shaderState->set("uColor", skyBox.color.vec());
+
+                Transform cameraTransform;
+                cameraTransform.decompose(camera.transform);
+
+                Transform cubeTransform;
+                cubeTransform.scale = { 1, 1, 1 };
+                cubeTransform.position = cameraTransform.position;
+                if (auto* transform = env->world->getComponent<Transform>(id)) {
+                    cubeTransform.rotation = transform->rotation;
+                }
+
+                dc->shaderState->set("uTransform", cubeTransform.calculateLocalMatrix());
+                dc->shaderState->set("uProjection", camera.viewProjection);
+            }
+        });
     }
 
 }

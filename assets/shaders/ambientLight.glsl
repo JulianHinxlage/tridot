@@ -26,7 +26,7 @@ void main(){
     vec4 albedo = texture(uTextures[0], texCoords);
     vec4 depth = texture(uTextures[4], texCoords);
     if(depth.rgb == vec3(1, 1, 1)){
-        oColor = vec4(0, 0, 0, 0);
+        oColor = albedo;
         return;
     }
 

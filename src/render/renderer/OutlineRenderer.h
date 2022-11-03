@@ -8,6 +8,7 @@
 #include "core/core.h"
 #include "DrawList.h"
 #include "RenderBatch.h"
+#include "ShaderStructs.h"
 #include <glm/glm.hpp>
 
 namespace tri {
@@ -17,6 +18,7 @@ namespace tri {
 		Color outlineColor;
 
 		void startup() override;
+		void shutdown() override;
 		void submit(const glm::mat4 &transform, Mesh *mesh);
 		void submitBatches(const glm::mat4& viewProjection);
 		Ref<FrameBuffer>& getFrameBuffer();
@@ -30,6 +32,8 @@ namespace tri {
 		Ref<Mesh> quad;
 		DrawList drawList;
 		RenderBatchList batches;
+		EnvironmentData envData;
+		Ref<Buffer> envBuffer;
 	};
 
 }

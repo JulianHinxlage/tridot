@@ -50,8 +50,10 @@ namespace tri {
 		Ref<Shader> bloomShader;
 		Ref<Shader> blurShader;
 		Ref<Shader> compositShader;
+		Ref<Shader> skyboxShader;
 		Ref<Mesh> sphereMesh;
 		Ref<Mesh> coneMesh;
+		Ref<Mesh> cubeMesh;
 
 		Ref<FrameBuffer> gBuffer;
 		Ref<FrameBuffer> lightAccumulationBuffer;
@@ -104,6 +106,7 @@ namespace tri {
 		void submitSpotLightBatch();
 		void submitBloom();
 		void submitDisplay();
+		void submitSkyBox(const Camera& camera);
 	};
 
 }

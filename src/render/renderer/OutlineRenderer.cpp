@@ -19,7 +19,29 @@ namespace tri {
         material = Ref<Material>::make();
         env->renderPipeline->addCallbackStep([&]() {
             quad = env->systemManager->getSystem<MeshFactory>()->generateQuad();
+
+            envBuffer = Ref<Buffer>::make();
+            envBuffer->init(nullptr, 0, sizeof(envData), BufferType::UNIFORM_BUFFER, true);
         });
+    }
+    
+    void OutlineRenderer::shutdown() {
+        env->renderPipeline->freeOnThread(outlineShader);
+        env->renderPipeline->freeOnThread(meshShader);
+        env->renderPipeline->freeOnThread(quad);
+        env->renderPipeline->freeOnThread(envBuffer);
+        env->renderPipeline->freeOnThread(meshesFrameBuffer);
+        env->renderPipeline->freeOnThread(outlineFrameBuffer);
+
+        outlineShader = nullptr;
+        meshShader = nullptr;
+        quad = nullptr;
+        envBuffer = nullptr;
+        meshesFrameBuffer = nullptr;
+        outlineFrameBuffer = nullptr;
+
+        drawList.reset();
+        batches.clear();
     }
 
     void OutlineRenderer::submit(const glm::mat4& transform, Mesh* mesh) {
@@ -74,6 +96,11 @@ namespace tri {
             });
         }
 
+        envData.viewProjection = viewProjection;
+        env->renderPipeline->addCallbackStep([&]() {
+            envBuffer->setData(&envData, sizeof(envData));
+        });
+
         //submit draw list
         drawList.sort();
         drawList.submit(batches);
@@ -85,6 +112,7 @@ namespace tri {
                 if (batch.second) {
                     if (batch.second->isInitialized()) {
                         batch.second->defaultTexture = nullptr;
+                        batch.second->environmentBuffer = envBuffer;
                         batch.second->submit(meshesFrameBuffer.get(), RenderPipeline::GEOMETRY);
                         batch.second->reset();
                     }
