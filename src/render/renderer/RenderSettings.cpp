@@ -13,13 +13,18 @@ namespace tri {
         env->console->addCVar("enablePointLights", &enablePointLights);
         env->console->addCVar("enableSpotLights", &enableSpotLights);
         env->console->addCVar("enableFrustumCulling", &enableFrustumCulling);
-        env->console->addCVar("enableBloom", &enableBloom);
         env->console->addCVar("enableShadows", &enableShadows);
-        env->console->addCVar("enableSSAO", &enableSSAO);
 
+        env->console->addCVar("enableBloom", &enableBloom);
         env->console->addCVar("bloomThreshold", &bloomThreshold);
         env->console->addCVar("bloomIntesity", &bloomIntesity);
         env->console->addCVar("bloomSpread", &bloomSpread);
+
+        env->console->addCVar("enableSSAO", &enableSSAO);
+        env->console->addCVar("ssaoKernalSize", &ssaoKernalSize);
+        env->console->addCVar("ssaoSampleRadius", &ssaoSampleRadius);
+        env->console->addCVar("ssaoBias", &ssaoBias);
+        env->console->addCVar("ssaoOcclusionStrength", &ssaoOcclusionStrength);
     }
 
 	RenderSettings::Statistics::Statistics() {

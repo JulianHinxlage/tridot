@@ -69,10 +69,17 @@ namespace tri {
 					ImGui::Checkbox("enableFrustumCulling", &env->renderSettings->enableFrustumCulling);
 					ImGui::Checkbox("enablePointLights", &env->renderSettings->enablePointLights);
 					ImGui::Checkbox("enableSpotLights", &env->renderSettings->enableSpotLights);
+
 					ImGui::Checkbox("enableBloom", &env->renderSettings->enableBloom);
 					ImGui::SliderFloat("bloomThreshold", &env->renderSettings->bloomThreshold, 0, 2);
 					ImGui::SliderFloat("bloomIntesity", &env->renderSettings->bloomIntesity, 0, 2);
 					ImGui::SliderInt("bloomSpread", &env->renderSettings->bloomSpread, 0, 50);
+
+					ImGui::Checkbox("enableSSAO", &env->renderSettings->enableSSAO);
+					ImGui::SliderInt("ssaoKernalSize", &env->renderSettings->ssaoKernalSize, 0, 256);
+					ImGui::SliderFloat("ssaoSampleRadius", &env->renderSettings->ssaoSampleRadius, 0, 10);
+					ImGui::SliderFloat("ssaoBias", &env->renderSettings->ssaoBias, 0, 1);
+					ImGui::SliderFloat("ssaoOcclusionStrength", &env->renderSettings->ssaoOcclusionStrength, 0, 10);
 
 					ImGui::Separator();
 

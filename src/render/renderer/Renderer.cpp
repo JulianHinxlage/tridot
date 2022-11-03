@@ -14,6 +14,7 @@
 #include "window/Viewport.h"
 #include "RenderPipeline.h"
 #include "MeshFactory.h"
+#include "engine/Random.h"
 #include <GL/glew.h>
 #include <tracy/TracyOpenGL.hpp>
 
@@ -23,6 +24,10 @@ namespace tri {
 
     void Renderer::init() {
         env->jobManager->addJob("Renderer", {"Renderer"});
+    }
+
+    float lerp(float x, float y, float t) {
+        return x * (1.0f - t) + y * t;
     }
 
     void Renderer::startup() {
@@ -37,6 +42,7 @@ namespace tri {
         blurShader = env->assetManager->get<Shader>("shaders/gaussianBlur.glsl");
         compositShader = env->assetManager->get<Shader>("shaders/composit.glsl");
         skyboxShader = env->assetManager->get<Shader>("shaders/skybox.glsl");
+        ssaoShader = env->assetManager->get<Shader>("shaders/ssao.glsl");
         coneMesh = env->assetManager->get<Mesh>("models/cone.obj");
         cubeMesh = env->assetManager->get<Mesh>("models/cube.obj");
 
@@ -59,6 +65,34 @@ namespace tri {
         
             spotLightBatch.instanceBuffer = Ref<BatchBuffer>::make();
             spotLightBatch.instanceBuffer->init(sizeof(LightBatch::Instance));
+
+
+            int kernalSize = env->renderSettings->ssaoKernalSize;
+            ssaoSamples.resize(256);
+            for (int i = 0; i < ssaoSamples.size(); i++) {
+                glm::vec3 sample = env->random->getVec3();
+                sample.x = sample.x * 2.0 - 1.0;
+                sample.y = sample.y * 2.0 - 1.0;
+                sample = glm::normalize(sample);
+                sample *= env->random->getFloat();
+
+                float scale = (float)i / (float)kernalSize;
+                scale = lerp(0.1f, 1.0f, scale * scale);
+                sample *= scale;
+                ssaoSamples[i] = sample;
+            }
+
+            int noiseResolution = 4;
+            std::vector<Color> noiseData;
+            noiseData.resize(noiseResolution * noiseResolution);
+            for (int i = 0; i < noiseData.size(); i++) {
+                noiseData[i] = Color(glm::vec3(env->random->getVec2(), 0.0));
+            }
+
+            Image noiseImage;
+            noiseImage.init(noiseResolution, noiseResolution, 3, 8, noiseData.data(), noiseData.size());
+            ssaoNoise = Ref<Texture>::make();
+            ssaoNoise->load(noiseImage);
         });
     }
 
@@ -75,12 +109,15 @@ namespace tri {
         env->renderPipeline->freeOnThread(blurShader);
         env->renderPipeline->freeOnThread(compositShader);
         env->renderPipeline->freeOnThread(skyboxShader);
+        env->renderPipeline->freeOnThread(ssaoShader);
         env->renderPipeline->freeOnThread(envBuffer);
         env->renderPipeline->freeOnThread(gBuffer);
         env->renderPipeline->freeOnThread(lightAccumulationBuffer);
         env->renderPipeline->freeOnThread(transparencyBuffer);
         env->renderPipeline->freeOnThread(bloomBuffer1);
         env->renderPipeline->freeOnThread(bloomBuffer2);
+        env->renderPipeline->freeOnThread(ssaoBuffer);
+        env->renderPipeline->freeOnThread(ssaoNoise);
         env->renderPipeline->freeOnThread(sphereMesh);
         env->renderPipeline->freeOnThread(coneMesh);
         env->renderPipeline->freeOnThread(cubeMesh);
@@ -101,12 +138,15 @@ namespace tri {
         blurShader = nullptr;
         skyboxShader = nullptr;
         compositShader = nullptr;
+        ssaoShader = nullptr;
         envBuffer = nullptr;
         gBuffer = nullptr;
         lightAccumulationBuffer = nullptr;
         transparencyBuffer = nullptr;
         bloomBuffer1 = nullptr;
         bloomBuffer2 = nullptr;
+        ssaoBuffer = nullptr;
+        ssaoNoise = nullptr;
         sphereMesh = nullptr;
         coneMesh = nullptr;
         cubeMesh = nullptr;
@@ -124,8 +164,13 @@ namespace tri {
     void Renderer::tick() {
         updateFrameBuffer(gBuffer, gBufferSpec);
         updateFrameBuffer(lightAccumulationBuffer, lightAccumulationSpec);
-        updateFrameBuffer(bloomBuffer1, bloomBufferSpec);
-        updateFrameBuffer(bloomBuffer2, bloomBufferSpec);
+        if (env->renderSettings->enableBloom) {
+            updateFrameBuffer(bloomBuffer1, bloomBufferSpec);
+            updateFrameBuffer(bloomBuffer2, bloomBufferSpec);
+        }
+        if (env->renderSettings->enableSSAO) {
+            updateFrameBuffer(ssaoBuffer, ssaoBufferSpec);
+        }
 
         prepareTransparencyBuffer();
         prepareLightBatches();
@@ -157,6 +202,10 @@ namespace tri {
                 submitMeshes();
 
                 submitBatches(camera);
+
+                if (env->renderSettings->enableSSAO) {
+                    submitSSAO();
+                }
 
                 submitLights(camera);
 
@@ -404,6 +453,18 @@ namespace tri {
         bloom.textureFormat = TextureFormat::RGBA8;
 
         bloomBufferSpec = { bloom };
+
+
+        FrameBufferAttachmentSpec ssao;
+        ssao.type = (TextureAttachment)(COLOR);
+        ssao.clearColor = color::white;
+        ssao.mipMapping = false;
+        ssao.name = "SSAO";
+        ssao.textureFormat = TextureFormat::RED8;
+        ssao.magNearest = true;
+        ssao.minNearest = true;
+
+        ssaoBufferSpec = { ssao };
     }
 
     bool Renderer::prepareLightBatches() {
@@ -577,6 +638,12 @@ namespace tri {
         dc->textures.push_back(gBuffer->getAttachment((TextureAttachment)(TextureAttachment::COLOR + 2)).get());
         dc->textures.push_back(gBuffer->getAttachment((TextureAttachment)(TextureAttachment::COLOR + 3)).get());
         dc->textures.push_back(gBuffer->getAttachment(TextureAttachment::DEPTH).get());
+        if (env->renderSettings->enableSSAO) {
+            dc->textures.push_back(ssaoBuffer->getAttachment(TextureAttachment::COLOR).get());
+        }
+        else {
+            dc->textures.push_back(defaultTexture.get());
+        }
 
         Transform quadTransform;
         quadTransform.rotation.x = glm::radians(90.0f);
@@ -876,6 +943,98 @@ namespace tri {
                 dc->shaderState->set("uProjection", camera.viewProjection);
             }
         });
+    }
+
+    void Renderer::submitSSAO() {
+        env->renderPipeline->addCommandStep(RenderPipeline::Command::DEPTH_OFF, RenderPipeline::LIGHTING);
+        env->renderPipeline->addCommandStep(RenderPipeline::Command::CULL_OFF, RenderPipeline::LIGHTING);
+        env->renderPipeline->addCommandStep(RenderPipeline::Command::BLEND_OFF, RenderPipeline::LIGHTING);
+
+        {
+            auto dc = env->renderPipeline->addDrawCallStep(RenderPipeline::LIGHTING);
+            dc->name = "ssao";
+
+            dc->frameBuffer = ssaoBuffer.get();
+            dc->shader = ssaoShader.get();
+            dc->textures.push_back(gBuffer->getAttachment((TextureAttachment)(TextureAttachment::COLOR + 2)).get()); //Position
+            dc->textures.push_back(gBuffer->getAttachment((TextureAttachment)(TextureAttachment::COLOR + 1)).get()); //Normal
+            dc->textures.push_back(ssaoNoise.get());
+            dc->textures.push_back(gBuffer->getAttachment(DEPTH).get());
+
+            dc->vertexArray = &quadMesh->vertexArray;
+
+            dc->shaderState = Ref<ShaderState>::make();
+            dc->shaderState->set("uEnvironment", envBuffer.get());
+
+            Transform quadTransform;
+            quadTransform.rotation.x = glm::radians(90.0f);
+            quadTransform.scale = { 2, 2, -2 };
+
+            dc->shaderState->set("uTransform", quadTransform.calculateLocalMatrix());
+            dc->shaderState->set("uProjection", glm::mat4(1));
+            dc->shaderState->set("samples", ssaoSamples.data(), ssaoSamples.size());
+
+            dc->shaderState->set("kernalSize", env->renderSettings->ssaoKernalSize);
+            dc->shaderState->set("sampleRadius", env->renderSettings->ssaoSampleRadius);
+            dc->shaderState->set("bias", env->renderSettings->ssaoBias);
+            dc->shaderState->set("occlusionStrength", env->renderSettings->ssaoOcclusionStrength);
+
+            std::vector<int> textureSlots;
+            for (int i = 0; i < dc->textures.size(); i++) {
+                textureSlots.push_back(i);
+            }
+            dc->shaderState->set("uTextures", textureSlots.data(), textureSlots.size());
+        }
+        
+        {
+            auto dc = env->renderPipeline->addDrawCallStep(RenderPipeline::LIGHTING);
+            dc->name = "ssao vblur";
+
+            dc->vertexArray = &quadMesh->vertexArray;
+            dc->shader = blurShader.get();
+            dc->frameBuffer = bloomBuffer2.get();
+            dc->textures.push_back(ssaoBuffer->getAttachment(TextureAttachment::COLOR).get());
+
+            Transform quadTransform;
+            quadTransform.rotation.x = glm::radians(90.0f);
+            quadTransform.scale = { 2, 2, -2 };
+
+            dc->shaderState = Ref<ShaderState>::make();
+            dc->shaderState->set("uTransform", quadTransform.calculateLocalMatrix());
+            dc->shaderState->set("spread", glm::vec2(1, 0));
+            dc->shaderState->set("steps", (int)ssaoNoise->getHeight());
+
+            std::vector<int> textureSlots;
+            for (int i = 0; i < dc->textures.size(); i++) {
+                textureSlots.push_back(i);
+            }
+            dc->shaderState->set("uTextures", textureSlots.data(), textureSlots.size());
+        }
+
+        {
+            auto dc = env->renderPipeline->addDrawCallStep(RenderPipeline::LIGHTING);
+            dc->name = "ssao hblur";
+
+            dc->vertexArray = &quadMesh->vertexArray;
+            dc->shader = blurShader.get();
+            dc->frameBuffer = ssaoBuffer.get();
+            dc->textures.push_back(bloomBuffer2->getAttachment(TextureAttachment::COLOR).get());
+
+            Transform quadTransform;
+            quadTransform.rotation.x = glm::radians(90.0f);
+            quadTransform.scale = { 2, 2, -2 };
+
+            dc->shaderState = Ref<ShaderState>::make();
+            dc->shaderState->set("uTransform", quadTransform.calculateLocalMatrix());
+            dc->shaderState->set("spread", glm::vec2(0, 1));
+            dc->shaderState->set("steps", (int)ssaoNoise->getWidth());
+
+            std::vector<int> textureSlots;
+            for (int i = 0; i < dc->textures.size(); i++) {
+                textureSlots.push_back(i);
+            }
+            dc->shaderState->set("uTextures", textureSlots.data(), textureSlots.size());
+        }
     }
 
 }

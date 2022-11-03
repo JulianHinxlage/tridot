@@ -51,6 +51,8 @@ namespace tri {
 		Ref<Shader> blurShader;
 		Ref<Shader> compositShader;
 		Ref<Shader> skyboxShader;
+		Ref<Shader> ssaoShader;
+
 		Ref<Mesh> sphereMesh;
 		Ref<Mesh> coneMesh;
 		Ref<Mesh> cubeMesh;
@@ -60,12 +62,17 @@ namespace tri {
 		Ref<FrameBuffer> transparencyBuffer;
 		Ref<FrameBuffer> bloomBuffer1;
 		Ref<FrameBuffer> bloomBuffer2;
+		Ref<FrameBuffer> ssaoBuffer;
 
 		ViewFrustum frustum;
+
+		std::vector<glm::vec3> ssaoSamples;
+		Ref<Texture> ssaoNoise;
 
 		std::vector<FrameBufferAttachmentSpec> gBufferSpec;
 		std::vector<FrameBufferAttachmentSpec> lightAccumulationSpec;
 		std::vector<FrameBufferAttachmentSpec> bloomBufferSpec;
+		std::vector<FrameBufferAttachmentSpec> ssaoBufferSpec;
 
 		class LightBatch {
 		public:
@@ -107,6 +114,7 @@ namespace tri {
 		void submitBloom();
 		void submitDisplay();
 		void submitSkyBox(const Camera& camera);
+		void submitSSAO();
 	};
 
 }

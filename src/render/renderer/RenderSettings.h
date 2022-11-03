@@ -14,14 +14,19 @@ namespace tri {
         bool enableTransparency = true;
         bool enablePointLights = true;
         bool enableSpotLights = true;
-        bool enableBloom = true;
         bool enableFrustumCulling = true;
         bool enableShadows = false;
-        bool enableSSAO = false;
 
+        bool enableBloom = true;
         float bloomThreshold = 1;
         float bloomIntesity = 1;
         int bloomSpread = 20;
+
+        bool enableSSAO = true;
+        int ssaoKernalSize = 32;
+        float ssaoSampleRadius = 1.0;
+        float ssaoBias = 0.025;
+        float ssaoOcclusionStrength = 1.0;
 
         virtual void init() override;
 

@@ -25,11 +25,12 @@ void main(){
 
     vec4 albedo = texture(uTextures[0], texCoords);
     vec4 depth = texture(uTextures[4], texCoords);
+    float ao = texture(uTextures[5], texCoords).r;
     if(depth.rgb == vec3(1, 1, 1)){
         oColor = albedo;
         return;
     }
 
-    oColor.rgb = albedo.rgb * uColor.rgb * uIntesity;
+    oColor.rgb = albedo.rgb * uColor.rgb * uIntesity * ao;
     oColor.a = 1.0;
 }
