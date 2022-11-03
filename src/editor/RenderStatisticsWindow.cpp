@@ -70,6 +70,9 @@ namespace tri {
 					ImGui::Checkbox("enablePointLights", &env->renderSettings->enablePointLights);
 					ImGui::Checkbox("enableSpotLights", &env->renderSettings->enableSpotLights);
 
+					ImGui::Checkbox("enableShadows", &env->renderSettings->enableShadows);
+					ImGui::SliderInt("shadowMapResolution", &env->renderSettings->shadowMapResolution, 0, 8192);
+
 					ImGui::Checkbox("enableBloom", &env->renderSettings->enableBloom);
 					ImGui::SliderFloat("bloomThreshold", &env->renderSettings->bloomThreshold, 0, 2);
 					ImGui::SliderFloat("bloomIntesity", &env->renderSettings->bloomIntesity, 0, 2);

@@ -51,7 +51,7 @@ namespace tri {
 	void RenderBatch::add(const glm::mat4& transform, Material* material, Color color, EntityId id) {
 		int mIndex = materials.getIndex(material);
 
-		if (mIndex >= materialBuffer->size()) {
+		if (mIndex >= materialBuffer->size() && material) {
 			MaterialData *mData = (MaterialData*)materialBuffer->next();
 
 			mData->texture = textures.getIndex(material->texture.get());

@@ -160,6 +160,11 @@ namespace tri {
             entry->second.texture = texture;
             return entry->second.texture;
         }else{
+            texture->setMagMin(spec.magNearest, spec.minNearest);
+            texture->setWrap(spec.sRepeat, spec.tRepeat);
+            if (spec.useBorderColor) {
+                texture->setBorderColor(spec.borderColor);
+            }
             attachments[(uint32_t)spec.type] = {texture, spec};
             return attachments[(uint32_t)spec.type].texture;
         }

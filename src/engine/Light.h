@@ -6,8 +6,11 @@
 
 #include "pch.h"
 #include "Color.h"
+#include "core/util/Ref.h"
 
 namespace tri {
+
+    class FrameBuffer;
 
     class AmbientLight {
     public:
@@ -19,6 +22,8 @@ namespace tri {
     public:
         Color color = color::white;
         float intensity = 1.5;
+        bool shadows = true;
+        Ref<FrameBuffer> shadowMap;
     };
 
     class PointLight {

@@ -11,7 +11,7 @@ namespace tri {
 	TRI_PROPERTIES2(AmbientLight, color, intensity);
 
 	TRI_COMPONENT_CATEGORY(DirectionalLight, "Light");
-	TRI_PROPERTIES2(DirectionalLight, color, intensity);
+	TRI_PROPERTIES4(DirectionalLight, color, intensity, shadows, shadowMap);
 
 	TRI_COMPONENT_CATEGORY(PointLight, "Light");
 	TRI_PROPERTIES4(PointLight, color, intensity, range, falloff);

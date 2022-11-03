@@ -26,20 +26,7 @@ in vec4 fColor;
 #include "base/uMaterials.glsl"
 #include "base/uEnvironment.glsl"
 
-uniform sampler2D uTextures[32];
-
-vec4 sampleTextureIndexed(int textureIndex, vec2 textureCoords){
-    if(textureIndex == -1){
-        return vec4(1, 1, 1, 1);
-    }
-    for(int i = 0; i < 30; i++){
-        if(i == textureIndex){
-            return texture(uTextures[i], textureCoords);
-        }
-    }
-    return vec4(0, 0, 0, 1);
-}
-
+#include "base/sampleTextureIndexed.glsl"
 
 layout (location = 0) out vec4 oColor;
 

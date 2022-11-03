@@ -17,6 +17,8 @@
 #include "engine/Random.h"
 #include <GL/glew.h>
 #include <tracy/TracyOpenGL.hpp>
+#include <glm/ext/matrix_transform.hpp>
+#include <glm/ext/matrix_clip_space.hpp>
 
 namespace tri {
 
@@ -43,6 +45,7 @@ namespace tri {
         compositShader = env->assetManager->get<Shader>("shaders/composit.glsl");
         skyboxShader = env->assetManager->get<Shader>("shaders/skybox.glsl");
         ssaoShader = env->assetManager->get<Shader>("shaders/ssao.glsl");
+        shadowShader = env->assetManager->get<Shader>("shaders/mesh.glsl");
         coneMesh = env->assetManager->get<Mesh>("models/cone.obj");
         cubeMesh = env->assetManager->get<Mesh>("models/cube.obj");
 
@@ -60,12 +63,14 @@ namespace tri {
             envBuffer = Ref<Buffer>::make();
             envBuffer->init(nullptr, 0, sizeof(envData), BufferType::UNIFORM_BUFFER, true);
 
+            shadowEnvBuffer = Ref<Buffer>::make();
+            shadowEnvBuffer->init(nullptr, 0, sizeof(shadowEnvData), BufferType::UNIFORM_BUFFER, true);
+
             pointLightBatch.instanceBuffer = Ref<BatchBuffer>::make();
             pointLightBatch.instanceBuffer->init(sizeof(LightBatch::Instance));
         
             spotLightBatch.instanceBuffer = Ref<BatchBuffer>::make();
             spotLightBatch.instanceBuffer->init(sizeof(LightBatch::Instance));
-
 
             int kernalSize = env->renderSettings->ssaoKernalSize;
             ssaoSamples.resize(256);
@@ -125,7 +130,9 @@ namespace tri {
         env->renderPipeline->freeOnThread(pointLightBatch.instanceBuffer);
         env->renderPipeline->freeOnThread(spotLightBatch.vertexArray);
         env->renderPipeline->freeOnThread(spotLightBatch.instanceBuffer);
-
+        env->renderPipeline->freeOnThread(shadowEnvBuffer);
+        env->renderPipeline->freeOnThread(shadowShader);
+        
         defaultTexture = nullptr;
         defaultMaterial = nullptr;
         quadMesh = nullptr;
@@ -154,22 +161,25 @@ namespace tri {
         pointLightBatch.instanceBuffer = nullptr;
         spotLightBatch.vertexArray = nullptr;
         spotLightBatch.instanceBuffer = nullptr;
+        shadowShader = nullptr;
+        shadowEnvBuffer = nullptr;
 
         drawList.reset();
         transparencyDrawList.reset();
         batches.clear();
         transparencyBatches.clear();
+        shadowBatches.clear();
     }
 
     void Renderer::tick() {
-        updateFrameBuffer(gBuffer, gBufferSpec);
-        updateFrameBuffer(lightAccumulationBuffer, lightAccumulationSpec);
+        updateFrameBuffer(gBuffer, gBufferSpec, env->viewport->size);
+        updateFrameBuffer(lightAccumulationBuffer, lightAccumulationSpec, env->viewport->size);
         if (env->renderSettings->enableBloom) {
-            updateFrameBuffer(bloomBuffer1, bloomBufferSpec);
-            updateFrameBuffer(bloomBuffer2, bloomBufferSpec);
+            updateFrameBuffer(bloomBuffer1, bloomBufferSpec, env->viewport->size);
+            updateFrameBuffer(bloomBuffer2, bloomBufferSpec, env->viewport->size);
         }
         if (env->renderSettings->enableSSAO) {
-            updateFrameBuffer(ssaoBuffer, ssaoBufferSpec);
+            updateFrameBuffer(ssaoBuffer, ssaoBufferSpec, env->viewport->size);
         }
 
         prepareTransparencyBuffer();
@@ -181,6 +191,8 @@ namespace tri {
         if (!gBuffer) {
             return;
         }
+
+        submitShadows();
 
         bool hasPrimary = false;
         env->world->each<Camera>([&](Camera& camera) {
@@ -305,7 +317,7 @@ namespace tri {
         }
     }
 
-    bool Renderer::updateFrameBuffer(Ref<FrameBuffer>& frameBuffer, const std::vector<FrameBufferAttachmentSpec>& spec) {
+    bool Renderer::updateFrameBuffer(Ref<FrameBuffer>& frameBuffer, const std::vector<FrameBufferAttachmentSpec>& spec, glm::vec2 size) {
         TRI_PROFILE_FUNC();
         if (frameBuffer == nullptr) {
             env->renderPipeline->freeOnThread(frameBuffer);
@@ -316,10 +328,10 @@ namespace tri {
             return false;
         }
         else {
-            if (env->viewport->size != glm::ivec2(frameBuffer->getSize())) {
-                env->renderPipeline->addCallbackStep([frameBuffer = frameBuffer]() {
+            if (size != frameBuffer->getSize()) {
+                env->renderPipeline->addCallbackStep([size, frameBuffer = frameBuffer]() {
                     TracyGpuZone("resize");
-                    frameBuffer->resize(env->viewport->size.x, env->viewport->size.y);
+                    frameBuffer->resize(size.x, size.y);
                 });
             }
             env->renderPipeline->addCallbackStep([frameBuffer = frameBuffer]() {
@@ -465,6 +477,18 @@ namespace tri {
         ssao.minNearest = true;
 
         ssaoBufferSpec = { ssao };
+
+        FrameBufferAttachmentSpec shadow;
+        shadow.type = (TextureAttachment)(DEPTH);
+        shadow.clearColor = color::white;
+        shadow.name = "Shadows";
+        shadow.textureFormat = TextureFormat::DEPTH32;
+        shadow.magNearest = false;
+        shadow.minNearest = false;
+        shadow.sRepeat = false;
+        shadow.tRepeat = false;
+
+        shadowMapSpec = { shadow };
     }
 
     bool Renderer::prepareLightBatches() {
@@ -675,6 +699,13 @@ namespace tri {
         dc->textures.push_back(gBuffer->getAttachment((TextureAttachment)(TextureAttachment::COLOR + 3)).get());
         dc->textures.push_back(gBuffer->getAttachment(TextureAttachment::DEPTH).get());
 
+        if (light.shadows && light.shadowMap && env->renderSettings->enableShadows) {
+            dc->textures.push_back(light.shadowMap->getAttachment(TextureAttachment::DEPTH).get());
+        }
+        else {
+            dc->textures.push_back(defaultTexture.get());
+        }
+
         Transform quadTransform;
         quadTransform.rotation.x = glm::radians(90.0f);
         quadTransform.scale = { 2, 2, -2 };
@@ -683,11 +714,19 @@ namespace tri {
         dc->shaderState->set("uTransform", quadTransform.calculateLocalMatrix());
         dc->shaderState->set("uColor", light.color.vec());
         dc->shaderState->set("uIntesity", light.intensity);
-
+        
         Transform directionTransform;
         directionTransform.rotation = transform.rotation;
         glm::vec3 direction = directionTransform.calculateLocalMatrix() * glm::vec4(1, 0, 0, 1);
         dc->shaderState->set("uDirection", direction);
+
+        float near = 1.0f;
+        float far = 100.0f;
+        float size = 32.0f;
+        glm::mat4 projection = glm::ortho(-size, size, -size, size, near, far);
+        glm::mat4 view = glm::lookAt(transform.position - direction, transform.position, { 0, 1, 0 });
+        glm::mat4 viewProjection = projection * view;
+        dc->shaderState->set("uLightProjection", viewProjection);
 
         std::vector<int> textureSlots;
         for (int i = 0; i < dc->textures.size(); i++) {
@@ -1034,6 +1073,69 @@ namespace tri {
                 textureSlots.push_back(i);
             }
             dc->shaderState->set("uTextures", textureSlots.data(), textureSlots.size());
+        }
+    }
+
+    void Renderer::submitShadows() {
+        if (env->renderSettings->enableShadows) {
+            env->world->each<const Transform, DirectionalLight>([&](EntityId id, const Transform& transform, DirectionalLight& light) {
+                if (light.shadows) {
+
+                    updateFrameBuffer(light.shadowMap, shadowMapSpec, glm::vec2(env->renderSettings->shadowMapResolution, env->renderSettings->shadowMapResolution));
+
+                    float near = 1.0f;
+                    float far = 100.0f;
+                    float size = 32.0f;
+
+                    Transform directionTransform;
+                    directionTransform.rotation = transform.rotation;
+                    glm::vec3 direction = directionTransform.calculateLocalMatrix() * glm::vec4(1, 0, 0, 1);
+
+                    glm::mat4 projection = glm::ortho(-size, size, -size, size, near, far);
+                    glm::mat4 view = glm::lookAt(transform.position - direction, transform.position, { 0, 1, 0 });
+                    glm::mat4 viewProjection = projection * view;
+
+                    frustum.viewProjectionMatrix = viewProjection;
+
+                    shadowEnvData.projection = projection;
+                    shadowEnvData.viewProjection = viewProjection;
+                    shadowEnvData.view = view;
+                    shadowEnvData.eyePosition = transform.position;
+                    shadowEnvData.lightCount = 0;
+                    shadowEnvData.radianceMapIndex = -1;
+                    shadowEnvData.irradianceMapIndex = -1;
+                    env->renderPipeline->addCallbackStep([&]() {
+                        shadowEnvBuffer->setData(&shadowEnvData, sizeof(shadowEnvData));
+                    });
+
+                    env->world->each<const Transform, const MeshComponent>([&](EntityId id, const Transform& t, const MeshComponent& m) {
+                        Mesh* mesh = m.mesh.get();
+                        if (!mesh) {
+                            mesh = quadMesh.get();
+                        }
+
+                        if (env->renderSettings->enableFrustumCulling && !frustum.inFrustum(t.getMatrix(), mesh)) {
+                            return;
+                        }
+                        auto* batch = shadowBatches.get(shadowShader.get(), mesh);
+                        if (batch->isInitialized()) {
+                            batch->add(t.getMatrix(), nullptr, color::white, -1);
+                        }
+                    });
+
+                    for (auto& i : shadowBatches.batches) {
+                        for (auto& j : i.second) {
+                            if (j.second->isInitialized()) {
+                                j.second->environmentBuffer = shadowEnvBuffer;
+                                j.second->defaultTexture = defaultTexture.get();
+                                j.second->submit(light.shadowMap.get(), RenderPipeline::SHADOWS);
+                                j.second->reset();
+                            }
+                        }
+                    }
+
+                }
+            });
         }
     }
 

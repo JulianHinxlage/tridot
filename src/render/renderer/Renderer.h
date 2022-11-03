@@ -38,9 +38,13 @@ namespace tri {
 		DrawList transparencyDrawList;
 		RenderBatchList batches;
 		RenderBatchList transparencyBatches;
+		RenderBatchList shadowBatches;
 		EnvironmentData envData;
 		Ref<Buffer> envBuffer;
 		glm::vec3 eyePosition;
+
+		EnvironmentData shadowEnvData;
+		Ref<Buffer> shadowEnvBuffer;
 
 		Ref<Shader> geometryShader;
 		Ref<Shader> ambientLightShader;
@@ -52,6 +56,7 @@ namespace tri {
 		Ref<Shader> compositShader;
 		Ref<Shader> skyboxShader;
 		Ref<Shader> ssaoShader;
+		Ref<Shader> shadowShader;
 
 		Ref<Mesh> sphereMesh;
 		Ref<Mesh> coneMesh;
@@ -73,6 +78,7 @@ namespace tri {
 		std::vector<FrameBufferAttachmentSpec> lightAccumulationSpec;
 		std::vector<FrameBufferAttachmentSpec> bloomBufferSpec;
 		std::vector<FrameBufferAttachmentSpec> ssaoBufferSpec;
+		std::vector<FrameBufferAttachmentSpec> shadowMapSpec;
 
 		class LightBatch {
 		public:
@@ -97,7 +103,7 @@ namespace tri {
 
 
 		void setupSpecs();
-		bool updateFrameBuffer(Ref<FrameBuffer>& frameBuffer, const std::vector<FrameBufferAttachmentSpec> &spec);
+		bool updateFrameBuffer(Ref<FrameBuffer>& frameBuffer, const std::vector<FrameBufferAttachmentSpec> &spec, glm::vec2 size);
 		void prepareTransparencyBuffer();
 		bool prepareLightBatches();
 		void submit(const glm::mat4& transform, Mesh* mesh, Material* material, Color color = color::white, EntityId id = -1);
@@ -115,6 +121,7 @@ namespace tri {
 		void submitDisplay();
 		void submitSkyBox(const Camera& camera);
 		void submitSSAO();
+		void submitShadows();
 	};
 
 }
