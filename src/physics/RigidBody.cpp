@@ -10,6 +10,6 @@ namespace tri {
 
 	TRI_COMPONENT_CATEGORY(RigidBody, "Physics");
 	TRI_PROPERTIES8(RigidBody, type, velocity, angular, mass, friction, restitution, linearDamping, angularDamping, enablePhysics);
-	TRI_PROPERTIES2(RigidBody, enablePhysics, isTrigger);
+	TRI_PROPERTIES3(RigidBody, enablePhysics, isTrigger, enableGravity);
 
 }

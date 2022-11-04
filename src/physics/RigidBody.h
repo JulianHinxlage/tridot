@@ -26,6 +26,7 @@ namespace tri {
 
 		bool enablePhysics = true;
 		bool isTrigger = false;
+		bool enableGravity = true;
 		void* reference = nullptr;
 
 		glm::vec3 lastPosition = { 0, 0, 0 };

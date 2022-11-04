@@ -72,21 +72,6 @@ namespace tri {
             spotLightBatch.instanceBuffer = Ref<BatchBuffer>::make();
             spotLightBatch.instanceBuffer->init(sizeof(LightBatch::Instance));
 
-            int kernalSize = env->renderSettings->ssaoKernalSize;
-            ssaoSamples.resize(256);
-            for (int i = 0; i < ssaoSamples.size(); i++) {
-                glm::vec3 sample = env->random->getVec3();
-                sample.x = sample.x * 2.0 - 1.0;
-                sample.y = sample.y * 2.0 - 1.0;
-                sample = glm::normalize(sample);
-                sample *= env->random->getFloat();
-
-                float scale = (float)i / (float)kernalSize;
-                scale = lerp(0.1f, 1.0f, scale * scale);
-                sample *= scale;
-                ssaoSamples[i] = sample;
-            }
-
             int noiseResolution = 4;
             std::vector<Color> noiseData;
             noiseData.resize(noiseResolution * noiseResolution);
@@ -1011,7 +996,6 @@ namespace tri {
 
             dc->shaderState->set("uTransform", quadTransform.calculateLocalMatrix());
             dc->shaderState->set("uProjection", glm::mat4(1));
-            dc->shaderState->set("samples", ssaoSamples.data(), ssaoSamples.size());
 
             dc->shaderState->set("kernalSize", env->renderSettings->ssaoKernalSize);
             dc->shaderState->set("sampleRadius", env->renderSettings->ssaoSampleRadius);
@@ -1023,6 +1007,26 @@ namespace tri {
                 textureSlots.push_back(i);
             }
             dc->shaderState->set("uTextures", textureSlots.data(), textureSlots.size());
+
+            if (env->renderSettings->ssaoKernalSize != ssaoSamples.size() && ssaoShader->getId() != 0) {
+                //generating samples
+                int kernalSize = env->renderSettings->ssaoKernalSize;
+                ssaoSamples.resize(kernalSize);
+                for (int i = 0; i < ssaoSamples.size(); i++) {
+                    glm::vec3 sample = env->random->getVec3();
+                    sample.x = sample.x * 2.0 - 1.0;
+                    sample.y = sample.y * 2.0 - 1.0;
+                    sample = glm::normalize(sample);
+                    sample *= env->random->getFloat();
+
+                    float scale = (float)i / (float)kernalSize;
+                    scale = lerp(0.1f, 1.0f, scale * scale);
+                    sample *= scale;
+                    ssaoSamples[i] = sample;
+                }
+
+                dc->shaderState->set("samples", ssaoSamples.data(), ssaoSamples.size());
+            }
         }
         
         {

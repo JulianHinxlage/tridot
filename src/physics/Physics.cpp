@@ -338,7 +338,6 @@ namespace tri {
 			body->setCollisionFlags(body->getCollisionFlags() | btCollisionObject::CF_NO_CONTACT_RESPONSE);
 		}
 
-
 		body->setFriction(rigidBody.friction);
 		body->setRestitution(rigidBody.restitution);
 		body->setRollingFriction(rigidBody.friction / 100);
@@ -387,9 +386,9 @@ namespace tri {
 			if (rigidBody.reference) {
 				btRigidBody* body = (btRigidBody*)rigidBody.reference;
 
-				//if (rigidBody.type == RigidBody::STATIC) {
-				//	return;
-				//}
+				if (!rigidBody.enableGravity) {
+					body->clearGravity();
+				}
 
 				Transform worldTransform;
 				worldTransform.decompose(transform.getMatrix());

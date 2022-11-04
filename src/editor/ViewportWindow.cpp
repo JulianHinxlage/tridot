@@ -113,7 +113,12 @@ namespace tri {
 													Color idColor = env->viewport->idMap->getPixel(pos.x, pos.y);
 													if (idColor.value != -1) {
 														EntityId id = idColor.value & ~(0xff << 24);
-														env->editor->selectionContext->select(id, !env->input->downControl());
+														if (env->editor->selectionContext->isSelected(id) && env->input->downControl()) {
+															env->editor->selectionContext->unselect(id);
+														}
+														else {
+															env->editor->selectionContext->select(id, !env->input->downControl());
+														}
 													}
 													else {
 														env->editor->selectionContext->unselectAll();
