@@ -17,8 +17,10 @@ namespace tri {
 	public:
 		Ref<Animation> animation;
 		EntityId recordEntityId = -1;
-		float keyTiming = 1.0f;
+		float keyTime = 1.0f;
+		KeyFrameBlendMode keyBlend = KeyFrameBlendMode::LINEAR;
 		int currentFrame = 0;
+		Prefab entityBuffer;
 
 		void init() override {
 			env->uiManager->addWindow<AnimationWindow>("Animations");
@@ -80,20 +82,129 @@ namespace tri {
 		void applyFrame(int frame) {
 			currentFrame = frame;
 
-			if (animation && animation->timeline.size() > 0) {
-				auto &seq = animation->timeline[0];
-
+			if (animation && animation->keyFrames.size() > 0) {
 				if (currentFrame < 0) {
-					currentFrame += seq.frames.size();
+					currentFrame += animation->keyFrames.size();
 				}
-				else if(currentFrame >= seq.frames.size()) {
-					currentFrame -= seq.frames.size();
+				else if(currentFrame >= animation->keyFrames.size()) {
+					currentFrame -= animation->keyFrames.size();
 				}
 
-				if (currentFrame >= 0 && currentFrame < seq.frames.size()) {
-					auto &f = seq.frames[currentFrame];
-					animation->apply(f.time, recordEntityId);
+				if (currentFrame >= 0 && currentFrame < animation->keyFrames.size()) {
+					animation->apply(animation->keyFrames[currentFrame].time, recordEntityId);
+					entityBuffer.copyEntity(recordEntityId);
 				}
+			}
+		}
+
+		bool hasPropertyInAnimation(int classId, int propertyIndex) {
+			if (animation) {
+				for (auto& frame : animation->keyFrames) {
+					for (auto& prop : frame.properties) {
+						if (prop.value.classId == classId) {
+							if (prop.value.propertyIndex == propertyIndex) {
+								return true;
+							}
+						}
+					}
+				}
+			}
+			return false;
+		}
+
+		void checkForNewProperties() {
+			for (auto* desc : Reflection::getDescriptors()) {
+				if (desc && (desc->flags & ClassDescriptor::COMPONENT)) {
+					if (void* comp1 = env->world->getComponent(recordEntityId, desc->classId)) {
+						if (void *comp2 = entityBuffer.getComponent(desc->classId)) {
+							for (int propertyIndex = 0; propertyIndex < desc->properties.size(); propertyIndex++) {
+								auto& propDesc = desc->properties[propertyIndex];
+								if (!hasPropertyInAnimation(desc->classId, propertyIndex)) {
+									if (propDesc.type->hasEquals() && !propDesc.type->equals((uint8_t*)comp1 + propDesc.offset, (uint8_t*)comp2 + propDesc.offset)) {
+									
+										if (animation) {
+											if (!(currentFrame >= 0 && currentFrame < animation->keyFrames.size())) {
+												KeyFrame frame;
+												frame.blend = keyBlend;
+												animation->keyFrames.push_back(frame);
+												currentFrame = 0;
+											}
+											
+											for (int i = 0; i < animation->keyFrames.size(); i++) {
+												auto& frame = animation->keyFrames[i];
+												KeyFrameProperty prop;
+												prop.value.classId = desc->classId;
+												prop.value.propertyIndex = propertyIndex;
+												prop.value.value.set(propDesc.type->classId, (uint8_t*)comp2 + propDesc.offset);
+												frame.properties.push_back(prop);
+											}
+										}
+
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+
+		void updateFrame() {
+			if (animation) {
+				checkForNewProperties();
+				if (currentFrame >= 0 && currentFrame < animation->keyFrames.size()) {
+					auto& frame = animation->keyFrames[currentFrame];
+					for (auto& prop : frame.properties) {
+						void* value = prop.value.getProperty(recordEntityId, env->world);
+						prop.value.value.set(prop.value.value.classId, value);
+					}
+				}
+				entityBuffer.copyEntity(recordEntityId);
+			}
+		}
+
+		void addFrame() {
+			if (animation) {
+				checkForNewProperties();
+				if (currentFrame >= 0 && currentFrame < animation->keyFrames.size()) {
+					auto& frame = animation->keyFrames[currentFrame];
+					KeyFrame newFrame;
+					newFrame.time = frame.time + keyTime;
+					newFrame.blend = keyBlend;
+
+					for (auto& prop : frame.properties) {
+						KeyFrameProperty newProp;
+						newProp.isRelative = prop.isRelative;
+						newProp.value.classId = prop.value.classId;
+						newProp.value.propertyIndex = prop.value.propertyIndex;
+						
+						void* value = newProp.value.getProperty(recordEntityId, env->world);
+						if (auto* desc = newProp.value.getPropertyDescriptor()) {
+							newProp.value.value.set(desc->type->classId, value);
+						}
+						newFrame.properties.push_back(newProp);
+					}
+
+					animation->keyFrames.insert(animation->keyFrames.begin() + currentFrame + 1, newFrame);
+				}
+				for (int i = currentFrame + 2; i < animation->keyFrames.size(); i++) {
+					animation->keyFrames[i].time += keyTime;
+				}
+				currentFrame++;
+				entityBuffer.copyEntity(recordEntityId);
+			}
+		}
+
+		void removeFrame() {
+			if (animation) {
+				if (currentFrame >= 0 && currentFrame < animation->keyFrames.size()) {
+					animation->keyFrames.erase(animation->keyFrames.begin() + currentFrame);
+					for (int i = currentFrame; i < animation->keyFrames.size(); i++) {
+						animation->keyFrames[i].time -= keyTime;
+					}
+				}
+				currentFrame--;
+				entityBuffer.copyEntity(recordEntityId);
 			}
 		}
 
@@ -108,19 +219,20 @@ namespace tri {
 							if (env->editor->selectionContext->isSingleSelection()) {
 								recordEntityId = env->editor->selectionContext->getSelected()[0];
 								animation = getAnimationFromEntity(recordEntityId);
-								if (animation && animation->timeline.size() > 0) {
-									currentFrame = animation->timeline[0].frames.size() - 1;
+								if (animation && animation->keyFrames.size() > 0) {
+									currentFrame = 0;
 									applyFrame(currentFrame);
 								}
 								else {
-									applyFrame(0);
 									currentFrame = -1;
+									entityBuffer.copyEntity(recordEntityId);
 								}
 							}
 						}
 
 						if (recordEntityId != -1) {
-							ImGui::InputFloat("key timing", &keyTiming);
+							ImGui::InputFloat("key time", &keyTime);
+							env->editor->classUI->draw(keyBlend, "key blend");
 
 							if (ImGui::Button("Next Frame")) {
 								applyFrame(currentFrame + 1);
@@ -130,28 +242,16 @@ namespace tri {
 								applyFrame(currentFrame - 1);
 							}
 
-							if (ImGui::Button("Add Frame")) {
-								if (animation) {
-									for (auto& s : animation->timeline) {
-										if (s.frames.size() > 0){
-											auto &f = s.frames[s.frames.size() - 1];
+							if (ImGui::Button("Update Frame")) {
+								updateFrame();
+							}
 
-											PropertyFrame frame;
-											frame.blend = f.blend;
-											frame.time = f.time + keyTiming;
-											frame.relativeValue = f.relativeValue;
-											frame.value.classId = f.value.classId;
-											frame.value.propertyIndex = f.value.propertyIndex;
-											void *prop = nullptr;
-											prop = frame.value.getProperty(recordEntityId, env->world);
-											if (auto* desc = frame.value.getPropertyDescriptor()) {
-												frame.value.value.set(desc->type->classId, prop);
-											}
-											s.frames.push_back(frame);
-										}
-									}
-									currentFrame++;
-								}
+							if (ImGui::Button("Add Frame")) {
+								addFrame();
+							}
+
+							if(ImGui::Button("Remove Frame")){
+								removeFrame();
 							}
 
 						}

@@ -11,30 +11,29 @@
 
 namespace tri {
 
-	enum KeyBlendMode {
+	enum KeyFrameBlendMode {
 		NONE,
 		STEP,
 		LINEAR,
 		SMOOTH,
 	};
 
-	class PropertyFrame {
+	class KeyFrameProperty {
 	public:
 		PropertyValueIdentifier value;
-		float time;
-		KeyBlendMode blend;
-		bool relativeValue = false;
+		bool isRelative = false;
 	};
 
-	class PropertySequence {
+	class KeyFrame {
 	public:
-		EntityId entityId = -1;
-		std::vector<PropertyFrame> frames;
+		float time = 0;
+		KeyFrameBlendMode blend = NONE;
+		std::vector<KeyFrameProperty> properties;
 	};
 
 	class Animation : public Asset {
 	public:
-		std::vector<PropertySequence> timeline;
+		std::vector<KeyFrame> keyFrames;
 
 		bool load(const std::string& file) override;
 		bool save(const std::string& file) override;

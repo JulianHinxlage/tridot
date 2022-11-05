@@ -10,22 +10,22 @@
 
 namespace tri {
 
-	TRI_CLASS(KeyBlendMode);
-	TRI_ENUM4(KeyBlendMode, NONE, STEP, LINEAR, SMOOTH);
+	TRI_CLASS(KeyFrameBlendMode);
+	TRI_ENUM4(KeyFrameBlendMode, NONE, STEP, LINEAR, SMOOTH);
 
-	TRI_CLASS(PropertyFrame);
-	TRI_PROPERTIES4(PropertyFrame, value, time, blend, relativeValue);
+	TRI_CLASS(KeyFrameProperty);
+	TRI_PROPERTIES2(KeyFrameProperty, value, isRelative);
 
-	TRI_CLASS(PropertySequence);
-	TRI_PROPERTIES2(PropertySequence, entityId, frames);
+	TRI_CLASS(KeyFrame);
+	TRI_PROPERTIES3(KeyFrame, time, blend, properties);
 
 	TRI_ASSET(Animation);
-	TRI_PROPERTIES1(Animation, timeline);
+	TRI_PROPERTIES1(Animation, keyFrames);
 
 	bool Animation::load(const std::string& file) {
 		SerialData data;
 		if (env->serializer->loadFromFile(data, file)) {
-			timeline.clear();
+			keyFrames.clear();
 			env->serializer->deserializeClass(this, data);
 			return true;
 		}
@@ -41,17 +41,15 @@ namespace tri {
 
 	float Animation::calculateMaxTime() {
 		float max = 0;
-		for (auto& seq : timeline) {
-			for (auto& key : seq.frames) {
-				if (key.time > max) {
-					max = key.time;
-				}
+		for (auto& key : keyFrames) {
+			if (key.time > max) {
+				max = key.time;
 			}
 		}
 		return max;
 	}
 
-	void setPropertyDiscrete(int classId, void* result, void* v1, void* v2, float factor, KeyBlendMode blend) {
+	void setPropertyDiscrete(int classId, void* result, void* v1, void* v2, float factor, KeyFrameBlendMode blend) {
 		auto* desc = Reflection::getDescriptor(classId);
 		switch (blend) {
 		case tri::NONE:
@@ -79,7 +77,7 @@ namespace tri {
 	}
 
 	template<typename T>
-	void setPropertyNumeric(void* result, void* v1, void* v2, float factor, KeyBlendMode blend) {
+	void setPropertyNumeric(void* result, void* v1, void* v2, float factor, KeyFrameBlendMode blend) {
 		switch (blend) {
 		case tri::NONE:
 			if (factor <= 0.0f) {
@@ -110,7 +108,7 @@ namespace tri {
 		}
 	}
 
-	void setProperty(int classId, void* result, void* v1, void* v2, float factor, KeyBlendMode blend) {
+	void setProperty(int classId, void* result, void* v1, void* v2, float factor, KeyFrameBlendMode blend) {
 		if (classId == Reflection::getClassId<float>()) {
 			setPropertyNumeric<float>(result, v1, v2, factor, blend);
 		}
@@ -142,26 +140,38 @@ namespace tri {
 	}
 
 	void Animation::apply(float time, EntityId id) {
-		for (auto& seq : timeline) {
-			if (seq.frames.size() > 0) {
-				PropertyFrame* prev = &seq.frames[0];
-				for (int i = 0; i < seq.frames.size(); i++) {
-					PropertyFrame* key = &seq.frames[i];
-					if (i > 0) {
-						float factor = time - prev->time;
-						if (factor >= 0 && factor <= key->time - prev->time) {
-							factor /= (key->time - prev->time);
+		for (int i = 1; i < keyFrames.size(); i++) {
+			auto& frame = keyFrames[i];
+			auto& prevFrame = keyFrames[i-1];
+			if (time <= frame.time && time >= prevFrame.time) {
 
-							EntityId propId = seq.entityId == -1 ? id : seq.entityId;
+				for (auto& prop : frame.properties) {
 
-							void* prop = prev->value.getProperty(propId, env->world);
-							if (prop && key->value.value.classId >= 0) {
-								setProperty(key->value.value.classId, prop, prev->value.value.get(), key->value.value.get(), factor, key->blend);
+
+					void* value1 = nullptr;
+					float factor = 0;
+					for (int j = i - 1; j >= 0; j--) {
+						auto& prev = keyFrames[j];
+
+						for (auto& p : prev.properties) {
+							if (p.value.classId == prop.value.classId) {
+								if (p.value.propertyIndex == prop.value.propertyIndex) {
+									value1 = p.value.value.get();
+									factor = time - prev.time / (frame.time - prev.time);
+									break;
+								}
 							}
 						}
+						if (value1 != nullptr) {
+							break;
+						}
 					}
-
-					prev = key;
+					if (value1 != nullptr) {
+						void* value2 = prop.value.value.get();
+						void* result = prop.value.getProperty(id, env->world);
+						int propClassId = prop.value.value.classId;
+						setProperty(propClassId, result, value1, value2, factor, frame.blend);
+					}
 				}
 			}
 		}
