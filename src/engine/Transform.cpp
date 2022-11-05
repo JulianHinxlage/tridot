@@ -16,6 +16,7 @@ namespace tri {
         : position(position), scale(scale), rotation(rotation) {
         parent = -1;
         matrix = glm::mat4(0);
+        parentMatrix = glm::mat4(1);
     }
 
     glm::vec3 Transform::getWorldPosition() const {
@@ -41,20 +42,17 @@ namespace tri {
             this->position = position;
         }
         else {
-            glm::mat4 parentMatrix = getMatrix() * glm::inverse(calculateLocalMatrix());
             this->position = glm::inverse(parentMatrix) * glm::vec4(position, 1);
         }
     }
 
     void Transform::setWorldScale(const glm::vec3& scale) {
-        glm::mat4 parentMatrix = getMatrix() * glm::inverse(calculateLocalMatrix());
         Transform t;
         t.decompose(glm::inverse(parentMatrix) * glm::scale(glm::mat4(1), scale));
         this->scale = t.scale;
     }
 
     void Transform::setWorldRotation(const glm::vec3& rotation) {
-        glm::mat4 parentMatrix = getMatrix() * glm::inverse(calculateLocalMatrix());
         Transform t;
 
         glm::mat4 rot(1);
@@ -102,6 +100,10 @@ namespace tri {
         glm::quat orentiation;
         glm::decompose(matrix, scale, orentiation, position, skew, perspective);
         rotation = glm::eulerAngles(orentiation);
+    }
+
+    void Transform::updateMatrix() {
+        matrix = parentMatrix * calculateLocalMatrix();
     }
 
     TRI_COMPONENT(Transform);
@@ -180,6 +182,7 @@ namespace tri {
                         Transform* t = env->world->getComponent<Transform>(id);
                         auto &childs = getChilds(id);
                         if (t) {
+                            t->parentMatrix = parentMat;
                             t->matrix = parentMat * t->calculateLocalMatrix();
                             if (childs.size() > 0) {
                                 matStack.push_back(parentMat);

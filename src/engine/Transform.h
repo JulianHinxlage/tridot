@@ -31,13 +31,15 @@ namespace tri {
         glm::mat4 calculateLocalMatrix() const;
         const glm::mat4& getMatrix() const;
         void decompose(const glm::mat4 &matrix);
-        void setMatrix(const glm::mat4 &matrix);
+        void setMatrix(const glm::mat4& matrix);
+        void updateMatrix();
 
         //only for main world (env->world)
         static const std::vector<EntityId>& getChilds(EntityId id);
 
     private:
         glm::mat4 matrix;
+        glm::mat4 parentMatrix;
         friend class STransform;
     };
 
