@@ -6,6 +6,7 @@
 #include "core/core.h"
 #include "physics/Physics.h"
 #include "engine/Time.h"
+#include "engine/EntityUtil.h"
 
 namespace tri {
 
@@ -57,7 +58,7 @@ namespace tri {
 									t1->updateMatrix();
 								}
 								hitbox1.onDestroy.invoke();
-								env->world->removeEntity(id1);
+								EntityUtil::removeEntityWithChilds(id1);
 							}
 
 						}
@@ -68,14 +69,14 @@ namespace tri {
 					hitbox1.lifeTime -= env->time->deltaTime;
 					if (hitbox1.lifeTime <= 0) {
 						hitbox1.onDestroy.invoke();
-						env->world->removeEntity(id1);
+						EntityUtil::removeEntityWithChilds(id1);
 					}
 				}
 
 				if (hitbox1.maxHitPoints > 0) {
 					if (hitbox1.hitPoints <= 0) {
 						hitbox1.onDestroy.invoke();
-						env->world->removeEntity(id1);
+						EntityUtil::removeEntityWithChilds(id1);
 					}
 				}
 			});

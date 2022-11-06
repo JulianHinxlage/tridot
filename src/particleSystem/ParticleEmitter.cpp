@@ -24,7 +24,8 @@ namespace tri {
 
 	TRI_ASSET(ParticleEffect);
 	TRI_PROPERTIES8(ParticleEffect, particlesPerSecond, particlesPerTrigger, fadeInTime, fadeOutTime, velocity, velocityVariance, size, sizeVariance);
-	TRI_PROPERTIES8(ParticleEffect, positionVariance, color, colorVariance, lifeTime, lifeTimeVariance, faceCamera, parrentParticles, particle);
+	TRI_PROPERTIES8(ParticleEffect, positionVariance, color, colorVariance, lifeTime, lifeTimeVariance, faceCamera, parrentParticles, inheritScale);
+	TRI_PROPERTIES1(ParticleEffect, particle);
 
 	TRI_COMPONENT(ParticleEmitter);
 	TRI_PROPERTIES2(ParticleEmitter, active, effect);
@@ -42,10 +43,7 @@ namespace tri {
 				auto &prefab = e.particle[env->random->getInt(0, e.particle.size() - 1)];
 				if (prefab) {
 					EntityId id = prefab->createEntity();
-					Transform* pt = env->world->getComponentPending<Transform>(id);
-					if (!pt) {
-						pt = &env->world->addComponent<Transform>(id);
-					}
+					Transform* pt = &env->world->getOrAddComponentPending<Transform>(id);
 					
 					if (e.parrentParticles) {
 						pt->parent = source;
@@ -68,12 +66,17 @@ namespace tri {
 					p.fadeOutTime = e.fadeOutTime;
 					
 					p.velocity = e.velocity + (env->random->getVec3() * 2.0f - 1.0f) * e.velocityVariance;
-					if (!e.parrentParticles) {
+					if (!e.parrentParticles && e.inheritScale) {
 						p.velocity = t.getMatrix() * glm::vec4(p.velocity, 0);
 					}
 
 					glm::vec3 size = e.size + (env->random->getVec3() * 2.0f - 1.0f) * e.sizeVariance;
-					pt->scale *= size;
+					if (e.inheritScale) {
+						pt->scale *= size;
+					}
+					else {
+						pt->scale = size;
+					}
 
 					p.color = Color(e.color.vec() + (env->random->getVec4() * 2.0f - 1.0f) * e.colorVariance.vec());
 					if (auto* mesh = env->world->getComponentPending<MeshComponent>(id)) {

@@ -18,6 +18,7 @@ namespace tri {
         glm::vec3 forward;
         glm::vec3 up;
         glm::vec3 right;
+        glm::vec3 eyePosition;
         glm::mat4 view;
         glm::mat4 projection;
         glm::mat4 viewProjection;
@@ -39,6 +40,8 @@ namespace tri {
         float aspectRatio;
 
         Camera(Type type = PERSPECTIVE, bool isPrimary = false);
+
+        glm::vec3 getScreenRay(glm::vec2 screenPosition);
     };
 
 }

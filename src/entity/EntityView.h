@@ -93,6 +93,9 @@ namespace tri {
                     //if a storage is not present, there are no entities to iterate
                     return;
                 }
+            }
+
+            for (int i = 0; i < storageCount; i++) {
                 if (shouldLock[i]) {
                     storages[i]->lock();
                 }

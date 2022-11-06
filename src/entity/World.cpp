@@ -434,6 +434,9 @@ namespace tri {
 	}
 
 	EntitySignature World::getSignature(EntityId id){
+		if (!entityStorage.hasComponent(id)) {
+			return 0;
+		}
 		return *(EntitySignature*)entityStorage.getComponentById(id);
 	}
 

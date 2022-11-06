@@ -6,12 +6,31 @@
 
 #include "pch.h"
 #include "entity/World.h"
+#include "engine/Transform.h"
+#include "engine/Camera.h"
 
 namespace tri {
 
 	class EntityUtil {
 	public:
 		static void replaceIds(const std::map<EntityId, EntityId>& idMap, World* world);
+		static void removeEntityWithChilds(EntityId id);
+		static void eachChild(EntityId id, bool recursive, const std::function<void(EntityId id)>& callback);
+
+		template<typename Component>
+		static Component *getComponentInHierarchy(EntityId id) {
+			if (auto *comp = env->world->getComponent<Component>(id)) {
+				return comp;
+			}
+			if (auto* transform = env->world->getComponent<Transform>(id)) {
+				if (transform->parent != -1) {
+					return getComponentInHierarchy<Component>(transform->parent);
+				}
+			}
+			return nullptr;
+		}
+
+		static Camera* getPrimaryCamera();
 	};
 
 }

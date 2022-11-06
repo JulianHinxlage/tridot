@@ -47,6 +47,7 @@ namespace tri {
 
 		bool faceCamera = false;
 		bool parrentParticles = false;
+		bool inheritScale = false;
 
 		std::vector<Ref<Prefab>> particle;
 

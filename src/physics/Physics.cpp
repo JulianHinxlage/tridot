@@ -382,6 +382,16 @@ namespace tri {
 	}
 
 	void Physics::tick() {
+		if (auto* store = env->world->getComponentStorage<Transform>()) {
+			store->lock();
+		}
+		if (auto* store = env->world->getComponentStorage<RigidBody>()) {
+			store->lock();
+		}
+		if (auto* store = env->world->getComponentStorage<Collider>()) {
+			store->lock();
+		}
+
 		env->world->view<RigidBody, Collider, Transform>().each([this](EntityId id, RigidBody& rigidBody, Collider& collider, Transform& transform) {
 			if (rigidBody.reference) {
 				btRigidBody* body = (btRigidBody*)rigidBody.reference;
@@ -433,16 +443,6 @@ namespace tri {
 				rigidBody.lastAngular = rigidBody.angular;
 			}
 		});
-
-		if (auto* store = env->world->getComponentStorage<RigidBody>()) {
-			store->lock();
-		}
-		if (auto* store = env->world->getComponentStorage<Collider>()) {
-			store->lock();
-		}
-		if (auto* store = env->world->getComponentStorage<Transform>()) {
-			store->lock();
-		}
 
 		impl->tick();
 
@@ -508,13 +508,13 @@ namespace tri {
 			}
 		});
 
+		if (auto* store = env->world->getComponentStorage<Transform>()) {
+			store->unlock();
+		}
 		if (auto* store = env->world->getComponentStorage<RigidBody>()) {
 			store->unlock();
 		}
 		if (auto* store = env->world->getComponentStorage<Collider>()) {
-			store->unlock();
-		}
-		if (auto* store = env->world->getComponentStorage<Transform>()) {
 			store->unlock();
 		}
 

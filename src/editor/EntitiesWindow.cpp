@@ -347,7 +347,8 @@ namespace tri {
 			}
 
 			//add parents if not in list
-			for (auto id : list) {
+			for (int i = 0; i < list.size(); i++) {
+				EntityId id = list[i];
 				auto* t = env->world->getComponent<Transform>(id);
 				if (t && t->parent != -1) {
 					if (!isEntityInList(t->parent)) {

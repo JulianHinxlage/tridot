@@ -46,9 +46,13 @@ namespace tri {
     }
 
     void AssetManager::removeSearchDirectory(const std::string &directory) {
+        std::string path = std::filesystem::absolute(directory).string();
+#if TRI_WINDOWS
+        path = StrUtil::toLower(path);
+#endif
         for(int i = 0; i < searchDirectories.size(); i++){
             auto &dir = searchDirectories[i];
-                if(dir == directory || dir == directory + "/"){
+            if(dir == path || dir == path + "/"){
                 searchDirectories.erase(searchDirectories.begin() + i);
                 i--;
             }
@@ -239,6 +243,11 @@ namespace tri {
         env->console->addCommand("addAssetDirectory", [](auto& args) {
             if (args.size() > 0) {
                 env->assetManager->addSearchDirectory(args[0]);
+            }
+        });
+        env->console->addCommand("removeAssetDirectory", [](auto& args) {
+            if (args.size() > 0) {
+                env->assetManager->removeSearchDirectory(args[0]);
             }
         });
         env->console->addCommand("waitForAllAssetsLoaded", [](auto& args) {

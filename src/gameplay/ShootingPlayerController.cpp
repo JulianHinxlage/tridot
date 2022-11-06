@@ -11,6 +11,7 @@
 #include "window/Input.h"
 #include "window/Viewport.h"
 #include "physics/RigidBody.h"
+#include "engine/EntityUtil.h"
 #include <glm/gtc/matrix_transform.hpp>
 
 namespace tri {
@@ -32,26 +33,14 @@ namespace tri {
 	class ShootingPlayerControllerSystem : public System {
 	public:
 		void tick() override {
-			glm::vec3 camRight = { 1, 0, 0 };
-			glm::vec3 camForward = { 0, 0, 1 };
-			glm::vec3 camUp = { 0, 1, 0 };
-			glm::vec3 camPosition = { 0, 0, 0 };
-			float camFOV = 45;
-			env->world->each<Camera>([&](Camera& c) {
-				if (c.active && c.isPrimary) {
-					camRight = c.right;
-					camForward = c.forward;
-					camUp = c.up;
-					Transform t;
-					t.decompose(c.transform);
-					camPosition = t.position;
-					camFOV = c.fieldOfView;
-				}
-			});
+			Camera* camera = EntityUtil::getPrimaryCamera();
 
 			env->world->each<ShootingPlayerController, Transform>([&](EntityId id, ShootingPlayerController&controller, Transform &transform) {
 				if (controller.fireTimer > 0) {
 					controller.fireTimer -= env->time->deltaTime;
+				}
+				if (!camera) {
+					return;
 				}
 				if (env->input->down(Input::MOUSE_BUTTON_LEFT) && controller.holdFire 
 					|| env->input->pressed(Input::MOUSE_BUTTON_LEFT) && !controller.holdFire) {
@@ -60,26 +49,20 @@ namespace tri {
 
 
 						glm::vec3 position = transform.getWorldPosition();
-						glm::vec3 forward = camForward;
+						glm::vec3 forward = camera->forward;
 						if (controller.useMouseAim) {
 							if (controller.directionHorizontal) {
-								glm::vec2 center = env->viewport->position + env->viewport->size / 2;
-								glm::vec2 mousePosition = env->input->getMousePosition(false);
-								glm::vec2 mouseOffset = (center - mousePosition) / (float)env->viewport->size.y * glm::radians(camFOV);
-
-								forward = camForward;
-								forward = glm::rotate(glm::mat4(1), mouseOffset.x, camUp) * glm::vec4(forward, 1.0f);
-								forward = glm::rotate(glm::mat4(1), mouseOffset.y, camRight) * glm::vec4(forward, 1.0f);
+								glm::vec3 ray = camera->getScreenRay(env->input->getMousePosition(false));
 
 								//mouse plane intersection
-								 glm::vec3 intersect = camPosition - forward * ((camPosition.y - position.y) / forward.y);
-								 forward = glm::normalize(intersect - position);
+								glm::vec3 intersect = camera->eyePosition - ray * ((camera->eyePosition.y - position.y) / ray.y);
+								forward = glm::normalize(intersect - position);
 							}
 						}
 						else {
 							if (controller.directionHorizontal) {
 								glm::vec3 up = { 0, 1, 0 };
-								forward = glm::cross(up, camRight);
+								forward = glm::cross(up, camera->right);
 							}
 						}
 						

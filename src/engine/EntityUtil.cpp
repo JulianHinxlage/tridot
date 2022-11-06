@@ -48,4 +48,30 @@ namespace tri {
 		}
 	}
 
+	void EntityUtil::removeEntityWithChilds(EntityId id) {
+		for (auto& child : Transform::getChilds(id)) {
+			removeEntityWithChilds(child);
+		}
+		env->world->removeEntity(id);
+	}
+
+	void EntityUtil::eachChild(EntityId id, bool recursive, const std::function<void(EntityId id)>& callback) {
+		for (auto& child : Transform::getChilds(id)) {
+			callback(child);
+			if (recursive) {
+				eachChild(child, recursive, callback);
+			}
+		}
+	}
+
+	Camera* EntityUtil::getPrimaryCamera() {
+		Camera* cam = nullptr;
+		env->world->each<Camera>([&](Camera& c) {
+			if (c.active && c.isPrimary) {
+				cam = &c;
+			}
+		});
+		return cam;
+	}
+
 }
