@@ -280,6 +280,18 @@ namespace tri {
 		}
 	}
 
+	void* World::getOrAddComponentPending(EntityId id, int classId) {
+		if (void *comp = getComponent(id, classId)) {
+			return comp;
+		}
+		else {
+			if (void* comp = getComponentPending(id, classId)) {
+				return comp;
+			}
+			return addComponent(id, classId);
+		}
+	}
+
 	void World::clear() {
 		entityStorage.clear();
 		freeEntityIds.clear();

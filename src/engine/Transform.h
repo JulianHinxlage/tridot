@@ -33,6 +33,7 @@ namespace tri {
         void decompose(const glm::mat4 &matrix);
         void setMatrix(const glm::mat4& matrix);
         void updateMatrix();
+        const glm::mat4& getParentMatrix() const;
 
         //only for main world (env->world)
         static const std::vector<EntityId>& getChilds(EntityId id);

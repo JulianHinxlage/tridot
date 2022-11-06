@@ -84,6 +84,11 @@ namespace tri {
 		}
 
 		template<typename Component>
+		Component& getOrAddComponentPending(EntityId id) {
+			return *(Component*)getOrAddComponentPending(id, Reflection::getClassId<Component>());
+		}
+
+		template<typename Component>
 		EntityId getIdByComponent(const Component *comp) {
 			return getIdByComponent(comp, Reflection::getClassId<Component>());
 		}
@@ -137,6 +142,7 @@ namespace tri {
 		void copy(World& from);
 		void clear();
 		void* getComponentPending(EntityId id, int classId);
+		void* getOrAddComponentPending(EntityId id, int classId);
 		void performePending();
 		EntitySignature getSignature(EntityId id);
 

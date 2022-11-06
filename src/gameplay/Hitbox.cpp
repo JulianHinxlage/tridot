@@ -64,6 +64,14 @@ namespace tri {
 					});
 				}
 
+				if (hitbox1.lifeTime != -1) {
+					hitbox1.lifeTime -= env->time->deltaTime;
+					if (hitbox1.lifeTime <= 0) {
+						hitbox1.onDestroy.invoke();
+						env->world->removeEntity(id1);
+					}
+				}
+
 				if (hitbox1.maxHitPoints > 0) {
 					if (hitbox1.hitPoints <= 0) {
 						hitbox1.onDestroy.invoke();

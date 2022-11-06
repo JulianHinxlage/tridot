@@ -103,13 +103,40 @@ namespace tri {
     }
 
     void Transform::updateMatrix() {
-        matrix = parentMatrix * calculateLocalMatrix();
+        Transform ptrans;
+        ptrans.decompose(parentMatrix);
+
+        if (ptrans.scale.x == ptrans.scale.y && ptrans.scale.y == ptrans.scale.z) {
+            matrix = parentMatrix * calculateLocalMatrix();
+            return;
+        }
+
+        float uScale = glm::pow(ptrans.scale.x * ptrans.scale.y * ptrans.scale.z, 1.0f / 3.0f);
+        
+        glm::mat4 t = glm::translate(glm::mat4(1), position);
+        glm::mat4 rz = glm::rotate(glm::mat4(1), rotation.z, { 0, 0, 1 });
+        glm::mat4 ry = glm::rotate(glm::mat4(1), rotation.y, { 0, 1, 0 });
+        glm::mat4 rx = glm::rotate(glm::mat4(1), rotation.x, { 1, 0, 0 });
+        glm::mat4 s = glm::scale(glm::mat4(1), scale);
+
+        glm::mat4 pt = glm::translate(glm::mat4(1), ptrans.position);
+        glm::mat4 prz = glm::rotate(glm::mat4(1), ptrans.rotation.z, { 0, 0, 1 });
+        glm::mat4 pry = glm::rotate(glm::mat4(1), ptrans.rotation.y, { 0, 1, 0 });
+        glm::mat4 prx = glm::rotate(glm::mat4(1), ptrans.rotation.x, { 1, 0, 0 });
+        glm::mat4 ps = glm::scale(glm::mat4(1), glm::vec3(uScale));
+
+        matrix = pt * prz * pry * prx * ps * t * rz * ry * rx * s;
+    }
+
+    const glm::mat4& Transform::getParentMatrix() const {
+        return parentMatrix;
     }
 
     TRI_COMPONENT(Transform);
     TRI_PROPERTIES3(Transform, position, scale, rotation);
     TRI_PROPERTY_FLAGS(Transform, parent, PropertyDescriptor::HIDDEN);
 
+    
     class STransform : public System {
     public:
         std::unordered_map<EntityId, std::vector<EntityId>> childs;
@@ -163,6 +190,7 @@ namespace tri {
             env->world->each<const Transform>([&](EntityId tid, Transform& t) {
                 if (t.parent == -1) {
 
+                    t.parentMatrix = glm::mat4(1);
                     t.matrix = t.calculateLocalMatrix();
                     parentMat = t.matrix;
                     for (auto child : getChilds(tid)) {
@@ -183,7 +211,7 @@ namespace tri {
                         auto &childs = getChilds(id);
                         if (t) {
                             t->parentMatrix = parentMat;
-                            t->matrix = parentMat * t->calculateLocalMatrix();
+                            t->updateMatrix();
                             if (childs.size() > 0) {
                                 matStack.push_back(parentMat);
                                 parentMat = t->matrix;
