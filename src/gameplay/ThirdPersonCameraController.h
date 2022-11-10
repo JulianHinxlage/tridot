@@ -19,6 +19,8 @@ namespace tri {
 		float minDistance = 1;
 		float maxDistance = 100;
 		glm::vec3 offset = {0, 0, 0};
+		bool mousePressToLook = true;
+		bool mouseCanToggleActive = false;
 		bool mouseActive = true;
 		bool mouseScrollActive = true;
 		glm::vec3 followPoint;

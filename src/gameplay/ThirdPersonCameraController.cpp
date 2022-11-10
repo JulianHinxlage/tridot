@@ -16,16 +16,16 @@
 namespace tri {
 
 	TRI_COMPONENT_CATEGORY(ThirdPersonCameraController, "Gameplay");
-    TRI_PROPERTIES8(ThirdPersonCameraController, active, followEntity, speed, distance, minDistance, maxDistance, offset, mouseActive);
-    TRI_PROPERTIES1(ThirdPersonCameraController, mouseScrollActive);
+    TRI_PROPERTIES8(ThirdPersonCameraController, active, followEntity, speed, distance, minDistance, maxDistance, offset, mousePressToLook);
+    TRI_PROPERTIES3(ThirdPersonCameraController, mouseCanToggleActive, mouseActive, mouseScrollActive);
 
-    //ThirdPersonCameraControlerSystem
-	class TPCCSystem : public System {
+	class ThirdPersonCameraControlerSystem : public System {
 	public:
         int mouseSetFrameNumber = -1;
         bool skipNext = true;
-        
-		void tick() override {
+        glm::vec2 mousePressStartPos = {0, 0};
+
+        glm::vec2 getMouseDelta(glm::vec2 startPos) {
             bool skip = false;
             if (mouseSetFrameNumber != env->time->frameCounter - 1) {
                 skipNext = true;
@@ -39,21 +39,39 @@ namespace tri {
             }
             mouseSetFrameNumber = env->time->frameCounter;
 
-            glm::vec2 center = env->viewport->position + env->viewport->size / 2;
             glm::vec2 mousePosition = env->input->getMousePosition(false);
-            glm::vec2 delta = mousePosition - center;
+            glm::vec2 delta = mousePosition - startPos;
             if (skip) {
                 delta = { 0, 0 };
             }
+            env->input->setMousePosition(startPos, false);
 
+            return delta;
+        }
+
+		void tick() override {
             env->world->each<ThirdPersonCameraController, const Camera, Transform>([&](EntityId id, ThirdPersonCameraController &controller, const Camera &camera, Transform &transform) {
                 if (controller.active) {
-                    if (env->input->pressed(Input::Key::KEY_TAB)) {
-                        controller.mouseActive = !controller.mouseActive;
+                    if (controller.mouseCanToggleActive) {
+                        if (env->input->pressed(Input::Key::KEY_TAB)) {
+                            controller.mouseActive = !controller.mouseActive;
+                        }
                     }
 
                     if (controller.mouseActive) {
-                        env->input->setMousePosition(center, false);
+                        glm::vec2 delta = { 0, 0 };
+                        if (!controller.mousePressToLook) {
+                            glm::vec2 center = env->viewport->position + env->viewport->size / 2;
+                            delta = getMouseDelta(center);
+                        }
+                        else {
+                            if (env->input->pressed(Input::MOUSE_BUTTON_RIGHT)) {
+                                mousePressStartPos = env->input->getMousePosition(false);
+                            }
+                            if (env->input->down(Input::MOUSE_BUTTON_RIGHT)) {
+                                delta = getMouseDelta(mousePressStartPos);
+                            }
+                        }
 
                         if (controller.mouseScrollActive) {
                             //mouse wheel
@@ -92,6 +110,6 @@ namespace tri {
             });
 		}
 	};
-	TRI_SYSTEM(TPCCSystem);
+	TRI_SYSTEM(ThirdPersonCameraControlerSystem);
 
 }
