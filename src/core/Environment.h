@@ -51,6 +51,9 @@ namespace tri {
 
 		//Physics
 		class Physics* physics;
+		
+		//Audio
+		class AudioSystem* audioSystem;
 
 		Environment();
 

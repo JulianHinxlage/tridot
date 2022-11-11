@@ -18,19 +18,21 @@ namespace tri {
 		fileWatcher = nullptr;
 		profiler = nullptr;
 		config = nullptr;
-
 		window = nullptr;
 		viewport = nullptr;
 		uiManager = nullptr;
 		input = nullptr;
 		time = nullptr;
 		random = nullptr;
-		serializer = nullptr;
 		assetManager = nullptr;
+		serializer = nullptr;
 		runtimeMode = nullptr;
 		world = nullptr;
 		editor = nullptr;
 		renderPipeline = nullptr;
+		renderSettings = nullptr;
+		physics = nullptr;
+		audioSystem = nullptr;
 
 		worldFile = "";
 	}
