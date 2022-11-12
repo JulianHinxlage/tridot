@@ -244,10 +244,13 @@ namespace tri {
             ComponentStorage *storage = world->getEntityStorage();
             EntityId* idData = storage->getIdData();
 
-            EntityId start = (storage->size() / subviewCount) * subviewIndex;
-            EntityId end = (storage->size() / subviewCount) * (subviewIndex + 1);
+            int size = storage->size() + storage->deactiveSize();
+            idData -= storage->deactiveSize();
+
+            EntityId start = (size / subviewCount) * subviewIndex;
+            EntityId end = (size / subviewCount) * (subviewIndex + 1);
             if (subviewIndex == subviewCount - 1) {
-                end = storage->size();
+                end = size;
             }
 
             if (blacklist == 0) {

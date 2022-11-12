@@ -135,6 +135,7 @@ namespace tri {
 	void Serializer::serializeEntity(EntityId id, World* world, SerialData& data) {
 		*data.emitter << YAML::BeginMap;
 		*data.emitter << YAML::Key << "id" << YAML::Value << id;
+		*data.emitter << YAML::Key << "active" << YAML::Value << world->isEntityActive(id);
 
 		for (auto *desc : Reflection::getDescriptors()) {
 			if (desc && desc->flags & ClassDescriptor::COMPONENT) {
@@ -154,9 +155,11 @@ namespace tri {
 	void Serializer::deserializeEntity(World* world, SerialData& data) {
 		EntityId id = data.node["id"].as<int>(-1);
 		id = world->addEntity(id);
+
+		bool active = data.node["active"].as<bool>(true);
 		
 		for (auto i : data.node) {
-			if (i.first.Scalar() != "id") {
+			if (i.first.Scalar() != "id" && i.first.Scalar() != "active") {
 				auto* desc = Reflection::getDescriptor(i.first.Scalar());
 				if (desc) {
 					void* comp = world->addComponent(id, desc->classId);
@@ -170,6 +173,10 @@ namespace tri {
 					env->systemManager->getSystem<ComponentCache>()->addComponent(id, world, i.first.Scalar(), e.c_str());
 				}
 			}
+		}
+
+		if (!active) {
+			world->setEntityActive(id, active);
 		}
 	}
 

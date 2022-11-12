@@ -234,6 +234,21 @@ namespace tri {
 		}
 	}
 
+	bool World::isEntityActive(EntityId id) {
+		return entityStorage.isComponentActive(id);
+	}
+
+	void World::setEntityActive(EntityId id, bool active) {
+		if (isEntityActive(id) != active) {
+			entityStorage.setComponentActive(id, active);
+			for (auto& store : storages) {
+				if (store) {
+					store->setComponentActive(id, active);
+				}
+			}
+		}
+	}
+
 	EntityId World::getIdByComponent(const void* comp, int classId) {
 		if (storages.size() <= classId) {
 			return -1;

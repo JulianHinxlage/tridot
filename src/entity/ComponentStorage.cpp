@@ -39,7 +39,7 @@ namespace tri {
 	}
 
 	void* ComponentStorage::getComponentByIndex(uint32_t index) {
-		TRI_ASSERT(index < size(), "index out of bounds");
+		TRI_ASSERT(index < idData.size(), "index out of bounds");
 		return (void*)(componentData + (index * componentSize));
 	}
 
@@ -48,15 +48,19 @@ namespace tri {
 	}
 
 	int ComponentStorage::size() {
-		return idData.size();
+		return idData.size() - deactiveComponentCount;
+	}
+
+	int ComponentStorage::deactiveSize() {
+		return deactiveComponentCount;
 	}
 
 	EntityId* ComponentStorage::getIdData() {
-		return idData.data();
+		return idData.data() + deactiveComponentCount;
 	}
 
 	void* ComponentStorage::getComponentData() {
-		return componentData;
+		return componentData + deactiveComponentCount * componentSize;
 	}
 
 	void ComponentStorage::clear() {
@@ -125,7 +129,7 @@ namespace tri {
 	void* ComponentStorage::addComponent(EntityId id, const void* ptr) {
 		TRI_ASSERT(!hasComponent(id), "component already present");
 
-		uint32_t index = size();
+		uint32_t index = idData.size();
 
 		//component data
 		if (componentDataCapacity < componentDataSize + 1) {
@@ -204,7 +208,7 @@ namespace tri {
 
 	void ComponentStorage::removeComponent(EntityId id) {
 		uint32_t index = getIndexById(id);
-		uint32_t endIndex = size() - 1;
+		uint32_t endIndex = idData.size() - 1;
 
 		//alignement of groups
 		for (int i = groups.size() - 1; i >= 0; i--) {
@@ -220,6 +224,10 @@ namespace tri {
 		}
 		index = getIndexById(id);
 
+		if (index < deactiveComponentCount) {
+			swapIndex(index, --deactiveComponentCount);
+			index = getIndexById(id);
+		}
 
 		swapIndex(index, endIndex);
 
@@ -268,10 +276,36 @@ namespace tri {
 			return -1;
 		}
 		int index = offset / componentSize;
-		if (index >= size()) {
+		if (index >= idData.size()) {
 			return -1;
 		}
 		return getIdByIndex(index);
+	}
+
+	bool ComponentStorage::isComponentActive(EntityId id) {
+		int index = getIndexById(id);
+		if (index == -1) {
+			return false;
+		}
+		return index >= deactiveComponentCount;
+	}
+
+	void ComponentStorage::setComponentActive(EntityId id, bool active) {
+		int index = getIndexById(id);
+		if (index == -1) {
+			return;
+		}
+
+		if (active) {
+			if (index < deactiveComponentCount) {
+				swapIndex(index, --deactiveComponentCount);
+			}
+		}
+		else {
+			if (index >= deactiveComponentCount) {
+				swapIndex(index, deactiveComponentCount++);
+			}
+		}
 	}
 
 	void ComponentStorage::addGroup(const std::shared_ptr<Group>& group) {
@@ -323,7 +357,7 @@ namespace tri {
 	}
 
 	void ComponentStorage::initialGroupSorting(Group* group) {
-		uint32_t endIndex = size();
+		uint32_t endIndex = idData.size();
 		for (uint32_t index = 0; index < endIndex; index++) {
 			EntityId id = getIdByIndex(index);
 
@@ -399,6 +433,7 @@ namespace tri {
 
 		//copy ids
 		idData = from.idData;
+		deactiveComponentCount = from.deactiveComponentCount;
 		indexByIdPageEntries = from.indexByIdPageEntries;
 		pageCount = from.pageCount;
 

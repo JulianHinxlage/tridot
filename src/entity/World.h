@@ -139,6 +139,9 @@ namespace tri {
 		void* getOrAddComponent(EntityId id, int classId);
 		EntityId getIdByComponent(const void* comp, int classId);
 
+		bool isEntityActive(EntityId id);
+		void setEntityActive(EntityId id, bool active);
+
 		void copy(World& from);
 		void clear();
 		void* getComponentPending(EntityId id, int classId);

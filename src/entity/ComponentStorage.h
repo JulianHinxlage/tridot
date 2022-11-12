@@ -35,7 +35,11 @@ namespace tri {
 		void removeComponent(EntityId id);
 		EntityId getIdByComponent(const void* comp);
 
+		bool isComponentActive(EntityId id);
+		void setComponentActive(EntityId id, bool active);
+
 		int size();
+		int deactiveSize();
 		EntityId* getIdData();
 		void* getComponentData();
 		void clear();
@@ -81,6 +85,7 @@ namespace tri {
 		std::vector<uint32_t> indexByIdPageEntries;
 		int pageCount = 0;
 
+		uint32_t deactiveComponentCount = 0;
 
 		std::vector<std::shared_ptr<Group>> groups;
 

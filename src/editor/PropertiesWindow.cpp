@@ -103,6 +103,16 @@ namespace tri {
 		}
 
 		void header() {
+			if (selectionContext->getSelected().size() > 0) {
+				EntityId id = selectionContext->getSelected()[0];
+				bool active = env->world->isEntityActive(id);
+				if(ImGui::Checkbox("active", &active)) {
+					for (auto& iterId : selectionContext->getSelected()) {
+						env->world->setEntityActive(iterId, active);
+					}
+				}
+			}
+
 			if (ImGui::Button("Add Component")) {
 				ImGui::OpenPopup("add");
 			}
