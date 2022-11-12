@@ -57,6 +57,7 @@ namespace tri {
 		Ref<Shader> skyboxShader;
 		Ref<Shader> ssaoShader;
 		Ref<Shader> shadowShader;
+		Ref<Shader> colorGradingShader;
 
 		Ref<Mesh> sphereMesh;
 		Ref<Mesh> coneMesh;
@@ -68,6 +69,7 @@ namespace tri {
 		Ref<FrameBuffer> bloomBuffer1;
 		Ref<FrameBuffer> bloomBuffer2;
 		Ref<FrameBuffer> ssaoBuffer;
+		Ref<FrameBuffer> postProcessingBuffer;
 
 		ViewFrustum frustum;
 
@@ -122,6 +124,7 @@ namespace tri {
 		void submitSkyBox(const Camera& camera);
 		void submitSSAO();
 		void submitShadows();
+		void submitPostProcessing();
 	};
 
 }

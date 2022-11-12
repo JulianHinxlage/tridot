@@ -86,6 +86,16 @@ namespace tri {
 
 					ImGui::Separator();
 
+					ImGui::SliderFloat("hueShift", &env->renderSettings->hueShift, 0, 1);
+					ImGui::SliderFloat("saturation", &env->renderSettings->saturation, 0, 2);
+					ImGui::SliderFloat("temperature", &env->renderSettings->temperature, 0, 4);
+					ImGui::SliderFloat("contrast", &env->renderSettings->contrast, 0, 2);
+					ImGui::SliderFloat("brightness", &env->renderSettings->brightness, 0, 2);
+					ImGui::SliderFloat("gamma", &env->renderSettings->gamma, 0, 4);
+					ImGui::ColorEdit3("gain", (float*)&env->renderSettings->gain);
+
+					ImGui::Separator();
+
 					env->editor->classUI->draw(env->systemManager->getSystem<Renderer>()->getGBuffer(), "GBuffer");
 					env->editor->classUI->draw(env->systemManager->getSystem<Renderer>()->getBloomBuffer(), "Bloom Buffer");
 				}

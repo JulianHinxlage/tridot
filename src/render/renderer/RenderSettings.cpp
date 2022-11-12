@@ -25,6 +25,13 @@ namespace tri {
         env->console->addCVar("ssaoSampleRadius", &ssaoSampleRadius);
         env->console->addCVar("ssaoBias", &ssaoBias);
         env->console->addCVar("ssaoOcclusionStrength", &ssaoOcclusionStrength);
+
+        env->console->addCVar("hueShift", &hueShift);
+        env->console->addCVar("saturation", &saturation);
+        env->console->addCVar("temperature", &temperature);
+        env->console->addCVar("contrast", &contrast);
+        env->console->addCVar("brightness", &brightness);
+        env->console->addCVar("gamma", &gamma);
     }
 
 	RenderSettings::Statistics::Statistics() {

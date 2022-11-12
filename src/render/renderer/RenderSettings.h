@@ -6,6 +6,7 @@
 
 #include "pch.h"
 #include "core/core.h"
+#include <glm/glm.hpp>
 
 namespace tri {
 
@@ -29,6 +30,14 @@ namespace tri {
         float ssaoSampleRadius = 1.0;
         float ssaoBias = 0.025;
         float ssaoOcclusionStrength = 1.0;
+
+        float hueShift = 0.0f;
+        float saturation = 1.0f;
+        float temperature = 1.0f;
+        float contrast = 1.0f;
+        float brightness = 1.0f;
+        float gamma = 1.0f;
+        glm::vec3 gain = { 0, 0, 0 };
 
         virtual void init() override;
 

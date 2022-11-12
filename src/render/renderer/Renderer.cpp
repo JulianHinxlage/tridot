@@ -46,6 +46,7 @@ namespace tri {
         skyboxShader = env->assetManager->get<Shader>("shaders/skybox.glsl");
         ssaoShader = env->assetManager->get<Shader>("shaders/ssao.glsl");
         shadowShader = env->assetManager->get<Shader>("shaders/mesh.glsl");
+        colorGradingShader = env->assetManager->get<Shader>("shaders/colorGrading.glsl");
         coneMesh = env->assetManager->get<Mesh>("models/cone.obj");
         cubeMesh = env->assetManager->get<Mesh>("models/cube.obj");
 
@@ -117,7 +118,9 @@ namespace tri {
         env->renderPipeline->freeOnThread(spotLightBatch.instanceBuffer);
         env->renderPipeline->freeOnThread(shadowEnvBuffer);
         env->renderPipeline->freeOnThread(shadowShader);
-        
+        env->renderPipeline->freeOnThread(colorGradingShader);
+        env->renderPipeline->freeOnThread(postProcessingBuffer);
+
         defaultTexture = nullptr;
         defaultMaterial = nullptr;
         quadMesh = nullptr;
@@ -148,6 +151,8 @@ namespace tri {
         spotLightBatch.instanceBuffer = nullptr;
         shadowShader = nullptr;
         shadowEnvBuffer = nullptr;
+        colorGradingShader = nullptr;
+        postProcessingBuffer = nullptr;
 
         drawList.reset();
         transparencyDrawList.reset();
@@ -159,6 +164,7 @@ namespace tri {
     void Renderer::tick() {
         updateFrameBuffer(gBuffer, gBufferSpec, env->viewport->size);
         updateFrameBuffer(lightAccumulationBuffer, lightAccumulationSpec, env->viewport->size);
+        updateFrameBuffer(postProcessingBuffer, lightAccumulationSpec, env->viewport->size);
         if (env->renderSettings->enableBloom) {
             updateFrameBuffer(bloomBuffer1, bloomBufferSpec, env->viewport->size);
             updateFrameBuffer(bloomBuffer2, bloomBufferSpec, env->viewport->size);
@@ -216,7 +222,9 @@ namespace tri {
                     submitBloom();
                 }
 
-                camera.output = lightAccumulationBuffer;
+                submitPostProcessing();
+
+                camera.output = postProcessingBuffer;
                 env->renderPipeline->addCommandStep(RenderPipeline::Command::DEPTH_ON, RenderPipeline::LIGHTING);
                 env->renderPipeline->addCommandStep(RenderPipeline::Command::CULL_BACK, RenderPipeline::LIGHTING);
                 env->renderPipeline->addCommandStep(RenderPipeline::Command::BLEND_ON, RenderPipeline::LIGHTING);
@@ -1141,6 +1149,40 @@ namespace tri {
                 }
             });
         }
+    }
+
+    void Renderer::submitPostProcessing() {
+        env->renderPipeline->addCommandStep(RenderPipeline::Command::DEPTH_OFF, RenderPipeline::POST_PROCESSING);
+        env->renderPipeline->addCommandStep(RenderPipeline::Command::CULL_OFF, RenderPipeline::POST_PROCESSING);
+        env->renderPipeline->addCommandStep(RenderPipeline::Command::BLEND_OFF, RenderPipeline::POST_PROCESSING);
+
+        auto dc = env->renderPipeline->addDrawCallStep(RenderPipeline::POST_PROCESSING, false);
+        dc->name = "color grading";
+
+        dc->vertexArray = &quadMesh->vertexArray;
+        dc->shader = colorGradingShader.get();
+        dc->frameBuffer = postProcessingBuffer.get();
+        dc->textures.push_back(lightAccumulationBuffer->getAttachment(TextureAttachment::COLOR).get());
+
+        Transform quadTransform;
+        quadTransform.rotation.x = glm::radians(90.0f);
+        quadTransform.scale = { 2, 2, -2 };
+
+        dc->shaderState = Ref<ShaderState>::make();
+        dc->shaderState->set("uTransform", quadTransform.calculateLocalMatrix());
+        dc->shaderState->set("hueShift", env->renderSettings->hueShift);
+        dc->shaderState->set("saturation", env->renderSettings->saturation);
+        dc->shaderState->set("temperature", env->renderSettings->temperature);
+        dc->shaderState->set("contrast", env->renderSettings->contrast);
+        dc->shaderState->set("brightness", env->renderSettings->brightness);
+        dc->shaderState->set("gamma", env->renderSettings->gamma);
+        dc->shaderState->set("gain", env->renderSettings->gain);
+
+        std::vector<int> textureSlots;
+        for (int i = 0; i < dc->textures.size(); i++) {
+            textureSlots.push_back(i);
+        }
+        dc->shaderState->set("uTextures", textureSlots.data(), textureSlots.size());
     }
 
 }
