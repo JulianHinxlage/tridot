@@ -31,6 +31,7 @@ namespace tri {
         float ssaoBias = 0.025;
         float ssaoOcclusionStrength = 1.0;
 
+        bool enableColorGrading = true;
         float hueShift = 0.0f;
         float saturation = 1.0f;
         float temperature = 1.0f;

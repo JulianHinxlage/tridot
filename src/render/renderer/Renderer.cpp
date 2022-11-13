@@ -222,9 +222,14 @@ namespace tri {
                     submitBloom();
                 }
 
-                submitPostProcessing();
+                if (env->renderSettings->enableColorGrading) {
+                    submitPostProcessing();
+                    camera.output = postProcessingBuffer;
+                }
+                else {
+                    camera.output = lightAccumulationBuffer;
+                }
 
-                camera.output = postProcessingBuffer;
                 env->renderPipeline->addCommandStep(RenderPipeline::Command::DEPTH_ON, RenderPipeline::LIGHTING);
                 env->renderPipeline->addCommandStep(RenderPipeline::Command::CULL_BACK, RenderPipeline::LIGHTING);
                 env->renderPipeline->addCommandStep(RenderPipeline::Command::BLEND_ON, RenderPipeline::LIGHTING);

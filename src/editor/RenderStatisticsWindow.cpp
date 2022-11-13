@@ -86,6 +86,7 @@ namespace tri {
 
 					ImGui::Separator();
 
+					ImGui::Checkbox("enableColorGrading", &env->renderSettings->enableColorGrading);
 					ImGui::SliderFloat("hueShift", &env->renderSettings->hueShift, 0, 1);
 					ImGui::SliderFloat("saturation", &env->renderSettings->saturation, 0, 2);
 					ImGui::SliderFloat("temperature", &env->renderSettings->temperature, 0, 4);

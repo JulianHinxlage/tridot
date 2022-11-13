@@ -26,6 +26,7 @@ namespace tri {
         env->console->addCVar("ssaoBias", &ssaoBias);
         env->console->addCVar("ssaoOcclusionStrength", &ssaoOcclusionStrength);
 
+        env->console->addCVar("enableColorGrading", &enableColorGrading);
         env->console->addCVar("hueShift", &hueShift);
         env->console->addCVar("saturation", &saturation);
         env->console->addCVar("temperature", &temperature);
