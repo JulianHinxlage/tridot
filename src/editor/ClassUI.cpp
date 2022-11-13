@@ -138,9 +138,35 @@ namespace tri {
 			bool change = false;
 
 			auto drag = [value]() {
-				//drag target
+
 				EntityEvent::Listener l;
 				std::string func;
+				if (ImGui::BeginPopupContextItem()) {
+					if (ImGui::MenuItem("Select")) {
+						for (auto* desc : Reflection::getDescriptors()) {
+							if (desc && desc->flags & ClassDescriptor::COMPONENT) {
+								EntityId id = env->world->getIdByComponent(value, desc->classId);
+								if (id != -1) {
+									void *comp = env->world->getComponent(id, desc->classId);
+									int offset = (uint8_t*)value - (uint8_t*)comp;
+									for (int propertyIndex = 0; propertyIndex < desc->properties.size(); propertyIndex++) {
+										auto& pdesc = desc->properties[propertyIndex];
+										if (pdesc.offset == offset) {
+											env->editor->entityOperations->copyEvent(id, desc->classId, propertyIndex);
+										}
+									}
+								}
+							}
+						}
+					}
+					if (ImGui::MenuItem("Connect", nullptr, nullptr, env->editor->entityOperations->hasCopiedFunction())) {
+						env->editor->entityOperations->pastFunction(l.entityId, l.function.classId, l.function.functionIndex);
+						value->addListener(l.entityId, l.function.classId, l.function.functionIndex);
+					}
+					ImGui::EndPopup();
+				}
+
+				//drag target
 				if (env->editor->classUI->dragTargetFunc(l.function.classId, func, l.entityId)) {
 					auto* desc = env->reflection->getDescriptor(l.function.classId);
 					if (desc) {
@@ -504,9 +530,39 @@ namespace tri {
 				}
 			}
 
-			for (auto& func : desc->functions) {
+
+			for (int functionIndex = 0; functionIndex < desc->functions.size(); functionIndex++) {
+				auto& func = desc->functions[functionIndex];
 				if (ImGui::Button(func->name.c_str())) {
 					func->invoke(ptr);
+				}
+				if (ImGui::BeginPopupContextItem()) {
+					if (ImGui::MenuItem("Select")) {
+						env->editor->entityOperations->copyFunction(env->world->getIdByComponent(ptr, classId), desc->classId, functionIndex);
+					}
+					if (ImGui::MenuItem("Connect", nullptr, nullptr, env->editor->entityOperations->hasCopiedEvent())) {
+						EntityId id = -1;
+						int propertyClassId = -1;
+						int propertyIndex = -1;
+						env->editor->entityOperations->pastEvent(id, propertyClassId, propertyIndex);
+
+						auto *propertyDesc = Reflection::getDescriptor(propertyClassId);
+						if (propertyDesc) {
+							void *comp = env->world->getComponent(id, propertyClassId);
+							if (comp) {
+								if (propertyIndex >= 0 && propertyIndex < propertyDesc->properties.size()) {
+									auto& pdesc = propertyDesc->properties[propertyIndex];
+									if (pdesc.type == Reflection::getDescriptor<EntityEvent>()) {
+										void* prop = (uint8_t*)comp + pdesc.offset;
+										((EntityEvent*)prop)->addListener(env->world->getIdByComponent(ptr, classId), desc->classId, functionIndex);
+									}
+								}
+
+							}
+						}
+
+					}
+					ImGui::EndPopup();
 				}
 				dragSourceFunc(desc->classId, func->name, env->world->getIdByComponent(ptr, classId));
 			}

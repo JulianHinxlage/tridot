@@ -140,4 +140,36 @@ namespace tri {
 		return componentBuffer.classId;
 	}
 
+	void EntityOperations::copyFunction(EntityId entityId, int classId, int functionIndex) {
+		functionEntityId = entityId;
+		functionClassId = classId;
+		this->functionIndex = functionIndex;
+	}
+
+	void EntityOperations::pastFunction(EntityId& entityId, int& classId, int& functionIndex) {
+		entityId = functionEntityId;
+		classId = functionClassId;
+		functionIndex = this->functionIndex;
+	}
+
+	bool EntityOperations::hasCopiedFunction() {
+		return functionEntityId != -1;
+	}
+
+	void EntityOperations::copyEvent(EntityId entityId, int classId, int propertyIndex) {
+		eventEntityId = entityId;
+		eventClassId = classId;
+		eventPropertyIndex = propertyIndex;
+	}
+
+	void EntityOperations::pastEvent(EntityId& entityId, int& classId, int& propertyIndex) {
+		entityId = eventEntityId;
+		classId = eventClassId;
+		propertyIndex = eventPropertyIndex;
+	}
+	
+	bool EntityOperations::hasCopiedEvent() {
+		return eventEntityId != -1;
+	}
+
 }

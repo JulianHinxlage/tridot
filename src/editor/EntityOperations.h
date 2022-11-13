@@ -30,10 +30,26 @@ namespace tri {
 		bool hasCopiedEntity();
 		int getCopiedComponentClassId();
 
+		void copyFunction(EntityId entityId, int classId, int functionIndex);
+		void pastFunction(EntityId &entityId, int &classId, int &functionIndex);
+		bool hasCopiedFunction();
+
+		void copyEvent(EntityId entityId, int classId, int propertyIndex);
+		void pastEvent(EntityId& entityId, int& classId, int& propertyIndex);
+		bool hasCopiedEvent();
+
 	private:
 		Prefab entityBuffer;
 		bool hasEntityInBuffer;
 		DynamicObjectBuffer componentBuffer;
+
+		EntityId functionEntityId = -1;
+		int functionClassId = -1;
+		int functionIndex = -1;
+
+		EntityId eventEntityId = -1;
+		int eventClassId = -1;
+		int eventPropertyIndex = -1;
 	};
 
 }
