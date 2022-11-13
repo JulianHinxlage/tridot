@@ -15,12 +15,14 @@ namespace tri {
 	class Event {
 	public:
 		void invoke(Args... args) {
-			for (auto& listener : listeners) {
+			for (int i = 0; i < listeners.size(); i++) {
+				auto& listener = listeners[i];
 				if (listener.callback) {
 					listener.callback(args...);
 				}
 			}
-			for (auto& listener : invokeOnceListeners) {
+			for (int i = 0; i < invokeOnceListeners.size(); i++) {
+				auto& listener = invokeOnceListeners[i];
 				if (listener.callback) {
 					listener.callback(args...);
 				}

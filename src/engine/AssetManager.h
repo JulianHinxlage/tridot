@@ -36,6 +36,7 @@ namespace tri {
             NO_RELOAD = 1 << 1,
             NO_RELOAD_ONCE = 1 << 2,
             DO_NOT_LOAD = 1 << 3,
+            EXPLICIT_LOAD = 1 << 4,
         };
 
         AssetManager();

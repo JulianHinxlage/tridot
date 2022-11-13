@@ -7,6 +7,7 @@
 #include "engine/Time.h"
 #include "core/util/StrUtil.h"
 #include "core/FileWatcher.h"
+#include "Map.h"
 
 namespace tri {
 
@@ -95,6 +96,13 @@ namespace tri {
         static std::mutex mutex;
         std::unique_lock<std::mutex> lock(mutex);
 
+        //special case for Map: Map is only loaded if EXPLICIT_LOAD is set
+        if (typeId == Reflection::getClassId<Map>()) {
+            if (!(options & EXPLICIT_LOAD)) {
+                options = (Options)(options | Options::DO_NOT_LOAD);
+            }
+        }
+
         std::string minimalPath;
         auto lookup = minimalPathLookupTable.find(file);
         if (lookup != minimalPathLookupTable.end()) {
@@ -112,8 +120,27 @@ namespace tri {
 
         auto x = assets.find(minimalPath);
         if(x != assets.end()){
-            if(x->second.typeId == typeId){
-                return x->second.asset;
+            AssetRecord& record = x->second;
+            if(record.typeId == typeId) {
+
+                if (options & EXPLICIT_LOAD) {
+                    record.options = options;
+                    record.preLoad = preLoad;
+                    record.postLoad = postLoad;
+                    record.options = (Options)(record.options & ~Options::DO_NOT_LOAD);
+                    if (record.status & UNLOADED) {
+                       if ((options & SYNCHRONOUS) || !asynchronousEnabled) {
+                           lock.unlock();
+                           load(record);
+                           loadActivate(record);
+                       }
+                       else {
+                           wakeCondition.notify_one();
+                       }
+                    }
+                }
+
+                return record.asset;
             }else{
                 return nullptr;
             }
