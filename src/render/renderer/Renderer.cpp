@@ -1134,9 +1134,13 @@ namespace tri {
                         if (env->renderSettings->enableFrustumCulling && !frustum.inFrustum(t.getMatrix(), mesh)) {
                             return;
                         }
-                        auto* batch = shadowBatches.get(shadowShader.get(), mesh);
-                        if (batch->isInitialized()) {
-                            batch->add(t.getMatrix(), nullptr, color::white, -1);
+
+                        bool opaque = m.color.a == 255 && (!m.material || m.material->color.a == 255);
+                        if (opaque) {
+                            auto* batch = shadowBatches.get(shadowShader.get(), mesh);
+                            if (batch->isInitialized()) {
+                                batch->add(t.getMatrix(), nullptr, color::white, -1);
+                            }
                         }
                     });
 
