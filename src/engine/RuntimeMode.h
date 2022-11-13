@@ -23,8 +23,28 @@ namespace tri {
 		void shutdown() override;
 		Mode getMode();
 		void setMode(Mode mode);
+
 		void setActiveSystem(Mode mode, const std::string& systemName, bool active);
 		void setActiveSystems(Mode mode, const std::vector<std::string>& systemNames, bool active);
+		void setActiveSystem(const std::vector<Mode>& modes, const std::string& systemName, bool active);
+		void setActiveSystems(const std::vector<Mode> &modes, const std::vector<std::string>& systemNames, bool active);
+
+		template<typename T>
+		void setActiveSystem(Mode mode, bool active) {
+			setActiveSystem(mode, Reflection::getDescriptor<T>()->name, active);
+		}
+		template<typename T>
+		void setActiveSystem(const std::vector<Mode>& modes, bool active) {
+			setActiveSystem(modes, Reflection::getDescriptor<T>()->name, active);
+		}
+		template<typename... T>
+		void setActiveSystems(Mode mode, bool active) {
+			(setActiveSystem<T>(mode, active), ...);
+		}
+		template<typename... T>
+		void setActiveSystems(const std::vector<Mode>& modes, bool active) {
+			(setActiveSystem<T>(modes, active), ...);
+		}
 
 	private:
 		Mode mode = LOADING;

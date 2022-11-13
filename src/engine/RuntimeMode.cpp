@@ -19,17 +19,9 @@ namespace tri {
 		std::vector<std::string> systems2 = { "Window", "Renderer", "UIManager", "RenderPipeline" };
 		std::vector<std::string> systems3 = { "Gizmos", "UndoSystem", "Editor" };
 		
-		env->runtimeMode->setActiveSystems(RuntimeMode::EDIT, systems1, true);
-		env->runtimeMode->setActiveSystems(RuntimeMode::EDIT, systems2, true);
-		env->runtimeMode->setActiveSystems(RuntimeMode::EDIT, systems3, true);
-
-		env->runtimeMode->setActiveSystems(RuntimeMode::PAUSED, systems1, true);
-		env->runtimeMode->setActiveSystems(RuntimeMode::PAUSED, systems2, true);
-		env->runtimeMode->setActiveSystems(RuntimeMode::PAUSED, systems3, true);
-
-		env->runtimeMode->setActiveSystems(RuntimeMode::LOADING, systems1, true);
-		env->runtimeMode->setActiveSystems(RuntimeMode::LOADING, systems2, true);
-		env->runtimeMode->setActiveSystems(RuntimeMode::LOADING, systems3, true);
+		env->runtimeMode->setActiveSystems({ RuntimeMode::EDIT, RuntimeMode::PAUSED, RuntimeMode::LOADING }, systems1, true);
+		env->runtimeMode->setActiveSystems({ RuntimeMode::EDIT, RuntimeMode::PAUSED, RuntimeMode::LOADING }, systems2, true);
+		env->runtimeMode->setActiveSystems({ RuntimeMode::EDIT, RuntimeMode::PAUSED, RuntimeMode::LOADING }, systems3, true);
 	}
 
 	void RuntimeMode::shutdown() {
@@ -45,31 +37,31 @@ namespace tri {
 		if (entry != modeContexts.end()) {
 			auto& context = entry->second;
 
-			if (context.activeSystems.size() > 0) {
-				setAllActive(false);
-				for (auto& active : context.activeSystems) {
-					auto* desc = Reflection::getDescriptor(active);
-					if (desc) {
-						auto* system = env->systemManager->getSystemHandle(desc->classId);
-						if (system) {
-							system->active = true;
-						}
-					}
-				}
+			if (mode == PLAY) {
+				setAllActive(true);
 			}
 			else {
-				setAllActive(true);
-				for (auto& inactive : context.inactiveSystems) {
-					auto* desc = Reflection::getDescriptor(inactive);
-					if (desc) {
-						auto* system = env->systemManager->getSystemHandle(desc->classId);
-						if (system) {
-							system->active = false;
-						}
+				setAllActive(false);
+			}
+
+			for (auto& inactive : context.inactiveSystems) {
+				auto* desc = Reflection::getDescriptor(inactive);
+				if (desc) {
+					auto* system = env->systemManager->getSystemHandle(desc->classId);
+					if (system) {
+						system->active = false;
 					}
 				}
 			}
-
+			for (auto& active : context.activeSystems) {
+				auto* desc = Reflection::getDescriptor(active);
+				if (desc) {
+					auto* system = env->systemManager->getSystemHandle(desc->classId);
+					if (system) {
+						system->active = true;
+					}
+				}
+			}
 		}
 		else {
 			setAllActive(true);
@@ -99,6 +91,18 @@ namespace tri {
 	void RuntimeMode::setActiveSystems(Mode mode, const std::vector<std::string>& systemNames, bool active) {
 		for (auto& systemName : systemNames) {
 			setActiveSystem(mode, systemName, active);
+		}
+	}
+
+	void RuntimeMode::setActiveSystem(const std::vector<Mode>& modes, const std::string& systemName, bool active) {
+		for (auto mode : modes) {
+			setActiveSystem(mode, systemName, active);
+		}
+	}
+
+	void RuntimeMode::setActiveSystems(const std::vector<Mode>& modes, const std::vector<std::string>& systemNames, bool active) {
+		for (auto mode : modes) {
+			setActiveSystems(mode, systemNames, active);
 		}
 	}
 

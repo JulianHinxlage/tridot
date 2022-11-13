@@ -21,8 +21,8 @@ namespace tri {
 		if (env->editor) {
 			env->editor->fileAssosiations[".wav"] = Reflection::getClassId<Audio>();
 		}
-        env->runtimeMode->setActiveSystem(RuntimeMode::EDIT, "AudioSystem", true);
-        env->runtimeMode->setActiveSystem(RuntimeMode::PAUSED, "AudioSystem", true);
+
+        env->runtimeMode->setActiveSystem<AudioSystem>({ RuntimeMode::EDIT, RuntimeMode::PAUSED, RuntimeMode::LOADING }, true);
 	}
 
 	void AudioSystem::startup() {

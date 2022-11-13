@@ -103,7 +103,7 @@ namespace tri {
 		}
 
 		virtual void startup() override {
-			env->runtimeMode->setActiveSystem(RuntimeMode::PAUSED, "ParticleSystem", true);
+			env->runtimeMode->setActiveSystem<ParticleSystem>(RuntimeMode::PAUSED, true);
 
 			if (env->editor) {
 				env->editor->fileAssosiations[".effect"] = Reflection::getClassId<ParticleEffect>();
