@@ -471,8 +471,9 @@ namespace tri {
         ssao.mipMapping = false;
         ssao.name = "SSAO";
         ssao.textureFormat = TextureFormat::RED8;
-        ssao.magNearest = true;
-        ssao.minNearest = true;
+        ssao.magNearest = false;
+        ssao.minNearest = false;
+        ssao.resizeFactor = { 0.5, 0.5 };
 
         ssaoBufferSpec = { ssao };
 

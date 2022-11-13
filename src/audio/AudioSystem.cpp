@@ -61,6 +61,7 @@ namespace tri {
                     alSource3f(source.id, AL_POSITION, transform.position.x, transform.position.y, transform.position.z);
                 }
                 else {
+                    alSource3f(source.id, AL_POSITION, 0, 0, 0);
                     alSourcei(source.id, AL_SOURCE_RELATIVE, AL_TRUE);
                 }
                 alSourcef(source.id, AL_GAIN, source.volume);
