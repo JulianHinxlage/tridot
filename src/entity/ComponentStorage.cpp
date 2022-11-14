@@ -68,7 +68,7 @@ namespace tri {
 		resizeData(0);
 		for (int i = 0; i < indexByIdPages.size(); i++) {
 			if (indexByIdPages[i]) {
-				delete indexByIdPages[i];
+				delete[] indexByIdPages[i];
 			}
 		}
 		indexByIdPages.clear();
@@ -248,7 +248,7 @@ namespace tri {
 
 		indexByIdPageEntries[pageIndex]--;
 		if (indexByIdPageEntries[pageIndex] == 0) {
-			delete indexByIdPages[pageIndex];
+			delete[] indexByIdPages[pageIndex];
 			indexByIdPages[pageIndex] = nullptr;
 			pageCount--;
 
@@ -416,7 +416,7 @@ namespace tri {
 		if (desc) {
 			desc->destruct(componentData, componentDataSize);
 		}
-		delete componentData;
+		delete[] componentData;
 
 		//allocate memory and copy data
 		componentDataSize = from.componentDataSize;
@@ -440,7 +440,7 @@ namespace tri {
 		//delete pages
 		for (int i = 0; i < indexByIdPages.size(); i++) {
 			if (indexByIdPages[i]) {
-				delete indexByIdPages[i];
+				delete[] indexByIdPages[i];
 				indexByIdPages[i] = nullptr;
 			}
 		}
@@ -489,7 +489,7 @@ namespace tri {
 			componentDataSize = componentDataCapacity;
 		}
 
-		delete oldData;
+		delete[] oldData;
 	}
 
 	int ComponentStorage::memoryUsage() {

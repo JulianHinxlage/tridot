@@ -25,6 +25,10 @@ namespace tri {
         bool skipNext = true;
         glm::vec2 mousePressStartPos = {0, 0};
 
+        void init() override {
+            env->jobManager->addJob("Physics")->addSystem<ThirdPersonCameraControlerSystem>();
+        }
+
         glm::vec2 getMouseDelta(glm::vec2 startPos) {
             bool skip = false;
             if (mouseSetFrameNumber != env->time->frameCounter - 1) {

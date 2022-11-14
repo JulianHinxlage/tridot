@@ -15,13 +15,15 @@ namespace tri {
 	}
 
 	void RuntimeMode::startup() {
-		std::vector<std::string> systems1 = { "Time", "Input", "AssetManager", "STransform", "SCamera", "FileWatcher", "JobManager" };
+		std::vector<std::string> systems1 = { "Time", "Input", "AssetManager", "TransformSystem", "CameraSystem", "FileWatcher", "JobManager" };
 		std::vector<std::string> systems2 = { "Window", "Renderer", "UIManager", "RenderPipeline" };
 		std::vector<std::string> systems3 = { "Gizmos", "UndoSystem", "Editor" };
 		
 		env->runtimeMode->setActiveSystems({ RuntimeMode::EDIT, RuntimeMode::PAUSED, RuntimeMode::LOADING }, systems1, true);
 		env->runtimeMode->setActiveSystems({ RuntimeMode::EDIT, RuntimeMode::PAUSED, RuntimeMode::LOADING }, systems2, true);
 		env->runtimeMode->setActiveSystems({ RuntimeMode::EDIT, RuntimeMode::PAUSED, RuntimeMode::LOADING }, systems3, true);
+
+		updateActive();
 	}
 
 	void RuntimeMode::shutdown() {

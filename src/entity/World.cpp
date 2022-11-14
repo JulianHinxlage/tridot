@@ -142,6 +142,7 @@ namespace tri {
 		if (enablePendingOperations) {
 			//pending operation
 			if (pendingAddComponentStorages.size() <= classId) {
+				std::unique_lock<std::mutex> lock(mutex);
 				pendingAddComponentStorages.resize(classId + 1);
 			}
 			if (!pendingAddComponentStorages[classId]) {
@@ -152,6 +153,7 @@ namespace tri {
 		else {
 			//event buffer
 			if (onComponentAddIds.size() <= classId) {
+				std::unique_lock<std::mutex> lock(mutex);
 				onComponentAddIds.resize(classId + 1);
 			}
 			if (!onComponentAddIds[classId]) {
@@ -162,6 +164,7 @@ namespace tri {
 
 
 		if (storages.size() <= classId) {
+			std::unique_lock<std::mutex> lock(mutex);
 			storages.resize(classId + 1);
 		}
 		if (!storages[classId]) {
@@ -200,6 +203,7 @@ namespace tri {
 		if (enablePendingOperations) {
 			//pending operation
 			if (pendingRemoveComponentIds.size() <= classId) {
+				std::unique_lock<std::mutex> lock(mutex);
 				pendingRemoveComponentIds.resize(classId + 1);
 			}
 			if (!pendingRemoveComponentIds[classId]) {
@@ -212,6 +216,7 @@ namespace tri {
 		else {
 			//event buffer
 			if (onComponentRemoveIds.size() <= classId) {
+				std::unique_lock<std::mutex> lock(mutex);
 				onComponentRemoveIds.resize(classId + 1);
 			}
 			if (!onComponentRemoveIds[classId]) {
@@ -245,6 +250,13 @@ namespace tri {
 				if (store) {
 					store->setComponentActive(id, active);
 				}
+			}
+
+			if (active) {
+				env->eventManager->onEntityActivated.invoke(this, id);
+			}
+			else {
+				env->eventManager->onEntityDeactivated.invoke(this, id);
 			}
 		}
 	}
@@ -391,8 +403,11 @@ namespace tri {
 			if (store) {
 				auto* desc = Reflection::getDescriptor(classId);
 				for (int i = 0; i < store->size(); i++) {
-					void* ptr = addComponent(store->getIdByIndex(i), classId);
-					desc->copy(store->getComponentByIndex(i), ptr);
+					EntityId id = store->getIdByIndex(i);
+					if (hasEntity(id)) {
+						void* ptr = addComponent(id, classId);
+						desc->copy(store->getComponentByIndex(i), ptr);
+					}
 				}
 			}
 		}
@@ -463,11 +478,14 @@ namespace tri {
 				return nullptr;
 			}
 			else {
+				std::unique_lock<std::mutex> lock(mutex);
 				storages.resize(classId + 1);
 			}
 		}
 		if (!storages[classId]) {
-			storages[classId] = std::make_shared<ComponentStorage>(classId);
+			if (Reflection::getDescriptor(classId)) {
+				storages[classId] = std::make_shared<ComponentStorage>(classId);
+			}
 		}
 		return storages[classId].get();
 	}
@@ -478,6 +496,7 @@ namespace tri {
 
 	int World::getComponentId(int classId) {
 		if (componentIdMap.size() <= classId) {
+			std::unique_lock<std::mutex> lock(mutex);
 			componentIdMap.resize(classId + 1, -1);
 		}
 		int id = componentIdMap[classId];

@@ -1,4 +1,4 @@
-enableJobMultithreading = false
+enableJobMultithreading = true
 enableModuleHotReloading = false
 unloadModuleOnCrash = true
 enableCrashRecovery = true

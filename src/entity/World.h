@@ -180,6 +180,8 @@ namespace tri {
 		std::vector<int> componentIdMap;
 		int nextComponentId = 0;
 
+		std::mutex mutex;
+
 		int getComponentId(int classId);
 	};
 

@@ -166,11 +166,13 @@ namespace tri {
 							break;
 						}
 					}
-					if (value1 != nullptr) {
+					if (value1) {
 						void* value2 = prop.value.value.get();
 						void* result = prop.value.getProperty(id, env->world);
 						int propClassId = prop.value.value.classId;
-						setProperty(propClassId, result, value1, value2, factor, frame.blend);
+						if (value2 && result) {
+							setProperty(propClassId, result, value1, value2, factor, frame.blend);
+						}
 					}
 				}
 			}

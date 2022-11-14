@@ -13,6 +13,16 @@ namespace tri {
 		env->editor->selectionContext = this;
 	}
 
+	void SelectionContext::startup() {
+		entityRemoveListener = env->eventManager->onEntityRemove.addListener([&](World* world, EntityId id) {
+			unselect(id);
+		});
+	}
+
+	void SelectionContext::shutdown() {
+		env->eventManager->onEntityRemove.removeListener(entityRemoveListener);
+	}
+
 	void SelectionContext::select(EntityId id, bool unselectOther) {
 		if (unselectOther) {
 			unselectAll();

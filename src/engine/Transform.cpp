@@ -137,7 +137,7 @@ namespace tri {
     TRI_PROPERTY_FLAGS(Transform, parent, PropertyDescriptor::HIDDEN);
 
     
-    class STransform : public System {
+    class TransformSystem : public System {
     public:
         std::unordered_map<EntityId, std::vector<EntityId>> childs;
         std::unordered_map<EntityId, std::vector<EntityId>> newChilds;
@@ -146,8 +146,8 @@ namespace tri {
         int listener2 = -1;
 
         void init() override {
-            auto* job = env->jobManager->addJob("Transform");
-            job->addSystem<STransform>();
+            auto* job = env->jobManager->addJob("Physics");
+            job->addSystem<TransformSystem>();
             job->enableMultithreading = true;
 
             listener = env->eventManager->postTick.addListener([&]() {
@@ -240,10 +240,10 @@ namespace tri {
             }
         }
     };
-    TRI_SYSTEM(STransform);
+    TRI_SYSTEM(TransformSystem);
 
     const std::vector<EntityId>& Transform::getChilds(EntityId id) {
-        return env->systemManager->getSystem<STransform>()->getChilds(id);
+        return env->systemManager->getSystem<TransformSystem>()->getChilds(id);
     }
 
 }

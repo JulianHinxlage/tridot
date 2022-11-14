@@ -12,6 +12,7 @@
 #include "engine/Serializer.h"
 #include "engine/AssetManager.h"
 #include "engine/MeshComponent.h"
+#include "engine/EntityInfo.h"
 #include "editor/Editor.h"
 #include "core/Reflection.h"
 #include <glm/gtc/matrix_transform.hpp>
@@ -39,51 +40,53 @@ namespace tri {
 			if (env->world->getComponentStorage<Particle>()->size() >= maxParticels) {
 				return;
 			}
+
+			EntityId id = -1;
 			if (e.particle.size() > 0) {
-				auto &prefab = e.particle[env->random->getInt(0, e.particle.size() - 1)];
+				auto& prefab = e.particle[env->random->getInt(0, e.particle.size() - 1)];
 				if (prefab) {
-					EntityId id = prefab->createEntity();
-					Transform* pt = &env->world->getOrAddComponentPending<Transform>(id);
-					
-					if (e.parrentParticles) {
-						pt->parent = source;
-						pt->position = e.positionVariance * (env->random->getVec3() * 2.0f - 1.0f);
-					}
-					else {
-						Transform t2;
-						pt->position = e.positionVariance * (env->random->getVec3() * 2.0f - 1.0f);
-						pt->decompose(t.getMatrix() * pt->calculateLocalMatrix());
-					}
-					
-
-
-					Particle& p = env->world->addComponent<Particle>(id);
-
-					p.faceCamera = e.faceCamera;
-					p.spawnTime = env->time->inGameTime;
-					p.lifeTime = e.lifeTime + e.lifeTime * env->random->getFloat(-1, 1) * e.lifeTimeVariance;
-					p.fadeInTime = e.fadeInTime;
-					p.fadeOutTime = e.fadeOutTime;
-					
-					p.velocity = e.velocity + (env->random->getVec3() * 2.0f - 1.0f) * e.velocityVariance;
-					if (!e.parrentParticles && e.inheritScale) {
-						p.velocity = t.getMatrix() * glm::vec4(p.velocity, 0);
-					}
-
-					glm::vec3 size = e.size + (env->random->getVec3() * 2.0f - 1.0f) * e.sizeVariance;
-					if (e.inheritScale) {
-						pt->scale *= size;
-					}
-					else {
-						pt->scale = size;
-					}
-
-					p.color = Color(e.color.vec() + (env->random->getVec4() * 2.0f - 1.0f) * e.colorVariance.vec());
-					if (auto* mesh = env->world->getComponentPending<MeshComponent>(id)) {
-						mesh->color = p.color;
-						mesh->color.a = 0;
-					}
+					id = prefab->createEntity();
 				}
+			}
+			if (id == -1) {
+				id = env->world->addEntity(Transform(), MeshComponent(), EntityInfo("Particle"));
+			}
+
+			Transform* pt = &env->world->getOrAddComponentPending<Transform>(id);
+			if (e.parrentParticles) {
+				pt->parent = source;
+				pt->position = e.positionVariance * (env->random->getVec3() * 2.0f - 1.0f);
+			}
+			else {
+				Transform t2;
+				pt->position = e.positionVariance * (env->random->getVec3() * 2.0f - 1.0f);
+				pt->decompose(t.getMatrix() * pt->calculateLocalMatrix());
+			}
+					
+			Particle& p = env->world->addComponent<Particle>(id);
+			p.faceCamera = e.faceCamera;
+			p.spawnTime = env->time->inGameTime;
+			p.lifeTime = e.lifeTime + e.lifeTime * env->random->getFloat(-1, 1) * e.lifeTimeVariance;
+			p.fadeInTime = e.fadeInTime;
+			p.fadeOutTime = e.fadeOutTime;
+					
+			p.velocity = e.velocity + (env->random->getVec3() * 2.0f - 1.0f) * e.velocityVariance;
+			if (!e.parrentParticles && e.inheritScale) {
+				p.velocity = t.getMatrix() * glm::vec4(p.velocity, 0);
+			}
+
+			glm::vec3 size = e.size + (env->random->getVec3() * 2.0f - 1.0f) * e.sizeVariance;
+			if (e.inheritScale) {
+				pt->scale *= size;
+			}
+			else {
+				pt->scale = size;
+			}
+
+			p.color = Color(e.color.vec() + (env->random->getVec4() * 2.0f - 1.0f) * e.colorVariance.vec());
+			if (auto* mesh = env->world->getComponentPending<MeshComponent>(id)) {
+				mesh->color = p.color;
+				mesh->color.a = 0;
 			}
 		}
 

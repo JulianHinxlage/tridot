@@ -11,6 +11,8 @@ namespace tri {
 	class SelectionContext : public System {
 	public:
 		void init() override;
+		void startup() override;
+		void shutdown() override;
 		void select(EntityId id, bool unselectOther = true);
 		void unselect(EntityId id);
 		void unselectAll();
@@ -25,6 +27,7 @@ namespace tri {
 
 	private:
 		std::vector<EntityId> selectedEntities;
+		int entityRemoveListener;
 	};
 
 }

@@ -18,6 +18,10 @@ namespace tri {
 
 	class PlatformerPlayerControllerSystem : public System {
 	public:
+		void init() override {
+			env->jobManager->addJob("Physics")->addSystem<PlatformerPlayerControllerSystem>();
+		}
+
 		void movement(EntityId id, Transform &transform, PlatformerPlayerController &controller) {
 			//get camera right vector
 			glm::vec3 camRight = { 1, 0, 0 };

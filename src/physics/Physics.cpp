@@ -254,7 +254,7 @@ namespace tri {
 	};
 
 	void Physics::init() {
-		auto* job = env->jobManager->addJob("Transform");
+		auto* job = env->jobManager->addJob("Physics");
 		job->addSystem<Physics>();
 		job->orderSystems({ "STransform", "Physics" });
 	}
@@ -264,6 +264,14 @@ namespace tri {
 		impl->init();
 
 		entityRemoveListener = env->eventManager->onEntityRemove.addListener([&](World* world, EntityId id) {
+			if (world->hasComponents<RigidBody, Collider, Transform>(id)) {
+				RigidBody* rb = world->getComponent<RigidBody>(id);
+				Transform* t = world->getComponent<Transform>(id);
+				removeRigidBody(id, *rb, *t);
+			}
+		});
+
+		entityDeactivatedListener = env->eventManager->onEntityDeactivated.addListener([&](World* world, EntityId id) {
 			if (world->hasComponents<RigidBody, Collider, Transform>(id)) {
 				RigidBody* rb = world->getComponent<RigidBody>(id);
 				Transform* t = world->getComponent<Transform>(id);
@@ -304,6 +312,7 @@ namespace tri {
 
 	void Physics::shutdown() {
 		env->eventManager->onEntityRemove.removeListener(entityRemoveListener);
+		env->eventManager->onEntityDeactivated.removeListener(entityDeactivatedListener);
 		env->eventManager->onRuntimeModeChange.removeListener(modeChangeListener);
 		env->eventManager->onMapEnd.removeListener(endMapListener);
 	}

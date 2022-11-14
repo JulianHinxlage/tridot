@@ -45,11 +45,11 @@ namespace tri {
         return glm::normalize(ray);
     }
 
-    class SCamera : public System {
+    class CameraSystem : public System {
     public:
         void init() override {
-            auto* job = env->jobManager->addJob("Renderer");
-            job->addSystem<SCamera>();
+            auto* job = env->jobManager->addJob("Physics");
+            job->addSystem<CameraSystem>();
         }
 
         void tick() override {
@@ -71,6 +71,6 @@ namespace tri {
             });
         }
     };
-    TRI_SYSTEM(SCamera);
+    TRI_SYSTEM(CameraSystem);
 
 }

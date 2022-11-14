@@ -41,7 +41,7 @@ namespace tri {
     private:
         glm::mat4 matrix;
         glm::mat4 parentMatrix;
-        friend class STransform;
+        friend class TransformSystem;
     };
 
 }

@@ -94,6 +94,8 @@ namespace tri {
 
 		Event<World*, EntityId> onEntityAdd;
 		Event<World*, EntityId> onEntityRemove;
+		Event<World*, EntityId> onEntityActivated;
+		Event<World*, EntityId> onEntityDeactivated;
 
 		Event<> onUnhandledException;
 

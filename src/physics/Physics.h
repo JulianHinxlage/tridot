@@ -25,6 +25,7 @@ namespace tri {
 		std::shared_ptr<Impl> impl;
 
 		int entityRemoveListener;
+		int entityDeactivatedListener;
 		int modeChangeListener;
 		int endMapListener;
 		RuntimeMode::Mode lastFrameRuntimeMode = RuntimeMode::LOADING;
