@@ -187,7 +187,7 @@ namespace tri {
             std::vector<EntityId> stack;
             std::vector<glm::mat4> matStack;
             glm::mat4 parentMat(1);
-            env->world->each<const Transform>([&](EntityId tid, Transform& t) {
+            env->world->each<Transform>([&](EntityId tid, Transform& t) {
                 if (t.parent == -1) {
 
                     t.parentMatrix = glm::mat4(1);

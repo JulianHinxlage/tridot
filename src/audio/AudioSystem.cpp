@@ -49,12 +49,12 @@ namespace tri {
 	}
 
 	void AudioSystem::tick() {
-        env->world->each<AudioListener, Transform>([&](AudioListener &listener, Transform &transform) {
+        env->world->each<AudioListener, const Transform>([&](AudioListener &listener, Transform &transform) {
             alListener3f(AL_POSITION, transform.position.x, transform.position.y, transform.position.z);
             alListener3f(AL_VELOCITY, 0, 0, 0);
             alListenerf(AL_GAIN, listener.volume);
         });
-        env->world->each<AudioSource, Transform>([&](AudioSource& source, Transform& transform) {
+        env->world->each<AudioSource, const Transform>([&](AudioSource& source, Transform& transform) {
             if (source.id != 0) {
                 if (source.positional) {
                     alSourcei(source.id, AL_SOURCE_RELATIVE, AL_FALSE);

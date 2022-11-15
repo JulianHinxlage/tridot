@@ -21,7 +21,6 @@ namespace tri {
 	class KeyFrameProperty {
 	public:
 		PropertyValueIdentifier value;
-		bool isRelative = false;
 	};
 
 	class KeyFrame {

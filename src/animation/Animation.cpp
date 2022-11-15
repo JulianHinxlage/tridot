@@ -14,7 +14,7 @@ namespace tri {
 	TRI_ENUM4(KeyFrameBlendMode, NONE, STEP, LINEAR, SMOOTH);
 
 	TRI_CLASS(KeyFrameProperty);
-	TRI_PROPERTIES2(KeyFrameProperty, value, isRelative);
+	TRI_PROPERTIES1(KeyFrameProperty, value);
 
 	TRI_CLASS(KeyFrame);
 	TRI_PROPERTIES3(KeyFrame, time, blend, properties);

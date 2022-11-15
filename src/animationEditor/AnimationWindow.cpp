@@ -7,6 +7,7 @@
 #include "window/Window.h"
 #include "render/objects/Material.h"
 #include "engine/AssetManager.h"
+#include "engine/Transform.h"
 #include "animation/Animation.h"
 #include "animation/AnimationComponent.h"
 #include <imgui/imgui.h>
@@ -21,12 +22,19 @@ namespace tri {
 		KeyFrameBlendMode keyBlend = KeyFrameBlendMode::LINEAR;
 		int currentFrame = 0;
 		Prefab entityBuffer;
+		glm::mat4 startTransform;
 
 		void init() override {
 			env->uiManager->addWindow<AnimationWindow>("Animations");
 			if (env->editor) {
 				env->editor->fileAssosiations[".anim"] = Reflection::getClassId<Animation>();
 			}
+		}
+
+		void startup() override {
+			env->eventManager->onRuntimeModeChange.addListener([&](int prev, int mode) {
+				resetToStart();
+			});
 		}
 
 		void shutdown() override {}
@@ -174,7 +182,6 @@ namespace tri {
 
 					for (auto& prop : frame.properties) {
 						KeyFrameProperty newProp;
-						newProp.isRelative = prop.isRelative;
 						newProp.value.classId = prop.value.classId;
 						newProp.value.propertyIndex = prop.value.propertyIndex;
 						
@@ -208,6 +215,27 @@ namespace tri {
 			}
 		}
 
+		void relativeSpace() {
+			if (auto* t = env->world->getComponent<Transform>(recordEntityId)) {
+				t->decompose(glm::inverse(startTransform) * t->calculateLocalMatrix());
+			}
+		}
+
+		void unrelativeSpace() {
+			if (auto* t = env->world->getComponent<Transform>(recordEntityId)) {
+				t->decompose(startTransform * t->calculateLocalMatrix());
+			}
+		}
+
+		void resetToStart() {
+			if (recordEntityId != -1) {
+				relativeSpace();
+				currentFrame = 0;
+				applyFrame(currentFrame);
+				unrelativeSpace();
+			}
+		}
+
 		void tick() override {
 			if (env->window && env->window->inFrame()) {
 				if (ImGui::Begin("Animations", &active)) {
@@ -218,6 +246,10 @@ namespace tri {
 							recordEntityId = -1;
 							if (env->editor->selectionContext->isSingleSelection()) {
 								recordEntityId = env->editor->selectionContext->getSelected()[0];
+								if (auto* t = env->world->getComponent<Transform>(recordEntityId)) {
+									startTransform = t->calculateLocalMatrix();
+								}
+								relativeSpace();
 								animation = getAnimationFromEntity(recordEntityId);
 								if (animation && animation->keyFrames.size() > 0) {
 									currentFrame = 0;
@@ -227,7 +259,13 @@ namespace tri {
 									currentFrame = -1;
 									entityBuffer.copyEntity(recordEntityId);
 								}
+								unrelativeSpace();
 							}
+						}
+						if (ImGui::Button("Reset")) {
+							resetToStart();
+							recordEntityId = -1;
+							animation = nullptr;
 						}
 
 						if (recordEntityId != -1) {
@@ -235,23 +273,33 @@ namespace tri {
 							env->editor->classUI->draw(keyBlend, "key blend");
 
 							if (ImGui::Button("Next Frame")) {
+								relativeSpace();
 								applyFrame(currentFrame + 1);
+								unrelativeSpace();
 							}
 
 							if (ImGui::Button("Prev Frame")) {
+								relativeSpace();
 								applyFrame(currentFrame - 1);
+								unrelativeSpace();
 							}
 
 							if (ImGui::Button("Update Frame")) {
+								relativeSpace();
 								updateFrame();
+								unrelativeSpace();
 							}
 
 							if (ImGui::Button("Add Frame")) {
+								relativeSpace();
 								addFrame();
+								unrelativeSpace();
 							}
 
 							if(ImGui::Button("Remove Frame")){
+								relativeSpace();
 								removeFrame();
+								unrelativeSpace();
 							}
 
 						}

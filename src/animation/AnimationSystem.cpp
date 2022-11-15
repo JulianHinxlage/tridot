@@ -5,6 +5,7 @@
 #include "AnimationComponent.h"
 #include "core/core.h"
 #include "engine/Time.h"
+#include "engine/Transform.h"
 
 namespace tri {
 
@@ -19,9 +20,27 @@ namespace tri {
 
 		void tick() override {
 			deltaTime = env->time->deltaTime;
+			env->world->getComponentStorage<Transform>()->lock();
 
 			env->world->each<AnimationComponent>([&](EntityId id, AnimationComponent& anim) {
 				if (anim.playing && anim.animation) {
+					if (auto* t = env->world->getComponent<Transform>(id)) {
+						if (!anim.lastPlaying) {
+							glm::mat4 current = t->calculateLocalMatrix();
+							t->position = { 0, 0, 0 };
+							t->scale = { 1, 1, 1 };
+							t->rotation = { 0, 0, 0 };
+							anim.animation->apply(anim.time, id);
+							glm::mat4 relative = t->calculateLocalMatrix();
+							anim.startTransform = current * glm::inverse(relative);
+
+							anim.maxTime = anim.animation->calculateMaxTime();
+						}
+						t->position = { 0, 0, 0 };
+						t->scale = { 1, 1, 1 };
+						t->rotation = { 0, 0, 0 };
+					}
+
 					float speed = anim.speed * (1 - (float)anim.reversed * 2);
 					anim.time += speed * deltaTime;
 
@@ -79,9 +98,14 @@ namespace tri {
 						}
 					}
 
+					if (auto* t = env->world->getComponent<Transform>(id)) {
+						t->decompose(anim.startTransform * t->calculateLocalMatrix());
+					}
 				}
+				anim.lastPlaying = anim.playing;
 			});
 
+			env->world->getComponentStorage<Transform>()->unlock();
 		}
 	};
 	TRI_SYSTEM(AnimationSystem);

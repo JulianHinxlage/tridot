@@ -6,6 +6,7 @@
 
 #include "pch.h"
 #include "Animation.h"
+#include <glm/glm.hpp>
 
 namespace tri {
 
@@ -20,6 +21,8 @@ namespace tri {
 
 		float time = 0;
 		float maxTime = 0;
+		glm::mat4 startTransform;
+		bool lastPlaying = false;
 
 		void play();
 		void stop();
