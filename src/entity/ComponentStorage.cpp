@@ -465,6 +465,8 @@ namespace tri {
 	}
 
 	void ComponentStorage::resizeData(int count) {
+		mutex->mutex.lock();
+
 		uint8_t *oldData = componentData;
 		uint32_t newCapacity = count;
 		
@@ -490,6 +492,8 @@ namespace tri {
 		}
 
 		delete[] oldData;
+
+		mutex->mutex.unlock();
 	}
 
 	int ComponentStorage::memoryUsage() {

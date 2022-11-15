@@ -19,8 +19,9 @@ namespace tri {
 		void init() override;
 		void startup() override;
 		void tick() override;
-		void updateBegin();
-		void updateEnd();
+		void frameBegin();
+		void frameEnd();
+		void frameShutdown();
 		void shutdown() override;
 		void updateActiveFlags();
 		void resetLayout();
@@ -48,8 +49,17 @@ namespace tri {
 		std::vector<std::string> menus;
 		std::vector<std::pair<std::string, bool>> unusedActiveFlags;
 		std::vector<const char*> layoutFiles;
+		
+		bool initialized = false;
+		void* imguiContext;
+		std::mutex mutex;
+		void* drawData = nullptr;
+		std::atomic_bool drawDataReady = false;
+		std::atomic_bool drawDataFinished = false;
+		bool uiOnOwnThread = false;
 
 		void setupFlagHandler();
+		void renderDrawData();
 	};
 
 }

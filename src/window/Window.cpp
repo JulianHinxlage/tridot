@@ -61,12 +61,12 @@ namespace tri {
 		}
 	}
 
-	void Window::updateBegin() {
+	void Window::frameBegin() {
 		TRI_PROFILE_FUNC();
 		if (window) {
 			glfwPollEvents();
 			if (env->uiManager) {
-				env->uiManager->updateBegin();
+				env->uiManager->frameBegin();
 			}
 
 			int vsync = env->console->getCVarValue<bool>("vsync", true);
@@ -85,14 +85,15 @@ namespace tri {
 		}
 	}
 
-	void Window::updateEnd() {
+	void Window::frameEnd() {
 		TRI_PROFILE_FUNC();
 		if (window && inFrameFlag) {
 			if (env->uiManager) {
-				env->uiManager->updateEnd();
+				env->uiManager->frameEnd();
 			}
 
 			{
+				TRI_PROFILE("swap buffers");
 				TracyGpuZone("swap buffers");
 				glfwSwapBuffers((GLFWwindow*)window);
 			}
@@ -106,19 +107,22 @@ namespace tri {
 	}
 
 	void Window::tick() {
-		TRI_PROFILE_FUNC();
 		if (env->viewport->displayInWindow) {
 			int width = 0;
 			int height = 0;
 			glfwGetWindowSize((GLFWwindow*)window, &width, &height);
 			env->viewport->size = { width, height };
 		}
-		updateEnd();
-		updateBegin();
+		frameEnd();
+		frameBegin();
 	}
 
 	void Window::shutdown() {
 		TRI_PROFILE_FUNC();
+		if (env->uiManager) {
+			env->uiManager->frameShutdown();
+		}
+		
 		glfwDestroyWindow((GLFWwindow*)window);
 		glfwTerminate();
 		inFrameFlag = false;

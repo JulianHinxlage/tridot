@@ -132,6 +132,15 @@ namespace tri {
 		jobExclusion.push_back(name);
 	}
 
+	void JobManager::Job::addChildJob(const std::string& name) {
+		for (int i = 0; i < childJobs.size(); i++) {
+			if (childJobs[i] == name) {
+				return;
+			}
+		}
+		childJobs.push_back(name);
+	}
+
 	void JobManager::Job::sort() {
 		for (auto& order : orderConstraints) {
 			std::string prev;
@@ -392,8 +401,21 @@ namespace tri {
 		});
 	}
 
-	void JobManager::JobHandle::tick() {
+	void JobManager::JobHandle::tick(bool asChild) {
+		if (!asChild) {
+			for (auto &job : jobManager->jobs) {
+				if (job.get() != this) {
+					for (auto& name : job->job.childJobs) {
+						if (name == this->job.name) {
+							return;
+						}
+					}
+				}
+			}
+		}
+
 		mutex.lock();
+
 		for (auto& name : job.jobExclusion) {
 			auto *handle = jobManager->getJobHandle(name);
 			if (handle && handle != this) {
@@ -401,7 +423,7 @@ namespace tri {
 			}
 		}
 
-		TRI_PROFILE_FUNC();
+		TRI_PROFILE_NAME(job.name.c_str(), job.name.size())
 		env->profiler->begin(job.name.c_str());
 
 		int recoveryIndex = 0;
@@ -447,9 +469,28 @@ namespace tri {
 				handle->mutex.unlock();
 			}
 		}
+
+		for (auto& name : job.childJobs) {
+			auto* handle = jobManager->getJobHandle(name);
+			if (handle && handle != this) {
+				handle->tick(true);
+			}
+		}
 	}
 
-	void JobManager::JobHandle::startupSystems() {
+	void JobManager::JobHandle::startupSystems(bool asChild) {
+		if (!asChild) {
+			for (auto& job : jobManager->jobs) {
+				if (job.get() != this) {
+					for (auto& name : job->job.childJobs) {
+						if (name == this->job.name) {
+							return;
+						}
+					}
+				}
+			}
+		}
+
 		TRI_PROFILE_FUNC();
 		int recoveryIndex = 0;
 
@@ -478,9 +519,28 @@ namespace tri {
 			}
 			index++;
 		}
+
+		for (auto& name : job.childJobs) {
+			auto* handle = jobManager->getJobHandle(name);
+			if (handle && handle != this) {
+				handle->startupSystems(true);
+			}
+		}
 	}
 
-	void JobManager::JobHandle::shutdownSystems() {
+	void JobManager::JobHandle::shutdownSystems(bool asChild) {
+		if (!asChild) {
+			for (auto& job : jobManager->jobs) {
+				if (job.get() != this) {
+					for (auto& name : job->job.childJobs) {
+						if (name == this->job.name) {
+							return;
+						}
+					}
+				}
+			}
+		}
+
 		TRI_PROFILE_FUNC();
 		int recoveryIndex = 0;
 
@@ -508,6 +568,13 @@ namespace tri {
 				recoveryIndex++;
 			}
 			index++;
+		}
+
+		for (auto& name : job.childJobs) {
+			auto* handle = jobManager->getJobHandle(name);
+			if (handle && handle != this) {
+				handle->shutdownSystems(true);
+			}
 		}
 	}
 

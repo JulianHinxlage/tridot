@@ -34,7 +34,7 @@ namespace tri {
 	TRI_SYSTEM_INSTANCE(Editor, env->editor);
 
 	void Editor::init() {
-		auto *job = env->jobManager->addJob("Render");
+		auto *job = env->jobManager->addJob("Editor");
 		job->addSystem<Editor>();
 		autoSaveListener = -1;
 		playBufferListener = -1;

@@ -12,7 +12,7 @@ namespace tri {
 
     void UndoSystem::init() {
         env->editor->undo = this;
-        env->jobManager->addJob("Render")->addSystem<UndoSystem>();
+        env->jobManager->addJob("Editor")->addSystem<UndoSystem>();
     }
 
     void UndoSystem::startup() {

@@ -18,9 +18,12 @@ namespace tri {
 	TRI_SYSTEM_INSTANCE(UIManager, env->uiManager);
 
 	void UIManager::init() {
-		auto* job = env->jobManager->addJob("Render");
+		auto* job = env->jobManager->addJob("Editor");
 		job->addSystem<UIManager>();
-		job->orderSystems({ "Window", "UIManager", "Editor", "DebugMenu"});
+		job->orderSystems({ "Window", "UIManager", "Editor"});
+		if (!uiOnOwnThread) {
+			env->jobManager->addJob("Render")->addChildJob("Editor");
+		}
 		menus = { "File", "View", "Debug" };
 
 		env->eventManager->onClassUnregister.addListener([&](int classId) {
@@ -38,10 +41,12 @@ namespace tri {
 	void UIManager::startup() {
 		//init imgui
 		IMGUI_CHECKVERSION();
-		ImGui::CreateContext();
+		imguiContext = (void*)ImGui::CreateContext();
 		ImGuiIO& io = ImGui::GetIO(); (void)io;
 		io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
-		io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
+		if (!uiOnOwnThread) {
+			io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
+		}
 		ImGui::StyleColorsDark();
 		ImGuiStyle& style = ImGui::GetStyle();
 		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
@@ -50,9 +55,6 @@ namespace tri {
 			style.Colors[ImGuiCol_WindowBg].w = 1.0f;
 		}
 
-		ImGui_ImplGlfw_InitForOpenGL((GLFWwindow*)env->window->getContext(), true);
-		const char* glsl_version = "#version 130";
-		ImGui_ImplOpenGL3_Init(glsl_version);
 
 		//set imgui style colors
 		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(1, 1, 1, 0.3));
@@ -120,6 +122,14 @@ namespace tri {
 
 		updateActiveFlags();
 
+		if (!initialized) {
+			return;
+		}
+
+		if (uiOnOwnThread) {
+			renderDrawData();
+		}
+
 		if (active) {
 			if (env->editor) {
 				if (env->window && env->window->inFrame()) {
@@ -168,22 +178,91 @@ namespace tri {
 		}
 	}
 
-	void UIManager::updateBegin() {
-		ImGui_ImplOpenGL3_NewFrame();
-		ImGui_ImplGlfw_NewFrame();
-		ImGui::NewFrame();
-	}
-
-	void UIManager::updateEnd() {
-		env->input->allowInputs = !ImGui::GetIO().WantTextInput;
+	void UIManager::renderDrawData() {
 		{
-			TracyGpuZone("imgui render");
+			TRI_PROFILE("wait");
+			ZoneColor(tracy::Color::DimGray);
+			while (drawDataReady) {}
+		}
+
+		std::unique_lock<std::mutex> lock(mutex);
+
+		if (ImGui::GetCurrentWindowRead()) {
+			TRI_PROFILE("ImGui::Render");
 			ImGui::Render();
 		}
 
+		if (ImGui::GetDrawData()) {
+			auto* data = ImGui::GetDrawData();
+			if (uiOnOwnThread) {
+				ImDrawData* newData = new ImDrawData(*data);
+				drawData = newData;
+			}
+			else {
+				drawData = data;
+			}
+			drawDataReady = true;
+		}
+
+		if (uiOnOwnThread) {
+			{
+				{
+					TRI_PROFILE("wait");
+					ZoneColor(tracy::Color::DimGray);
+					while (!drawDataFinished) {}
+				}
+
+				TRI_PROFILE("ImGui::NewFrame");
+				ImGui::NewFrame();
+
+				drawDataFinished = false;
+			}
+		}
+	}
+
+	void UIManager::frameBegin() {
+		if (!initialized) {
+			initialized = true;
+			ImGui_ImplGlfw_InitForOpenGL((GLFWwindow*)env->window->getContext(), true);
+			const char* glsl_version = "#version 130";
+			ImGui_ImplOpenGL3_Init(glsl_version);
+		}
+
+		ImGui_ImplOpenGL3_NewFrame();
+		ImGui_ImplGlfw_NewFrame();
+
+		drawDataFinished = true;
+
+		if (!uiOnOwnThread) {
+			{
+				TRI_PROFILE("ImGui::NewFrame");
+				ImGui::NewFrame();
+			}
+		}
+	}
+
+	void UIManager::frameEnd() {
+		if (!uiOnOwnThread) {
+			renderDrawData();
+		}
+
+		std::unique_lock<std::mutex> lock(mutex);
+
+		env->input->allowInputs = !ImGui::GetIO().WantTextInput;
+
+
 		{
-			TracyGpuZone("imgui render draw data");
-			ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+			TRI_PROFILE("ImGuiRenderDrawData");
+			TracyGpuZone("ImGuiRenderDrawData");
+			if (drawData) {
+				ImGui_ImplOpenGL3_RenderDrawData((ImDrawData*)drawData);
+				if (uiOnOwnThread) {
+					delete (ImDrawData*)drawData;
+				}
+				drawData = nullptr;
+				drawDataFinished = false;
+				drawDataReady = false;
+			}
 		}
 
 		ImGuiIO& io = ImGui::GetIO(); (void)io;
@@ -199,21 +278,19 @@ namespace tri {
 	}
 
 	void UIManager::shutdown() {
+		std::unique_lock<std::mutex> lock(mutex);
 		if (ImGui::GetCurrentContext()) {
 			ImGui::SaveIniSettingsToDisk(ImGui::GetIO().IniFilename);
-			//auto& handlers = ImGui::GetCurrentContext()->SettingsHandlers;
-			//for (int i = 0; i < handlers.size(); i++) {
-			//	auto& handler = handlers[i];
-			//	if (handler.TypeHash == ImHashStr("WindowFlags")) {
-			//		handlers.erase(handlers.begin() + i);
-			//		break;
-			//	}
-			//}
 		}
-
-		ImGui_ImplOpenGL3_Shutdown();
-		ImGui_ImplGlfw_Shutdown();
 		ImGui::DestroyContext();
+	}
+
+	void UIManager::frameShutdown() {
+		std::unique_lock<std::mutex> lock(mutex);
+		if (ImGui::GetCurrentContext()) {
+			ImGui_ImplOpenGL3_Shutdown();
+			ImGui_ImplGlfw_Shutdown();
+		}
 	}
 
 	void UIManager::addWindow(int classId, const std::string& displayName, const std::string& menu, const std::string& category) {
@@ -234,7 +311,8 @@ namespace tri {
 			}
 		}
 		windows.push_back(window);
-		env->jobManager->getJob("Render")->addSystem(Reflection::getDescriptor(classId)->name);
+		auto* job = env->jobManager->addJob("Editor");
+		job->addSystem(Reflection::getDescriptor(classId)->name);
 		auto* sys = env->systemManager->getSystemHandle(classId);
 		sys->active = false;
 	}

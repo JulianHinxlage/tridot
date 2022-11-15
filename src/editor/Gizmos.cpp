@@ -20,7 +20,7 @@ namespace tri {
         operation = TRANSLATE;
         mode = LOCAL;
         pivots = CENTER;
-        auto* job = env->jobManager->addJob("Render");
+        auto* job = env->jobManager->addJob("Editor");
         job->addSystem<Gizmos>();
         job->orderSystems({ "Gizmos", "ViewportWindow" });
     }

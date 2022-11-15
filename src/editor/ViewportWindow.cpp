@@ -110,19 +110,23 @@ namespace tri {
 										if (pos.x >= 0 && pos.y >= 0) {
 											if (pos.x < env->viewport->size.x && pos.y < env->viewport->size.y) {
 												if (env->viewport->idMap) {
-													Color idColor = env->viewport->idMap->getPixel(pos.x, pos.y);
-													if (idColor.value != -1) {
-														EntityId id = idColor.value & ~(0xff << 24);
-														if (env->editor->selectionContext->isSelected(id) && env->input->downControl()) {
-															env->editor->selectionContext->unselect(id);
+
+													env->renderPipeline->addCallbackStep([pos]() {
+														Color idColor = env->viewport->idMap->getPixel(pos.x, pos.y);
+														if (idColor.value != -1) {
+															EntityId id = idColor.value & ~(0xff << 24);
+															if (env->editor->selectionContext->isSelected(id) && env->input->downControl()) {
+																env->editor->selectionContext->unselect(id);
+															}
+															else {
+																env->editor->selectionContext->select(id, !env->input->downControl());
+															}
 														}
 														else {
-															env->editor->selectionContext->select(id, !env->input->downControl());
+															env->editor->selectionContext->unselectAll();
 														}
-													}
-													else {
-														env->editor->selectionContext->unselectAll();
-													}
+													}, RenderPipeline::DISPLAY);
+
 												}
 											}
 										}

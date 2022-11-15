@@ -41,12 +41,14 @@ namespace tri {
 			void removeSystem(const std::string& name);
 			void orderSystems(const std::vector<std::string>& systems);
 			void addJobExclusion(const std::string& name);
+			void addChildJob(const std::string& name);
 
 		private:
 			friend class JobManager;
 			std::vector<std::string> systemNames;
 			std::vector<int> systemClassIds;
 			std::vector<std::string> jobExclusion;
+			std::vector<std::string> childJobs;
 			std::vector<std::vector<std::string>> orderConstraints;
 			void sort();
 		};
@@ -74,9 +76,9 @@ namespace tri {
 			bool isThreadFinished = false;
 
 			void run();
-			void tick();
-			void startupSystems();
-			void shutdownSystems();
+			void tick(bool asChild = false);
+			void startupSystems(bool asChild = false);
+			void shutdownSystems(bool asChild = false);
 		};
 		friend class JobHandle;
 		std::vector<std::shared_ptr<JobHandle>> jobs;

@@ -5,6 +5,7 @@
 #include "FrameBuffer.h"
 #include "core/core.h"
 #include "RenderContext.h"
+#include "renderer/RenderPipeline.h"
 #include "GL/glew.h"
 #include "GLFW/glfw3.h"
 #include <algorithm>
@@ -35,7 +36,9 @@ namespace tri {
 
     FrameBuffer::~FrameBuffer() {
         if(id != 0){
-            glDeleteFramebuffers(1, &id);
+            env->renderPipeline->addCallbackStep([id = id]() {
+                glDeleteFramebuffers(1, &id);
+            });
             id = 0;
         }
     }

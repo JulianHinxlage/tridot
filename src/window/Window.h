@@ -34,8 +34,8 @@ namespace tri {
 		int vsyncInterval = 1;
 		glm::vec4 backgroundColor = {1, 1, 1, 1};
 
-		void updateBegin();
-		void updateEnd();
+		void frameBegin();
+		void frameEnd();
 	};
 
 }
