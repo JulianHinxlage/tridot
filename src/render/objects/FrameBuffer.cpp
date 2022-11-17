@@ -38,7 +38,7 @@ namespace tri {
         if(id != 0){
             env->renderPipeline->addCallbackStep([id = id]() {
                 glDeleteFramebuffers(1, &id);
-            });
+            }, RenderPipeline::POST_RENDER);
             id = 0;
         }
     }

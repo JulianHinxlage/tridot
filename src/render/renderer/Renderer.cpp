@@ -297,13 +297,13 @@ namespace tri {
     }
 
     void Renderer::prepareTransparencyBuffer() {
-        if (!transparencyBuffer && gBuffer && lightAccumulationBuffer) {
+        if (!transparencyBuffer) {
             env->renderPipeline->addCallbackStep([&]() {
                 transparencyBuffer = Ref<FrameBuffer>::make();
                 transparencyBuffer->init(0, 0, {});
             });
         }
-        if (transparencyBuffer) {
+        if (transparencyBuffer && gBuffer && lightAccumulationBuffer) {
             env->renderPipeline->addCallbackStep([&]() {
                 transparencyBuffer->setAttachment((FrameBufferAttachmentSpec)(TextureAttachment)(TextureAttachment::COLOR + 0), lightAccumulationBuffer->getAttachment((TextureAttachment)(TextureAttachment::COLOR + 0)));
                 transparencyBuffer->setAttachment((FrameBufferAttachmentSpec)(TextureAttachment)(TextureAttachment::COLOR + 1), gBuffer->getAttachment((TextureAttachment)(TextureAttachment::COLOR + 1)));

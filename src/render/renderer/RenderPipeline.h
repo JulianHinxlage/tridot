@@ -25,6 +25,7 @@ namespace tri {
 			TRANSPARENCY,
 			POST_PROCESSING,
 			DISPLAY,
+			POST_RENDER,
 		};
 
 		enum StepType {

@@ -128,8 +128,7 @@ namespace tri {
 
 	void* ComponentStorage::addComponent(EntityId id, const void* ptr) {
 		TRI_ASSERT(!hasComponent(id), "component already present");
-
-		uint32_t index = idData.size();
+		mutex->mutex.lock();
 
 		//component data
 		if (componentDataCapacity < componentDataSize + 1) {
@@ -139,6 +138,8 @@ namespace tri {
 				resizeData(componentDataCapacity * 2);
 			}
 		}
+
+		uint32_t index = idData.size();
 		componentDataSize++;
 
 		uint32_t pageIndex = id >> pageSizeBits;
@@ -203,6 +204,8 @@ namespace tri {
 		else {
 			desc->construct(comp);
 		}
+
+		mutex->mutex.unlock();
 		return comp;
 	}
 
@@ -465,7 +468,9 @@ namespace tri {
 	}
 
 	void ComponentStorage::resizeData(int count) {
-		mutex->mutex.lock();
+		if (count == componentDataSize) {
+			return;
+		}
 
 		uint8_t *oldData = componentData;
 		uint32_t newCapacity = count;
@@ -492,8 +497,6 @@ namespace tri {
 		}
 
 		delete[] oldData;
-
-		mutex->mutex.unlock();
 	}
 
 	int ComponentStorage::memoryUsage() {

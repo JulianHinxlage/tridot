@@ -125,7 +125,7 @@ namespace tri {
 														else {
 															env->editor->selectionContext->unselectAll();
 														}
-													}, RenderPipeline::DISPLAY);
+													}, RenderPipeline::POST_RENDER);
 
 												}
 											}

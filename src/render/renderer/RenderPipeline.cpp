@@ -34,6 +34,8 @@ namespace tri {
 		steps.back()->name = "post process";
 		addStep(Ref<Step>::make(), RenderPass::DISPLAY, true, false);
 		steps.back()->name = "display";
+		addStep(Ref<Step>::make(), RenderPass::POST_RENDER, true, false);
+		steps.back()->name = "post render";
 
 		processedPrepared = true;
 	}
