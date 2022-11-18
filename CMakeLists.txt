@@ -29,7 +29,7 @@ target_precompile_headers(${PROJECT_NAME} PUBLIC src/pch.h)
 target_include_directories(${PROJECT_NAME} PUBLIC src src/core extern)
 target_include_directories(${PROJECT_NAME} PRIVATE src/core)
 
-if (NOT CMAKE_BUILD_TYPE MATCHES "Debug")
+if (CMAKE_BUILD_TYPE MATCHES "Debug")
     target_compile_definitions(${PROJECT_NAME} PUBLIC TRI_DEBUG)
 else()
     target_compile_definitions(${PROJECT_NAME} PUBLIC TRI_RELEASE)
@@ -127,6 +127,17 @@ target_precompile_headers(${PROJECT_NAME} PUBLIC src/pch.h)
 target_include_directories(${PROJECT_NAME} PRIVATE src src/animationEditor)
 target_link_libraries(${PROJECT_NAME} PUBLIC TridotCore TridotAnimation TridotEditorLib)
 
+#Tridot Network
+project(TridotNetwork)
+file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS src/network/*.cpp)
+add_library(${PROJECT_NAME} SHARED ${SOURCES})
+target_precompile_headers(${PROJECT_NAME} PUBLIC src/pch.h)
+target_include_directories(${PROJECT_NAME} PRIVATE src src/network)
+target_link_libraries(${PROJECT_NAME} PUBLIC TridotCore TridotEntity TridotEngine)
+if(WIN32)
+    target_link_libraries(${PROJECT_NAME} PRIVATE ws2_32)
+endif()
+
 #Tridot Particle System
 project(TridotParticleSystem)
 file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS src/particleSystem/*.cpp)
@@ -165,7 +176,7 @@ add_executable(${PROJECT_NAME} ${SOURCES})
 target_precompile_headers(${PROJECT_NAME} PUBLIC src/pch.h)
 target_include_directories(${PROJECT_NAME} PUBLIC src src/launch/editor)
 target_link_libraries(${PROJECT_NAME} PUBLIC TridotCore)
-add_dependencies(${PROJECT_NAME} TridotWindow TridotEntity TridotEditorLib TridotDebugMenu TridotEngine TridotRender TridotPhysics TridotAnimation TridotParticleSystem TridotAnimationEditor TridotGameplay TridotAudio)
+add_dependencies(${PROJECT_NAME} TridotWindow TridotEntity TridotEditorLib TridotDebugMenu TridotEngine TridotRender TridotPhysics TridotAnimation TridotParticleSystem TridotAnimationEditor TridotGameplay TridotAudio TridotNetwork)
 
 #Tridot Game Executable
 project(TridotGame)
@@ -174,7 +185,7 @@ add_executable(${PROJECT_NAME} ${SOURCES})
 target_precompile_headers(${PROJECT_NAME} PUBLIC src/pch.h)
 target_include_directories(${PROJECT_NAME} PUBLIC src src/launcher/game)
 target_link_libraries(${PROJECT_NAME} PUBLIC TridotCore TridotWindow)
-add_dependencies(${PROJECT_NAME} TridotWindow TridotEntity TridotDebugMenu TridotEngine TridotRender TridotPhysics TridotAnimation TridotParticleSystem TridotGameplay TridotAudio)
+add_dependencies(${PROJECT_NAME} TridotWindow TridotEntity TridotDebugMenu TridotEngine TridotRender TridotPhysics TridotAnimation TridotParticleSystem TridotGameplay TridotAudio TridotNetwork)
 
 #Fat Game Binary
 project(TridotGameFull)
@@ -209,7 +220,7 @@ endif()
 target_include_directories(${PROJECT_NAME} PUBLIC extern extern/glm extern/glfw/include extern/glew/include extern/imgui extern/yaml-cpp/include extern/bullet3/src extern/openal/include)
 target_link_libraries(${PROJECT_NAME} BulletDynamics BulletCollision LinearMath OpenAL)
 
-if (NOT CMAKE_BUILD_TYPE MATCHES "Debug")
+if (CMAKE_BUILD_TYPE MATCHES "Debug")
     target_compile_definitions(${PROJECT_NAME} PUBLIC TRI_DEBUG)
 else()
     target_compile_definitions(${PROJECT_NAME} PUBLIC TRI_RELEASE)
@@ -221,7 +232,7 @@ endif()
 
 
 #folders
-set_target_properties(TridotCore TridotWindow TridotEntity TridotEngine TridotDebugMenu TridotRender TridotEditorLib TridotGameplay TridotParticleSystem TridotAnimation TridotAnimationEditor TridotAudio TridotEditor TridotGame TridotGameFull PROPERTIES FOLDER Tridot)
+set_target_properties(TridotCore TridotWindow TridotEntity TridotEngine TridotDebugMenu TridotRender TridotEditorLib TridotGameplay TridotParticleSystem TridotAnimation TridotAnimationEditor TridotAudio TridotNetwork TridotEditor TridotGame TridotGameFull PROPERTIES FOLDER Tridot)
 set_target_properties(glfw uninstall PROPERTIES FOLDER Libs)
 
 project(Tridot)

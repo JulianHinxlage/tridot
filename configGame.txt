@@ -11,6 +11,7 @@ loadModule TridotDebugMenu
 loadModule TridotRender
 loadModule TridotPhysics
 loadModule TridotAnimation
+loadModule TridotNetwork
 loadModule TridotParticleSystem
 loadModule TridotAudio
 loadModule TridotGameplay

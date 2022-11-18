@@ -13,6 +13,7 @@ loadModule TridotEditorLib
 loadModule TridotPhysics
 loadModule TridotAnimation
 loadModule TridotAnimationEditor
+loadModule TridotNetwork
 loadModule TridotParticleSystem
 loadModule TridotAudio
 loadModule TridotGameplay
