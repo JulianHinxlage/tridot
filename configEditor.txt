@@ -29,4 +29,6 @@ addAssetDirectory $/./
 addAssetDirectory assets/
 addAssetDirectory local/data/
 
+networkMode = host
+
 loadMap autosave.tmap

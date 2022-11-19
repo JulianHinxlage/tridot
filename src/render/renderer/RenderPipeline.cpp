@@ -16,6 +16,10 @@ namespace tri {
 
 	TRI_SYSTEM_INSTANCE(RenderPipeline, env->renderPipeline);
 
+	RenderPipeline::~RenderPipeline() {
+		shutdown();
+	}
+
 	void RenderPipeline::init() {
 		auto* job = env->jobManager->addJob("Render");
 		job->addSystem<RenderPipeline>();

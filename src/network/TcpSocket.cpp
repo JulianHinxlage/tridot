@@ -124,6 +124,7 @@ namespace tri {
 		int result = ::accept(handle, (sockaddr*)ep.getHandle(), &size);
 		if (result == -1) {
 			printSocketError();
+			disconnect();
 			return nullptr;
 		}
 
@@ -136,16 +137,12 @@ namespace tri {
 	bool TcpSocket::disconnect() {
 #if TRI_WINDOWS
 		int status = shutdown(handle, SD_BOTH);
-		if (status == 0) {
-			status = closesocket(handle);
-			handle = -1;
-		}
+		status = closesocket(handle);
+		handle = -1;
 #else
 		int status = shutdown(handle, SHUT_RDWR);
-		if (status == 0) {
-			status = close(handle);
-			handle = -1;
-		}
+		status = close(handle);
+		handle = -1;
 #endif
 		return status == 0;
 	}
@@ -170,9 +167,7 @@ namespace tri {
 	bool TcpSocket::read(void* data, int& bytes) {
 		int code = ::recv(handle, (char*)data, bytes, 0);
 		if (code <= 0) {
-			if (code == -1) {
-				disconnect();
-			}
+			disconnect();
 			return false;
 		}
 		bytes = code;

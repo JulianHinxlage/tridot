@@ -8,6 +8,7 @@
 #include "entity/World.h"
 #include "engine/Transform.h"
 #include "engine/Camera.h"
+#include "core/util/Guid.h"
 
 namespace tri {
 
@@ -31,6 +32,9 @@ namespace tri {
 		}
 
 		static Camera* getPrimaryCamera();
+
+		static EntityId getEntityByGuid(Guid guid);
+		static EntityId getEntityByName(const std::string &name);
 	};
 
 }

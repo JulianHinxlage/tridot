@@ -97,6 +97,7 @@ namespace tri {
 			virtual Ref<Step> copy(bool copySteps = true, bool copyOnlyFixed = false);
 		};
 
+		~RenderPipeline();
 		void init() override;
 		void startup() override;
 		void tick() override;

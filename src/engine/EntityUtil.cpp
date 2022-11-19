@@ -4,6 +4,8 @@
 
 #include "EntityUtil.h"
 #include "core/core.h"
+#include "engine/RuntimeMode.h"
+#include "engine/EntityInfo.h"
 
 namespace tri {
 	
@@ -72,6 +74,49 @@ namespace tri {
 			}
 		});
 		return cam;
+	}
+
+	class EntityUtilSystem : public System {
+	public:
+		std::map<Guid, EntityId> guidMap;
+		std::unordered_map<std::string, EntityId> nameMap;
+
+		void init() override {
+			env->systemManager->addSystem<RuntimeMode>();
+			env->runtimeMode->setActiveSystem<EntityUtilSystem>({ RuntimeMode::LOADING, RuntimeMode::EDIT, RuntimeMode::PAUSED }, true);
+		}
+
+		void tick() override {
+			std::map<Guid, EntityId> tmpGuidMap;
+			std::unordered_map<std::string, EntityId> tmpNameMap;
+
+			env->world->each<const EntityInfo>([&](EntityId id, EntityInfo &info) {
+				tmpGuidMap[info.guid] = id;
+				tmpNameMap[info.name] = id;
+			});
+
+			guidMap.swap(tmpGuidMap);
+			nameMap.swap(tmpNameMap);
+		}
+	};
+	TRI_SYSTEM(EntityUtilSystem);
+
+	EntityId EntityUtil::getEntityByGuid(Guid guid) {
+		auto &map = env->systemManager->getSystem<EntityUtilSystem>()->guidMap;
+		auto entry = map.find(guid);
+		if (entry == map.end()) {
+			return -1;
+		}
+		return entry->second;
+	}
+
+	EntityId EntityUtil::getEntityByName(const std::string& name) {
+		auto& map = env->systemManager->getSystem<EntityUtilSystem>()->nameMap;
+		auto entry = map.find(name);
+		if (entry == map.end()) {
+			return -1;
+		}
+		return entry->second;
 	}
 
 }
