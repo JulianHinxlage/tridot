@@ -193,23 +193,33 @@ namespace tri {
 
 		template<typename T>
 		CVar* addCVar(const std::string& name, T initialValue = T()) {
-			auto cvar = std::make_shared<CVarT<T>>();
-			cvar->classId = Reflection::getClassId<T>();
-			cvar->name = name;
-			cvar->store = initialValue;
-			cvar->ptr = &cvar->store;
-			cvars[name] = cvar;
-			return (CVar*)cvar.get();
+			if (cvars.find(name) == cvars.end()) {
+				auto cvar = std::make_shared<CVarT<T>>();
+				cvar->classId = Reflection::getClassId<T>();
+				cvar->name = name;
+				cvar->store = initialValue;
+				cvar->ptr = &cvar->store;
+				cvars[name] = cvar;
+				return (CVar*)cvar.get();
+			}
+			else {
+				return cvars[name].get();
+			}
 		}
 
 		template<typename T>
 		CVar* addCVar(const std::string& name, T *ptr) {
-			auto cvar = std::make_shared<CVarT<T>>();
-			cvar->classId = Reflection::getClassId<T>();
-			cvar->name = name;
-			cvar->ptr = ptr;
-			cvars[name] = cvar;
-			return (CVar*)cvar.get();
+			if (cvars.find(name) == cvars.end()) {
+				auto cvar = std::make_shared<CVarT<T>>();
+				cvar->classId = Reflection::getClassId<T>();
+				cvar->name = name;
+				cvar->ptr = ptr;
+				cvars[name] = cvar;
+				return (CVar*)cvar.get();
+			}
+			else {
+				return cvars[name].get();
+			}
 		}
 
 		void removeCVar(const std::string& name);

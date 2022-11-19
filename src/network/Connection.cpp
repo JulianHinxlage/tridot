@@ -21,7 +21,7 @@ namespace tri {
 	}
 
 	void Connection::run(const std::function<void(Connection* conn, void* data, int bytes)>& callback) {
-		buffer.resize(1024);
+		buffer.resize(1024 * 32);
 		if (threadId != -1) {
 			env->threadManager->terminateThread(threadId);
 			threadId = -1;
@@ -40,7 +40,7 @@ namespace tri {
 	}
 
 	void Connection::runConnect(const std::string& address, uint16_t port, const std::function<void(Connection* conn, void* data, int bytes)>& callback) {
-		buffer.resize(1024);
+		buffer.resize(1024 * 32);
 		if (threadId != -1) {
 			env->threadManager->terminateThread(threadId);
 			threadId = -1;
@@ -55,6 +55,7 @@ namespace tri {
 				if (onFail) {
 					onFail(this);
 				}
+				return;
 			}
 
 			while (socket->isConnected()) {
@@ -66,7 +67,7 @@ namespace tri {
 			if (onDisconnect) {
 				onDisconnect(this);
 			}
-			});
+		});
 	}
 
 	void Connection::runListen(uint16_t port, const std::function<void(Ref<Connection>conn)>& callback) {
@@ -84,6 +85,7 @@ namespace tri {
 				if (onFail) {
 					onFail(this);
 				}
+				return;
 			}
 			
 			while (socket->isConnected()) {

@@ -146,6 +146,9 @@ namespace tri {
 				pendingAddComponentStorages.resize(classId + 1);
 			}
 			if (!pendingAddComponentStorages[classId]) {
+				if (!Reflection::getDescriptor(classId)) {
+					return nullptr;
+				}
 				pendingAddComponentStorages[classId] = std::make_shared<ComponentStorage>(classId);
 			}
 			return pendingAddComponentStorages[classId]->addComponent(id, ptr);

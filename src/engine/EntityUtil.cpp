@@ -76,6 +76,20 @@ namespace tri {
 		return cam;
 	}
 
+	Guid EntityUtil::getGuid(EntityId id) {
+		if (auto *info = env->world->getComponent<EntityInfo>(id)) {
+			return info->guid;
+		}
+		return Guid();
+	}
+
+	const std::string& EntityUtil::getName(EntityId id) {
+		if (auto* info = env->world->getComponent<EntityInfo>(id)) {
+			return info->name;
+		}
+		return "";
+	}
+
 	class EntityUtilSystem : public System {
 	public:
 		std::map<Guid, EntityId> guidMap;

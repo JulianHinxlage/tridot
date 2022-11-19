@@ -31,6 +31,7 @@ namespace tri {
 		
 		void serializeEntity(EntityId id, World *world, SerialData& data);
 		void deserializeEntity(World* world, SerialData& data);
+		void deserializeEntity(EntityId id, World* world, SerialData& data);
 
 		void serializePrefab(Prefab *prefab, SerialData& data);
 		void deserializePrefab(Prefab* prefab, SerialData& data);

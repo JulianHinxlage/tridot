@@ -152,17 +152,14 @@ namespace tri {
 		*data.emitter << YAML::EndMap;
 	}
 
-	void Serializer::deserializeEntity(World* world, SerialData& data) {
-		EntityId id = data.node["id"].as<int>(-1);
-		id = world->addEntity(id);
-
+	void Serializer::deserializeEntity(EntityId id, World* world, SerialData& data) {
 		bool active = data.node["active"].as<bool>(true);
-		
+
 		for (auto i : data.node) {
 			if (i.first.Scalar() != "id" && i.first.Scalar() != "active") {
 				auto* desc = Reflection::getDescriptor(i.first.Scalar());
 				if (desc) {
-					void* comp = world->addComponent(id, desc->classId);
+					void* comp = world->getOrAddComponent(id, desc->classId);
 					SerialData d(i.second);
 					deserializeClass(desc->classId, comp, d);
 				}
@@ -178,6 +175,13 @@ namespace tri {
 		if (!active) {
 			world->setEntityActive(id, active);
 		}
+	}
+
+
+	void Serializer::deserializeEntity(World* world, SerialData& data) {
+		EntityId id = data.node["id"].as<int>(-1);
+		id = world->addEntity(id);
+		deserializeEntity(id, world, data);
 	}
 
 	void Serializer::serializeWorld(World* world, SerialData& data) {

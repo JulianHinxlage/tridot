@@ -5,6 +5,9 @@
 #include "NetworkSystem.h"
 #include "core/core.h"
 #include "engine/RuntimeMode.h"
+#include "engine/Map.h"
+#include "Packet.h"
+#include "NetworkReplication.h"
 
 #if TRI_WINDOWS
 #include <winsock2.h>
@@ -44,7 +47,16 @@ namespace tri {
 		}
 #endif
 
-		tick();
+		env->eventManager->onMapBegin.addListener([&](World* world, std::string file) {
+			if (mode == SERVER || mode == HOST) {
+				Packet reply;
+				reply.add(NetOpcode::LOAD_MAP);
+				reply.addStr(env->worldFile);
+				for (auto& conn : connections) {
+					conn->socket->write(reply.data(), reply.size());
+				}
+			}
+		});
 	}
 
 	void NetworkSystem::tick() {
@@ -69,10 +81,24 @@ namespace tri {
 			}
 		}
 
+		if (mode == CLIENT) {
+			if (tryReconnect) {
+				tryReconnect = false;
+				setMode(CLIENT);
+			}
+		}
+
 		disconnectedConnections.clear();
 	}
 
 	void NetworkSystem::shutdown() {
+		connection->stop();
+		for (auto& conn : connections) {
+			conn->stop();
+		}
+		connections.clear();
+		disconnectedConnections.clear();
+
 #if TRI_WINDOWS
 		WSACleanup();
 #endif
@@ -87,6 +113,10 @@ namespace tri {
 				connection = nullptr;
 				connections.clear();
 			}
+
+			auto* replication = env->systemManager->getSystem<NetworkReplication>();
+			replication->active = false;
+			replication->hasAuthority = false;
 		}
 		else if (mode == CLIENT) {
 			if (!connection) {
@@ -98,14 +128,19 @@ namespace tri {
 
 			connection->onConnect = [&](Connection* conn) {
 				env->console->info("connected to %s %i", conn->socket->getEndpoint().getAddress().c_str(), conn->socket->getEndpoint().getPort());
+				auto* replication = env->systemManager->getSystem<NetworkReplication>();
+				replication->active = true;
+				replication->hasAuthority = false;
 				onConnect(conn);
 			};
 			connection->onDisconnect = [&](Connection* conn) {
 				env->console->info("disconnected from %s %i", conn->socket->getEndpoint().getAddress().c_str(), conn->socket->getEndpoint().getPort());
 				onDisconnect(conn);
+				tryReconnect = true;
 			};
 			connection->onFail = [&](Connection* conn) {
 				env->console->error("failed to connect to %s %i", serverAddress.c_str(), serverPort);
+				tryReconnect = true;
 			};
 			connection->runConnect(serverAddress, serverPort, [&](Connection* conn, void* data, int bytes) {
 				onRead(conn, data, bytes);
@@ -124,6 +159,9 @@ namespace tri {
 			};
 			connection->onConnect = [&](Connection* conn) {
 				env->console->info("listen on port %i", serverPort);
+				auto *replication = env->systemManager->getSystem<NetworkReplication>();
+				replication->active = true;
+				replication->hasAuthority = true;
 			};
 			connection->runListen(serverPort, [&](Ref<Connection> conn) {
 				connections.push_back(conn);
@@ -147,12 +185,59 @@ namespace tri {
 		}
 	}
 
-	void NetworkSystem::onRead(Connection* conn, void* data, int bytes) {
+	void NetworkSystem::sendToAll(void* data, int bytes) {
+		if (mode == CLIENT) {
+			connection->socket->write(data, bytes);
+		}
+		else if (mode == SERVER || mode == HOST) {
+			for (auto& conn : connections) {
+				conn->socket->write(data, bytes);
+			}
+		}
+	}
 
+	void NetworkSystem::onRead(Connection* conn, void* data, int bytes) {
+		Packet packet;
+		packet.add(data, bytes);
+
+		NetOpcode opcode = packet.get<NetOpcode>();
+
+		switch (opcode) {
+		case NOOP:
+			break;
+		case JOIN: {
+			Packet reply;
+			reply.add(NetOpcode::LOAD_MAP);
+			reply.addStr(env->worldFile);
+			conn->socket->write(reply.data(), reply.size());
+			break;
+		}
+		case LOAD_MAP: {
+			if (mode == CLIENT) {
+				std::string file = packet.getStr();
+				Map::loadAndSetToActiveWorld(file);
+			}
+			break;
+		}
+		case ENTITY_ADD:
+		case ENTITY_UPDATE:
+		case ENTITY_REMOVE:{
+			Guid guid = packet.get<Guid>();
+			env->systemManager->getSystem<NetworkReplication>()->onData(guid, opcode, packet.getStr());
+			break;
+		}
+		default:
+			env->console->warning("invalid opcode %i", (int)opcode);
+			break;
+		}
 	}
 
 	void NetworkSystem::onConnect(Connection* conn) {
-	
+		if (mode == CLIENT) {
+			Packet packet;
+			packet.add(NetOpcode::JOIN);
+			conn->socket->write(packet.data(), packet.size());
+		}
 	}
 
 	void NetworkSystem::onDisconnect(Connection* conn) {

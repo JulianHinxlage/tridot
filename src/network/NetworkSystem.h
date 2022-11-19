@@ -10,6 +10,15 @@
 
 namespace tri {
 
+	enum NetOpcode {
+		NOOP,
+		JOIN,
+		LOAD_MAP,
+		ENTITY_ADD,
+		ENTITY_UPDATE,
+		ENTITY_REMOVE,
+	};
+
 	class NetworkSystem : public System {
 	public:
 		enum Mode {
@@ -27,11 +36,14 @@ namespace tri {
 		void setMode(Mode mode);
 		Mode getMode() { return mode; }
 
+		void sendToAll(void* data, int bytes);
+
 	private:
 		Mode mode;
 		std::string strMode;
 		int serverPort;
 		std::string serverAddress;
+		bool tryReconnect = false;
 
 		Ref<Connection> connection;
 		std::vector<Ref<Connection>> connections;

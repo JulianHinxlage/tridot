@@ -33,6 +33,9 @@ namespace tri {
 
 		static Camera* getPrimaryCamera();
 
+		static Guid getGuid(EntityId id);
+		static const std::string &getName(EntityId id);
+
 		static EntityId getEntityByGuid(Guid guid);
 		static EntityId getEntityByName(const std::string &name);
 	};
