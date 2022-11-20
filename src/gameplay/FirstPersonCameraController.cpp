@@ -11,6 +11,7 @@
 #include "window/Input.h"
 #include "window/Viewport.h"
 #include "physics/RigidBody.h"
+#include "engine/EntityUtil.h"
 
 namespace tri {
 
@@ -52,7 +53,7 @@ namespace tri {
 
         void tick() override {
             env->world->each<FirstPersonCameraController, Camera, Transform>([&](EntityId id, FirstPersonCameraController& controller, Camera& camera, Transform& transform) {
-                if (controller.active) {
+                if (controller.active && EntityUtil::isEntityOwning(id)) {
                     if (controller.mouseCanToggleActive) {
                         if (env->input->pressed(Input::Key::KEY_TAB)) {
                             controller.mouseActive = !controller.mouseActive;

@@ -20,11 +20,22 @@ namespace tri {
 		void tick() override;
 		void shutdown() override;
 
+		void setOwning(Guid guid, Connection *conn);
+		bool isOwning(Guid guid);
+
 	private:
 		std::set<Guid> addedRuntimeEntities;
 		std::set<Guid> removedRuntimeEntities;
 		std::set<Guid> mapEntities;
 		std::set<Guid> removedMapEntities;
+
+		std::set<Guid> owning;
+		std::map<Guid, Connection*> owningConnections;
+
+		std::map<EntityId, EntityId> idMap;
+
+		Connection* getOwningConnection(Guid guid);
+
 	};
 
 }

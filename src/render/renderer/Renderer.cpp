@@ -15,6 +15,7 @@
 #include "RenderPipeline.h"
 #include "MeshFactory.h"
 #include "engine/Random.h"
+#include "engine/EntityUtil.h"
 #include <GL/glew.h>
 #include <tracy/TracyOpenGL.hpp>
 #include <glm/ext/matrix_transform.hpp>
@@ -186,8 +187,8 @@ namespace tri {
         submitShadows();
 
         bool hasPrimary = false;
-        env->world->each<Camera>([&](Camera& camera) {
-            if (camera.active) {
+        env->world->each<Camera>([&](EntityId id, Camera& camera) {
+            if (camera.active && EntityUtil::isEntityOwning(id)) {
                 if (env->viewport->size.y != 0) {
                     camera.aspectRatio = (float)env->viewport->size.x / (float)env->viewport->size.y;
                 }

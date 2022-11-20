@@ -7,7 +7,7 @@ using namespace tri;
 
 int main(int argc, char* argv[]) {
     MainLoop::init();
-    env->config->loadConfigFileFirstFound({ "./editor.cfg", "../editor.cfg", "../../editor.cfg" });
+    env->config->loadConfigFileFirstFound({ "./server.cfg", "../server.cfg", "../../server.cfg" });
     MainLoop::startup();
     MainLoop::run();
     MainLoop::shutdown();

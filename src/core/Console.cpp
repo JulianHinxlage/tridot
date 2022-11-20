@@ -58,7 +58,7 @@ namespace tri {
 		int pos = (int)strftime(time, 32, "%H:%M:%S", &timeInfo);
 		snprintf(time + pos, 32 - pos, ".%03d", (int)msec);
 		strftime(date, 32, "%d.%m.%Y", &timeInfo);
-		
+
 		for (auto& target : targets) {
 			if (target) {
 				if (level >= target->level) {
@@ -92,6 +92,15 @@ namespace tri {
 			target.stream = new std::ofstream(target.file);
 		}
 		targets.push_back(std::make_shared<LogTarget>(target));
+	}
+
+	void Console::removeLogTarget(const std::string& file) {
+		for (int i = 0; i < targets.size(); i++) {
+			if (targets[i]->file == file) {
+				targets.erase(targets.begin() + i);
+				i--;
+			}
+		}
 	}
 
 	CVar* Console::getCVar(const std::string& name) {

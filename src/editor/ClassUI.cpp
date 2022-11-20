@@ -134,6 +134,11 @@ namespace tri {
 			}
 			return change;
 		});
+		addClassUI<Guid>([](const char* label, Guid* value, Guid* min, Guid* max, bool multiEdit) {
+			bool change = false;
+			ImGui::LabelText(label, value->toString().c_str());
+			return change;
+		});
 		addClassUI<EntityEvent>([](const char* label, EntityEvent* value, EntityEvent* min, EntityEvent* max, bool multiEdit) {
 			bool change = false;
 

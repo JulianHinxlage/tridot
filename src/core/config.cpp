@@ -29,6 +29,14 @@ namespace tri {
 		env->console->addCVar<int>("monitor", -1);
 		env->console->addCVar<bool>("noWindow", false);
 		env->console->addCVar<bool>("vsync", true);
+		env->console->addCVar<std::string>("logFile", "tridot.log")->setChangeCallback<std::string>([](const std::string &prev, const std::string &value) {
+			Console::LogTarget target;
+			target.file = value;
+			target.level = LogLevel::TRACE;
+			env->console->addLogTarget(target);
+			env->console->removeLogTarget(prev);
+		});
+
 
 		env->console->addCVar<bool>("enableModuleHotReloading", &env->moduleManager->enableModuleHotReloading);
 		env->console->addCVar<bool>("unloadModuleOnCrash", &env->systemManager->getSystem<CrashHandler>()->unloadModuleOnCrash);
@@ -39,6 +47,11 @@ namespace tri {
 		env->console->addCommand("loadModule", [&](auto& args) {
 			if (args.size() > 0) {
 				env->moduleManager->loadModule(args[0], isPostStartup);
+			}
+		});
+		env->console->addCommand("loadModuleNoSystems", [&](auto& args) {
+			if (args.size() > 0) {
+				env->moduleManager->loadModule(args[0], isPostStartup, true);
 			}
 		});
 		env->console->addCommand("unloadModule", [&](auto& args) {
@@ -86,7 +99,9 @@ namespace tri {
 		std::string config = StrUtil::readFile(file);
 
 		std::filesystem::path currentPath = std::filesystem::current_path();
-		std::filesystem::current_path(std::filesystem::path(file).parent_path());
+		if (std::filesystem::path(file).has_parent_path()) {
+			std::filesystem::current_path(std::filesystem::path(file).parent_path());
+		}
 		
 		bool isOriginalPath = originalPath.empty();
 		if (isOriginalPath) {

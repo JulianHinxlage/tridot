@@ -5,12 +5,14 @@
 #pragma once
 
 #include "pch.h"
+#include "engine/Prefab.h"
 
 namespace tri {
 
-	class NetworkComponent {
+	class GameMode {
 	public:
-		bool syncAlways = true;
+		std::vector<Ref<Prefab>> playerPrefab;
+		std::vector<EntityId> localPlayer;
 	};
 
 }

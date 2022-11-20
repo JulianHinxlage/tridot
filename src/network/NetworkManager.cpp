@@ -88,7 +88,9 @@ namespace tri {
 	}
 
 	void NetworkManager::shutdown() {
-		connection->stop();
+		if (connection) {
+			connection->stop();
+		}
 		for (auto& conn : connections) {
 			conn->stop();
 		}
@@ -212,7 +214,8 @@ namespace tri {
 		packet.add(data, bytes);
 		NetOpcode opcode = packet.get<NetOpcode>();
 
-		env->console->trace("packet with opcode %s", EntityUtil::enumString(opcode));
+		env->console->trace("packet with opcode %s %s", EntityUtil::enumString(opcode), packet.get<Guid>().toString().c_str());
+		packet.unskip(sizeof(Guid));
 
 		auto entry = packetCallbacks.find(opcode);
 		if (entry != packetCallbacks.end()) {

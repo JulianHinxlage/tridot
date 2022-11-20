@@ -127,19 +127,25 @@ namespace tri {
 					std::unique_lock<std::mutex> lock(env->world->performePendingMutex);
 					SerialData ser;
 					ser.ownigNode = YAML::Load(packet.getStr());
-					env->serializer->deserializeEntity(env->world, ser);
+					env->serializer->deserializeEntity(env->world, ser, &idMap);
 				}
 			}
 		};
 		env->networkManager->packetCallbacks[NetOpcode::ENTITY_UPDATE] = [&](Connection* conn, NetOpcode opcode, Packet& packet) {
-			if (!env->networkManager->hasAuthority()) {
-				Guid guid = packet.get<Guid>();
+			Guid guid = packet.get<Guid>();
+			if (!env->networkManager->hasAuthority() || getOwningConnection(guid) == conn) {
 				EntityId id = EntityUtil::getEntityByGuid(guid);
 				if (id != -1) {
 					std::unique_lock<std::mutex> lock(env->world->performePendingMutex);
 					SerialData ser;
 					ser.ownigNode = YAML::Load(packet.getStr());
 					env->serializer->deserializeEntity(id, env->world, ser);
+				}
+				else {
+					std::unique_lock<std::mutex> lock(env->world->performePendingMutex);
+					SerialData ser;
+					ser.ownigNode = YAML::Load(packet.getStr());
+					env->serializer->deserializeEntity(env->world, ser, &idMap);
 				}
 			}
 		};
@@ -149,6 +155,12 @@ namespace tri {
 				Guid guid = packet.get<Guid>();
 				EntityId id = EntityUtil::getEntityByGuid(guid);
 				env->world->removeEntity(id);
+			}
+		};
+		env->networkManager->packetCallbacks[NetOpcode::ENTITY_OWNING] = [&](Connection* conn, NetOpcode opcode, Packet& packet) {
+			if (!env->networkManager->hasAuthority()) {
+				Guid guid = packet.get<Guid>();
+				owning.insert(guid);
 			}
 		};
 
@@ -164,10 +176,20 @@ namespace tri {
 		});
 		env->eventManager->onEntityAdd.addListener([&](World* world, EntityId id) {
 			if (world == env->world) {
+				if (auto* net = env->world->getComponent<NetworkComponent>(id)) {
+					Guid guid = EntityUtil::getGuid(id);
+					addedRuntimeEntities.insert(guid);
+				}
+			}
+		});
+		env->eventManager->onComponentAdd<NetworkComponent>().addListener([&](World* world, EntityId id) {
+			if (world == env->world) {
 				Guid guid = EntityUtil::getGuid(id);
 				addedRuntimeEntities.insert(guid);
 				if (env->networkManager->hasAuthority()) {
-					addEntity(id, guid);
+					if (env->runtimeMode->getMode() != RuntimeMode::LOADING) {
+						addEntity(id, guid);
+					}
 				}
 			}
 		});
@@ -176,32 +198,88 @@ namespace tri {
 				Guid guid = EntityUtil::getGuid(id);
 				if (mapEntities.contains(guid)) {
 					removedMapEntities.insert(guid);
+					if (env->networkManager->hasAuthority()) {
+						removeEntity(guid);
+					}
 				}
 				else {
 					addedRuntimeEntities.erase(guid);
 					removedRuntimeEntities.insert(guid);
-				}
-				if (env->networkManager->hasAuthority()) {
-					removeEntity(guid);
+					if (env->networkManager->hasAuthority()) {
+						if (auto* net = env->world->getComponent<NetworkComponent>(id)) {
+							removeEntity(guid);
+						}
+					}
 				}
 			}
+		});
+
+		env->networkManager->onDisconnect.addListener([&](Connection* conn) {
+			for (auto& i : owningConnections) {
+				if (i.second == conn) {
+					env->world->removeEntity(EntityUtil::getEntityByGuid(i.first));
+				}
+			}
+		});
+
+		EntityUtil::setIsEntityOwningFunction([&](Guid guid) {
+			return isOwning(guid);
 		});
 	}
 
 	void NetworkReplication::tick() {
-		if (env->networkManager->hasAuthority()) {
-			if (env->time->frameTicks(1.0f / 60.0f)) {
-				env->world->each<NetworkComponent>([&](EntityId id, NetworkComponent& net) {
-					if (net.syncAlways) {
+		if (env->time->frameTicks(1.0f / 60.0f)) {
+			env->world->each<NetworkComponent>([&](EntityId id, NetworkComponent& net) {
+				if (net.syncAlways) {
+					Guid guid = EntityUtil::getGuid(id);
+					if (isOwning(guid)) {
 						updateEntity(id, EntityUtil::getGuid(id));
 					}
-				});
-			}
+				}
+			});
+		}
+		if (!idMap.empty()) {
+			EntityUtil::replaceIds(idMap, env->world);
+			idMap.clear();
 		}
 	}
 
 	void NetworkReplication::shutdown() {
+		EntityUtil::setIsEntityOwningFunction(nullptr);
+	}
 
+	void NetworkReplication::setOwning(Guid guid, Connection *conn) {
+		if (env->networkManager->hasAuthority()) {
+			if (conn) {
+				owningConnections[guid] = conn;
+
+				Packet packet;
+				packet.add(NetOpcode::ENTITY_OWNING);
+				packet.add(guid);
+				conn->socket->write(packet.data(), packet.size());
+			}
+			else {
+				owningConnections.erase(guid);
+				//todo: unown on client
+			}
+		}
+	}
+
+	bool NetworkReplication::isOwning(Guid guid) {
+		if (env->networkManager->hasAuthority()) {
+			return owningConnections.find(guid) == owningConnections.end();
+		}
+		else {
+			return owning.contains(guid);
+		}
+	}
+
+	Connection* NetworkReplication::getOwningConnection(Guid guid) {
+		auto entry = owningConnections.find(guid);
+		if (entry == owningConnections.end()) {
+			return nullptr;
+		}
+		return entry->second;
 	}
 
 }

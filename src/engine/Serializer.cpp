@@ -153,7 +153,7 @@ namespace tri {
 		*data.emitter << YAML::EndMap;
 	}
 
-	void Serializer::deserializeEntity(EntityId id, World* world, SerialData& data) {
+	void Serializer::deserializeEntity(EntityId id, World* world, SerialData& data, std::map<EntityId, EntityId>* idMap) {
 		bool active = data.node["active"].as<bool>(true);
 		EntityId hint = data.node["id"].as<int>(-1);
 
@@ -175,10 +175,8 @@ namespace tri {
 			}
 		}
 
-		if (hint != id) {
-			std::map<EntityId, EntityId> idMap;
-			idMap[hint] = id;
-			EntityUtil::replaceIds(idMap, world);
+		if (hint != id && idMap) {
+			(*idMap)[hint] = id;
 		}
 
 		if (!active) {
@@ -187,10 +185,10 @@ namespace tri {
 	}
 
 
-	void Serializer::deserializeEntity(World* world, SerialData& data) {
+	void Serializer::deserializeEntity(World* world, SerialData& data, std::map<EntityId, EntityId> *idMap) {
 		EntityId id = data.node["id"].as<int>(-1);
 		id = world->addEntity(id);
-		deserializeEntity(id, world, data);
+		deserializeEntity(id, world, data, idMap);
 	}
 
 	void Serializer::serializeWorld(World* world, SerialData& data) {

@@ -38,6 +38,9 @@ namespace tri {
 
 		static EntityId getEntityByGuid(Guid guid);
 		static EntityId getEntityByName(const std::string &name);
+		static bool isEntityOwning(EntityId id);
+		static bool isEntityOwning(Guid guid);
+		static void setIsEntityOwningFunction(const std::function<bool(Guid guid)> &function);
 
 		template<typename Enum>
 		static std::string enumString(Enum e) {
@@ -48,6 +51,7 @@ namespace tri {
 			}
 			return std::to_string((int)e);
 		}
+
 	};
 
 }

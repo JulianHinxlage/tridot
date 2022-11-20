@@ -30,8 +30,8 @@ namespace tri {
 		void deserializeClass(int classId, void *ptr, SerialData& data);
 		
 		void serializeEntity(EntityId id, World *world, SerialData& data);
-		void deserializeEntity(World* world, SerialData& data);
-		void deserializeEntity(EntityId id, World* world, SerialData& data);
+		void deserializeEntity(World* world, SerialData& data, std::map<EntityId, EntityId>* idMap = nullptr);
+		void deserializeEntity(EntityId id, World* world, SerialData& data, std::map<EntityId, EntityId>* idMap = nullptr);
 
 		void serializePrefab(Prefab *prefab, SerialData& data);
 		void deserializePrefab(Prefab* prefab, SerialData& data);

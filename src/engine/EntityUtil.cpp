@@ -9,6 +9,8 @@
 
 namespace tri {
 	
+	std::function<bool(Guid guid)> isOwningFunction;
+
 	void eachProperty(int classId, void* comp, std::function<void(void* prop, int classId)> callback) {
 		auto* desc = Reflection::getDescriptor(classId);
 		if (desc) {
@@ -32,7 +34,10 @@ namespace tri {
 			for (auto* desc : Reflection::getDescriptors()) {
 				if (desc) {
 					if (desc->flags & ClassDescriptor::COMPONENT) {
-						void* comp = world->getComponentPending(i.second, desc->classId);
+						void* comp = world->getComponent(i.second, desc->classId);
+						if (!comp) {
+							comp = world->getComponentPending(i.second, desc->classId);
+						}
 						if (comp) {
 							eachProperty(desc->classId, comp, [&](void* prop, int classId) {
 								if (classId == Reflection::getClassId<EntityId>()) {
@@ -68,8 +73,8 @@ namespace tri {
 
 	Camera* EntityUtil::getPrimaryCamera() {
 		Camera* cam = nullptr;
-		env->world->each<Camera>([&](Camera& c) {
-			if (c.active && c.isPrimary) {
+		env->world->each<Camera>([&](EntityId id, Camera& c) {
+			if (c.active && c.isPrimary && isEntityOwning(id)) {
 				cam = &c;
 			}
 		});
@@ -131,6 +136,21 @@ namespace tri {
 			return -1;
 		}
 		return entry->second;
+	}
+
+	bool EntityUtil::isEntityOwning(EntityId id) {
+		return isEntityOwning(getGuid(id));
+	}
+
+	bool EntityUtil::isEntityOwning(Guid guid) {
+		if (isOwningFunction) {
+			return isOwningFunction(guid);
+		}
+		return false;
+	}
+
+	void EntityUtil::setIsEntityOwningFunction(const std::function<bool(Guid guid)>& function) {
+		isOwningFunction = function;
 	}
 
 }

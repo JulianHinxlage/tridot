@@ -97,7 +97,7 @@ namespace tri {
 		return moduleDirectories;
 	}
 
-	Module* ModuleManager::loadModule(const std::string& name, bool pending) {
+	Module* ModuleManager::loadModule(const std::string& name, bool pending, bool noSystems) {
 		if (pending) {
 			pendingLoads.push_back(name);
 			return nullptr;
@@ -182,9 +182,21 @@ namespace tri {
 		}
 
 
+		if (noSystems) {
+			auto descriptors = Reflection::getDescriptors();
+			for (auto* desc : descriptors) {
+				if (desc && (desc->flags & ClassDescriptor::SYSTEM)) {
+					std::string file = getModuleNameByAddress(desc->registrationSourceAddress);
+					if (checkName(module.get(), file)) {
+						Reflection::unregisterClass(desc->classId);
+					}
+				}
+			}
+		}
+		else {
+			SystemManager::addNewSystems();
+		}
 
-
-		SystemManager::addNewSystems();
 
 		env->console->info("module \"%s\" loaded", module->name.c_str());
 		env->eventManager->onModuleLoad.invoke(module->name);

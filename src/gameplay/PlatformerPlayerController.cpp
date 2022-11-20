@@ -10,6 +10,7 @@
 #include "window/Input.h"
 #include "engine/Time.h"
 #include "engine/Camera.h"
+#include "engine/EntityUtil.h"
 
 namespace tri {
 
@@ -25,11 +26,9 @@ namespace tri {
 		void movement(EntityId id, Transform &transform, PlatformerPlayerController &controller) {
 			//get camera right vector
 			glm::vec3 camRight = { 1, 0, 0 };
-			env->world->each<Camera>([&](Camera& c) {
-				if (c.active && c.isPrimary) {
-					camRight = c.right;
-				}
-			});
+			if (auto* cam = EntityUtil::getPrimaryCamera()) {
+				camRight = cam->right;
+			}
 
 			//WASD input
 			glm::vec3 move = { 0, 0, 0 };
@@ -78,7 +77,7 @@ namespace tri {
 
 		void tick() override {
 			env->world->each<PlatformerPlayerController, Transform, RigidBody>([&](EntityId id, PlatformerPlayerController &c, Transform &t, RigidBody &rb) {
-				if (c.active) {
+				if (c.active && EntityUtil::isEntityOwning(id)) {
 					movement(id, t, c);
 
 					glm::vec3 pos = t.getWorldPosition();

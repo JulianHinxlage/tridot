@@ -23,6 +23,14 @@ namespace tri {
 
 	class CVar {
 	public:
+
+		template<typename T>
+		void setChangeCallback(const std::function<void(const T &prev, const T &value)> &callback) {
+			onChange = [callback](const void* prev, const void* value) {
+				callback(*(T*)prev, *(T*)value);
+			};
+		}
+
 		template<typename T>
 		T* getPtr() {
 			if (classId == Reflection::getClassId<T>()) {
@@ -50,6 +58,11 @@ namespace tri {
 		template<typename T>
 		void set(const T& value) {
 			if (classId == Reflection::getClassId<T>()) {
+				if (onChange) {
+					if (*(T*)ptr != value) {
+						onChange(ptr, &value);
+					}
+				}
 				*(T*)ptr = value;
 			}
 			else {
@@ -75,6 +88,7 @@ namespace tri {
 		int classId;
 		std::string name;
 		void* ptr;
+		std::function<void(const void* prev, const void* value)> onChange;
 	};
 
 	class Console : public System {
@@ -96,6 +110,7 @@ namespace tri {
 		
 		void logMsg(const std::string& msg, LogLevel level = LogLevel::INFO, const std::string& source = "System");
 		void addLogTarget(LogTarget target);
+		void removeLogTarget(const std::string &file);
 		const char* getLevelName(LogLevel level);
 
 		template<typename... Args>
@@ -257,7 +272,17 @@ namespace tri {
 				else {
 					s << str;
 				}
-				s >> *(T*)ptr;
+
+				T newValue;
+				s >> newValue;
+
+				if (onChange) {
+					if (*(T*)ptr != newValue) {
+						onChange(ptr, &newValue);
+					}
+				}
+
+				*(T*)ptr = newValue;
 			}
 		};
 
@@ -271,6 +296,11 @@ namespace tri {
 			}
 
 			virtual void fromString(const std::string& str) {
+				if (onChange) {
+					if (*(std::string*)ptr != str) {
+						onChange(ptr, &str);
+					}
+				}
 				*(std::string*)ptr = str;
 			}
 		};

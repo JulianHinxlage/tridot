@@ -3,12 +3,24 @@
 //
 
 #include "core.h"
+#include "window/Input.h"
+#include "window/Window.h"
 using namespace tri;
 
 int main(int argc, char* argv[]) {
     MainLoop::init();
-    env->config->loadConfigFileFirstFound({ "./editor.cfg", "../editor.cfg", "../../editor.cfg" });
+    env->config->loadConfigFileFirstFound({ "./host.cfg", "../host.cfg", "../../host.cfg" });
     MainLoop::startup();
+
+    //wait for all assets to be loaded before starting the scene
+    env->console->executeCommand("waitForAllAssetsLoaded");
+
+    env->eventManager->postTick.addListener([]() {
+        if (env->input->down(Input::KEY_ESCAPE)) {
+            env->window->close();
+        }
+    });
+
     MainLoop::run();
     MainLoop::shutdown();
     return 0;

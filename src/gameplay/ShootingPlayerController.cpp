@@ -36,6 +36,9 @@ namespace tri {
 			Camera* camera = EntityUtil::getPrimaryCamera();
 
 			env->world->each<ShootingPlayerController, Transform>([&](EntityId id, ShootingPlayerController&controller, Transform &transform) {
+				if (!EntityUtil::isEntityOwning(id)) {
+					return;
+				}
 				if (controller.fireTimer > 0) {
 					controller.fireTimer -= env->time->deltaTime;
 				}

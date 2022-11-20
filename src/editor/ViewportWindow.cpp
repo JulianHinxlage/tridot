@@ -13,6 +13,7 @@
 #include "render/renderer/OutlineRenderer.h"
 #include "Gizmos.h"
 #include "engine/RuntimeMode.h"
+#include "engine/EntityUtil.h"
 #include <imgui/imgui.h>
 #include <imgui/imgui_internal.h>
 
@@ -56,7 +57,7 @@ namespace tri {
 						Transform* cameraTransform = nullptr;
 						bool hasPrimary = false;
 						env->world->each<const Camera, const Transform>([&](EntityId id, Camera& c, Transform& t) {
-							if (c.isPrimary && !hasPrimary) {
+							if (c.isPrimary && !hasPrimary && EntityUtil::isEntityOwning(id)) {
 								camera = &c;
 								cameraTransform = &t;
 								editorCameraEntity = id;
