@@ -15,6 +15,8 @@ namespace tri {
 
 	class NetworkReplication : public System {
 	public:
+		bool enableClientSideEntitySpawning;
+
 		void init() override;
 		void startup() override;
 		void tick() override;
@@ -31,6 +33,8 @@ namespace tri {
 
 		std::set<Guid> owning;
 		std::map<Guid, Connection*> owningConnections;
+		std::set<Guid> addedNetworkEntities;
+
 
 		std::map<EntityId, EntityId> idMap;
 

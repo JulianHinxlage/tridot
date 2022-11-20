@@ -20,6 +20,7 @@ namespace tri {
 	void NetworkReplication::init() {
 		env->runtimeMode->setActiveSystem<NetworkReplication>({ RuntimeMode::LOADING, RuntimeMode::EDIT, RuntimeMode::PAUSED }, true);
 		env->jobManager->addJob("Network")->addSystem<NetworkReplication>();
+		enableClientSideEntitySpawning = true;
 	}
 
 	void addEntity(EntityId id, Guid guid, Connection *conn = nullptr) {
@@ -117,17 +118,38 @@ namespace tri {
 				for (auto& guid : addedRuntimeEntities) {
 					addEntity(EntityUtil::getEntityByGuid(guid), guid, conn);
 				}
+
+				Packet reply;
+				reply.add(NetOpcode::MAP_SYNC);
+				conn->socket->write(reply.data(), reply.size());
 			}
 		};
+		env->networkManager->packetCallbacks[NetOpcode::MAP_SYNC] = [&](Connection* conn, NetOpcode opcode, Packet& packet) {
+			Packet reply;
+			reply.add(NetOpcode::MAP_SYNCED);
+			conn->socket->write(reply.data(), reply.size());
+		};
+
 		env->networkManager->packetCallbacks[NetOpcode::ENTITY_ADD] = [&](Connection* conn, NetOpcode opcode, Packet& packet) {
-			if (!env->networkManager->hasAuthority()) {
+			if (enableClientSideEntitySpawning || !env->networkManager->hasAuthority()) {
 				Guid guid = packet.get<Guid>();
 				EntityId id = EntityUtil::getEntityByGuid(guid);
 				if (id == -1) {
+					addedNetworkEntities.insert(guid);
 					std::unique_lock<std::mutex> lock(env->world->performePendingMutex);
 					SerialData ser;
 					ser.ownigNode = YAML::Load(packet.getStr());
 					env->serializer->deserializeEntity(env->world, ser, &idMap);
+				}
+				else {
+					packet.getStr();
+					env->console->trace("entity %s already exists", guid.toString().c_str());
+				}
+				if (env->networkManager->hasAuthority()) {
+					int count = packet.readIndex;
+					packet.unskip(count);
+					env->networkManager->sendToAll(packet, conn);
+					packet.skip(count);
 				}
 			}
 		};
@@ -142,10 +164,14 @@ namespace tri {
 					env->serializer->deserializeEntity(id, env->world, ser);
 				}
 				else {
-					std::unique_lock<std::mutex> lock(env->world->performePendingMutex);
-					SerialData ser;
-					ser.ownigNode = YAML::Load(packet.getStr());
-					env->serializer->deserializeEntity(env->world, ser, &idMap);
+					packet.getStr();
+					env->console->trace("entity %s dose not exists", guid.toString().c_str());
+				}
+				if (env->networkManager->hasAuthority()) {
+					int count = packet.readIndex;
+					packet.unskip(count);
+					env->networkManager->sendToAll(packet, conn);
+					packet.skip(count);
 				}
 			}
 		};
@@ -169,6 +195,7 @@ namespace tri {
 				mapEntities.clear();
 				addedRuntimeEntities.clear();
 				removedRuntimeEntities.clear();
+				addedNetworkEntities.clear();
 				world->each([&](EntityId id) {
 					mapEntities.insert(EntityUtil::getGuid(id));
 				});
@@ -186,8 +213,8 @@ namespace tri {
 			if (world == env->world) {
 				Guid guid = EntityUtil::getGuid(id);
 				addedRuntimeEntities.insert(guid);
-				if (env->networkManager->hasAuthority()) {
-					if (env->runtimeMode->getMode() != RuntimeMode::LOADING) {
+				if (enableClientSideEntitySpawning || env->networkManager->hasAuthority()) {
+					if (!addedNetworkEntities.contains(guid)) {
 						addEntity(id, guid);
 					}
 				}
@@ -229,14 +256,16 @@ namespace tri {
 
 	void NetworkReplication::tick() {
 		if (env->time->frameTicks(1.0f / 60.0f)) {
-			env->world->each<NetworkComponent>([&](EntityId id, NetworkComponent& net) {
-				if (net.syncAlways) {
-					Guid guid = EntityUtil::getGuid(id);
-					if (isOwning(guid)) {
-						updateEntity(id, EntityUtil::getGuid(id));
+			if (env->networkManager->isConnected()) {
+				env->world->each<NetworkComponent>([&](EntityId id, NetworkComponent& net) {
+					if (net.syncAlways) {
+						Guid guid = EntityUtil::getGuid(id);
+						if (isOwning(guid)) {
+							updateEntity(id, EntityUtil::getGuid(id));
+						}
 					}
-				}
-			});
+				});
+			}
 		}
 		if (!idMap.empty()) {
 			EntityUtil::replaceIds(idMap, env->world);

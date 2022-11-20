@@ -194,28 +194,27 @@ namespace tri {
 		return mode != CLIENT;
 	}
 
-	void NetworkManager::sendToAll(const void* data, int bytes) {
+	void NetworkManager::sendToAll(const void* data, int bytes, Connection* except) {
 		if (mode == CLIENT) {
 			connection->socket->write(data, bytes);
 		}
 		else if (mode == SERVER || mode == HOST) {
 			for (auto& conn : connections) {
-				conn->socket->write(data, bytes);
+				if (conn.get() != except) {
+					conn->socket->write(data, bytes);
+				}
 			}
 		}
 	}
 
-	void NetworkManager::sendToAll(Packet& packet) {
-		sendToAll(packet.data(), packet.size());
+	void NetworkManager::sendToAll(Packet& packet, Connection* except) {
+		sendToAll(packet.data(), packet.size(), except);
 	}
 
 	void NetworkManager::onRead(Connection* conn, void* data, int bytes) {
 		Packet packet;
 		packet.add(data, bytes);
 		NetOpcode opcode = packet.get<NetOpcode>();
-
-		env->console->trace("packet with opcode %s %s", EntityUtil::enumString(opcode), packet.get<Guid>().toString().c_str());
-		packet.unskip(sizeof(Guid));
 
 		auto entry = packetCallbacks.find(opcode);
 		if (entry != packetCallbacks.end()) {
@@ -225,6 +224,12 @@ namespace tri {
 			if (opcode != NOOP) {
 				env->console->warning("invalid opcode %i", opcode);
 			}
+			return;
+		}
+
+		auto remain = packet.getRemaining();
+		if (!remain.empty()) {
+			onRead(conn, remain.data(), remain.size());
 		}
 	}
 

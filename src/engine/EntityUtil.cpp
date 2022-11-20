@@ -146,7 +146,7 @@ namespace tri {
 		if (isOwningFunction) {
 			return isOwningFunction(guid);
 		}
-		return false;
+		return true;
 	}
 
 	void EntityUtil::setIsEntityOwningFunction(const std::function<bool(Guid guid)>& function) {

@@ -125,7 +125,7 @@ file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS src/animationEditor/*.cpp)
 add_library(${PROJECT_NAME} SHARED ${SOURCES})
 target_precompile_headers(${PROJECT_NAME} PUBLIC src/pch.h)
 target_include_directories(${PROJECT_NAME} PRIVATE src src/animationEditor)
-target_link_libraries(${PROJECT_NAME} PUBLIC TridotCore TridotAnimation TridotEditorLib)
+target_link_libraries(${PROJECT_NAME} PUBLIC TridotCore TridotAnimation TridotEditorModule)
 
 #Tridot Network
 project(TridotNetwork)

@@ -20,11 +20,9 @@ namespace tri {
 	public:
 
 		void startup() {
-			env->networkManager->packetCallbacks[NetOpcode::MAP_LOADED] = [&](Connection* conn, NetOpcode opcode, Packet& packet) {
+			env->networkManager->packetCallbacks[NetOpcode::MAP_SYNCED] = [&](Connection* conn, NetOpcode opcode, Packet& packet) {
 				if (env->networkManager->hasAuthority()) {
-					env->eventManager->postTick.addListener([conn, this]() {
-						join(conn);
-					}, true);
+					join(conn);
 				}
 			};
 			env->eventManager->onMapBegin.addListener([&](World* world, std::string file) {
@@ -55,7 +53,7 @@ namespace tri {
 				}
 			});
 
-			if (env->networkManager->getMode() != NetMode::STANDALONE) {
+			if (env->networkManager->getMode() == NetMode::CLIENT || env->networkManager->getMode() == NetMode::HOST) {
 				join(nullptr);
 			}
 		}

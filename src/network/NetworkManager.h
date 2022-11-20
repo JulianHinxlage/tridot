@@ -17,6 +17,8 @@ namespace tri {
 		MAP_REQUEST,
 		MAP_RESPONSE,
 		MAP_LOADED,
+		MAP_SYNC,
+		MAP_SYNCED,
 		ENTITY_ADD,
 		ENTITY_UPDATE,
 		ENTITY_REMOVE,
@@ -42,8 +44,8 @@ namespace tri {
 
 		bool isConnected();
 		bool hasAuthority();
-		void sendToAll(const void* data, int bytes);
-		void sendToAll(Packet &packet);
+		void sendToAll(const void* data, int bytes, Connection* except = nullptr);
+		void sendToAll(Packet& packet, Connection* except = nullptr);
 
 		Event<Connection*> onConnect;
 		Event<Connection*> onDisconnect;
