@@ -8,11 +8,20 @@
 #include "config.h"
 #include "System.h"
 #include "Reflection.h"
+#include "ModuleManager.h"
+#include "Console.h"
 
 namespace tri {
 
+	class EventBase {
+	public:
+		EventBase();
+		virtual ~EventBase();
+		virtual void removeModuleListeners(const std::string &file);
+	};
+
 	template<typename... Args>
-	class Event {
+	class Event : public EventBase {
 	public:
 		void invoke(Args... args) {
 			for (int i = 0; i < listeners.size(); i++) {
@@ -61,6 +70,27 @@ namespace tri {
 		int nextId = 0;
 		std::vector<Listener> listeners;
 		std::vector<Listener> invokeOnceListeners;
+
+		void removeModuleListeners(const std::string& file) override {
+			for (int i = 0; i < listeners.size(); i++) {
+				auto& listener = listeners[i];
+				auto ptr = *((void**)&listener.callback);
+				std::string f = ModuleManager::getModuleNameByAddress(ptr);
+				if (f == file) {
+					listeners.erase(listeners.begin() + i);
+					i--;
+				}
+			}
+			for (int i = 0; i < invokeOnceListeners.size(); i++) {
+				auto& listener = invokeOnceListeners[i];
+				auto ptr = *((void**)&listener.callback);
+				std::string f = ModuleManager::getModuleNameByAddress(ptr);
+				if (f == file) {
+					invokeOnceListeners.erase(invokeOnceListeners.begin() + i);
+					i--;
+				}
+			}
+		}
 	};
 
 	class World;
@@ -122,10 +152,11 @@ namespace tri {
 			}
 			return onComponentRemoveEvents[classId];
 		}
+
+		void removeModuleListeners(const std::string& file);
 	private:
 		std::vector<Event<World*, EntityId>> onComponentAddEvents;
 		std::vector<Event<World*, EntityId>> onComponentRemoveEvents;
-
 	};
 
 }
