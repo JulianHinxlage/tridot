@@ -89,7 +89,7 @@ namespace tri {
 #endif
 	}
 
-	bool UdpSocket::write(void* data, int bytes, const Endpoint& endpoint) {
+	bool UdpSocket::write(const void* data, int bytes, const Endpoint& endpoint) {
 		int code = ::sendto(handle, (char*)data, bytes, 0, (sockaddr*)endpoint.getHandle(), sizeof(endpoint));
 		if (code < 0) {
 			return false;

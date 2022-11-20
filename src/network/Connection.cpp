@@ -45,28 +45,39 @@ namespace tri {
 			env->threadManager->terminateThread(threadId);
 			threadId = -1;
 		}
+		running = true;
 		threadId = env->threadManager->addThread("Connection", [&, address, port, callback]() {
-			if (socket->connect(address, port)) {
-				if (onConnect) {
-					onConnect(this);
+
+			while (running) {
+				if (socket->connect(address, port)) {
+					if (onConnect) {
+						onConnect(this);
+					}
 				}
-			}
-			else {
-				if (onFail) {
-					onFail(this);
+				else {
+					if (onFail) {
+						onFail(this);
+					}
+					std::unique_lock<std::mutex> lock(reconnectMutex);
+					reconnect.wait(lock);
+					continue;
 				}
-				return;
+
+
+				while (running && socket->isConnected()) {
+					int bytes = buffer.size();
+					if (socket->read(buffer.data(), bytes)) {
+						callback(this, buffer.data(), bytes);
+					}
+				}
+				if (onDisconnect) {
+					onDisconnect(this);
+				}
+
+				std::unique_lock<std::mutex> lock(reconnectMutex);
+				reconnect.wait(lock);
 			}
 
-			while (socket->isConnected()) {
-				int bytes = buffer.size();
-				if (socket->read(buffer.data(), bytes)) {
-					callback(this, buffer.data(), bytes);
-				}
-			}
-			if (onDisconnect) {
-				onDisconnect(this);
-			}
 		});
 	}
 
@@ -75,6 +86,7 @@ namespace tri {
 			env->threadManager->terminateThread(threadId);
 			threadId = -1;
 		}
+		running = true;
 		threadId = env->threadManager->addThread("Listen", [&, port, callback]() {
 			if (socket->listen(port)) {
 				if (onConnect) {
@@ -88,7 +100,7 @@ namespace tri {
 				return;
 			}
 			
-			while (socket->isConnected()) {
+			while (running && socket->isConnected()) {
 				Ref<TcpSocket> newSocket = socket->accept();
 				if (newSocket) {
 					Ref<Connection> conn = Ref<Connection>::make();
@@ -103,8 +115,9 @@ namespace tri {
 	}
 
 	void Connection::stop() {
+		running = false;
+		reconnect.notify_all();
 		socket->disconnect();
-		env->threadManager->joinThread(threadId);
 		env->threadManager->terminateThread(threadId);
 		threadId = -1;
 	}

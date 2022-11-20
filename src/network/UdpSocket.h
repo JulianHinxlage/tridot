@@ -18,7 +18,7 @@ namespace tri {
 		bool listen(uint16_t port, bool prefereIpv4 = false);
 		void close();
 
-		bool write(void* data, int bytes, const Endpoint &endpoint);
+		bool write(const void* data, int bytes, const Endpoint &endpoint);
 		bool read(void* data, int &bytes, Endpoint& endpoint);
 
 	private:

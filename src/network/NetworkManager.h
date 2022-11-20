@@ -7,39 +7,51 @@
 #include "pch.h"
 #include "core/System.h"
 #include "Connection.h"
+#include "engine/EntityEvent.h"
+#include "Packet.h"
 
 namespace tri {
 
 	enum NetOpcode {
 		NOOP,
-		JOIN,
-		LOAD_MAP,
+		MAP_REQUEST,
+		MAP_RESPONSE,
+		MAP_LOADED,
 		ENTITY_ADD,
 		ENTITY_UPDATE,
 		ENTITY_REMOVE,
+		ENTITY_OWNING,
 	};
 
-	class NetworkSystem : public System {
+	enum NetMode {
+		STANDALONE,
+		CLIENT,
+		SERVER,
+		HOST,
+	};
+
+	class NetworkManager : public System {
 	public:
-		enum Mode {
-			STANDALONE,
-			CLIENT,
-			SERVER,
-			HOST,
-		};
-		
 		void init();
 		void startup() override;
 		void tick() override;
 		void shutdown() override;
 
-		void setMode(Mode mode);
-		Mode getMode() { return mode; }
+		void setMode(NetMode mode);
+		NetMode getMode() { return mode; }
 
-		void sendToAll(void* data, int bytes);
+		bool isConnected();
+		bool hasAuthority();
+		void sendToAll(const void* data, int bytes);
+		void sendToAll(Packet &packet);
+
+		Event<Connection*> onConnect;
+		Event<Connection*> onDisconnect;
+
+		std::map<NetOpcode, std::function<void(Connection *conn, NetOpcode opcode, Packet &packet)>> packetCallbacks;
 
 	private:
-		Mode mode;
+		NetMode mode;
 		std::string strMode;
 		int serverPort;
 		std::string serverAddress;
@@ -50,8 +62,6 @@ namespace tri {
 		std::vector<Ref<Connection>> disconnectedConnections;
 
 		void onRead(Connection* conn, void* data, int bytes);
-		void onConnect(Connection* conn);
-		void onDisconnect(Connection* conn);
 	};
 
 }

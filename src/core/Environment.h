@@ -55,6 +55,10 @@ namespace tri {
 		//Audio
 		class AudioSystem* audioSystem;
 
+		//Network
+		class NetworkManager* networkManager;
+		class NetworkReplication* networkReplication;
+
 		Environment();
 
 		static void init();

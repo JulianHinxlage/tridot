@@ -29,7 +29,7 @@ namespace tri {
 		copyIntoEntity(id, world, true, idMap);
 		EntityUtil::replaceIds(*idMap, world);
 
-		for (auto& i : *idMap) {
+		for (auto& i : idMapLocal) {
 			if (auto *info = world->getComponentPending<EntityInfo>(i.second)) {
 				info->guid = env->random->getGuid();
 			}

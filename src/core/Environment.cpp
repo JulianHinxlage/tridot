@@ -33,6 +33,8 @@ namespace tri {
 		renderSettings = nullptr;
 		physics = nullptr;
 		audioSystem = nullptr;
+		networkManager = nullptr;
+		networkReplication = nullptr;
 
 		worldFile = "";
 	}

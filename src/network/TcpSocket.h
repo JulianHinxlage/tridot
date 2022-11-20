@@ -24,12 +24,13 @@ namespace tri {
 		bool isConnected();
 		const Endpoint& getEndpoint();
 
-		bool write(void* data, int bytes);
+		bool write(const void* data, int bytes);
 		bool read(void* data, int &bytes);
 
 		int getHandle();
 	private:
 		Endpoint endpoint;
+		bool connected;
 		int handle;
 	};
 

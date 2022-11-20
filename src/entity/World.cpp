@@ -335,6 +335,7 @@ namespace tri {
 
 	void World::performePending() {
 		TRI_PROFILE_FUNC();
+		std::unique_lock<std::mutex> lock(performePendingMutex);
 
 		bool currentEnablePendingOperations = enablePendingOperations;
 		enablePendingOperations = false;

@@ -17,6 +17,7 @@ namespace tri {
 	class World {
 	public:
 		bool enablePendingOperations = true;
+		std::mutex performePendingMutex;
 
 		World();
 		~World();

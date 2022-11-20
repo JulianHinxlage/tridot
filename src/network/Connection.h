@@ -14,6 +14,9 @@ namespace tri {
 		std::vector<uint8_t> buffer;
 		Ref<TcpSocket> socket;
 		int threadId;
+		std::mutex reconnectMutex;
+		std::condition_variable reconnect;
+		bool running;
 		std::function<void(Connection* conn)> onDisconnect;
 		std::function<void(Connection* conn)> onConnect;
 		std::function<void(Connection* conn)> onFail;

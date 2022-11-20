@@ -3,7 +3,7 @@
 //
 
 #include "NetworkReplication.h"
-#include "NetworkSystem.h"
+#include "NetworkManager.h"
 #include "core/core.h"
 #include "engine/RuntimeMode.h"
 #include "engine/Map.h"
@@ -15,137 +15,193 @@
 
 namespace tri {
 
-	TRI_SYSTEM(NetworkReplication);
-
-	NetworkReplication::NetworkReplication() {
-		active = false;
-		hasAuthority = false;
-	}
+	TRI_SYSTEM_INSTANCE(NetworkReplication, env->networkReplication);
 
 	void NetworkReplication::init() {
 		env->runtimeMode->setActiveSystem<NetworkReplication>({ RuntimeMode::LOADING, RuntimeMode::EDIT, RuntimeMode::PAUSED }, true);
 		env->jobManager->addJob("Network")->addSystem<NetworkReplication>();
 	}
 
-	void NetworkReplication::startup() {
-		addListener = env->eventManager->onEntityAdd.addListener([&](World* world, EntityId id) {
-			if (world == env->world) {
-				addedRuntimeEntities.insert(EntityUtil::getGuid(id));
-			}
-		});
-		componentAddListener = env->eventManager->onComponentAdd<NetworkComponent>().addListener([&](World* world, EntityId id) {
-			if (active && hasAuthority) {
-				if (auto* net = env->world->getComponent<NetworkComponent>(id)) {
-					addEntity(id);
-				}
-			}
-		});
-		removeListener = env->eventManager->onEntityRemove.addListener([&](World* world, EntityId id) {
-			if (world == env->world) {
-				auto guid = EntityUtil::getGuid(id);
-				addedRuntimeEntities.erase(guid);
-				removedRuntimeEntities.insert(guid);
+	void addEntity(EntityId id, Guid guid, Connection *conn = nullptr) {
+		Packet packet;
+		packet.add(NetOpcode::ENTITY_ADD);
+		packet.add(guid);
 
-				if (active && hasAuthority) {
-					if (auto* net = env->world->getComponent<NetworkComponent>(id)) {
-						removeEntity(id);
-					}
+		SerialData ser;
+		ser.emitter = std::make_shared<YAML::Emitter>();
+		env->serializer->serializeEntity(id, env->world, ser);
+		packet.addStr(ser.emitter->c_str());
+		if (conn) {
+			conn->socket->write(packet.data(), packet.size());
+		}
+		else {
+			env->networkManager->sendToAll(packet);
+		}
+	}
+
+	void updateEntity(EntityId id, Guid guid, Connection* conn = nullptr) {
+		Packet packet;
+		packet.add(NetOpcode::ENTITY_UPDATE);
+		packet.add(guid);
+
+		SerialData ser;
+		ser.emitter = std::make_shared<YAML::Emitter>();
+		env->serializer->serializeEntity(id, env->world, ser);
+		packet.addStr(ser.emitter->c_str());
+		if (conn) {
+			conn->socket->write(packet.data(), packet.size());
+		}
+		else {
+			env->networkManager->sendToAll(packet);
+		}
+	}
+
+	void removeEntity(Guid guid, Connection *conn = nullptr) {
+		Packet packet;
+		packet.add(NetOpcode::ENTITY_REMOVE);
+		packet.add(guid);
+		if (conn) {
+			conn->socket->write(packet.data(), packet.size());
+		}
+		else {
+			env->networkManager->sendToAll(packet);
+		}
+	}
+
+	void NetworkReplication::startup() {
+		env->networkManager->onConnect.addListener([](Connection* conn) {
+			if (env->networkManager->getMode() == NetMode::CLIENT) {
+				Packet packet;
+				packet.add(NetOpcode::MAP_REQUEST);
+				env->networkManager->sendToAll(packet);
+			}
+		});
+
+		env->networkManager->packetCallbacks[NetOpcode::MAP_REQUEST] = [](Connection* conn, NetOpcode opcode, Packet& packet) {
+			Packet reply;
+			reply.add(NetOpcode::MAP_RESPONSE);
+			reply.addStr(env->worldFile);
+			conn->socket->write(reply.data(), reply.size());
+		};
+
+		env->networkManager->packetCallbacks[NetOpcode::MAP_RESPONSE] = [](Connection* conn, NetOpcode opcode, Packet& packet) {
+			if (!env->networkManager->hasAuthority()) {
+				std::string file = packet.getStr();
+				env->eventManager->onMapBegin.addListener([conn](World* world, std::string) {
+					env->eventManager->postTick.addListener([conn]() {
+						Packet reply;
+						reply.add(NetOpcode::MAP_LOADED);
+						conn->socket->write(reply.data(), reply.size());
+					}, true);
+				}, true);
+				Map::loadAndSetToActiveWorld(file);
+			}
+		};
+
+		env->eventManager->onMapBegin.addListener([](World* world, std::string file) {
+			if (world == env->world) {
+				if (env->networkManager->hasAuthority()) {
+					Packet reply;
+					reply.add(NetOpcode::MAP_RESPONSE);
+					reply.addStr(env->worldFile);
+					env->networkManager->sendToAll(reply);
 				}
 			}
 		});
-		beginListener = env->eventManager->onMapBegin.addListener([&](World* world, std::string file) {
-			removedRuntimeEntities.clear();
-			addedRuntimeEntities.clear();
+
+		env->networkManager->packetCallbacks[NetOpcode::MAP_LOADED] = [&](Connection* conn, NetOpcode opcode, Packet& packet) {
+			if (env->networkManager->hasAuthority()) {
+				for (auto &guid : removedMapEntities) {
+					removeEntity(guid, conn);
+				}
+				for (auto& guid : addedRuntimeEntities) {
+					addEntity(EntityUtil::getEntityByGuid(guid), guid, conn);
+				}
+			}
+		};
+		env->networkManager->packetCallbacks[NetOpcode::ENTITY_ADD] = [&](Connection* conn, NetOpcode opcode, Packet& packet) {
+			if (!env->networkManager->hasAuthority()) {
+				Guid guid = packet.get<Guid>();
+				EntityId id = EntityUtil::getEntityByGuid(guid);
+				if (id == -1) {
+					std::unique_lock<std::mutex> lock(env->world->performePendingMutex);
+					SerialData ser;
+					ser.ownigNode = YAML::Load(packet.getStr());
+					env->serializer->deserializeEntity(env->world, ser);
+				}
+			}
+		};
+		env->networkManager->packetCallbacks[NetOpcode::ENTITY_UPDATE] = [&](Connection* conn, NetOpcode opcode, Packet& packet) {
+			if (!env->networkManager->hasAuthority()) {
+				Guid guid = packet.get<Guid>();
+				EntityId id = EntityUtil::getEntityByGuid(guid);
+				if (id != -1) {
+					std::unique_lock<std::mutex> lock(env->world->performePendingMutex);
+					SerialData ser;
+					ser.ownigNode = YAML::Load(packet.getStr());
+					env->serializer->deserializeEntity(id, env->world, ser);
+				}
+			}
+		};
+		env->networkManager->packetCallbacks[NetOpcode::ENTITY_REMOVE] = [&](Connection* conn, NetOpcode opcode, Packet& packet) {
+			if (!env->networkManager->hasAuthority()) {
+				std::unique_lock<std::mutex> lock(env->world->performePendingMutex);
+				Guid guid = packet.get<Guid>();
+				EntityId id = EntityUtil::getEntityByGuid(guid);
+				env->world->removeEntity(id);
+			}
+		};
+
+		env->eventManager->onMapBegin.addListener([&](World* world, std::string file) {
+			if (world == env->world) {
+				mapEntities.clear();
+				addedRuntimeEntities.clear();
+				removedRuntimeEntities.clear();
+				world->each([&](EntityId id) {
+					mapEntities.insert(EntityUtil::getGuid(id));
+				});
+			}
+		});
+		env->eventManager->onEntityAdd.addListener([&](World* world, EntityId id) {
+			if (world == env->world) {
+				Guid guid = EntityUtil::getGuid(id);
+				addedRuntimeEntities.insert(guid);
+				if (env->networkManager->hasAuthority()) {
+					addEntity(id, guid);
+				}
+			}
+		});
+		env->eventManager->onEntityRemove.addListener([&](World* world, EntityId id) {
+			if (world == env->world) {
+				Guid guid = EntityUtil::getGuid(id);
+				if (mapEntities.contains(guid)) {
+					removedMapEntities.insert(guid);
+				}
+				else {
+					addedRuntimeEntities.erase(guid);
+					removedRuntimeEntities.insert(guid);
+				}
+				if (env->networkManager->hasAuthority()) {
+					removeEntity(guid);
+				}
+			}
 		});
 	}
 
 	void NetworkReplication::tick() {
-		if (active && hasAuthority) {
-			if (env->runtimeMode->getMode() != RuntimeMode::LOADING) {
-				if (env->time->frameTicks(1.0f / 60.0f)) {
-					env->world->each<NetworkComponent>([&](EntityId id, NetworkComponent& net) {
-						if (net.syncAlways) {
-							updateEntity(id);
-						}
-					});
-				}
+		if (env->networkManager->hasAuthority()) {
+			if (env->time->frameTicks(1.0f / 60.0f)) {
+				env->world->each<NetworkComponent>([&](EntityId id, NetworkComponent& net) {
+					if (net.syncAlways) {
+						updateEntity(id, EntityUtil::getGuid(id));
+					}
+				});
 			}
-		}
-
-		if (active && !hasAuthority) {
-			std::unique_lock<std::mutex> lock(operationsMutex);
-			for (auto& operation : operations) {
-				EntityId id = EntityUtil::getEntityByGuid(operation.guid);
-				if (id != -1) {
-					if (operation.opcode == NetOpcode::ENTITY_UPDATE || operation.opcode == NetOpcode::ENTITY_ADD) {
-						SerialData ser;
-						ser.ownigNode = YAML::Load(operation.data);
-						env->serializer->deserializeEntity(id, env->world, ser);
-					}
-					else if (operation.opcode == NetOpcode::ENTITY_REMOVE) {
-						env->world->removeEntity(id);
-					}
-				}
-				else {
-					if (operation.opcode == NetOpcode::ENTITY_ADD) {
-						SerialData ser;
-						ser.ownigNode = YAML::Load(operation.data);
-						env->serializer->deserializeEntity(env->world, ser);
-					}
-				}
-			}
-			operations.clear();
 		}
 	}
 
 	void NetworkReplication::shutdown() {
-		removedRuntimeEntities.clear();
-		addedRuntimeEntities.clear();
-		env->eventManager->onEntityAdd.removeListener(addListener);
-		env->eventManager->onComponentAdd<NetworkComponent>().removeListener(componentAddListener);
-		env->eventManager->onEntityRemove.removeListener(removeListener);
-		env->eventManager->onMapBegin.removeListener(beginListener);
-	}
 
-	void NetworkReplication::onData(Guid guid, NetOpcode opcode, const std::string& data) {
-		TRI_PROFILE_FUNC();
-		if (active && !hasAuthority) {
-			std::unique_lock<std::mutex> lock(operationsMutex);
-			operations.push_back({ guid, opcode, data });
-		}
-	}
-
-	void NetworkReplication::updateEntity(EntityId id) {
-		SerialData ser;
-		ser.emitter = std::make_shared<YAML::Emitter>();
-		env->serializer->serializeEntity(id, env->world, ser);
-		Packet packet;
-		packet.add(NetOpcode::ENTITY_UPDATE);
-		packet.add(EntityUtil::getGuid(id));
-		packet.addStr(ser.emitter->c_str());
-		env->systemManager->getSystem<NetworkSystem>()->sendToAll(packet.data(), packet.size());
-	}
-
-	void NetworkReplication::addEntity(EntityId id) {
-		SerialData ser;
-		ser.emitter = std::make_shared<YAML::Emitter>();
-		env->serializer->serializeEntity(id, env->world, ser);
-		Packet packet;
-		packet.add(NetOpcode::ENTITY_ADD);
-		packet.add(EntityUtil::getGuid(id));
-		packet.addStr(ser.emitter->c_str());
-		env->systemManager->getSystem<NetworkSystem>()->sendToAll(packet.data(), packet.size());
-	}
-
-	void NetworkReplication::removeEntity(EntityId id) {
-		SerialData ser;
-		ser.emitter = std::make_shared<YAML::Emitter>();
-		env->serializer->serializeEntity(id, env->world, ser);
-		Packet packet;
-		packet.add(NetOpcode::ENTITY_REMOVE);
-		packet.add(EntityUtil::getGuid(id));
-		packet.addStr("");
-		env->systemManager->getSystem<NetworkSystem>()->sendToAll(packet.data(), packet.size());
 	}
 
 }

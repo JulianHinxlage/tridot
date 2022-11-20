@@ -48,6 +48,10 @@ namespace tri {
 		void addSerializeCallback(int classId, const std::function<void(void* ptr, SerialData& data)>& callback);
 		void addDeserializeCallback(int classId, const std::function<void(void* ptr, SerialData& data)>& callback);
 
+		void serializeEntityBinary(EntityId id, World* world, std::string &data);
+		void deserializeEntityBinary(World* world, const std::string& data);
+		void deserializeEntityBinary(EntityId id, World* world, const std::string& data);
+
 		void serializeWorldBinary(World* world, const std::string& file);
 		bool deserializeWorldBinary(World* world, const std::string& file);
 
@@ -76,6 +80,9 @@ namespace tri {
 	private:
 		std::vector<std::function<void(void *ptr, SerialData& data)>> serializeCallbacks;
 		std::vector<std::function<void(void *ptr, SerialData& data)>> deserializeCallbacks;
+		
+		std::vector<std::shared_ptr<void>> binaryMappers;
+		void* getMapper(int classId);
 	};
 
 }

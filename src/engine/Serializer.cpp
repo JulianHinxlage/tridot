@@ -10,6 +10,7 @@
 #include "engine/EntityEvent.h"
 #include "engine/Map.h"
 #include "engine/MetaTypes.h"
+#include "EntityUtil.h"
 #include <glm/glm.hpp>
 
 namespace tri {
@@ -154,6 +155,8 @@ namespace tri {
 
 	void Serializer::deserializeEntity(EntityId id, World* world, SerialData& data) {
 		bool active = data.node["active"].as<bool>(true);
+		EntityId hint = data.node["id"].as<int>(-1);
+
 
 		for (auto i : data.node) {
 			if (i.first.Scalar() != "id" && i.first.Scalar() != "active") {
@@ -170,6 +173,12 @@ namespace tri {
 					env->systemManager->getSystem<ComponentCache>()->addComponent(id, world, i.first.Scalar(), e.c_str());
 				}
 			}
+		}
+
+		if (hint != id) {
+			std::map<EntityId, EntityId> idMap;
+			idMap[hint] = id;
+			EntityUtil::replaceIds(idMap, world);
 		}
 
 		if (!active) {
@@ -742,6 +751,69 @@ namespace tri {
 		}
 	};
 
+	void* Serializer::getMapper(int classId) {
+		if (binaryMappers.size() <= classId) {
+			binaryMappers.resize(classId + 1);
+		}
+		if (!binaryMappers[classId]) {
+			auto mapper = std::make_shared<BinaryMapper>();
+			mapper->create(classId);
+			binaryMappers[classId] = mapper;
+		}
+		return binaryMappers[classId].get();
+	}
+
+
+	void Serializer::serializeEntityBinary(EntityId id, World* world, std::string& data) {
+		std::stringstream stream;
+		writeBin(id, stream);
+		for (auto* desc : Reflection::getDescriptors()) {
+			if (desc && desc->flags & ClassDescriptor::COMPONENT) {
+				if (void *comp = world->getComponent(id, desc->classId)) {
+					writeStr(desc->name, stream);
+					((BinaryMapper*)getMapper(desc->classId))->write(comp, stream);
+				}
+			}
+		}
+		data = stream.str();
+	}
+
+	void Serializer::deserializeEntityBinary(World* world, const std::string& data) {
+		std::stringstream stream(data);
+
+		EntityId id = -1;
+		readBin(id, stream);
+		
+		id = world->addEntity(id);
+		deserializeEntityBinary(id, world, data);
+	}
+
+	void Serializer::deserializeEntityBinary(EntityId id, World* world, const std::string& data) {
+		std::stringstream stream(data);
+
+		EntityId savedId = -1;
+		readBin(savedId, stream);
+
+		while (!stream.bad()) {
+			std::string name;
+			readStr(name, stream);
+
+			if (name == ""){
+				break;
+			}
+
+			auto* desc = Reflection::getDescriptor(name);
+			if (desc) {
+				void *comp = world->getOrAddComponentPending(id, desc->classId);
+				((BinaryMapper*)getMapper(desc->classId))->read(comp, stream);
+			}
+			else {
+				break;
+			}
+		}
+	}
+
+
 	void Serializer::serializeWorldBinary(World* world, const std::string& file) {
 
 		/*
@@ -808,13 +880,12 @@ namespace tri {
 				if (storage && storage->size() > 0) {
 					int count = storage->size();
 
-					BinaryMapper mapper;
-					mapper.create(desc->classId);
+					BinaryMapper* mapper = ((BinaryMapper*)getMapper(desc->classId));
 
 					for (int i = 0; i < count; i++) {
 						EntityId id = storage->getIdByIndex(i);
 						writeBin(id, stream);
-						mapper.write(storage->getComponentByIndex(i), stream);
+						mapper->write(storage->getComponentByIndex(i), stream);
 					}
 				}
 			}
@@ -919,14 +990,13 @@ namespace tri {
 				auto *desc = Reflection::getDescriptor(storage->classId);
 				void* data = desc->alloc();
 
-				BinaryMapper mapper;
-				mapper.create(desc->classId);
+				BinaryMapper* mapper = ((BinaryMapper*)getMapper(desc->classId));
 
 				for (int j = 0; j < storageSize; j++) {
 					EntityId id = -1;
 					readBin(id, stream);
 
-					mapper.read(data, stream);
+					mapper->read(data, stream);
 					if (id != -1) {
 						world->addComponent(id, desc->classId, data);
 					}

@@ -34,6 +34,7 @@ namespace tri {
 	
 	TcpSocket::TcpSocket() {
 		handle = -1;
+		connected = false;
 	}
 
 	TcpSocket::~TcpSocket() {
@@ -53,17 +54,20 @@ namespace tri {
 
 		handle = socket(ep.isIpv4() ? AF_INET : AF_INET6, SOCK_STREAM, IPPROTO_TCP);
 		if (handle == -1) {
+			connected = false;
 			printSocketError();
 			return false;
 		}
 
 		int code = ::connect(handle, (sockaddr*)endpoint.getHandle(), sizeof(Endpoint));
 		if (code != 0) {
+			connected = false;
 			printSocketError();
 			disconnect();
 			return false;
 		}
 
+		connected = true;
 		return true;
 	}
 
@@ -93,6 +97,7 @@ namespace tri {
 
 		handle = socket(addr6.sin6_family, SOCK_STREAM, IPPROTO_TCP);
 		if (handle == -1) {
+			connected = false;
 			printSocketError();
 			return false;
 		}
@@ -103,6 +108,7 @@ namespace tri {
 		int code = bind(handle, (sockaddr*)&addr6, sizeof(addr6));
 		if (code != 0) {
 			printSocketError();
+			connected = false;
 			disconnect();
 			return false;
 		}
@@ -110,10 +116,12 @@ namespace tri {
 		code = ::listen(handle, 10);
 		if (code != 0) {
 			printSocketError();
+			connected = false;
 			disconnect();
 			return false;
 		}
 
+		connected = true;
 		return true;
 	}
 
@@ -124,6 +132,7 @@ namespace tri {
 		int result = ::accept(handle, (sockaddr*)ep.getHandle(), &size);
 		if (result == -1) {
 			printSocketError();
+			connected = false;
 			disconnect();
 			return nullptr;
 		}
@@ -144,6 +153,7 @@ namespace tri {
 		status = close(handle);
 		handle = -1;
 #endif
+		connected = false;
 		return status == 0;
 	}
 
@@ -155,9 +165,10 @@ namespace tri {
 		return endpoint;
 	}
 
-	bool TcpSocket::write(void* data, int bytes) {
+	bool TcpSocket::write(const void* data, int bytes) {
 		int code = ::send(handle, (char*)data, bytes, 0);
 		if (code < 0) {
+			connected = false;
 			disconnect();
 			return false;
 		}
@@ -167,6 +178,7 @@ namespace tri {
 	bool TcpSocket::read(void* data, int& bytes) {
 		int code = ::recv(handle, (char*)data, bytes, 0);
 		if (code <= 0) {
+			connected = false;
 			disconnect();
 			return false;
 		}

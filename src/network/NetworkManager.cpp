@@ -1,13 +1,16 @@
+#include "NetworkManager.h"
+#include "NetworkManager.h"
 //
 // Copyright (c) 2022 Julian Hinxlage. All rights reserved.
 //
 
-#include "NetworkSystem.h"
+#include "NetworkManager.h"
 #include "core/core.h"
 #include "engine/RuntimeMode.h"
-#include "engine/Map.h"
 #include "Packet.h"
 #include "NetworkReplication.h"
+#include "engine/EntityUtil.h"
+#include "NetworkComponent.h"
 
 #if TRI_WINDOWS
 #include <winsock2.h>
@@ -22,10 +25,14 @@
 
 namespace tri {
 	
-	TRI_SYSTEM(NetworkSystem);
+	TRI_SYSTEM_INSTANCE(NetworkManager, env->networkManager);
 
-	void NetworkSystem::init() {
-		env->runtimeMode->setActiveSystem<NetworkSystem>({ RuntimeMode::LOADING, RuntimeMode::EDIT, RuntimeMode::PAUSED }, true);
+	TRI_CLASS(NetOpcode);
+	TRI_ENUM8(NetOpcode, NOOP, MAP_REQUEST, MAP_RESPONSE, MAP_LOADED, ENTITY_ADD, ENTITY_UPDATE, ENTITY_REMOVE, ENTITY_OWNING);
+
+	void NetworkManager::init() {
+		env->runtimeMode->setActiveSystem<NetworkManager>({ RuntimeMode::LOADING, RuntimeMode::EDIT, RuntimeMode::PAUSED }, true);
+		env->jobManager->addJob("Network")->addSystem<NetworkManager>();
 
 		mode = STANDALONE;
 		strMode = "";
@@ -37,7 +44,7 @@ namespace tri {
 		env->console->addCVar<std::string>("networkMode", "standalone");
 	}
 
-	void NetworkSystem::startup() {
+	void NetworkManager::startup() {
 #if TRI_WINDOWS
 		WSADATA wsaData;
 		int result = WSAStartup(MAKEWORD(2, 2), &wsaData);
@@ -46,20 +53,9 @@ namespace tri {
 			return;
 		}
 #endif
-
-		env->eventManager->onMapBegin.addListener([&](World* world, std::string file) {
-			if (mode == SERVER || mode == HOST) {
-				Packet reply;
-				reply.add(NetOpcode::LOAD_MAP);
-				reply.addStr(env->worldFile);
-				for (auto& conn : connections) {
-					conn->socket->write(reply.data(), reply.size());
-				}
-			}
-		});
 	}
 
-	void NetworkSystem::tick() {
+	void NetworkManager::tick() {
 		std::string strMode = env->console->getCVarValue<std::string>("networkMode", "standalone");
 		strMode = StrUtil::toLower(strMode);
 		if (strMode != this->strMode) {
@@ -83,15 +79,15 @@ namespace tri {
 
 		if (mode == CLIENT) {
 			if (tryReconnect) {
-				tryReconnect = false;
 				setMode(CLIENT);
+				tryReconnect = false;
 			}
 		}
 
 		disconnectedConnections.clear();
 	}
 
-	void NetworkSystem::shutdown() {
+	void NetworkManager::shutdown() {
 		connection->stop();
 		for (auto& conn : connections) {
 			conn->stop();
@@ -104,7 +100,7 @@ namespace tri {
 #endif
 	}
 
-	void NetworkSystem::setMode(Mode mode) {
+	void NetworkManager::setMode(NetMode mode) {
 		this->mode = mode;
 
 		if (mode == STANDALONE) {
@@ -113,38 +109,38 @@ namespace tri {
 				connection = nullptr;
 				connections.clear();
 			}
-
-			auto* replication = env->systemManager->getSystem<NetworkReplication>();
-			replication->active = false;
-			replication->hasAuthority = false;
 		}
 		else if (mode == CLIENT) {
 			if (!connection) {
 				connection = Ref<Connection>::make();
 			}
 			else {
-				connection->stop();
+				if (!tryReconnect) {
+					connection->stop();
+				}
 			}
 
 			connection->onConnect = [&](Connection* conn) {
 				env->console->info("connected to %s %i", conn->socket->getEndpoint().getAddress().c_str(), conn->socket->getEndpoint().getPort());
-				auto* replication = env->systemManager->getSystem<NetworkReplication>();
-				replication->active = true;
-				replication->hasAuthority = false;
-				onConnect(conn);
+				onConnect.invoke(conn);
 			};
 			connection->onDisconnect = [&](Connection* conn) {
 				env->console->info("disconnected from %s %i", conn->socket->getEndpoint().getAddress().c_str(), conn->socket->getEndpoint().getPort());
-				onDisconnect(conn);
+				onDisconnect.invoke(conn);
 				tryReconnect = true;
 			};
 			connection->onFail = [&](Connection* conn) {
 				env->console->error("failed to connect to %s %i", serverAddress.c_str(), serverPort);
 				tryReconnect = true;
 			};
-			connection->runConnect(serverAddress, serverPort, [&](Connection* conn, void* data, int bytes) {
-				onRead(conn, data, bytes);
-			});
+			if (tryReconnect) {
+				connection->reconnect.notify_one();
+			}
+			else {
+				connection->runConnect(serverAddress, serverPort, [&](Connection* conn, void* data, int bytes) {
+					onRead(conn, data, bytes);
+				});
+			}
 		}
 		else if (mode == SERVER || mode == HOST) {
 			if (!connection) {
@@ -159,15 +155,12 @@ namespace tri {
 			};
 			connection->onConnect = [&](Connection* conn) {
 				env->console->info("listen on port %i", serverPort);
-				auto *replication = env->systemManager->getSystem<NetworkReplication>();
-				replication->active = true;
-				replication->hasAuthority = true;
 			};
 			connection->runListen(serverPort, [&](Ref<Connection> conn) {
 				connections.push_back(conn);
 				conn->onDisconnect = [&](Connection* conn) {
 					env->console->info("disconnect from %s %i", conn->socket->getEndpoint().getAddress().c_str(), conn->socket->getEndpoint().getPort());
-					onDisconnect(conn);
+					onDisconnect.invoke(conn);
 					for (int i = 0; i < connections.size(); i++) {
 						if (connections[i].get() == conn) {
 							disconnectedConnections.push_back(connections[i]);
@@ -177,7 +170,7 @@ namespace tri {
 					}
 				};
 				env->console->info("connection from %s %i", conn->socket->getEndpoint().getAddress().c_str(), conn->socket->getEndpoint().getPort());
-				onConnect(conn.get());
+				onConnect.invoke(conn.get());
 				conn->run([&](Connection* conn, void* data, int bytes) {
 					onRead(conn, data, bytes);
 				});
@@ -185,7 +178,21 @@ namespace tri {
 		}
 	}
 
-	void NetworkSystem::sendToAll(void* data, int bytes) {
+	bool NetworkManager::isConnected() {
+		if (mode == CLIENT) {
+			return connection->socket->isConnected();
+		}
+		else if (mode == SERVER || mode == HOST) {
+			return connections.size() > 0;
+		}
+		return false;
+	}
+
+	bool NetworkManager::hasAuthority() {
+		return mode != CLIENT;
+	}
+
+	void NetworkManager::sendToAll(const void* data, int bytes) {
 		if (mode == CLIENT) {
 			connection->socket->write(data, bytes);
 		}
@@ -196,52 +203,26 @@ namespace tri {
 		}
 	}
 
-	void NetworkSystem::onRead(Connection* conn, void* data, int bytes) {
+	void NetworkManager::sendToAll(Packet& packet) {
+		sendToAll(packet.data(), packet.size());
+	}
+
+	void NetworkManager::onRead(Connection* conn, void* data, int bytes) {
 		Packet packet;
 		packet.add(data, bytes);
-
 		NetOpcode opcode = packet.get<NetOpcode>();
 
-		switch (opcode) {
-		case NOOP:
-			break;
-		case JOIN: {
-			Packet reply;
-			reply.add(NetOpcode::LOAD_MAP);
-			reply.addStr(env->worldFile);
-			conn->socket->write(reply.data(), reply.size());
-			break;
+		env->console->trace("packet with opcode %s", EntityUtil::enumString(opcode));
+
+		auto entry = packetCallbacks.find(opcode);
+		if (entry != packetCallbacks.end()) {
+			entry->second(conn, opcode, packet);
 		}
-		case LOAD_MAP: {
-			if (mode == CLIENT) {
-				std::string file = packet.getStr();
-				Map::loadAndSetToActiveWorld(file);
+		else {
+			if (opcode != NOOP) {
+				env->console->warning("invalid opcode %i", opcode);
 			}
-			break;
 		}
-		case ENTITY_ADD:
-		case ENTITY_UPDATE:
-		case ENTITY_REMOVE:{
-			Guid guid = packet.get<Guid>();
-			env->systemManager->getSystem<NetworkReplication>()->onData(guid, opcode, packet.getStr());
-			break;
-		}
-		default:
-			env->console->warning("invalid opcode %i", (int)opcode);
-			break;
-		}
-	}
-
-	void NetworkSystem::onConnect(Connection* conn) {
-		if (mode == CLIENT) {
-			Packet packet;
-			packet.add(NetOpcode::JOIN);
-			conn->socket->write(packet.data(), packet.size());
-		}
-	}
-
-	void NetworkSystem::onDisconnect(Connection* conn) {
-
 	}
 
 }

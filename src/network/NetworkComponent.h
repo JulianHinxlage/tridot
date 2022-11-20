@@ -11,6 +11,7 @@ namespace tri {
 	class NetworkComponent {
 	public:
 		bool syncAlways = true;
+		bool owning = true;
 	};
 
 }

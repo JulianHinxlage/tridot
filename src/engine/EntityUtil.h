@@ -38,6 +38,16 @@ namespace tri {
 
 		static EntityId getEntityByGuid(Guid guid);
 		static EntityId getEntityByName(const std::string &name);
+
+		template<typename Enum>
+		static std::string enumString(Enum e) {
+			for (auto& v : Reflection::getDescriptor<Enum>()->enumValues) {
+				if (v.second == (int)e) {
+					return v.first;
+				}
+			}
+			return std::to_string((int)e);
+		}
 	};
 
 }
