@@ -26,7 +26,7 @@ namespace tri {
 		bool enableModuleHotReloading = false;
 
 		void init() override;
-		Module* loadModule(const std::string& name, bool pending = true, bool noSystems = false);
+		Module* loadModule(const std::string& name, bool pending = true, bool loadAsStub = false);
 		Module* getModule(const std::string& name);
 		void unloadModule(const std::string& name, bool pending = true);
 		void unloadModule(Module *module, bool pending = true);

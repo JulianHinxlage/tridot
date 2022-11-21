@@ -123,6 +123,7 @@ namespace tri {
 			}
 
 			connection->onConnect = [&](Connection* conn) {
+				failWarning = true;
 				env->console->info("connected to %s %i", conn->socket->getEndpoint().getAddress().c_str(), conn->socket->getEndpoint().getPort());
 				onConnect.invoke(conn);
 			};
@@ -132,7 +133,10 @@ namespace tri {
 				tryReconnect = true;
 			};
 			connection->onFail = [&](Connection* conn) {
-				env->console->error("failed to connect to %s %i", serverAddress.c_str(), serverPort);
+				if (failWarning) {
+					env->console->error("failed to connect to %s %i", serverAddress.c_str(), serverPort);
+					failWarning = false;
+				}
 				tryReconnect = true;
 			};
 			if (tryReconnect) {

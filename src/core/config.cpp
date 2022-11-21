@@ -49,7 +49,7 @@ namespace tri {
 				env->moduleManager->loadModule(args[0], isPostStartup);
 			}
 		});
-		env->console->addCommand("loadModuleNoSystems", [&](auto& args) {
+		env->console->addCommand("loadModuleStub", [&](auto& args) {
 			if (args.size() > 0) {
 				env->moduleManager->loadModule(args[0], isPostStartup, true);
 			}

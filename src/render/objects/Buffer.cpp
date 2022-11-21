@@ -4,6 +4,7 @@
 
 #include "core/core.h"
 #include "Buffer.h"
+#include "renderer/RenderPipeline.h"
 #include <GL/glew.h>
 
 namespace tri {
@@ -19,7 +20,9 @@ namespace tri {
 
     Buffer::~Buffer() {
         if(id != 0){
-            glDeleteBuffers(1, &id);
+            env->renderPipeline->addCallbackStep([id = id]() {
+                glDeleteBuffers(1, &id);
+            }, RenderPipeline::POST_RENDER);
             id = 0;
         }
     }

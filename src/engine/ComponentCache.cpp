@@ -14,7 +14,7 @@ namespace tri {
 		if (enableComponentCaching) {
 			unregisterListener = env->eventManager->onClassUnregister.addListener([&](int classId) {
 				auto* desc = Reflection::getDescriptor(classId);
-				if (desc) {
+				if (desc && (desc->flags & ClassDescriptor::COMPONENT)) {
 					for (auto* world : World::getAllWorlds()) {
 						auto* storage = world->getComponentStorage(classId);
 						if (storage) {
@@ -41,7 +41,7 @@ namespace tri {
 			registerListener = env->eventManager->onClassRegister.addListener([&](int classId) {
 				env->eventManager->postTick.addListener([&, classId]() {
 					auto* desc = Reflection::getDescriptor(classId);
-					if (desc) {
+					if (desc && (desc->flags & ClassDescriptor::COMPONENT)) {
 						for (auto* world : World::getAllWorlds()) {
 							Cache* cache = getCache(world, classId, false);
 							if (cache) {

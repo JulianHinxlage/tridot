@@ -12,9 +12,11 @@ namespace tri {
 		int postTickListener = 0;
 
 		void shutdown() {
-			delete env->world;
 			worlds.clear();
-			env->world = nullptr;
+			env->eventManager->postShutdown.addListener([]() {
+				delete env->world;
+				env->world = nullptr;
+			});
 			env->eventManager->postTick.removeListener(postTickListener);
 		}
 

@@ -107,14 +107,16 @@ namespace tri {
 	}
 
 	void Window::tick() {
-		if (env->viewport->displayInWindow) {
-			int width = 0;
-			int height = 0;
-			glfwGetWindowSize((GLFWwindow*)window, &width, &height);
-			env->viewport->size = { width, height };
+		if (window) {
+			if (env->viewport->displayInWindow) {
+				int width = 0;
+				int height = 0;
+				glfwGetWindowSize((GLFWwindow*)window, &width, &height);
+				env->viewport->size = { width, height };
+			}
+			frameEnd();
+			frameBegin();
 		}
-		frameEnd();
-		frameBegin();
 	}
 
 	void Window::shutdown() {

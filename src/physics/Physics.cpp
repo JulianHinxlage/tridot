@@ -256,7 +256,7 @@ namespace tri {
 	void Physics::init() {
 		auto* job = env->jobManager->addJob("Physics");
 		job->addSystem<Physics>();
-		job->orderSystems({ "STransform", "Physics" });
+		job->orderSystems({ "TransformSystem", "Physics" });
 	}
 
 	void Physics::startup() {

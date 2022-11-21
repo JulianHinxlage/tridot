@@ -5,9 +5,27 @@
 #include "core.h"
 using namespace tri;
 
+#if WIN32
+#include "windows.h"
+BOOL onConsoleEvent(DWORD event) {
+    switch (event) {
+    case CTRL_C_EVENT:
+    case CTRL_CLOSE_EVENT:
+        break;
+    }
+    return TRUE;
+}
+void setupHandler() {
+    SetConsoleCtrlHandler(onConsoleEvent, TRUE);
+}
+#else
+void setupHandler() {}
+#endif
+
 int main(int argc, char* argv[]) {
+    setupHandler();
     MainLoop::init();
-    env->config->loadConfigFileFirstFound({ "./server.cfg", "../server.cfg", "../../server.cfg" });
+    MainLoop::parseArguments(argc, argv, { "./server.cfg", "../server.cfg", "../../server.cfg" });
     MainLoop::startup();
     MainLoop::run();
     MainLoop::shutdown();
@@ -15,8 +33,9 @@ int main(int argc, char* argv[]) {
 }
 
 #if WIN32
-int __stdcall WinMain(void* hInstance, void* hPrevInstance, char* lpCmdLine, int nCmdShow) {
+int __stdcall WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
     auto args = StrUtil::split(lpCmdLine, " ", false);
+    args.insert(args.begin(), std::filesystem::current_path().string() + "\\.exe");
     std::vector<const char*> argv;
     argv.reserve(args.size());
     for (auto& a : args) {
@@ -26,3 +45,6 @@ int __stdcall WinMain(void* hInstance, void* hPrevInstance, char* lpCmdLine, int
     return main(argc, (char**)argv.data());
 }
 #endif
+
+
+

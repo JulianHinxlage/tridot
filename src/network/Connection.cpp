@@ -60,6 +60,7 @@ namespace tri {
 					}
 					std::unique_lock<std::mutex> lock(reconnectMutex);
 					reconnect.wait(lock);
+					std::this_thread::sleep_for(std::chrono::seconds(1));
 					continue;
 				}
 

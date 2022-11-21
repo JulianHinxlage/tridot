@@ -11,6 +11,36 @@ namespace tri {
 
     TRI_SYSTEM_INSTANCE(Time, env->time);
 
+    void preciseSleep(double seconds) {
+        using namespace std;
+        using namespace std::chrono;
+
+        static double estimate = 5e-3;
+        static double mean = 5e-3;
+        static double m2 = 0;
+        static int64_t count = 1;
+
+        while (seconds > estimate) {
+            auto start = high_resolution_clock::now();
+            this_thread::sleep_for(milliseconds(1));
+            auto end = high_resolution_clock::now();
+
+            double observed = (end - start).count() / 1e9;
+            seconds -= observed;
+
+            ++count;
+            double delta = observed - mean;
+            mean += delta / count;
+            m2 += delta * (observed - mean);
+            double stddev = sqrt(m2 / (count - 1));
+            estimate = mean + stddev;
+        }
+
+        // spin lock
+        auto start = high_resolution_clock::now();
+        while ((high_resolution_clock::now() - start).count() / 1e9 < seconds);
+    }
+
     Time::Time() {
         //info
         deltaTime = 0;
@@ -23,6 +53,7 @@ namespace tri {
         deltaTimeFactor = 1;
         maxDeltaTime = 0.2;
         pause = false;
+        frameRateLimit = -1;
 
         //stats
         framesPerSecond = 0;
@@ -37,6 +68,10 @@ namespace tri {
         lastDeltaTimeAccumulator = 0;
     }
 
+    void Time::init() {
+        env->console->addCVar("frameRateLimit", &frameRateLimit);
+    }
+    
     void Time::startup() {
         clock.reset();
         frameTimeAccumulator = 0;
@@ -48,8 +83,18 @@ namespace tri {
 
     void Time::tick() {
         //frame/delta time
-        frameTime = (float)clock.round();
-        
+        if (frameRateLimit > 0) {            
+            frameTime = (float)clock.elapsed();
+            float sleepTime = (1.0f / frameRateLimit) - frameTime;
+            if (sleepTime > 0) {
+                preciseSleep(sleepTime);
+            }
+            frameTime = (float)clock.round();
+        }
+        else {
+            frameTime = (float)clock.round();
+        }
+
         if (env->runtimeMode->getMode() == RuntimeMode::PLAY) {
             deltaTime = pause ? 0.0f : std::min(maxDeltaTime, frameTime * deltaTimeFactor);
         }

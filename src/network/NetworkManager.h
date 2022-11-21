@@ -58,6 +58,7 @@ namespace tri {
 		int serverPort;
 		std::string serverAddress;
 		bool tryReconnect = false;
+		bool failWarning = true;
 
 		Ref<Connection> connection;
 		std::vector<Ref<Connection>> connections;

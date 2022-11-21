@@ -4,6 +4,7 @@
 
 #include "VertexArray.h"
 #include "core/core.h"
+#include "renderer/RenderPipeline.h"
 #include <GL/glew.h>
 
 namespace tri {
@@ -118,7 +119,9 @@ namespace tri {
 
     void VertexArray::clear() {
         if(id != 0){
-            glDeleteVertexArrays(1, &id);
+            env->renderPipeline->addCallbackStep([id = id]() {
+                glDeleteVertexArrays(1, &id);
+            }, RenderPipeline::POST_RENDER);
             id = 0;
         }
         nextAttribute = 0;

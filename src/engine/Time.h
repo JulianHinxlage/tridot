@@ -22,6 +22,7 @@ namespace tri {
         float deltaTimeFactor;
         float maxDeltaTime;
         bool pause;
+        float frameRateLimit;
 
         //stats
         float framesPerSecond;
@@ -30,6 +31,7 @@ namespace tri {
         float maxFrameTime;
 
         Time();
+        void init() override;
         void startup() override;
         void tick() override;
 

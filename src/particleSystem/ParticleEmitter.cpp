@@ -15,6 +15,7 @@
 #include "engine/EntityInfo.h"
 #include "editor/Editor.h"
 #include "core/Reflection.h"
+#include "engine/EntityUtil.h"
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/euler_angles.hpp>
 
@@ -126,8 +127,8 @@ namespace tri {
 			});
 
 			const Transform *cameraTransform = nullptr;
-			env->world->each<const Camera, const Transform>([&](const Camera& c, const Transform& t) {
-				if (c.isPrimary && c.active) {
+			env->world->each<const Camera, const Transform>([&](EntityId id, const Camera& c, const Transform& t) {
+				if (c.isPrimary && c.active && EntityUtil::isEntityOwning(id)) {
 					cameraTransform = &t;
 				}
 			});
@@ -161,7 +162,9 @@ namespace tri {
 
 	void ParticleEmitter::trigger() {
 		if (effect) {
-			env->systemManager->getSystem<ParticleSystem>()->trigger(*effect, env->world->getIdByComponent(this));
+			if (auto* system = env->systemManager->getSystem<ParticleSystem>()) {
+				system->trigger(*effect, env->world->getIdByComponent(this));
+			}
 		}
 	}
 

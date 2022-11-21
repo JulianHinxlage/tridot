@@ -89,11 +89,9 @@ namespace tri {
 			if (!env->networkManager->hasAuthority()) {
 				std::string file = packet.getStr();
 				env->eventManager->onMapBegin.addListener([conn](World* world, std::string) {
-					env->eventManager->postTick.addListener([conn]() {
-						Packet reply;
-						reply.add(NetOpcode::MAP_LOADED);
-						conn->socket->write(reply.data(), reply.size());
-					}, true);
+					Packet reply;
+					reply.add(NetOpcode::MAP_LOADED);
+					conn->socket->write(reply.data(), reply.size());
 				}, true);
 				Map::loadAndSetToActiveWorld(file);
 			}

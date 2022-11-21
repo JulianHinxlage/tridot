@@ -9,6 +9,7 @@
 #include "EventManager.h"
 #include "Profiler.h"
 #include "FileWatcher.h"
+#include "engine/Asset.h"
 
 #if !TRI_WINDOWS
 #include <dlfcn.h>
@@ -97,7 +98,7 @@ namespace tri {
 		return moduleDirectories;
 	}
 
-	Module* ModuleManager::loadModule(const std::string& name, bool pending, bool noSystems) {
+	Module* ModuleManager::loadModule(const std::string& name, bool pending, bool loadAsStub) {
 		if (pending) {
 			pendingLoads.push_back(name);
 			return nullptr;
@@ -137,17 +138,17 @@ namespace tri {
 		if (enableModuleHotReloading) {
 			std::filesystem::path path(filePath);
 			runtimePath = (path.parent_path() / "runtime_dlls" / path.filename()).string();
-			if (!std::filesystem::exists(std::filesystem::path(runtimePath).parent_path())) {
-				std::filesystem::create_directories(std::filesystem::path(runtimePath).parent_path());
-			}
 			int postfix = 0;
 			for (int postfix = 0; postfix < 10; postfix++) {
+				if (!std::filesystem::exists(std::filesystem::path(runtimePath).parent_path())) {
+					std::filesystem::create_directories(std::filesystem::path(runtimePath).parent_path());
+				}
 				try {
 					std::filesystem::copy(filePath, runtimePath, std::filesystem::copy_options::overwrite_existing);
 					break;
 				}
 				catch (...) {}
-				runtimePath = (path.parent_path() / "runtime_dlls" / (path.filename().stem().string() + "_" + std::to_string(postfix + 1) + path.filename().extension().string())).string();
+				runtimePath = (path.parent_path() / (std::string("runtime_dlls_") + std::to_string(postfix + 1)) / (path.filename().stem().string()  + path.filename().extension().string())).string();
 			}
 		}
 
@@ -182,13 +183,24 @@ namespace tri {
 		}
 
 
-		if (noSystems) {
+		if (loadAsStub) {
 			auto descriptors = Reflection::getDescriptors();
 			for (auto* desc : descriptors) {
 				if (desc && (desc->flags & ClassDescriptor::SYSTEM)) {
 					std::string file = getModuleNameByAddress(desc->registrationSourceAddress);
 					if (checkName(module.get(), file)) {
 						Reflection::unregisterClass(desc->classId);
+					}
+				}
+			}
+
+			for (auto* desc : descriptors) {
+				if (desc && (desc->flags & ClassDescriptor::ASSET)) {
+					if (!(desc->flags & ClassDescriptor::REFERENCE)) {
+						std::string file = getModuleNameByAddress(desc->registrationSourceAddress);
+						if (checkName(module.get(), file)) {
+							Reflection::convertToStubClass<Asset>(desc->classId);
+						}
 					}
 				}
 			}

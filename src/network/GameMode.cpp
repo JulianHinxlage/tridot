@@ -53,13 +53,14 @@ namespace tri {
 				}
 			});
 
-			if (env->networkManager->getMode() == NetMode::CLIENT || env->networkManager->getMode() == NetMode::HOST) {
+			if (env->networkManager->getMode() == NetMode::HOST) {
 				join(nullptr);
 			}
 		}
 
 		void join(Connection* conn) {
 			env->world->each<GameMode>([&](GameMode& gameMode) {
+				env->console->info("GameMode join");
 				std::map<EntityId, EntityId> idMap;
 				for (auto& prefab : gameMode.playerPrefab) {
 					prefab->createEntity(env->world, -1, &idMap);

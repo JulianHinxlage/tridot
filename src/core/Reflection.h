@@ -231,6 +231,19 @@ namespace tri {
 		}
 
 		static void unregisterClass(int classId, bool invokeEvent = true) {
+			for (auto& desc : getDescriptorsImpl()) {
+				if (desc) {
+					if (desc->elementType && desc->elementType->classId == classId) {
+						desc->elementType = nullptr;
+					}
+					for (auto& prop : desc->properties) {
+						if (prop.type && prop.type->classId == classId) {
+							prop.type = nullptr;
+						}
+					}
+				}
+			}
+			
 			auto *desc = getDescriptorsImpl()[classId];
 			if (desc) {
 				getDescriptorsByNameImpl().erase(desc->name);
@@ -243,6 +256,36 @@ namespace tri {
 				delete desc;
 			}
 			getDescriptorsImpl()[classId] = nullptr;
+		}
+
+		template<typename ClassType>
+		static void convertToStubClass(int classId) {
+			ClassDescriptor* stub = new ClassDescriptorT<ClassType>();
+
+			for (auto& desc : getDescriptorsImpl()) {
+				if (desc) {
+					if (desc->elementType && desc->elementType->classId == classId) {
+						desc->elementType = stub;
+					}
+					for (auto& prop : desc->properties) {
+						if (prop.type && prop.type->classId == classId) {
+							prop.type = stub;
+						}
+					}
+				}
+			}
+
+			auto* desc = getDescriptorsImpl()[classId];
+			stub->classId = desc->classId;
+			stub->name = desc->name;
+			stub->size = sizeof(ClassType);
+			stub->category = desc->category;
+			stub->hashCode = desc->hashCode;
+			stub->flags = desc->flags;
+			stub->registrationSourceAddress = desc->registrationSourceAddress;
+
+			getDescriptorsImpl()[classId] = stub;
+			delete desc;
 		}
 
 	private:

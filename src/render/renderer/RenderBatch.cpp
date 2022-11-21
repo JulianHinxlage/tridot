@@ -90,8 +90,10 @@ namespace tri {
 		//update the vertex array if the mesh has changes (e.g. asset reload)
 		if (meshChangeCounter != mesh->changeCounter) {
 			env->renderPipeline->addCallbackStep([&]() {
-				updateMesh();
-			});
+				if (meshChangeCounter != mesh->changeCounter) {
+					updateMesh();
+				}
+			}, RenderPipeline::POST_RENDER);
 			instanceBuffer->swapBuffers();
 			materialBuffer->swapBuffers();
 			return;

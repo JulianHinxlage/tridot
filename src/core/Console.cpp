@@ -131,6 +131,7 @@ namespace tri {
 		std::vector<std::string> parts;
 		for (int i = 0; i < parts1.size(); i++) {
 			if (i % 2 == 0) {
+				parts1[i] = StrUtil::replace(parts1[i], "=", " = ");
 				for (auto& p : StrUtil::split(parts1[i], " ", false)) {
 					parts.push_back(p);
 				}

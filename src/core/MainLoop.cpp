@@ -33,6 +33,52 @@ namespace tri {
 		target2.level = LogLevel::TRACE;
 		env->console->addLogTarget(target2);
 	}
+
+	void MainLoop::parseArguments(int argc, char* argv[], std::vector<std::string> defaultConfigFiles) {
+		std::vector<std::string> commands;
+		
+		bool configFlag = false;
+		bool inQuotes = false;
+		std::string arg;
+		for (int i = 1; i < argc; i++) {
+			if (inQuotes) {
+				arg += " ";
+				arg += argv[i];
+			}
+			else {
+				arg = argv[i];
+			}
+
+			if (arg.size() > 0 && arg[0] == '\"') {
+				inQuotes = true;
+				arg.erase(arg.begin());
+			}
+			if (arg.size() > 0 && arg[arg.size() - 1] == '\"') {
+				inQuotes = false;
+				arg.erase(arg.begin() + arg.size() - 1);
+			}
+
+			if (inQuotes) {
+				continue;
+			}
+
+			if (arg == "-c") {
+				configFlag = true;
+			}
+			else if (configFlag) {
+				configFlag = false;
+				defaultConfigFiles = { arg };
+			}
+			else {
+				commands.push_back(arg);
+			}
+		}
+
+		env->config->loadConfigFileFirstFound(defaultConfigFiles);
+		for (auto& command : commands) {
+			env->console->executeCommand(command);
+		}
+	}
 	
 	void MainLoop::startup() {
 		env->moduleManager->performePending();

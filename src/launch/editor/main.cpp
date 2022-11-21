@@ -7,7 +7,7 @@ using namespace tri;
 
 int main(int argc, char* argv[]) {
     MainLoop::init();
-    env->config->loadConfigFileFirstFound({ "./editor.cfg", "../editor.cfg", "../../editor.cfg" });
+    MainLoop::parseArguments(argc, argv, { "./editor.cfg", "../editor.cfg", "../../editor.cfg" });
     MainLoop::startup();
     MainLoop::run();
     MainLoop::shutdown();
@@ -17,6 +17,7 @@ int main(int argc, char* argv[]) {
 #if WIN32
 int __stdcall WinMain(void* hInstance, void* hPrevInstance, char* lpCmdLine, int nCmdShow) {
     auto args = StrUtil::split(lpCmdLine, " ", false);
+    args.insert(args.begin(), std::filesystem::current_path().string() + "\\.exe");
     std::vector<const char*> argv;
     argv.reserve(args.size());
     for (auto& a : args) {

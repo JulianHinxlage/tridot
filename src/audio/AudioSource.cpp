@@ -17,16 +17,20 @@ namespace tri {
 	TRI_FUNCTION(AudioSource, stop);
 
 	void AudioSource::play() {
-		if (looping && id != 0) {
-			env->audioSystem->stop(id);
-			id = 0;
+		if (env->audioSystem) {
+			if (looping && id != 0) {
+				env->audioSystem->stop(id);
+				id = 0;
+			}
+			id = env->audioSystem->play(audio);
 		}
-		id = env->audioSystem->play(audio);
 	}
 
 	void AudioSource::stop() {
-		env->audioSystem->stop(id);
-		id = 0;
+		if (env->audioSystem) {
+			env->audioSystem->stop(id);
+			id = 0;
+		}
 	}
 
 }
