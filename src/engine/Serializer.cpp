@@ -17,7 +17,7 @@ namespace tri {
 
 	TRI_SYSTEM_INSTANCE(Serializer, env->serializer);
 
-	void Serializer::serializeClass(int classId, void* ptr, SerialData& data) {
+	void Serializer::serializeClass(int classId, void* ptr, SerialData& data, bool replication) {
 		if (classId < 0) {
 			return;
 		}
@@ -66,8 +66,10 @@ namespace tri {
 		*data.emitter << YAML::BeginMap;
 		for (auto& prop : desc->properties) {
 			if (!(prop.flags & PropertyDescriptor::NO_SERIALIZE)) {
-				*data.emitter << YAML::Key << prop.name << YAML::Value;
-				serializeClass(prop.type->classId, (uint8_t*)ptr + prop.offset, data);
+				if (!replication || (prop.flags & PropertyDescriptor::REPLICATE)) {
+					*data.emitter << YAML::Key << prop.name << YAML::Value;
+					serializeClass(prop.type->classId, (uint8_t*)ptr + prop.offset, data);
+				}
 			}
 		}
 		*data.emitter << YAML::EndMap;
@@ -133,17 +135,21 @@ namespace tri {
 		}
 	}
 
-	void Serializer::serializeEntity(EntityId id, World* world, SerialData& data) {
+	void Serializer::serializeEntity(EntityId id, World* world, SerialData& data, bool replication) {
 		*data.emitter << YAML::BeginMap;
-		*data.emitter << YAML::Key << "id" << YAML::Value << id;
-		*data.emitter << YAML::Key << "active" << YAML::Value << world->isEntityActive(id);
+		if (!replication) {
+			*data.emitter << YAML::Key << "id" << YAML::Value << id;
+			*data.emitter << YAML::Key << "active" << YAML::Value << world->isEntityActive(id);
+		}
 
 		for (auto *desc : Reflection::getDescriptors()) {
 			if (desc && desc->flags & ClassDescriptor::COMPONENT) {
 				if (!(desc->flags & ClassDescriptor::NO_SERIALIZE)) {
-					if (void* comp = world->getComponent(id, desc->classId)) {
-						*data.emitter << YAML::Key << desc->name << YAML::Value;
-						serializeClass(desc->classId, comp, data);
+					if (!replication || (desc->flags & PropertyDescriptor::REPLICATE)) {
+						if (void* comp = world->getComponent(id, desc->classId)) {
+							*data.emitter << YAML::Key << desc->name << YAML::Value;
+							serializeClass(desc->classId, comp, data, replication);
+						}
 					}
 				}
 			}

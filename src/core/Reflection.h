@@ -17,6 +17,7 @@ namespace tri {
 			NONE = 0,
 			HIDDEN = 1 << 0,
 			NO_SERIALIZE = 1 << 1,
+			REPLICATE = 1 << 7,
 		};
 
 		std::string name;
@@ -47,6 +48,7 @@ namespace tri {
 			SYSTEM = 1 << 4,
 			REFERENCE = 1 << 5,
 			VECTOR = 1 << 6,
+			REPLICATE = 1 << 7,
 		};
 
 		int classId;
@@ -163,6 +165,10 @@ namespace tri {
 			prop.min = nullptr;
 			prop.max = nullptr;
 			desc->properties.push_back(prop);
+
+			if (flags & PropertyDescriptor::REPLICATE) {
+				desc->flags = (ClassDescriptor::Flags)(desc->flags | ClassDescriptor::REPLICATE);
+			}
 		}
 
 		template<typename ClassType, typename PropertyType>

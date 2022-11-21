@@ -30,7 +30,7 @@ namespace tri {
 
 		SerialData ser;
 		ser.emitter = std::make_shared<YAML::Emitter>();
-		env->serializer->serializeEntity(id, env->world, ser);
+		env->serializer->serializeEntity(id, env->world, ser, false);
 		packet.addStr(ser.emitter->c_str());
 		if (conn) {
 			conn->socket->write(packet.data(), packet.size());
@@ -47,7 +47,7 @@ namespace tri {
 
 		SerialData ser;
 		ser.emitter = std::make_shared<YAML::Emitter>();
-		env->serializer->serializeEntity(id, env->world, ser);
+		env->serializer->serializeEntity(id, env->world, ser, true);
 		packet.addStr(ser.emitter->c_str());
 		if (conn) {
 			conn->socket->write(packet.data(), packet.size());

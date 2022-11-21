@@ -26,10 +26,10 @@ namespace tri {
 	public:
 		void init() override;
 
-		void serializeClass(int classId, void *ptr, SerialData &data);
+		void serializeClass(int classId, void *ptr, SerialData &data, bool replication = false);
 		void deserializeClass(int classId, void *ptr, SerialData& data);
 		
-		void serializeEntity(EntityId id, World *world, SerialData& data);
+		void serializeEntity(EntityId id, World *world, SerialData& data, bool replication = false);
 		void deserializeEntity(World* world, SerialData& data, std::map<EntityId, EntityId>* idMap = nullptr);
 		void deserializeEntity(EntityId id, World* world, SerialData& data, std::map<EntityId, EntityId>* idMap = nullptr);
 

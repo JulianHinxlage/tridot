@@ -133,9 +133,10 @@ namespace tri {
     }
 
     TRI_COMPONENT(Transform);
-    TRI_PROPERTIES3(Transform, position, scale, rotation);
+    TRI_PROPERTY_FLAGS(Transform, position, PropertyDescriptor::REPLICATE);
+    TRI_PROPERTY_FLAGS(Transform, scale, PropertyDescriptor::REPLICATE);
+    TRI_PROPERTY_FLAGS(Transform, rotation, PropertyDescriptor::REPLICATE);
     TRI_PROPERTY_FLAGS(Transform, parent, PropertyDescriptor::HIDDEN);
-
     
     class TransformSystem : public System {
     public:

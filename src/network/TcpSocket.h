@@ -12,6 +12,9 @@ namespace tri {
 
 	class TcpSocket {
 	public:
+		int bytesUp = 0;
+		int bytesDown = 0;
+
 		TcpSocket();
 		~TcpSocket();
 

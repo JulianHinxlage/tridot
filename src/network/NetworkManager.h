@@ -34,6 +34,9 @@ namespace tri {
 
 	class NetworkManager : public System {
 	public:
+		int bytesUpPerSecond = 0;
+		int bytesDownPerSecond = 0;
+
 		void init();
 		void startup() override;
 		void tick() override;

@@ -59,6 +59,7 @@ namespace tri {
 		}
 
 		void join(Connection* conn) {
+			std::unique_lock<std::mutex> lock(env->world->performePendingMutex);
 			env->world->each<GameMode>([&](GameMode& gameMode) {
 				env->console->info("GameMode join");
 				std::map<EntityId, EntityId> idMap;

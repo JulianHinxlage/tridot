@@ -172,6 +172,7 @@ namespace tri {
 			disconnect();
 			return false;
 		}
+		bytesUp += bytes;
 		return true;
 	}
 
@@ -183,6 +184,7 @@ namespace tri {
 			return false;
 		}
 		bytes = code;
+		bytesDown += bytes;
 		return true;
 	}
 

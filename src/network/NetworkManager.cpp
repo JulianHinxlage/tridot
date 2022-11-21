@@ -11,6 +11,7 @@
 #include "NetworkReplication.h"
 #include "engine/EntityUtil.h"
 #include "NetworkComponent.h"
+#include "engine/Time.h"
 
 #if TRI_WINDOWS
 #include <winsock2.h>
@@ -53,6 +54,30 @@ namespace tri {
 			return;
 		}
 #endif
+
+		env->console->addCommand("networkStats", [&](auto args) {
+			env->console->info("network statistics:");
+
+			if (hasAuthority()) {
+				if (connections.size() == 1) {
+					env->console->info("%i connection", connections.size());
+				}
+				else {
+					env->console->info("%i connections", connections.size());
+				}
+			}
+			else {
+				if (connection && connection->socket->isConnected()) {
+					env->console->info("connected to server");
+				}
+				else {
+					env->console->info("not connected to server");
+				}
+			}
+
+			env->console->info("%i k/sec up", bytesUpPerSecond / 1000);
+			env->console->info("%i k/sec down", bytesDownPerSecond / 1000);
+		});
 	}
 
 	void NetworkManager::tick() {
@@ -85,6 +110,26 @@ namespace tri {
 		}
 
 		disconnectedConnections.clear();
+
+		if (env->time->frameTicks(1.0f)) {
+			bytesDownPerSecond = 0;
+			bytesUpPerSecond = 0;
+
+			if (connection) {
+				bytesDownPerSecond += connection->socket->bytesDown;
+				bytesUpPerSecond += connection->socket->bytesUp;
+				connection->socket->bytesDown = 0;
+				connection->socket->bytesUp = 0;
+			}
+			for (auto& conn : connections) {
+				if (conn) {
+					bytesDownPerSecond += conn->socket->bytesDown;
+					bytesUpPerSecond += conn->socket->bytesUp;
+					conn->socket->bytesDown = 0;
+					conn->socket->bytesUp = 0;
+				}
+			}
+		}
 	}
 
 	void NetworkManager::shutdown() {
@@ -216,6 +261,7 @@ namespace tri {
 	}
 
 	void NetworkManager::onRead(Connection* conn, void* data, int bytes) {
+		TRI_PROFILE_FUNC();
 		Packet packet;
 		packet.add(data, bytes);
 		NetOpcode opcode = packet.get<NetOpcode>();
