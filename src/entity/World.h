@@ -156,6 +156,8 @@ namespace tri {
 
 		static const std::vector<World*>& getAllWorlds();
 		void removeComponentStorage(int classId);
+
+		void preventPendingEntityRemove(EntityId id);
 	private:
 		//component data
 		std::vector<std::shared_ptr<ComponentStorage>> storages;
@@ -170,6 +172,7 @@ namespace tri {
 		std::vector<std::shared_ptr<std::vector<EntityId>>> pendingRemoveComponentIds;
 		std::vector<EntityId> pendingAddIds;
 		std::vector<EntityId> pendingRemoveIds;
+		std::set<EntityId> pendingRemovePreventIds;
 
 		//events buffers
 		std::vector<std::shared_ptr<std::vector<EntityId>>> onComponentAddIds;

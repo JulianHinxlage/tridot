@@ -16,11 +16,17 @@ namespace tri {
 	TRI_COMPONENT_CATEGORY(GameMode, "Network");
 	TRI_PROPERTIES2(GameMode, playerPrefab, localPlayer);
 
+	class TestComponent {
+	public:
+		int x = 0;
+	};
+	TRI_COMPONENT(TestComponent);
+
 	class GameModeSystem : public System {
 	public:
 
 		void startup() {
-			env->networkManager->packetCallbacks[NetOpcode::MAP_SYNCED] = [&](Connection* conn, NetOpcode opcode, Packet& packet) {
+			env->networkManager->packetCallbacks[NetOpcode::MAP_JOIN] = [&](Connection* conn, NetOpcode opcode, Packet& packet) {
 				if (env->networkManager->hasAuthority()) {
 					join(conn);
 				}
@@ -64,7 +70,9 @@ namespace tri {
 				env->console->info("GameMode join");
 				std::map<EntityId, EntityId> idMap;
 				for (auto& prefab : gameMode.playerPrefab) {
-					prefab->createEntity(env->world, -1, &idMap);
+					if (prefab) {
+						prefab->createEntity(env->world, -1, &idMap);
+					}
 				}
 
 				for (auto& i : idMap) {

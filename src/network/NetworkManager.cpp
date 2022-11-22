@@ -29,7 +29,8 @@ namespace tri {
 	TRI_SYSTEM_INSTANCE(NetworkManager, env->networkManager);
 
 	TRI_CLASS(NetOpcode);
-	TRI_ENUM8(NetOpcode, NOOP, MAP_REQUEST, MAP_RESPONSE, MAP_LOADED, ENTITY_ADD, ENTITY_UPDATE, ENTITY_REMOVE, ENTITY_OWNING);
+	TRI_ENUM8(NetOpcode, NOOP, MAP_REQUEST, MAP_RESPONSE, MAP_LOADED, MAP_SYNCED, MAP_JOIN, ENTITY_ADD, ENTITY_UPDATE);
+	TRI_ENUM3(NetOpcode, ENTITY_REMOVE, ENTITY_OWNING, PROPERTY_DATA);
 
 	void NetworkManager::init() {
 		env->runtimeMode->setActiveSystem<NetworkManager>({ RuntimeMode::LOADING, RuntimeMode::EDIT, RuntimeMode::PAUSED }, true);
@@ -141,6 +142,9 @@ namespace tri {
 		}
 		connections.clear();
 		disconnectedConnections.clear();
+		packetCallbacks.clear();
+
+		env->console->removeCommand("networkStats");
 
 #if TRI_WINDOWS
 		WSACleanup();
@@ -245,12 +249,12 @@ namespace tri {
 
 	void NetworkManager::sendToAll(const void* data, int bytes, Connection* except) {
 		if (mode == CLIENT) {
-			connection->socket->write(data, bytes);
+			connection->write(data, bytes);
 		}
 		else if (mode == SERVER || mode == HOST) {
 			for (auto& conn : connections) {
 				if (conn.get() != except) {
-					conn->socket->write(data, bytes);
+					conn->write(data, bytes);
 				}
 			}
 		}
@@ -274,12 +278,6 @@ namespace tri {
 			if (opcode != NOOP) {
 				env->console->warning("invalid opcode %i", opcode);
 			}
-			return;
-		}
-
-		auto remain = packet.getRemaining();
-		if (!remain.empty()) {
-			onRead(conn, remain.data(), remain.size());
 		}
 	}
 

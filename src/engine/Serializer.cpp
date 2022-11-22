@@ -594,168 +594,9 @@ namespace tri {
 		}
 	}
 
-	class BinaryMapper {
-	public:
-		class Step {
-		public:
-			bool plain;
-			int bytes;
-			int offset;
-			std::function<void(void* ptr, std::ostream& stream)> writeCallback;
-			std::function<void(void* ptr, std::istream& stream)> readCallback;
-		};
-		std::vector<Step> steps;
+	
 
-		void read(void* ptr, std::istream &stream) {
-			for (auto& step : steps) {
-				if (step.plain) {
-					stream.read((char*)ptr + step.offset, step.bytes);
-				}
-				else {
-					step.readCallback((uint8_t*)ptr + step.offset, stream);
-				}
-			}
-		}
-
-		void write(void* ptr, std::ostream& stream) {
-			for (auto& step : steps) {
-				if (step.plain) {
-					stream.write((char*)ptr + step.offset, step.bytes);
-				}
-				else {
-					step.writeCallback((uint8_t*)ptr + step.offset, stream);
-				}
-			}
-		}
-
-		void create(int classId, int offset = 0) {
-			auto* desc = Reflection::getDescriptor(classId);
-			if (desc) {
-
-				if (!(desc->flags & ClassDescriptor::NO_SERIALIZE)) {
-					if (desc->isType<std::string>()) {
-						Step step;
-						step.plain = false;
-						step.offset = offset;
-						step.bytes = desc->size;
-						step.writeCallback = [](void* ptr, std::ostream& stream) {
-							writeStr(*(std::string*)ptr, stream);
-						};
-						step.readCallback = [](void* ptr, std::istream& stream) {
-							readStr(*(std::string*)ptr, stream);
-						};
-						steps.push_back(step);
-					}
-					else if (desc->flags & ClassDescriptor::VECTOR) {
-						Step step;
-						step.plain = false;
-						step.offset = offset;
-						step.bytes = desc->size;
-						int classId = desc->classId;
-						step.writeCallback = [classId](void* ptr, std::ostream& stream) {
-							auto* desc = Reflection::getDescriptor(classId);
-							if (desc) {
-								int size = desc->vectorSize(ptr);
-								writeBin(size, stream);
-								BinaryMapper mapper;
-								mapper.create(desc->elementType->classId);
-								for (int i = 0; i < size; i++) {
-									mapper.write(desc->vectorGet(ptr, i), stream);
-								}
-							}
-						};
-						step.readCallback = [classId](void* ptr, std::istream& stream) {
-							auto* desc = Reflection::getDescriptor(classId);
-							if (desc) {
-								int size = 0;
-								readBin(size, stream);
-								BinaryMapper mapper;
-								mapper.create(desc->elementType->classId);
-								for (int i = 0; i < size; i++) {
-									desc->vectorInsert(ptr, i, nullptr);
-									mapper.read(desc->vectorGet(ptr, i), stream);
-								}
-							}
-						};
-						steps.push_back(step);
-					}
-					else if (desc->flags & ClassDescriptor::REFERENCE) {
-						if (desc->elementType->flags & ClassDescriptor::ASSET) {
-							Step step;
-							step.plain = false;
-							step.offset = offset;
-							step.bytes = desc->size;
-							int classId = desc->elementType->classId;
-							step.writeCallback = [](void* ptr, std::ostream& stream) {
-								auto file = env->assetManager->getFile(*(Ref<Asset>*)ptr);
-								writeStr(file, stream);
-							};
-							step.readCallback = [classId](void* ptr, std::istream& stream) {
-								std::string file;
-								readStr(file, stream);
-								if (!file.empty()) {
-									*(Ref<Asset>*)ptr = env->assetManager->get(classId, file);
-								}
-								else {
-									*(Ref<Asset>*)ptr = nullptr;
-								}
-							};
-							steps.push_back(step);
-						}
-					}
-					else if (desc->properties.size() > 0) {
-						for (auto& prop : desc->properties) {
-							if (!(prop.flags & PropertyDescriptor::NO_SERIALIZE)) {
-								create(prop.type->classId, offset + prop.offset);
-							}
-						}
-					}
-					else {
-
-						if (!(
-							desc->isType<int>() ||
-							desc->isType<bool>() ||
-							desc->isType<float>() ||
-							desc->isType<double>() ||
-							desc->isType<EntityId>() ||
-							desc->isType<Guid>() ||
-							desc->isType<Color>() ||
-							desc->isType<glm::vec2>() ||
-							desc->isType<glm::vec3>() ||
-							desc->isType<glm::vec4>() ||
-							desc->enumValues.size() > 0
-							)) {
-							return;
-						}
-
-						Step step;
-						step.plain = true;
-						step.offset = offset;
-						step.bytes = desc->size;
-						bool hasMerged = false;
-						if (steps.size() > 0) {
-							auto& back = steps.back();
-							if (back.plain) {
-								if (step.offset == back.offset + back.bytes) {
-									back.bytes += step.bytes;
-									hasMerged = true;
-								}
-							}
-						}
-						if (!hasMerged) {
-							steps.push_back(step);
-						}
-					}
-
-
-
-				}
-
-			}
-		}
-	};
-
-	void* Serializer::getMapper(int classId) {
+	BinaryMapper* Serializer::getMapper(int classId) {
 		if (binaryMappers.size() <= classId) {
 			binaryMappers.resize(classId + 1);
 		}
@@ -775,7 +616,7 @@ namespace tri {
 			if (desc && desc->flags & ClassDescriptor::COMPONENT) {
 				if (void *comp = world->getComponent(id, desc->classId)) {
 					writeStr(desc->name, stream);
-					((BinaryMapper*)getMapper(desc->classId))->write(comp, stream);
+					getMapper(desc->classId)->write(comp, stream);
 				}
 			}
 		}
@@ -809,7 +650,7 @@ namespace tri {
 			auto* desc = Reflection::getDescriptor(name);
 			if (desc) {
 				void *comp = world->getOrAddComponentPending(id, desc->classId);
-				((BinaryMapper*)getMapper(desc->classId))->read(comp, stream);
+				getMapper(desc->classId)->read(comp, stream);
 			}
 			else {
 				break;
@@ -884,7 +725,7 @@ namespace tri {
 				if (storage && storage->size() > 0) {
 					int count = storage->size();
 
-					BinaryMapper* mapper = ((BinaryMapper*)getMapper(desc->classId));
+					BinaryMapper* mapper = getMapper(desc->classId);
 
 					for (int i = 0; i < count; i++) {
 						EntityId id = storage->getIdByIndex(i);
@@ -994,7 +835,7 @@ namespace tri {
 				auto *desc = Reflection::getDescriptor(storage->classId);
 				void* data = desc->alloc();
 
-				BinaryMapper* mapper = ((BinaryMapper*)getMapper(desc->classId));
+				BinaryMapper* mapper = getMapper(desc->classId);
 
 				for (int j = 0; j < storageSize; j++) {
 					EntityId id = -1;
@@ -1016,6 +857,151 @@ namespace tri {
 
 		world->enablePendingOperations = enablePending;
 		return true;
+	}
+
+	void BinaryMapper::read(void* ptr, std::istream &stream) {
+		for (auto& step : steps) {
+			if (step.plain) {
+				stream.read((char*)ptr + step.offset, step.bytes);
+			}
+			else {
+				step.readCallback((uint8_t*)ptr + step.offset, stream);
+			}
+		}
+	}
+
+	void BinaryMapper::write(void* ptr, std::ostream& stream) {
+		for (auto& step : steps) {
+			if (step.plain) {
+				stream.write((char*)ptr + step.offset, step.bytes);
+			}
+			else {
+				step.writeCallback((uint8_t*)ptr + step.offset, stream);
+			}
+		}
+	}
+
+	void BinaryMapper::create(int classId, int offset) {
+		auto* desc = Reflection::getDescriptor(classId);
+		if (desc) {
+
+			if (!(desc->flags & ClassDescriptor::NO_SERIALIZE)) {
+				if (desc->isType<std::string>()) {
+					Step step;
+					step.plain = false;
+					step.offset = offset;
+					step.bytes = desc->size;
+					step.writeCallback = [](void* ptr, std::ostream& stream) {
+						writeStr(*(std::string*)ptr, stream);
+					};
+					step.readCallback = [](void* ptr, std::istream& stream) {
+						readStr(*(std::string*)ptr, stream);
+					};
+					steps.push_back(step);
+				}
+				else if (desc->flags & ClassDescriptor::VECTOR) {
+					Step step;
+					step.plain = false;
+					step.offset = offset;
+					step.bytes = desc->size;
+					int classId = desc->classId;
+					step.writeCallback = [classId](void* ptr, std::ostream& stream) {
+						auto* desc = Reflection::getDescriptor(classId);
+						if (desc) {
+							int size = desc->vectorSize(ptr);
+							writeBin(size, stream);
+							BinaryMapper mapper;
+							mapper.create(desc->elementType->classId);
+							for (int i = 0; i < size; i++) {
+								mapper.write(desc->vectorGet(ptr, i), stream);
+							}
+						}
+					};
+					step.readCallback = [classId](void* ptr, std::istream& stream) {
+						auto* desc = Reflection::getDescriptor(classId);
+						if (desc) {
+							int size = 0;
+							readBin(size, stream);
+							BinaryMapper mapper;
+							mapper.create(desc->elementType->classId);
+							for (int i = 0; i < size; i++) {
+								desc->vectorInsert(ptr, i, nullptr);
+								mapper.read(desc->vectorGet(ptr, i), stream);
+							}
+						}
+					};
+					steps.push_back(step);
+				}
+				else if (desc->flags & ClassDescriptor::REFERENCE) {
+					if (desc->elementType->flags & ClassDescriptor::ASSET) {
+						Step step;
+						step.plain = false;
+						step.offset = offset;
+						step.bytes = desc->size;
+						int classId = desc->elementType->classId;
+						step.writeCallback = [](void* ptr, std::ostream& stream) {
+							auto file = env->assetManager->getFile(*(Ref<Asset>*)ptr);
+							writeStr(file, stream);
+						};
+						step.readCallback = [classId](void* ptr, std::istream& stream) {
+							std::string file;
+							readStr(file, stream);
+							if (!file.empty()) {
+								*(Ref<Asset>*)ptr = env->assetManager->get(classId, file);
+							}
+							else {
+								*(Ref<Asset>*)ptr = nullptr;
+							}
+						};
+						steps.push_back(step);
+					}
+				}
+				else if (desc->properties.size() > 0) {
+					for (auto& prop : desc->properties) {
+						if (!(prop.flags & PropertyDescriptor::NO_SERIALIZE)) {
+							create(prop.type->classId, offset + prop.offset);
+						}
+					}
+				}
+				else {
+
+					if (!(
+						desc->isType<int>() ||
+						desc->isType<bool>() ||
+						desc->isType<float>() ||
+						desc->isType<double>() ||
+						desc->isType<EntityId>() ||
+						desc->isType<Guid>() ||
+						desc->isType<Color>() ||
+						desc->isType<glm::vec2>() ||
+						desc->isType<glm::vec3>() ||
+						desc->isType<glm::vec4>() ||
+						desc->enumValues.size() > 0
+						)) {
+						return;
+					}
+
+					Step step;
+					step.plain = true;
+					step.offset = offset;
+					step.bytes = desc->size;
+					bool hasMerged = false;
+					if (steps.size() > 0) {
+						auto& back = steps.back();
+						if (back.plain) {
+							if (step.offset == back.offset + back.bytes) {
+								back.bytes += step.bytes;
+								hasMerged = true;
+							}
+						}
+					}
+					if (!hasMerged) {
+						steps.push_back(step);
+					}
+				}
+			}
+
+		}
 	}
 
 }

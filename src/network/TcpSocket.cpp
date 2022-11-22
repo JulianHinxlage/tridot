@@ -140,6 +140,7 @@ namespace tri {
 		Ref<TcpSocket> socket = Ref<TcpSocket>::make();
 		socket->handle = result;
 		socket->endpoint = ep;
+		socket->connected = true;
 		return socket;
 	}
 
@@ -158,7 +159,7 @@ namespace tri {
 	}
 
 	bool TcpSocket::isConnected() {
-		return handle != -1;
+		return connected;
 	}
 
 	const Endpoint& TcpSocket::getEndpoint() {

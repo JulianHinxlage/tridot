@@ -3,8 +3,8 @@
 //
 
 #include "pch.h"
-#include "Connection.h"
 #include "core/core.h"
+#include "Connection.h"
 
 namespace tri {
 
@@ -21,18 +21,12 @@ namespace tri {
 	}
 
 	void Connection::run(const std::function<void(Connection* conn, void* data, int bytes)>& callback) {
-		buffer.resize(1024 * 32);
 		if (threadId != -1) {
 			env->threadManager->terminateThread(threadId);
 			threadId = -1;
 		}
 		threadId = env->threadManager->addThread("Connection", [&, callback]() {
-			while (socket->isConnected()) {
-				int bytes = buffer.size();
-				if (socket->read(buffer.data(), bytes)) {
-					callback(this, buffer.data(), bytes);
-				}
-			}
+			runImpl(callback);
 			if (onDisconnect) {
 				onDisconnect(this);
 			}
@@ -40,7 +34,6 @@ namespace tri {
 	}
 
 	void Connection::runConnect(const std::string& address, uint16_t port, const std::function<void(Connection* conn, void* data, int bytes)>& callback) {
-		buffer.resize(1024 * 32);
 		if (threadId != -1) {
 			env->threadManager->terminateThread(threadId);
 			threadId = -1;
@@ -64,13 +57,7 @@ namespace tri {
 					continue;
 				}
 
-
-				while (running && socket->isConnected()) {
-					int bytes = buffer.size();
-					if (socket->read(buffer.data(), bytes)) {
-						callback(this, buffer.data(), bytes);
-					}
-				}
+				runImpl(callback);
 				if (onDisconnect) {
 					onDisconnect(this);
 				}
@@ -121,6 +108,35 @@ namespace tri {
 		socket->disconnect();
 		env->threadManager->terminateThread(threadId);
 		threadId = -1;
+	}
+
+	bool Connection::write(const void* data, int bytes) {
+		socket->write(&bytes, sizeof(bytes));
+		return socket->write(data, bytes);
+	}
+
+	bool Connection::write(Packet& packet) {
+		return write(packet.data(), packet.size());
+	}
+
+	void Connection::runImpl(const std::function<void(Connection* conn, void* data, int bytes)>& callback) {
+		while (socket->isConnected()) {
+			int packetSize = 0;
+			int packetSizeSize = sizeof(packetSize);
+			if (socket->read(&packetSize, packetSizeSize)) {
+				if (buffer.size() < packetSize) {
+					buffer.resize(packetSize);
+				}
+				int index = 0;
+				while (index < packetSize) {
+					int bytes = packetSize - index;
+					if (socket->read(buffer.data() + index, bytes)) {
+						index += bytes;
+					}
+				}
+				callback(this, buffer.data(), packetSize);
+			}
+		}
 	}
 
 }

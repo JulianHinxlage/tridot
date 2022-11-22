@@ -16,6 +16,7 @@ namespace tri {
 	class NetworkReplication : public System {
 	public:
 		bool enableClientSideEntitySpawning;
+		bool enableClientSideEntityDepawning;
 
 		void init() override;
 		void startup() override;
@@ -24,6 +25,7 @@ namespace tri {
 
 		void setOwning(Guid guid, Connection *conn);
 		bool isOwning(Guid guid);
+		Connection* getOwningConnection(Guid guid);
 
 	private:
 		std::set<Guid> addedRuntimeEntities;
@@ -34,12 +36,10 @@ namespace tri {
 		std::set<Guid> owning;
 		std::map<Guid, Connection*> owningConnections;
 		std::set<Guid> addedNetworkEntities;
+		std::set<Guid> removedNetworkEntities;
 
 
 		std::map<EntityId, EntityId> idMap;
-
-		Connection* getOwningConnection(Guid guid);
-
 	};
 
 }

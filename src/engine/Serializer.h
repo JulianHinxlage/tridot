@@ -22,6 +22,23 @@ namespace tri {
 		SerialData(YAML::Node& node) : node(node) {}
 	};
 
+	class BinaryMapper {
+	public:
+		class Step {
+		public:
+			bool plain;
+			int bytes;
+			int offset;
+			std::function<void(void* ptr, std::ostream& stream)> writeCallback;
+			std::function<void(void* ptr, std::istream& stream)> readCallback;
+		};
+		std::vector<Step> steps;
+
+		void read(void* ptr, std::istream& stream);
+		void write(void* ptr, std::ostream& stream);
+		void create(int classId, int offset = 0);
+	};
+
 	class Serializer : public System {
 	public:
 		void init() override;
@@ -77,12 +94,12 @@ namespace tri {
 			});
 		}
 
+		BinaryMapper* getMapper(int classId);
 	private:
 		std::vector<std::function<void(void *ptr, SerialData& data)>> serializeCallbacks;
 		std::vector<std::function<void(void *ptr, SerialData& data)>> deserializeCallbacks;
 		
-		std::vector<std::shared_ptr<void>> binaryMappers;
-		void* getMapper(int classId);
+		std::vector<std::shared_ptr<BinaryMapper>> binaryMappers;
 	};
 
 }

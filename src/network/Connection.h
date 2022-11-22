@@ -6,6 +6,7 @@
 
 #include "pch.h"
 #include "TcpSocket.h"
+#include "Packet.h"
 
 namespace tri {
 
@@ -27,6 +28,11 @@ namespace tri {
 		void runConnect(const std::string &address, uint16_t port, const std::function<void(Connection* conn, void* data, int bytes)>& callback);
 		void runListen(uint16_t port, const std::function<void(Ref<Connection> conn)>& callback);
 		void stop();
+
+		bool write(const void* data, int bytes);
+		bool write(Packet &packet);
+	private:
+		void runImpl(const std::function<void(Connection* conn, void* data, int bytes)>& callback);
 	};
 
 }

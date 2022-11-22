@@ -137,9 +137,9 @@ namespace tri {
 		std::string runtimePath = filePath;
 		if (enableModuleHotReloading) {
 			std::filesystem::path path(filePath);
-			runtimePath = (path.parent_path() / "runtime_dlls" / path.filename()).string();
 			int postfix = 0;
 			for (int postfix = 0; postfix < 10; postfix++) {
+				runtimePath = (path.parent_path() / "runtime_dlls" / std::to_string(postfix) / path.filename()).string();
 				if (!std::filesystem::exists(std::filesystem::path(runtimePath).parent_path())) {
 					std::filesystem::create_directories(std::filesystem::path(runtimePath).parent_path());
 				}
@@ -148,7 +148,6 @@ namespace tri {
 					break;
 				}
 				catch (...) {}
-				runtimePath = (path.parent_path() / (std::string("runtime_dlls_") + std::to_string(postfix + 1)) / (path.filename().stem().string()  + path.filename().extension().string())).string();
 			}
 		}
 

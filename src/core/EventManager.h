@@ -143,20 +143,26 @@ namespace tri {
 			if (classId >= onComponentAddEvents.size()) {
 				onComponentAddEvents.resize(classId + 1);
 			}
-			return onComponentAddEvents[classId];
+			if (!onComponentAddEvents[classId]) {
+				onComponentAddEvents[classId] = std::make_shared<Event<World*, EntityId>>();
+			}
+			return *onComponentAddEvents[classId];
 		}
 
 		Event<World*, EntityId>& onComponentRemove(int classId) {
 			if (classId >= onComponentRemoveEvents.size()) {
 				onComponentRemoveEvents.resize(classId + 1);
 			}
-			return onComponentRemoveEvents[classId];
+			if (!onComponentRemoveEvents[classId]) {
+				onComponentRemoveEvents[classId] = std::make_shared<Event<World*, EntityId>>();
+			}
+			return *onComponentRemoveEvents[classId];
 		}
 
 		void removeModuleListeners(const std::string& file);
 	private:
-		std::vector<Event<World*, EntityId>> onComponentAddEvents;
-		std::vector<Event<World*, EntityId>> onComponentRemoveEvents;
+		std::vector<std::shared_ptr<Event<World*, EntityId>>> onComponentAddEvents;
+		std::vector<std::shared_ptr<Event<World*, EntityId>>> onComponentRemoveEvents;
 	};
 
 }

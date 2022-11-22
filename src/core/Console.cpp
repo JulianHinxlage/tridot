@@ -119,7 +119,7 @@ namespace tri {
 		auto command = std::make_shared<Command>();
 		command->name = name;
 		command->callback = callback,
-			commands[name] = command;
+		commands[name] = command;
 	}
 
 	void Console::removeCommand(const std::string& name) {

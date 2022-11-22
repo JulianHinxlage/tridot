@@ -105,17 +105,35 @@ namespace tri {
 			env->runtimeMode->setActiveSystem<EntityUtilSystem>({ RuntimeMode::LOADING, RuntimeMode::EDIT, RuntimeMode::PAUSED }, true);
 		}
 
-		void tick() override {
-			std::map<Guid, EntityId> tmpGuidMap;
-			std::unordered_map<std::string, EntityId> tmpNameMap;
+		void startup() {
+			env->eventManager->onMapBegin.addListener([&](World *world, std::string file) {
+				if (world == env->world) {
+					std::map<Guid, EntityId> tmpGuidMap;
+					std::unordered_map<std::string, EntityId> tmpNameMap;
 
-			env->world->each<const EntityInfo>([&](EntityId id, EntityInfo &info) {
-				tmpGuidMap[info.guid] = id;
-				tmpNameMap[info.name] = id;
+					env->world->each<const EntityInfo>([&](EntityId id, EntityInfo& info) {
+						tmpGuidMap[info.guid] = id;
+						tmpNameMap[info.name] = id;
+					});
+
+				guidMap.swap(tmpGuidMap);
+				nameMap.swap(tmpNameMap);
+				}
 			});
-
-			guidMap.swap(tmpGuidMap);
-			nameMap.swap(tmpNameMap);
+			env->eventManager->onComponentAdd<EntityInfo>().addListener([&](World *world, EntityId id) {
+				if (world == env->world) {
+					EntityInfo& info = *env->world->getComponent<EntityInfo>(id);
+					guidMap[info.guid] = id;
+					nameMap[info.name] = id;
+				}
+			});
+			env->eventManager->onComponentRemove<EntityInfo>().addListener([&](World* world, EntityId id) {
+				if (world == env->world) {
+					EntityInfo& info = *env->world->getComponent<EntityInfo>(id);
+					guidMap.erase(info.guid);
+					nameMap.erase(info.name);
+				}
+			});
 		}
 	};
 	TRI_SYSTEM(EntityUtilSystem);

@@ -376,7 +376,9 @@ namespace tri {
 			env->eventManager->onEntityRemove.invoke(this, id);
 		}
 		for (auto& id : pendingRemoveIds) {
-			removeEntity(id);
+			if (!pendingRemovePreventIds.contains(id)) {
+				removeEntity(id);
+			}
 		}
 
 		//pending remove operations events
@@ -438,6 +440,7 @@ namespace tri {
 		pendingRemoveIds.clear();
 		pendingAddIds.clear();
 		onEntityRemoveIds.clear();
+		pendingRemovePreventIds.clear();
 		onEntityAddIds.clear();
 
 		for (int classId = 0; classId < onComponentRemoveIds.size(); classId++) {
@@ -549,6 +552,10 @@ namespace tri {
 		for (int i = 0; i < size; i++) {
 			data[i] &= ~(1 << compId);
 		}
+	}
+
+	void World::preventPendingEntityRemove(EntityId id) {
+		pendingRemovePreventIds.insert(id);
 	}
 
 }
