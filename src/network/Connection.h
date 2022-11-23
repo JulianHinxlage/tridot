@@ -6,9 +6,11 @@
 
 #include "pch.h"
 #include "TcpSocket.h"
-#include "Packet.h"
+#include "engine/Archive.h"
 
 namespace tri {
+
+	typedef MemoryArchive Packet;
 
 	class Connection {
 	public:
@@ -16,11 +18,19 @@ namespace tri {
 		Ref<TcpSocket> socket;
 		int threadId;
 		std::mutex reconnectMutex;
+		std::mutex writeMutex;
 		std::condition_variable reconnect;
 		bool running;
 		std::function<void(Connection* conn)> onDisconnect;
 		std::function<void(Connection* conn)> onConnect;
 		std::function<void(Connection* conn)> onFail;
+
+		enum State {
+			NOT_CONNECTED,
+			CONNECTED,
+			JOINED,
+		};
+		State clientState = NOT_CONNECTED;
 
 		Connection();
 		~Connection();

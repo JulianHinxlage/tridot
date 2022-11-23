@@ -81,8 +81,9 @@ namespace tri {
 		virtual void destruct(void* ptr, int count) const = 0;
 		virtual void copy(const void* from, void* to, int count) const = 0;
 
-		virtual int vectorSize(void* ptr) const { return 0; }
+		virtual int vectorSize(const void* ptr) const { return 0; }
 		virtual void* vectorGet(void* ptr, int index) const { return nullptr; }
+		virtual const void* vectorGet(const void* ptr, int index) const { return nullptr; }
 		virtual void vectorInsert(void* ptr, int index, void* elementPtr) const {}
 		virtual void vectorErase(void* ptr, int index) const {}
 		virtual void vectorClear(void* ptr) const {}
@@ -405,12 +406,16 @@ namespace tri {
 		public:
 			using T = std::vector<E>;
 
-			virtual int vectorSize(void* ptr) const {
+			virtual int vectorSize(const void* ptr) const {
 				return ((T*)ptr)->size();
 			}
 			virtual void* vectorGet(void* ptr, int index) const {
 				return &(E&)(*(((T*)ptr)->begin() + index));
 			}
+			virtual const void* vectorGet(const void* ptr, int index) const {
+				return &(E&)(*(((T*)ptr)->begin() + index));
+			}
+
 			virtual void vectorInsert(void* ptr, int index, void* elementPtr) const {
 				if (elementPtr == nullptr) {
 					((T*)ptr)->insert(((T*)ptr)->begin() + index, E());

@@ -6,6 +6,7 @@
 
 #include "pch.h"
 #include "Asset.h"
+#include "RuntimeMode.h"
 #include "entity/World.h"
 
 namespace tri {
@@ -16,7 +17,7 @@ namespace tri {
         std::string file;
 
         void setToActiveWorld();
-        static void loadAndSetToActiveWorld(const std::string& file);
+        static void loadAndSetToActiveWorld(const std::string& file, RuntimeMode::Mode resultingRumtimeMode = RuntimeMode::PLAY);
         virtual bool load(const std::string& file);
         virtual bool save(const std::string& file);
     };

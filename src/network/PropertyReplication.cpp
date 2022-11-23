@@ -39,15 +39,6 @@ namespace tri {
 		}
 	}
 
-	template<typename T>
-	void writeBin(const T& t, std::ostream& stream) {
-		stream.write((char*)&t, sizeof(T));
-	}
-	template<typename T>
-	void readBin(T& t, std::istream& stream) {
-		stream.read((char*)&t, sizeof(T));
-	}
-
 	enum NextField : uint8_t {
 		PACKET_END,
 		ENTITY,
@@ -68,53 +59,50 @@ namespace tri {
 			{
 				TRI_PROFILE("process property update");
 				std::unique_lock<std::mutex> lock(env->world->performePendingMutex);
-				std::stringstream stream(std::string(packet.data(), packet.data() + packet.size()));
+				BinaryArchive archive(&packet);
 
 				Guid guid;
 				EntityId id;
 				bool ignoreProperty = true;
 				while (true) {
 					NextField next = PACKET_END;
-					readBin(next, stream);
+					packet.readBin(next);
 
 					if (next == PROPERTY) {
 
-						size_t hashCode = 0;
+						std::string name;
 						uint8_t index = 0;
-						readBin(hashCode, stream);
-						readBin(index, stream);
+						packet.readStr(name);
+						packet.readBin(index);
 
 						bool processedProperty = false;
 						for (auto* desc : Reflection::getDescriptors()) {
-							if (desc && desc->hashCode == hashCode) {
+							if (desc && desc->name == name) {
 								if (desc->properties.size() > index) {
 									auto& prop = desc->properties[index];
 
 									if (void* comp = env->world->getComponent(id, desc->classId)) {
 										void* ptr = (uint8_t*)comp + prop.offset;
 										if (!ignoreProperty && (prop.flags & PropertyDescriptor::REPLICATE)) {
-											env->serializer->getMapper(prop.type->classId)->read(ptr, stream);
+											archive.readClass(ptr, prop.type->classId);
 										}
 										else {
 											//todo: cache tmp buffers
 											DynamicObjectBuffer tmp;
 											tmp.set(prop.type->classId);
-											env->serializer->getMapper(prop.type->classId)->read(tmp.get(), stream);
+											archive.readClass(tmp.get(), prop.type->classId);
 										}
-										processedProperty = true;
 									}
-
+									else {
+										env->console->log(LogLevel::TRACE, "Network", "property %s index %i dose not exists on entity %s", name.c_str(), index, guid.toString().c_str());
+									}
 									break;
 								}
 							}
 						}
-						if (!processedProperty) {
-							env->console->warning("could not process property %i %i", hashCode, index);
-							break;
-						}
 					}
 					else if (next == ENTITY) {
-						readBin(guid, stream);
+						packet.readBin(guid);
 						ignoreProperty = true;
 
 						if (env->networkManager->hasAuthority()) {
@@ -123,6 +111,12 @@ namespace tri {
 								if (id != -1) {
 									ignoreProperty = false;
 								}
+								else {
+									env->console->log(LogLevel::TRACE, "Network", "entity with guid %s dose not exist", guid.toString().c_str());
+								}
+							}
+							else {
+								env->console->log(LogLevel::TRACE, "Network", "client tries to update not owning entity with guid %s", guid.toString().c_str());
 							}
 						}
 						else {
@@ -130,6 +124,9 @@ namespace tri {
 								id = EntityUtil::getEntityByGuid(guid);
 								if (id != -1) {
 									ignoreProperty = false;
+								}
+								else {
+									env->console->log(LogLevel::TRACE, "Network", "entity with guid %s dose not exist", guid.toString().c_str());
 								}
 							}
 						}
@@ -144,15 +141,18 @@ namespace tri {
 			if (env->networkManager->hasAuthority()) {
 				TRI_PROFILE("relay property update");
 				//relay packet to other clients
-				packet.unskip(packet.readIndex);
+				packet.reset();
 				env->networkManager->sendToAll(packet, conn);
 			}
 		};
+
 	}
 
 	void PropertyReplication::tick() {
-		std::stringstream stream;
-		writeBin(NetOpcode::PROPERTY_DATA, stream);
+		Packet packet;
+		BinaryArchive archive(&packet);
+
+		packet.writeBin(NetOpcode::PROPERTY_DATA);
 		bool hasData = false;
 
 		if (env->time->frameTicks(1.0f / 60.0f)) {
@@ -168,11 +168,11 @@ namespace tri {
 							guids.push_back(guid);
 						}
 					}
-				});
+					});
 
 				for (int i = 0; i < ids.size(); i++) {
 					EntityId& id = ids[i];
-					Guid &guid = guids[i];
+					Guid& guid = guids[i];
 
 					for (auto* desc : Reflection::getDescriptors()) {
 						if (desc && (desc->flags & ClassDescriptor::COMPONENT)) {
@@ -195,7 +195,7 @@ namespace tri {
 											}
 											auto& buffer = buffers[j];
 
-									
+
 											void* ptr = (uint8_t*)comp + prop.offset;
 											void* ptr2 = buffer->getComponentById(id);
 
@@ -204,15 +204,15 @@ namespace tri {
 
 													if (first) {
 														first = false;
-														writeBin(NextField::ENTITY, stream);
-														writeBin(guid, stream);
+														packet.writeBin(NextField::ENTITY);
+														packet.writeBin(guid);
 													}
 
-													writeBin(NextField::PROPERTY, stream);
-													writeBin(desc->hashCode, stream);
-													writeBin((uint8_t)j, stream);
+													packet.writeBin(NextField::PROPERTY);
+													packet.writeStr(desc->name);
+													packet.writeBin((uint8_t)j);
 
-													env->serializer->getMapper(prop.type->classId)->write(ptr, stream);
+													archive.writeClass(ptr, prop.type->classId);
 													hasData = true;
 													prop.type->copy(ptr, ptr2);
 												}
@@ -234,10 +234,10 @@ namespace tri {
 		}
 
 		if (hasData) {
-			writeBin(NextField::PACKET_END, stream);
-			std::string str = stream.str();
-			env->networkManager->sendToAll(str.data(), str.size());
+			packet.writeBin(NextField::PACKET_END);
+			env->networkManager->sendToAll(packet);
 		}
+
 	}
 
 }

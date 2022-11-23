@@ -134,7 +134,7 @@ namespace tri {
 					if (id == Reflection::getClassId<Map>()) {
 						if (ImGui::BeginPopupContextItem()) {
 							if (ImGui::MenuItem("Load")) {
-								Map::loadAndSetToActiveWorld(path);
+								Map::loadAndSetToActiveWorld(path, RuntimeMode::EDIT);
 							}
 							bool isLoaded = env->assetManager->getStatus(path) & AssetManager::Status::LOADED;
 							if (ImGui::MenuItem("Unload", nullptr, nullptr, isLoaded)) {

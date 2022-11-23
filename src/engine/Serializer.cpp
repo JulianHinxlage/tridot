@@ -11,6 +11,7 @@
 #include "engine/Map.h"
 #include "engine/MetaTypes.h"
 #include "EntityUtil.h"
+#include "Archive.h"
 #include <glm/glm.hpp>
 
 namespace tri {
@@ -544,7 +545,7 @@ namespace tri {
 					env->serializer->deserializeWorldBinary(env->world, file);
 				}
 				else {
-					Map::loadAndSetToActiveWorld(file);
+					Map::loadAndSetToActiveWorld(file, env->editor ? RuntimeMode::EDIT : RuntimeMode::PLAY);
 				}
 			}
 			else {
@@ -568,96 +569,55 @@ namespace tri {
 	}
 
 
-
-
-	template<typename T>
-	void writeBin(const T& t, std::ostream& stream) {
-		stream.write((char*)&t, sizeof(T));
-	}
-
-	void writeStr(const std::string& str, std::ostream& stream) {
-		stream.write(str.c_str(), str.size() + 1);
-	}
-
-	template<typename T>
-	void readBin(T& t, std::istream& stream) {
-		stream.read((char*)&t, sizeof(T));
-	}
-
-	void readStr(std::string& str, std::istream& stream) {
-		str.clear();
-		char c = '\0';
-		stream.read(&c, 1);
-		while (c != '\0') {
-			str += c;
-			stream.read(&c, 1);
-		}
-	}
-
-	
-
-	BinaryMapper* Serializer::getMapper(int classId) {
-		if (binaryMappers.size() <= classId) {
-			binaryMappers.resize(classId + 1);
-		}
-		if (!binaryMappers[classId]) {
-			auto mapper = std::make_shared<BinaryMapper>();
-			mapper->create(classId);
-			binaryMappers[classId] = mapper;
-		}
-		return binaryMappers[classId].get();
-	}
-
-
-	void Serializer::serializeEntityBinary(EntityId id, World* world, std::string& data) {
-		std::stringstream stream;
-		writeBin(id, stream);
+	void Serializer::serializeEntityBinary(EntityId id, World* world, Archive& memoryArchive) {
+		BinaryArchive archive(&memoryArchive);
+		
+		archive.writeBin(id);
 		for (auto* desc : Reflection::getDescriptors()) {
 			if (desc && desc->flags & ClassDescriptor::COMPONENT) {
-				if (void *comp = world->getComponent(id, desc->classId)) {
-					writeStr(desc->name, stream);
-					getMapper(desc->classId)->write(comp, stream);
+				if (void* comp = world->getComponent(id, desc->classId)) {
+					archive.writeStr(desc->name);
+					archive.writeClass(comp, desc->classId);
 				}
 			}
 		}
-		data = stream.str();
 	}
 
-	void Serializer::deserializeEntityBinary(World* world, const std::string& data) {
-		std::stringstream stream(data);
-
-		EntityId id = -1;
-		readBin(id, stream);
-		
-		id = world->addEntity(id);
-		deserializeEntityBinary(id, world, data);
+	void Serializer::deserializeEntityBinary(World* world, Archive& memoryArchive, std::map<EntityId, EntityId>* idMap) {
+		deserializeEntityBinary(-1, world, memoryArchive, idMap);
 	}
 
-	void Serializer::deserializeEntityBinary(EntityId id, World* world, const std::string& data) {
-		std::stringstream stream(data);
+	void Serializer::deserializeEntityBinary(EntityId id, World* world, Archive& memoryArchive, std::map<EntityId, EntityId>* idMap) {
+		BinaryArchive archive(&memoryArchive);
 
 		EntityId savedId = -1;
-		readBin(savedId, stream);
+		archive.readBin(savedId);
 
-		while (!stream.bad()) {
+		if (id == -1) {
+			id = world->addEntity(savedId);
+		}
+		if (id != savedId && idMap) {
+			(*idMap)[savedId] = id;
+		}
+
+		while(archive.hasDataLeft()){
 			std::string name;
-			readStr(name, stream);
+			archive.readStr(name);
 
-			if (name == ""){
+			if (name == "") {
 				break;
 			}
 
 			auto* desc = Reflection::getDescriptor(name);
 			if (desc) {
-				void *comp = world->getOrAddComponentPending(id, desc->classId);
-				getMapper(desc->classId)->read(comp, stream);
+				void* comp = world->getOrAddComponentPending(id, desc->classId);
+				archive.readClass(comp, desc->classId);
 			}
 			else {
 				break;
 			}
 		}
 	}
-
 
 	void Serializer::serializeWorldBinary(World* world, const std::string& file) {
 
@@ -672,7 +632,7 @@ namespace tri {
 				4B storage size
 				4B element size
 				str name
-			
+
 			// Body //
 			for entity count
 				4B id
@@ -681,10 +641,12 @@ namespace tri {
 				(element size Bytes) data
 		*/
 
-		std::ofstream stream(file, std::ofstream::binary);
+		FileArchive fileArchive;
+		BinaryArchive archive(&fileArchive);
+		fileArchive.openFileForWrite(file);
 
 		int magic = 'pamt';
-		writeBin(magic, stream);
+		archive.writeBin(magic);
 
 		int componentCount = 0;
 		for (auto* desc : Reflection::getDescriptors()) {
@@ -697,18 +659,18 @@ namespace tri {
 		}
 
 		int entityCount = world->getEntityStorage()->size();
-		writeBin(entityCount, stream);
-		writeBin(componentCount, stream);
+		archive.writeBin(entityCount);
+		archive.writeBin(componentCount);
 
 		//component header
 		for (auto* desc : Reflection::getDescriptors()) {
 			if (desc && desc->flags & ClassDescriptor::COMPONENT) {
 				auto* storage = world->getComponentStorage(desc->classId);
 				if (storage && storage->size() > 0) {
-					
-					writeBin(storage->size(), stream);
-					writeBin(desc->size, stream);
-					writeStr(desc->name, stream);
+
+					archive.writeBin(storage->size());
+					archive.writeBin(desc->size);
+					archive.writeStr(desc->name);
 
 				}
 			}
@@ -716,27 +678,24 @@ namespace tri {
 
 		for (int i = 0; i < entityCount; i++) {
 			EntityId id = world->getEntityStorage()->getIdByIndex(i);
-			writeBin(id, stream);
+			archive.writeBin(id);
 		}
-		
+
 		for (auto* desc : Reflection::getDescriptors()) {
 			if (desc && desc->flags & ClassDescriptor::COMPONENT) {
 				auto* storage = world->getComponentStorage(desc->classId);
 				if (storage && storage->size() > 0) {
 					int count = storage->size();
 
-					BinaryMapper* mapper = getMapper(desc->classId);
-
 					for (int i = 0; i < count; i++) {
 						EntityId id = storage->getIdByIndex(i);
-						writeBin(id, stream);
-						mapper->write(storage->getComponentByIndex(i), stream);
+						archive.writeBin(id);
+						archive.writeClass(storage->getComponentByIndex(i), desc->classId);
 					}
 				}
 			}
 		}
 
-		stream.close();
 	}
 
 	bool Serializer::deserializeWorldBinary(World* world, const std::string& file) {
@@ -765,11 +724,12 @@ namespace tri {
 		bool enablePending = world->enablePendingOperations;
 		world->enablePendingOperations = false;
 
-		std::ifstream stream(file, std::ifstream::binary);
-		if (stream.is_open()) {
+		FileArchive fileArchive;
+		BinaryArchive archive(&fileArchive);
+		if(fileArchive.openFileForRead(file)) {
 
 			int magic = 0;
-			readBin(magic, stream);
+			archive.readBin(magic);
 			if (magic != 'pamt') {
 				env->console->debug("file dose not match magic number");
 				world->enablePendingOperations = enablePending;
@@ -779,8 +739,8 @@ namespace tri {
 			int entityCount = 0;
 			int componentCount = 0;
 
-			readBin(entityCount, stream);
-			readBin(componentCount, stream);
+			archive.readBin(entityCount);
+			archive.readBin(componentCount);
 
 			std::vector<ComponentStorage*> storages;
 			std::vector<int> storageSizes;
@@ -790,9 +750,10 @@ namespace tri {
 				int storageSize = 0;
 				int elementSize = 0;
 				std::string name;
-				readBin(storageSize, stream);
-				readBin(elementSize, stream);
-				readStr(name, stream);
+				
+				archive.readBin(storageSize);
+				archive.readBin(elementSize);
+				archive.readStr(name);
 
 				auto *desc = Reflection::getDescriptor(name);
 
@@ -824,7 +785,7 @@ namespace tri {
 			// Body //
 			for (int i = 0; i < entityCount; i++) {
 				EntityId id = -1;
-				readBin(id, stream);
+				archive.readBin(id);
 				world->addEntity(id);
 			}
 
@@ -835,13 +796,11 @@ namespace tri {
 				auto *desc = Reflection::getDescriptor(storage->classId);
 				void* data = desc->alloc();
 
-				BinaryMapper* mapper = getMapper(desc->classId);
-
 				for (int j = 0; j < storageSize; j++) {
 					EntityId id = -1;
-					readBin(id, stream);
+					archive.readBin(id);
 
-					mapper->read(data, stream);
+					archive.readClass(data, desc->classId);
 					if (id != -1) {
 						world->addComponent(id, desc->classId, data);
 					}
@@ -857,151 +816,6 @@ namespace tri {
 
 		world->enablePendingOperations = enablePending;
 		return true;
-	}
-
-	void BinaryMapper::read(void* ptr, std::istream &stream) {
-		for (auto& step : steps) {
-			if (step.plain) {
-				stream.read((char*)ptr + step.offset, step.bytes);
-			}
-			else {
-				step.readCallback((uint8_t*)ptr + step.offset, stream);
-			}
-		}
-	}
-
-	void BinaryMapper::write(void* ptr, std::ostream& stream) {
-		for (auto& step : steps) {
-			if (step.plain) {
-				stream.write((char*)ptr + step.offset, step.bytes);
-			}
-			else {
-				step.writeCallback((uint8_t*)ptr + step.offset, stream);
-			}
-		}
-	}
-
-	void BinaryMapper::create(int classId, int offset) {
-		auto* desc = Reflection::getDescriptor(classId);
-		if (desc) {
-
-			if (!(desc->flags & ClassDescriptor::NO_SERIALIZE)) {
-				if (desc->isType<std::string>()) {
-					Step step;
-					step.plain = false;
-					step.offset = offset;
-					step.bytes = desc->size;
-					step.writeCallback = [](void* ptr, std::ostream& stream) {
-						writeStr(*(std::string*)ptr, stream);
-					};
-					step.readCallback = [](void* ptr, std::istream& stream) {
-						readStr(*(std::string*)ptr, stream);
-					};
-					steps.push_back(step);
-				}
-				else if (desc->flags & ClassDescriptor::VECTOR) {
-					Step step;
-					step.plain = false;
-					step.offset = offset;
-					step.bytes = desc->size;
-					int classId = desc->classId;
-					step.writeCallback = [classId](void* ptr, std::ostream& stream) {
-						auto* desc = Reflection::getDescriptor(classId);
-						if (desc) {
-							int size = desc->vectorSize(ptr);
-							writeBin(size, stream);
-							BinaryMapper mapper;
-							mapper.create(desc->elementType->classId);
-							for (int i = 0; i < size; i++) {
-								mapper.write(desc->vectorGet(ptr, i), stream);
-							}
-						}
-					};
-					step.readCallback = [classId](void* ptr, std::istream& stream) {
-						auto* desc = Reflection::getDescriptor(classId);
-						if (desc) {
-							int size = 0;
-							readBin(size, stream);
-							BinaryMapper mapper;
-							mapper.create(desc->elementType->classId);
-							for (int i = 0; i < size; i++) {
-								desc->vectorInsert(ptr, i, nullptr);
-								mapper.read(desc->vectorGet(ptr, i), stream);
-							}
-						}
-					};
-					steps.push_back(step);
-				}
-				else if (desc->flags & ClassDescriptor::REFERENCE) {
-					if (desc->elementType->flags & ClassDescriptor::ASSET) {
-						Step step;
-						step.plain = false;
-						step.offset = offset;
-						step.bytes = desc->size;
-						int classId = desc->elementType->classId;
-						step.writeCallback = [](void* ptr, std::ostream& stream) {
-							auto file = env->assetManager->getFile(*(Ref<Asset>*)ptr);
-							writeStr(file, stream);
-						};
-						step.readCallback = [classId](void* ptr, std::istream& stream) {
-							std::string file;
-							readStr(file, stream);
-							if (!file.empty()) {
-								*(Ref<Asset>*)ptr = env->assetManager->get(classId, file);
-							}
-							else {
-								*(Ref<Asset>*)ptr = nullptr;
-							}
-						};
-						steps.push_back(step);
-					}
-				}
-				else if (desc->properties.size() > 0) {
-					for (auto& prop : desc->properties) {
-						if (!(prop.flags & PropertyDescriptor::NO_SERIALIZE)) {
-							create(prop.type->classId, offset + prop.offset);
-						}
-					}
-				}
-				else {
-
-					if (!(
-						desc->isType<int>() ||
-						desc->isType<bool>() ||
-						desc->isType<float>() ||
-						desc->isType<double>() ||
-						desc->isType<EntityId>() ||
-						desc->isType<Guid>() ||
-						desc->isType<Color>() ||
-						desc->isType<glm::vec2>() ||
-						desc->isType<glm::vec3>() ||
-						desc->isType<glm::vec4>() ||
-						desc->enumValues.size() > 0
-						)) {
-						return;
-					}
-
-					Step step;
-					step.plain = true;
-					step.offset = offset;
-					step.bytes = desc->size;
-					bool hasMerged = false;
-					if (steps.size() > 0) {
-						auto& back = steps.back();
-						if (back.plain) {
-							if (step.offset == back.offset + back.bytes) {
-								back.bytes += step.bytes;
-								hasMerged = true;
-							}
-						}
-					}
-					if (!hasMerged) {
-						steps.push_back(step);
-					}
-				}
-			}
-
-		}
 	}
 
 }

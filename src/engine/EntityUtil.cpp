@@ -122,16 +122,18 @@ namespace tri {
 			});
 			env->eventManager->onComponentAdd<EntityInfo>().addListener([&](World *world, EntityId id) {
 				if (world == env->world) {
-					EntityInfo& info = *env->world->getComponent<EntityInfo>(id);
-					guidMap[info.guid] = id;
-					nameMap[info.name] = id;
+					if (EntityInfo* info = env->world->getComponent<EntityInfo>(id)) {
+						guidMap[info->guid] = id;
+						nameMap[info->name] = id;
+					}
 				}
 			});
 			env->eventManager->onComponentRemove<EntityInfo>().addListener([&](World* world, EntityId id) {
 				if (world == env->world) {
-					EntityInfo& info = *env->world->getComponent<EntityInfo>(id);
-					guidMap.erase(info.guid);
-					nameMap.erase(info.name);
+					if (EntityInfo* info = env->world->getComponent<EntityInfo>(id)) {
+						guidMap.erase(info->guid);
+						nameMap.erase(info->name);
+					}
 				}
 			});
 		}

@@ -111,6 +111,9 @@ namespace tri {
 	}
 
 	bool Connection::write(const void* data, int bytes) {
+		std::unique_lock<std::mutex> lock(writeMutex);
+		int magic = 'trid';
+		socket->write(&magic, sizeof(magic));
 		socket->write(&bytes, sizeof(bytes));
 		return socket->write(data, bytes);
 	}
@@ -121,9 +124,32 @@ namespace tri {
 
 	void Connection::runImpl(const std::function<void(Connection* conn, void* data, int bytes)>& callback) {
 		while (socket->isConnected()) {
+
+			int magic = 0;
+			while (magic != 'trid') {
+				int magicSize = sizeof(magic);
+				if (!socket->read(&magic, magicSize)) {
+					break;
+				}
+				if (magic != 'trid') {
+					env->console->log(LogLevel::TRACE, "Network", "packet magic mismatch");
+				}
+			}
+			if (magic != 'trid') {
+				break;
+			}
+
 			int packetSize = 0;
 			int packetSizeSize = sizeof(packetSize);
 			if (socket->read(&packetSize, packetSizeSize)) {
+				if (packetSizeSize != sizeof(packetSize)) {
+					break;
+				}
+				if (packetSize > 1024 * 128) {
+					env->console->log(LogLevel::TRACE, "Network", "packet size limit exceeded");
+					break;
+				}
+
 				if (buffer.size() < packetSize) {
 					buffer.resize(packetSize);
 				}
@@ -133,8 +159,17 @@ namespace tri {
 					if (socket->read(buffer.data() + index, bytes)) {
 						index += bytes;
 					}
+					else {
+						break;
+					}
+				}
+				if (index != packetSize) {
+					break;
 				}
 				callback(this, buffer.data(), packetSize);
+			}
+			else {
+				break;
 			}
 		}
 	}

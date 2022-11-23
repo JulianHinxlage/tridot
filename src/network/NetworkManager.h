@@ -8,7 +8,7 @@
 #include "core/System.h"
 #include "Connection.h"
 #include "engine/EntityEvent.h"
-#include "Packet.h"
+#include "engine/Archive.h"
 
 namespace tri {
 
@@ -50,6 +50,7 @@ namespace tri {
 		bool hasAuthority();
 		void sendToAll(const void* data, int bytes, Connection* except = nullptr);
 		void sendToAll(Packet& packet, Connection* except = nullptr);
+		std::vector<Ref<Connection>> &getConnections();
 
 		Event<Connection*> onConnect;
 		Event<Connection*> onDisconnect;

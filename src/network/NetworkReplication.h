@@ -9,7 +9,6 @@
 #include "core/System.h"
 #include "entity/World.h"
 #include "NetworkManager.h"
-#include "Packet.h"
 
 namespace tri {
 
@@ -26,6 +25,10 @@ namespace tri {
 		void setOwning(Guid guid, Connection *conn);
 		bool isOwning(Guid guid);
 		Connection* getOwningConnection(Guid guid);
+
+		void addEntity(EntityId id, Guid guid, Connection* conn = nullptr);
+		void updateEntity(EntityId id, Guid guid, Connection* conn = nullptr);
+		void removeEntity(Guid guid, Connection* conn = nullptr);
 
 	private:
 		std::set<Guid> addedRuntimeEntities;

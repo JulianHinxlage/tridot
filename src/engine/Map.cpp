@@ -29,25 +29,21 @@ namespace tri {
         }
     }
 
-    void Map::loadAndSetToActiveWorld(const std::string &file) {
+    void Map::loadAndSetToActiveWorld(const std::string &file, RuntimeMode::Mode resultingRumtimeMode) {
         env->runtimeMode->setMode(RuntimeMode::LOADING);
-        auto map = env->assetManager->get<Map>(file, AssetManager::Options::EXPLICIT_LOAD, nullptr, [](auto asset) {
+        auto map = env->assetManager->get<Map>(file, AssetManager::Options::EXPLICIT_LOAD, nullptr, [resultingRumtimeMode](auto asset) {
             ((Map*)asset.get())->setToActiveWorld();
-            env->eventManager->postTick.addListener([file = env->assetManager->getFile(asset)]() {
+            env->eventManager->postTick.addListener([file = env->assetManager->getFile(asset), resultingRumtimeMode]() {
                 env->assetManager->unload(file);
-                if (!env->editor) {
-                    env->runtimeMode->setMode(RuntimeMode::PLAY);
-                }
+                env->runtimeMode->setMode(resultingRumtimeMode);
             }, true);
             return true;
         });
         if (env->assetManager->getStatus(file) & AssetManager::Status::LOADED) {
             map->setToActiveWorld();
-            env->eventManager->postTick.addListener([file]() {
+            env->eventManager->postTick.addListener([file, resultingRumtimeMode]() {
                 env->assetManager->unload(file);
-                if (!env->editor) {
-                    env->runtimeMode->setMode(RuntimeMode::PLAY);
-                }
+                env->runtimeMode->setMode(resultingRumtimeMode);
             }, true);
         }
     }

@@ -7,6 +7,7 @@
 #include "pch.h"
 #include "core/core.h"
 #include "Prefab.h"
+#include "Archive.h"
 #include <yaml-cpp/yaml.h>
 
 namespace tri {
@@ -20,23 +21,6 @@ namespace tri {
 
 		SerialData() : node(ownigNode) {}
 		SerialData(YAML::Node& node) : node(node) {}
-	};
-
-	class BinaryMapper {
-	public:
-		class Step {
-		public:
-			bool plain;
-			int bytes;
-			int offset;
-			std::function<void(void* ptr, std::ostream& stream)> writeCallback;
-			std::function<void(void* ptr, std::istream& stream)> readCallback;
-		};
-		std::vector<Step> steps;
-
-		void read(void* ptr, std::istream& stream);
-		void write(void* ptr, std::ostream& stream);
-		void create(int classId, int offset = 0);
 	};
 
 	class Serializer : public System {
@@ -65,10 +49,10 @@ namespace tri {
 		void addSerializeCallback(int classId, const std::function<void(void* ptr, SerialData& data)>& callback);
 		void addDeserializeCallback(int classId, const std::function<void(void* ptr, SerialData& data)>& callback);
 
-		void serializeEntityBinary(EntityId id, World* world, std::string &data);
-		void deserializeEntityBinary(World* world, const std::string& data);
-		void deserializeEntityBinary(EntityId id, World* world, const std::string& data);
-
+		void serializeEntityBinary(EntityId id, World* world, Archive &archive);
+		void deserializeEntityBinary(World* world, Archive& archive, std::map<EntityId, EntityId>* idMap = nullptr);
+		void deserializeEntityBinary(EntityId id, World* world, Archive& archive, std::map<EntityId, EntityId>* idMap = nullptr);
+		
 		void serializeWorldBinary(World* world, const std::string& file);
 		bool deserializeWorldBinary(World* world, const std::string& file);
 
@@ -94,12 +78,9 @@ namespace tri {
 			});
 		}
 
-		BinaryMapper* getMapper(int classId);
 	private:
 		std::vector<std::function<void(void *ptr, SerialData& data)>> serializeCallbacks;
 		std::vector<std::function<void(void *ptr, SerialData& data)>> deserializeCallbacks;
-		
-		std::vector<std::shared_ptr<BinaryMapper>> binaryMappers;
 	};
 
 }

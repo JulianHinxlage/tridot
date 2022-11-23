@@ -28,7 +28,11 @@ namespace tri {
 		void startup() {
 			env->networkManager->packetCallbacks[NetOpcode::MAP_JOIN] = [&](Connection* conn, NetOpcode opcode, Packet& packet) {
 				if (env->networkManager->hasAuthority()) {
-					join(conn);
+					if (conn->clientState != Connection::JOINED) {
+						conn->clientState = Connection::JOINED;
+						env->console->log(LogLevel::INFO, "Network", "player join %s %i", conn->socket->getEndpoint().getAddress().c_str(), conn->socket->getEndpoint().getPort());
+						join(conn);
+					}
 				}
 			};
 			env->eventManager->onMapBegin.addListener([&](World* world, std::string file) {
@@ -67,7 +71,6 @@ namespace tri {
 		void join(Connection* conn) {
 			std::unique_lock<std::mutex> lock(env->world->performePendingMutex);
 			env->world->each<GameMode>([&](GameMode& gameMode) {
-				env->console->info("GameMode join");
 				std::map<EntityId, EntityId> idMap;
 				for (auto& prefab : gameMode.playerPrefab) {
 					if (prefab) {

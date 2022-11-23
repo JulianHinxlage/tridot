@@ -70,6 +70,52 @@ namespace tri {
 
     void Time::init() {
         env->console->addCVar("frameRateLimit", &frameRateLimit);
+
+        class Replay {
+        public:
+            std::string command;
+            float time = 0;
+        };
+        static std::vector<Replay> replays;
+        env->console->addCommand("replay", [&](auto& args) {
+            bool usage = false;
+            if (args.size() > 0) {
+                if (args[0] == "clear") {
+                    replays.clear();
+                }
+                else {
+                    float time = 0;
+                    try {
+                        time = std::stof(args[0]);
+
+                        replays.push_back({});
+                        replays.back().time = time;
+                        auto args2 = args;
+                        args2.erase(args2.begin());
+                        replays.back().command = StrUtil::join(args2, " ");
+                    }
+                    catch (...) {
+                        usage = true;
+                    }
+                }
+
+            }
+            else {
+                usage = true;
+            }
+
+            if (usage) {
+                env->console->info("usage: replay clear");
+                env->console->info("usage: replay <time> <command>");
+            }
+        });
+        env->eventManager->postTick.addListener([&]() {
+            for (auto& replay : replays) {
+                if (env->time->frameTicks(replay.time)) {
+                    env->console->executeCommand(replay.command);
+                }
+            }
+        });
     }
     
     void Time::startup() {

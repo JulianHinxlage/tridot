@@ -434,8 +434,6 @@ namespace tri {
 			}
 		}
 
-
-
 		//clear buffers
 		pendingRemoveIds.clear();
 		pendingAddIds.clear();

@@ -114,7 +114,7 @@ namespace tri {
 						std::string file = openFileDialog(".tmap\0*.tmap\0.*\0*.*\0");
 						if (!file.empty()) {
 							env->eventManager->postTick.addListener([file]() {
-								Map::loadAndSetToActiveWorld(file);
+								Map::loadAndSetToActiveWorld(file, RuntimeMode::EDIT);
 							}, true);
 						}
 					}
@@ -142,7 +142,7 @@ namespace tri {
 							env->serializer->serializeWorldBinary(env->world, "world.bin");
 							env->console->info("save (bin) world took %f s", clock.elapsed());
 						}, true);
-
+					
 					}
 					if (ImGui::MenuItem("Load Binary")) {
 						env->eventManager->postTick.addListener([]() {
@@ -218,7 +218,7 @@ namespace tri {
 					std::string file = openFileDialog(".tmap\0*.tmap\0.*\0*.*\0");
 					if (!file.empty()) {
 						env->eventManager->postTick.addListener([file]() {
-							Map::loadAndSetToActiveWorld(file);
+							Map::loadAndSetToActiveWorld(file, RuntimeMode::EDIT);
 						}, true);
 					}
 				}

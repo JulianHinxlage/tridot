@@ -1,5 +1,3 @@
-#include "NetworkManager.h"
-#include "NetworkManager.h"
 //
 // Copyright (c) 2022 Julian Hinxlage. All rights reserved.
 //
@@ -7,7 +5,6 @@
 #include "NetworkManager.h"
 #include "core/core.h"
 #include "engine/RuntimeMode.h"
-#include "Packet.h"
 #include "NetworkReplication.h"
 #include "engine/EntityUtil.h"
 #include "NetworkComponent.h"
@@ -16,6 +13,7 @@
 #if TRI_WINDOWS
 #include <winsock2.h>
 #include <ws2tcpip.h>
+#undef ERROR
 #else
 #include<unistd.h>
 #include<sys/socket.h>
@@ -173,17 +171,17 @@ namespace tri {
 
 			connection->onConnect = [&](Connection* conn) {
 				failWarning = true;
-				env->console->info("connected to %s %i", conn->socket->getEndpoint().getAddress().c_str(), conn->socket->getEndpoint().getPort());
+				env->console->log(LogLevel::INFO, "Network", "connected to %s %i", conn->socket->getEndpoint().getAddress().c_str(), conn->socket->getEndpoint().getPort());
 				onConnect.invoke(conn);
 			};
 			connection->onDisconnect = [&](Connection* conn) {
-				env->console->info("disconnected from %s %i", conn->socket->getEndpoint().getAddress().c_str(), conn->socket->getEndpoint().getPort());
+				env->console->log(LogLevel::INFO, "Network", "disconnected from %s %i", conn->socket->getEndpoint().getAddress().c_str(), conn->socket->getEndpoint().getPort());
 				onDisconnect.invoke(conn);
 				tryReconnect = true;
 			};
 			connection->onFail = [&](Connection* conn) {
 				if (failWarning) {
-					env->console->error("failed to connect to %s %i", serverAddress.c_str(), serverPort);
+					env->console->log(LogLevel::ERROR, "Network", "failed to connect to %s %i", serverAddress.c_str(), serverPort);
 					failWarning = false;
 				}
 				tryReconnect = true;
@@ -206,15 +204,16 @@ namespace tri {
 			}
 
 			connection->onFail = [&](Connection* conn) {
-				env->console->error("failed to listen on port %i", serverPort);
+				env->console->log(LogLevel::ERROR, "Network", "failed to listen on port %i", serverPort);
 			};
 			connection->onConnect = [&](Connection* conn) {
-				env->console->info("listen on port %i", serverPort);
+				env->console->log(LogLevel::INFO, "Network", "listen on port %i", serverPort);
 			};
 			connection->runListen(serverPort, [&](Ref<Connection> conn) {
 				connections.push_back(conn);
 				conn->onDisconnect = [&](Connection* conn) {
-					env->console->info("disconnect from %s %i", conn->socket->getEndpoint().getAddress().c_str(), conn->socket->getEndpoint().getPort());
+					env->console->log(LogLevel::INFO, "Network", "disconnect from %s %i", conn->socket->getEndpoint().getAddress().c_str(), conn->socket->getEndpoint().getPort());
+					conn->clientState = Connection::NOT_CONNECTED;
 					onDisconnect.invoke(conn);
 					for (int i = 0; i < connections.size(); i++) {
 						if (connections[i].get() == conn) {
@@ -224,7 +223,8 @@ namespace tri {
 						}
 					}
 				};
-				env->console->info("connection from %s %i", conn->socket->getEndpoint().getAddress().c_str(), conn->socket->getEndpoint().getPort());
+				env->console->log(LogLevel::INFO, "Network", "connection from %s %i", conn->socket->getEndpoint().getAddress().c_str(), conn->socket->getEndpoint().getPort());
+				conn->clientState = Connection::CONNECTED;
 				onConnect.invoke(conn.get());
 				conn->run([&](Connection* conn, void* data, int bytes) {
 					onRead(conn, data, bytes);
@@ -264,11 +264,16 @@ namespace tri {
 		sendToAll(packet.data(), packet.size(), except);
 	}
 
+	std::vector<Ref<Connection>>& NetworkManager::getConnections() {
+		return connections;
+	}
+
 	void NetworkManager::onRead(Connection* conn, void* data, int bytes) {
 		TRI_PROFILE_FUNC();
-		Packet packet;
-		packet.add(data, bytes);
-		NetOpcode opcode = packet.get<NetOpcode>();
+		Packet packet(data, bytes);
+		NetOpcode opcode = packet.readBin<NetOpcode>();
+
+		//env->console->log(LogLevel::TRACE, "Network", "packet opcode: %s", EntityUtil::enumString(opcode).c_str());
 
 		auto entry = packetCallbacks.find(opcode);
 		if (entry != packetCallbacks.end()) {
@@ -276,7 +281,7 @@ namespace tri {
 		}
 		else {
 			if (opcode != NOOP) {
-				env->console->warning("invalid opcode %i", opcode);
+				env->console->log(LogLevel::TRACE, "Network", "invalid opcode %i", opcode);
 			}
 		}
 	}

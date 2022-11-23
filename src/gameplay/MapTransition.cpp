@@ -25,7 +25,7 @@ namespace tri {
 					env->eventManager->onMapBegin.addListener([previousMode](World *world, std::string file) {
 						env->runtimeMode->setMode(previousMode);
 					}, true);
-					Map::loadAndSetToActiveWorld(file);
+					Map::loadAndSetToActiveWorld(file, env->runtimeMode->getMode());
 				}
 			}
 		}
