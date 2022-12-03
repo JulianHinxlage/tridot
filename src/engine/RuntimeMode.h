@@ -63,3 +63,5 @@ namespace tri {
 	};
 
 }
+
+#define TRI_COMPONENT_TICK(T) TRI_TICK(){if(env->runtimeMode->getMode() != tri::RuntimeMode::PLAY){return;} env->world->each<T>([](EntityId id, T& t) { t.tick(id); }); }

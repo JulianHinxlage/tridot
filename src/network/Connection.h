@@ -21,6 +21,8 @@ namespace tri {
 		std::mutex writeMutex;
 		std::condition_variable reconnect;
 		bool running;
+		StringArchive readStringArchive;
+		StringArchive writeStringArchive;
 		std::function<void(Connection* conn)> onDisconnect;
 		std::function<void(Connection* conn)> onConnect;
 		std::function<void(Connection* conn)> onFail;

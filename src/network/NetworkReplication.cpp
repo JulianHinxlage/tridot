@@ -93,7 +93,6 @@ namespace tri {
 					addedNetworkEntities.insert(guid);
 					std::unique_lock<std::mutex> lock(env->world->performePendingMutex);
 					env->serializer->deserializeEntityBinary(env->world, packet, &idMap);
-
 				}
 				else {
 					env->console->log(LogLevel::TRACE, "Network", "entity %s already exists", guid.toString().c_str());

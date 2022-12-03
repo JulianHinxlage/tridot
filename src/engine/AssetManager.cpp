@@ -108,7 +108,7 @@ namespace tri {
         if (lookup != minimalPathLookupTable.end()) {
             minimalPath = lookup->second;
         }
-        else {
+        if(minimalPath.empty()) {
 #if TRI_WINDOWS
             minimalPath = minimalFilePath(StrUtil::toLower(file));
 #else

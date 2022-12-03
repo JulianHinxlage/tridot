@@ -11,8 +11,15 @@ namespace tri {
 
 	class Archive {
 	public:
-		virtual void writeBytes(const void* ptr, int bytes) = 0;
-		virtual void readBytes(void* ptr, int bytes) = 0;
+		Archive* bytesArchive;
+		Archive* stringArchive;
+		Archive* classArchive;
+
+		Archive();
+
+		virtual void writeBytes(const void* ptr, int bytes);
+		virtual void readBytes(void* ptr, int bytes);
+		virtual bool hasDataLeft();
 
 		virtual void writeClass(const void* ptr, int classId);
 		virtual void readClass(void* ptr, int classId);
@@ -21,7 +28,6 @@ namespace tri {
 		virtual void readStr(std::string &str);
 		virtual std::string readStr();
 
-		virtual bool hasDataLeft() { return false; }
 
 		template<typename T>
 		void write(const T& value) {
@@ -56,6 +62,9 @@ namespace tri {
 			readBin<T>(value);
 			return value;
 		}
+
+		void writeVarInt(const int64_t& value);
+		void readVarInt(int64_t &value);
 	};
 
 	class MemoryArchive : public Archive {
@@ -65,10 +74,7 @@ namespace tri {
 
 		void writeBytes(const void* ptr, int bytes) override;
 		void readBytes(void* ptr, int bytes) override;
-		bool hasDataLeft() override {
-			return readIndex < dataSize;
-		}
-
+		bool hasDataLeft() override;
 
 		void skip(int bytes);
 		void unskip(int bytes);
@@ -122,26 +128,17 @@ namespace tri {
 
 	class BinaryArchive : public Archive {
 	public:
-		Archive *base;
-
-		BinaryArchive(Archive* base)
-			: base(base) {}
-
-		void writeBytes(const void* ptr, int bytes) override {
-			base->writeBytes(ptr, bytes);
-		}
-
-		void readBytes(void* ptr, int bytes) override {
-			base->readBytes(ptr, bytes);
-		}
-
-		bool hasDataLeft() override { 
-			return base->hasDataLeft();
-		}
-
-
 		void writeClass(const void* ptr, int classId) override;
 		void readClass(void* ptr, int classId) override;
+	};
+
+	class StringArchive : public Archive {
+	public:
+		std::unordered_map<int, std::string> strById;
+		std::unordered_map<std::string, int> idByStr;
+
+		void writeStr(const std::string& str) override;
+		void readStr(std::string& str) override;
 	};
 
 }

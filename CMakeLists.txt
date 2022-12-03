@@ -260,7 +260,7 @@ endif()
 
 
 #folders
-set_target_properties(TridotCore TridotWindow TridotEntity TridotEngine TridotDebugMenu TridotRender TridotEditorModule TridotGameplay TridotParticleSystem TridotAnimation TridotAnimationEditor TridotAudio TridotNetwork TridotEditor TridotGame TridotGameFull PROPERTIES FOLDER Tridot)
+set_target_properties(TridotCore TridotWindow TridotEntity TridotEngine TridotDebugMenu TridotRender TridotEditorModule TridotGameplay TridotParticleSystem TridotAnimation TridotAnimationEditor TridotAudio TridotNetwork TridotEditor TridotGame TridotHost TridotClient TridotServer TridotGameFull PROPERTIES FOLDER Tridot)
 set_target_properties(glfw uninstall PROPERTIES FOLDER Libs)
 
 project(Tridot)

@@ -570,7 +570,8 @@ namespace tri {
 
 
 	void Serializer::serializeEntityBinary(EntityId id, World* world, Archive& memoryArchive) {
-		BinaryArchive archive(&memoryArchive);
+		BinaryArchive archive;
+		archive.bytesArchive = &memoryArchive;
 		
 		archive.writeBin(id);
 		for (auto* desc : Reflection::getDescriptors()) {
@@ -588,7 +589,8 @@ namespace tri {
 	}
 
 	void Serializer::deserializeEntityBinary(EntityId id, World* world, Archive& memoryArchive, std::map<EntityId, EntityId>* idMap) {
-		BinaryArchive archive(&memoryArchive);
+		BinaryArchive archive;
+		archive.bytesArchive = &memoryArchive;
 
 		EntityId savedId = -1;
 		archive.readBin(savedId);
@@ -642,7 +644,8 @@ namespace tri {
 		*/
 
 		FileArchive fileArchive;
-		BinaryArchive archive(&fileArchive);
+		BinaryArchive archive;
+		archive.bytesArchive = &fileArchive;
 		fileArchive.openFileForWrite(file);
 
 		int magic = 'pamt';
@@ -725,7 +728,8 @@ namespace tri {
 		world->enablePendingOperations = false;
 
 		FileArchive fileArchive;
-		BinaryArchive archive(&fileArchive);
+		BinaryArchive archive;
+		archive.bytesArchive = &fileArchive;
 		if(fileArchive.openFileForRead(file)) {
 
 			int magic = 0;

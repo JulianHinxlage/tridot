@@ -38,7 +38,7 @@ namespace tri {
 		int bytesUpPerSecond = 0;
 		int bytesDownPerSecond = 0;
 
-		void init();
+		void init() override;
 		void startup() override;
 		void tick() override;
 		void shutdown() override;
@@ -50,7 +50,8 @@ namespace tri {
 		bool hasAuthority();
 		void sendToAll(const void* data, int bytes, Connection* except = nullptr);
 		void sendToAll(Packet& packet, Connection* except = nullptr);
-		std::vector<Ref<Connection>> &getConnections();
+		std::vector<Ref<Connection>>& getConnections();
+		Ref<Connection> &getConnection();
 
 		Event<Connection*> onConnect;
 		Event<Connection*> onDisconnect;

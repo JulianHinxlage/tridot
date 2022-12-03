@@ -324,7 +324,7 @@ namespace tri {
 			bool equals(void* v1, void* v2) const override {
 				if constexpr (impl::is_vector<T>::value) {
 					if constexpr (impl::has_equal<T, T>()) {
-						if constexpr (impl::has_equal<T::value_type, T::value_type>()) {
+						if constexpr (impl::has_equal<typename T::value_type, typename T::value_type>()) {
 							return *(T*)v1 == *(T*)v2;
 						}
 					}
@@ -339,7 +339,7 @@ namespace tri {
 			bool hasEquals() const override {
 				if constexpr (impl::is_vector<T>::value) {
 					if constexpr (impl::has_equal<T, T>()) {
-						if constexpr (impl::has_equal<T::value_type, T::value_type>()) {
+						if constexpr (impl::has_equal<typename T::value_type, typename T::value_type>()) {
 							return true;
 						}
 					}
@@ -491,8 +491,8 @@ namespace tri {
 
 			ClassDescriptor* desc;
 			if constexpr (impl::is_vector<T>::value) {
-				desc = new ClassDescriptorVector<T::value_type>();
-				desc->elementType = descriptors[getClassId<T::value_type>()];
+				desc = new ClassDescriptorVector<typename T::value_type>();
+				desc->elementType = descriptors[getClassId<typename T::value_type>()];
 				desc->flags = ClassDescriptor::VECTOR;
 			}
 			else {

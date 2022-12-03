@@ -59,7 +59,14 @@ namespace tri {
 			{
 				TRI_PROFILE("process property update");
 				std::unique_lock<std::mutex> lock(env->world->performePendingMutex);
-				BinaryArchive archive(&packet);
+
+
+				BinaryArchive binaryArchive;
+				packet.classArchive = &binaryArchive;
+				packet.stringArchive = &conn->readStringArchive;
+				binaryArchive.bytesArchive = &packet;
+				binaryArchive.stringArchive = &conn->readStringArchive;
+				conn->readStringArchive.bytesArchive = &packet;
 
 				Guid guid;
 				EntityId id;
@@ -84,13 +91,13 @@ namespace tri {
 									if (void* comp = env->world->getComponent(id, desc->classId)) {
 										void* ptr = (uint8_t*)comp + prop.offset;
 										if (!ignoreProperty && (prop.flags & PropertyDescriptor::REPLICATE)) {
-											archive.readClass(ptr, prop.type->classId);
+											packet.readClass(ptr, prop.type->classId);
 										}
 										else {
 											//todo: cache tmp buffers
 											DynamicObjectBuffer tmp;
 											tmp.set(prop.type->classId);
-											archive.readClass(tmp.get(), prop.type->classId);
+											packet.readClass(tmp.get(), prop.type->classId);
 										}
 									}
 									else {
@@ -144,13 +151,33 @@ namespace tri {
 				packet.reset();
 				env->networkManager->sendToAll(packet, conn);
 			}
+
+			packet.classArchive = nullptr;
+			packet.stringArchive = nullptr;
+			conn->readStringArchive.bytesArchive = nullptr;
 		};
 
 	}
 
 	void PropertyReplication::tick() {
+		if (env->networkManager->getMode() == CLIENT) {
+			replicateToConnection(env->networkManager->getConnection().get());
+		}
+		else if (env->networkManager->getMode() == SERVER || env->networkManager->getMode() == HOST) {
+			for (auto& conn : env->networkManager->getConnections()) {
+				replicateToConnection(conn.get());
+			}
+		}
+	}
+
+	void PropertyReplication::replicateToConnection(Connection* conn) {
 		Packet packet;
-		BinaryArchive archive(&packet);
+		BinaryArchive binaryArchive;
+		packet.classArchive = &binaryArchive;
+		packet.stringArchive = &conn->writeStringArchive;
+		binaryArchive.bytesArchive = &packet;
+		binaryArchive.stringArchive = &conn->writeStringArchive;
+		conn->writeStringArchive.bytesArchive = &packet;
 
 		packet.writeBin(NetOpcode::PROPERTY_DATA);
 		bool hasData = false;
@@ -212,7 +239,7 @@ namespace tri {
 													packet.writeStr(desc->name);
 													packet.writeBin((uint8_t)j);
 
-													archive.writeClass(ptr, prop.type->classId);
+													packet.writeClass(ptr, prop.type->classId);
 													hasData = true;
 													prop.type->copy(ptr, ptr2);
 												}
@@ -235,9 +262,10 @@ namespace tri {
 
 		if (hasData) {
 			packet.writeBin(NextField::PACKET_END);
-			env->networkManager->sendToAll(packet);
+			conn->write(packet);
 		}
 
+		conn->writeStringArchive.bytesArchive = nullptr;
 	}
 
 }

@@ -7,6 +7,7 @@
 #include "pch.h"
 #include "core/System.h"
 #include "entity/ComponentStorage.h"
+#include "Connection.h"
 
 namespace tri {
 
@@ -15,6 +16,8 @@ namespace tri {
 		void init() override;
 		void startup() override;
 		void tick() override;
+
+		void replicateToConnection(Connection* conn);
 
 	private:
 		std::vector<std::vector<std::shared_ptr<ComponentStorage>>> storages;

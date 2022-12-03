@@ -74,8 +74,8 @@ namespace tri {
 				}
 			}
 
-			env->console->info("%i k/sec up", bytesUpPerSecond / 1000);
-			env->console->info("%i k/sec down", bytesDownPerSecond / 1000);
+			env->console->info("%f k/sec up", (float)bytesUpPerSecond / 1000.0f);
+			env->console->info("%f k/sec down", (float)bytesDownPerSecond / 1000.0f);
 		});
 	}
 
@@ -266,6 +266,10 @@ namespace tri {
 
 	std::vector<Ref<Connection>>& NetworkManager::getConnections() {
 		return connections;
+	}
+
+	Ref<Connection>& NetworkManager::getConnection() {
+		return connection;
 	}
 
 	void NetworkManager::onRead(Connection* conn, void* data, int bytes) {
