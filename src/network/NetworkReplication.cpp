@@ -60,18 +60,26 @@ namespace tri {
 
 		env->networkManager->packetCallbacks[NetOpcode::MAP_LOADED] = [&](Connection* conn, NetOpcode opcode, Packet& packet) {
 			if (env->networkManager->hasAuthority()) {
+				Clock::sleep(0.25);
+
 				for (auto &guid : removedMapEntities) {
 					removeEntity(guid, conn);
 				}
+
+				Clock::sleep(0.25);
 
 				for (auto& guid : addedRuntimeEntities) {
 					addEntity(EntityUtil::getEntityByGuid(guid), guid, conn);
 				}
 
+				Clock::sleep(0.25);
+
 				env->world->each<NetworkComponent>([&](EntityId id, NetworkComponent& net) {
 					Guid guid = EntityUtil::getGuid(id);
 					updateEntity(id, guid, conn);
 				});
+
+				Clock::sleep(0.25);
 
 				Packet reply;
 				reply.writeBin(NetOpcode::MAP_SYNCED);

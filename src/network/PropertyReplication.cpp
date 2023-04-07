@@ -48,6 +48,88 @@ namespace tri {
 	void PropertyReplication::init() {
 		env->runtimeMode->setActiveSystem<PropertyReplication>({ RuntimeMode::LOADING, RuntimeMode::EDIT, RuntimeMode::PAUSED }, true);
 		env->jobManager->addJob("Network")->addSystem<PropertyReplication>();
+
+		env->console->addCVar("networkReplicationRate", &networkReplicationRate);
+	}
+
+	void relayPacket(Packet &packet, Connection *conn) {
+		Packet relay;
+		BinaryArchive binaryArchive;
+		relay.classArchive = &binaryArchive;
+		relay.stringArchive = &conn->writeStringArchive;
+		binaryArchive.bytesArchive = &relay;
+		binaryArchive.stringArchive = &conn->writeStringArchive;
+		conn->writeStringArchive.bytesArchive = &relay;
+
+		relay.reserve(packet.size());
+
+		NetOpcode opcode;
+		packet.readBin(opcode);
+		relay.writeBin(opcode);
+
+		Guid guid;
+		EntityId id;
+		bool ignoreProperty = true;
+		while (true) {
+			NextField next = PACKET_END;
+			packet.readBin(next);
+			relay.writeBin(next);
+
+			if (next == PROPERTY) {
+
+				std::string name;
+				uint8_t index = 0;
+				packet.readStr(name);
+				relay.writeStr(name);
+				packet.readBin(index);
+				relay.writeBin(index);
+
+				bool processedProperty = false;
+				for (auto* desc : Reflection::getDescriptors()) {
+					if (desc && desc->name == name) {
+						if (desc->properties.size() > index) {
+							auto& prop = desc->properties[index];
+
+							//todo: cache tmp buffers
+							DynamicObjectBuffer tmp;
+							tmp.set(prop.type->classId);
+							packet.readClass(tmp.get(), prop.type->classId);
+							relay.writeClass(tmp.get(), prop.type->classId);
+
+							break;
+						}
+					}
+				}
+			}
+			else if (next == ENTITY) {
+				packet.readBin(guid);
+				relay.writeBin(guid);
+				ignoreProperty = true;
+
+				if (env->networkManager->hasAuthority()) {
+					if (env->networkReplication->getOwningConnection(guid) == conn) {
+						id = EntityUtil::getEntityByGuid(guid);
+						if (id != -1) {
+							ignoreProperty = false;
+						}
+					}
+				}
+				else {
+					if (!env->networkReplication->isOwning(guid)) {
+						id = EntityUtil::getEntityByGuid(guid);
+						if (id != -1) {
+							ignoreProperty = false;
+						}
+					}
+				}
+			}
+			else if (next == PACKET_END) {
+				break;
+			}
+		}
+
+		conn->write(relay);
+		conn->writeStringArchive.bytesArchive = nullptr;
 	}
 
 	void PropertyReplication::startup() {
@@ -55,6 +137,8 @@ namespace tri {
 			if (!env->networkReplication || !env->networkManager) {
 				return;
 			}
+
+			std::unique_lock<std::mutex> lock(mutex);
 
 			{
 				TRI_PROFILE("process property update");
@@ -148,8 +232,12 @@ namespace tri {
 			if (env->networkManager->hasAuthority()) {
 				TRI_PROFILE("relay property update");
 				//relay packet to other clients
-				packet.reset();
-				env->networkManager->sendToAll(packet, conn);
+				for (auto &c : env->networkManager->getConnections()) {
+					if (c && c.get() != conn) {
+						packet.reset();
+						relayPacket(packet, c.get());
+					}
+				}
 			}
 
 			packet.classArchive = nullptr;
@@ -160,14 +248,18 @@ namespace tri {
 	}
 
 	void PropertyReplication::tick() {
-		if (env->networkManager->getMode() == CLIENT) {
-			replicateToConnection(env->networkManager->getConnection().get());
-		}
-		else if (env->networkManager->getMode() == SERVER || env->networkManager->getMode() == HOST) {
-			for (auto& conn : env->networkManager->getConnections()) {
-				replicateToConnection(conn.get());
+		{
+			std::unique_lock<std::mutex> lock(mutex);
+			if (env->networkManager->getMode() == CLIENT) {
+				replicateToConnection(env->networkManager->getConnection().get());
+			}
+			else if (env->networkManager->getMode() == SERVER || env->networkManager->getMode() == HOST) {
+				for (auto& conn : env->networkManager->getConnections()) {
+					replicateToConnection(conn.get());
+				}
 			}
 		}
+		updateShadowState();
 	}
 
 	void PropertyReplication::replicateToConnection(Connection* conn) {
@@ -182,7 +274,7 @@ namespace tri {
 		packet.writeBin(NetOpcode::PROPERTY_DATA);
 		bool hasData = false;
 
-		if (env->time->frameTicks(1.0f / 60.0f)) {
+		if (env->time->frameTicks(1.0f / networkReplicationRate)) {
 			if (env->networkManager->isConnected()) {
 
 				std::vector<EntityId> ids;
@@ -195,7 +287,7 @@ namespace tri {
 							guids.push_back(guid);
 						}
 					}
-					});
+				});
 
 				for (int i = 0; i < ids.size(); i++) {
 					EntityId& id = ids[i];
@@ -241,13 +333,8 @@ namespace tri {
 
 													packet.writeClass(ptr, prop.type->classId);
 													hasData = true;
-													prop.type->copy(ptr, ptr2);
 												}
 											}
-											else {
-												buffer->addComponent(id, ptr);
-											}
-
 										}
 									}
 								}
@@ -266,6 +353,74 @@ namespace tri {
 		}
 
 		conn->writeStringArchive.bytesArchive = nullptr;
+	}
+
+	void PropertyReplication::updateShadowState() {
+		if (env->time->frameTicks(1.0f / networkReplicationRate)) {
+			if (env->networkManager->isConnected()) {
+				std::unique_lock<std::mutex> lock(env->world->performePendingMutex);
+
+				std::vector<EntityId> ids;
+				std::vector<Guid> guids;
+				env->world->each<NetworkComponent>([&](EntityId id, NetworkComponent& net) {
+					if (net.syncAlways) {
+						Guid guid = EntityUtil::getGuid(id);
+						if (env->networkReplication->isOwning(guid)) {
+							ids.push_back(id);
+							guids.push_back(guid);
+						}
+					}
+				});
+
+				for (int i = 0; i < ids.size(); i++) {
+					EntityId& id = ids[i];
+					Guid& guid = guids[i];
+
+					for (auto* desc : Reflection::getDescriptors()) {
+						if (desc && (desc->flags & ClassDescriptor::COMPONENT)) {
+							if (desc->flags & ClassDescriptor::REPLICATE) {
+								bool first = true;
+								if (void* comp = env->world->getComponent(id, desc->classId)) {
+
+									if (storages.size() <= desc->classId) {
+										storages.resize(desc->classId + 1);
+										storages[desc->classId].resize(desc->properties.size());
+									}
+
+									auto& buffers = storages[desc->classId];
+									for (int j = 0; j < desc->properties.size(); j++) {
+										auto& prop = desc->properties[j];
+										if (prop.flags & PropertyDescriptor::REPLICATE) {
+
+											if (!buffers[j]) {
+												buffers[j] = std::make_shared<ComponentStorage>(prop.type->classId);
+											}
+											auto& buffer = buffers[j];
+
+
+											void* ptr = (uint8_t*)comp + prop.offset;
+											void* ptr2 = buffer->getComponentById(id);
+
+											if (ptr2) {
+												if (!classEquals(ptr, ptr2, prop.type, 0.0001f)) {
+													prop.type->copy(ptr, ptr2);
+												}
+											}
+											else {
+												buffer->addComponent(id, ptr);
+											}
+
+										}
+									}
+								}
+							}
+
+						}
+					}
+				}
+
+			}
+		}
 	}
 
 }
