@@ -1,3 +1,0 @@
-loadConfig ../../configEditor.txt
-addModuleDirectory $/../
-loadModule Template

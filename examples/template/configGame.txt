@@ -1,3 +1,0 @@
-loadConfig ../../configGame.txt
-addModuleDirectory $/../
-loadModule Template

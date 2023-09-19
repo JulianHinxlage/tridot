@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.0)
 set(CMAKE_CXX_STANDARD 20)
+set(SOLUTION_NAME "tridot")
 
 #general settings
 if(WIN32)
@@ -18,6 +19,20 @@ endif()
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 set(CMAKE_FOLDER Libs)
 
+
+function(assign_source_group)
+    foreach(source IN LISTS ${ARGN})
+        file(RELATIVE_PATH source_rel "${CMAKE_CURRENT_SOURCE_DIR}" "${source}")
+        get_filename_component(source_path "${source_rel}" PATH)
+        string(REPLACE "/" "\\" source_path_msvc "${source_path}")
+        source_group("${source_path_msvc}" FILES "${source}")
+    endforeach()
+endfunction(assign_source_group)
+
+file(GLOB_RECURSE ALL_SOURCES CONFIGURE_DEPENDS src/*.cpp src/*.h)
+assign_source_group(ALL_SOURCES)
+
+
 #Tridot Core
 project(TridotCore)
 file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS src/core/*.cpp)
@@ -28,6 +43,7 @@ add_library(${PROJECT_NAME} SHARED ${SOURCES} ${SOURCES2})
 target_precompile_headers(${PROJECT_NAME} PUBLIC src/pch.h)
 target_include_directories(${PROJECT_NAME} PUBLIC src src/core extern)
 target_include_directories(${PROJECT_NAME} PRIVATE src/core)
+set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER ${SOLUTION_NAME})
 
 if (CMAKE_BUILD_TYPE MATCHES "Debug")
     target_compile_definitions(${PROJECT_NAME} PUBLIC TRI_DEBUG)
@@ -47,6 +63,8 @@ add_library(${PROJECT_NAME} SHARED ${SOURCES})
 target_precompile_headers(${PROJECT_NAME} PUBLIC src/pch.h)
 target_include_directories(${PROJECT_NAME} PRIVATE src/entity)
 target_link_libraries(${PROJECT_NAME} PUBLIC TridotCore)
+set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER ${SOLUTION_NAME})
+
 
 #Tridot Window
 project(TridotWindow)
@@ -64,6 +82,8 @@ else()
     target_link_libraries(${PROJECT_NAME} TridotCore glm glfw GL glew pthread stdc++fs)
 endif()
 target_include_directories(${PROJECT_NAME} PUBLIC extern extern/glm extern/glfw/include extern/glew/include extern/imgui)
+set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER ${SOLUTION_NAME})
+
 
 
 #Tridot Engine
@@ -75,6 +95,8 @@ target_include_directories(${PROJECT_NAME} PUBLIC extern/glm extern/yaml-cpp/inc
 target_include_directories(${PROJECT_NAME} PRIVATE src)
 add_subdirectory(extern/yaml-cpp)
 target_link_libraries(${PROJECT_NAME} PUBLIC glm yaml-cpp TridotCore TridotEntity)
+set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER ${SOLUTION_NAME})
+
 
 
 
@@ -85,6 +107,8 @@ add_library(${PROJECT_NAME} SHARED ${SOURCES})
 target_precompile_headers(${PROJECT_NAME} PUBLIC src/pch.h)
 target_include_directories(${PROJECT_NAME} PRIVATE src src/debugMenu)
 target_link_libraries(${PROJECT_NAME} PUBLIC TridotCore TridotWindow TridotEngine)
+set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER ${SOLUTION_NAME})
+
 
 #Tridot Editor Module
 project(TridotEditorModule)
@@ -93,6 +117,8 @@ add_library(${PROJECT_NAME} SHARED ${SOURCES})
 target_precompile_headers(${PROJECT_NAME} PUBLIC src/pch.h)
 target_include_directories(${PROJECT_NAME} PRIVATE src src/editor)
 target_link_libraries(${PROJECT_NAME} PUBLIC TridotCore TridotWindow TridotEntity TridotEngine TridotRender TridotAnimation)
+set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER ${SOLUTION_NAME})
+
 
 #Tridot Render
 project(TridotRender)
@@ -101,6 +127,8 @@ add_library(${PROJECT_NAME} SHARED ${SOURCES})
 target_precompile_headers(${PROJECT_NAME} PUBLIC src/pch.h)
 target_include_directories(${PROJECT_NAME} PRIVATE src src/render)
 target_link_libraries(${PROJECT_NAME} PUBLIC TridotCore TridotWindow TridotEngine)
+set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER ${SOLUTION_NAME})
+
 
 #Tridot Physics
 project(TridotPhysics)
@@ -110,6 +138,8 @@ target_precompile_headers(${PROJECT_NAME} PUBLIC src/pch.h)
 target_include_directories(${PROJECT_NAME} PRIVATE src src/physics extern/bullet3/src)
 add_subdirectory(extern/bullet3)
 target_link_libraries(${PROJECT_NAME} PUBLIC TridotCore TridotEngine BulletDynamics BulletCollision LinearMath)
+set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER ${SOLUTION_NAME})
+
 
 #Tridot Animation
 project(TridotAnimation)
@@ -118,6 +148,7 @@ add_library(${PROJECT_NAME} SHARED ${SOURCES})
 target_precompile_headers(${PROJECT_NAME} PUBLIC src/pch.h)
 target_include_directories(${PROJECT_NAME} PRIVATE src src/animation)
 target_link_libraries(${PROJECT_NAME} PUBLIC TridotCore TridotEntity TridotEngine)
+set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER ${SOLUTION_NAME})
 
 #Tridot Animation Editor
 project(TridotAnimationEditor)
@@ -126,6 +157,7 @@ add_library(${PROJECT_NAME} SHARED ${SOURCES})
 target_precompile_headers(${PROJECT_NAME} PUBLIC src/pch.h)
 target_include_directories(${PROJECT_NAME} PRIVATE src src/animationEditor)
 target_link_libraries(${PROJECT_NAME} PUBLIC TridotCore TridotAnimation TridotEditorModule)
+set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER ${SOLUTION_NAME})
 
 #Tridot Network
 project(TridotNetwork)
@@ -137,6 +169,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC TridotCore TridotEntity TridotEngin
 if(WIN32)
     target_link_libraries(${PROJECT_NAME} PRIVATE ws2_32)
 endif()
+set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER ${SOLUTION_NAME})
 
 #Tridot Particle System
 project(TridotParticleSystem)
@@ -145,6 +178,7 @@ add_library(${PROJECT_NAME} SHARED ${SOURCES})
 target_precompile_headers(${PROJECT_NAME} PUBLIC src/pch.h)
 target_include_directories(${PROJECT_NAME} PRIVATE src src/particleSystem)
 target_link_libraries(${PROJECT_NAME} PUBLIC TridotCore TridotEntity TridotEngine)
+set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER ${SOLUTION_NAME})
 
 #Tridot Audio
 project(TridotAudio)
@@ -158,6 +192,7 @@ set(LIBTYPE "STATIC")
 add_subdirectory(extern/openal)
 target_include_directories(${PROJECT_NAME} PRIVATE extern/openal/include)
 target_link_libraries(${PROJECT_NAME} PRIVATE OpenAL)
+set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER ${SOLUTION_NAME})
 
 #Tridot Gameplay
 project(TridotGameplay)
@@ -166,7 +201,7 @@ add_library(${PROJECT_NAME} SHARED ${SOURCES})
 target_precompile_headers(${PROJECT_NAME} PUBLIC src/pch.h)
 target_include_directories(${PROJECT_NAME} PRIVATE src src/gameplay)
 target_link_libraries(${PROJECT_NAME} PUBLIC TridotCore TridotEntity TridotEngine TridotWindow TridotPhysics)
-
+set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER ${SOLUTION_NAME})
 
 
 #Tridot Editor Executable
@@ -177,6 +212,8 @@ target_precompile_headers(${PROJECT_NAME} PUBLIC src/pch.h)
 target_include_directories(${PROJECT_NAME} PUBLIC src src/launch/editor)
 target_link_libraries(${PROJECT_NAME} PUBLIC TridotCore)
 add_dependencies(${PROJECT_NAME} TridotWindow TridotEntity TridotEditorModule TridotDebugMenu TridotEngine TridotRender TridotPhysics TridotAnimation TridotParticleSystem TridotAnimationEditor TridotGameplay TridotAudio TridotNetwork)
+set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER ${SOLUTION_NAME})
+set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${PROJECT_NAME})
 
 #Tridot Game Executable
 project(TridotGame)
@@ -186,6 +223,7 @@ target_precompile_headers(${PROJECT_NAME} PUBLIC src/pch.h)
 target_include_directories(${PROJECT_NAME} PUBLIC src src/launcher/game)
 target_link_libraries(${PROJECT_NAME} PUBLIC TridotCore)
 add_dependencies(${PROJECT_NAME} TridotWindow TridotEntity TridotDebugMenu TridotEngine TridotRender TridotPhysics TridotAnimation TridotParticleSystem TridotGameplay TridotAudio TridotNetwork)
+set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER ${SOLUTION_NAME})
 
 
 project(TridotHost)
@@ -195,6 +233,8 @@ target_precompile_headers(${PROJECT_NAME} PUBLIC src/pch.h)
 target_include_directories(${PROJECT_NAME} PUBLIC src src/launcher/host)
 target_link_libraries(${PROJECT_NAME} PUBLIC TridotCore)
 add_dependencies(${PROJECT_NAME} TridotWindow TridotEntity TridotDebugMenu TridotEngine TridotRender TridotPhysics TridotAnimation TridotParticleSystem TridotGameplay TridotAudio TridotNetwork)
+set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER ${SOLUTION_NAME})
+
 
 project(TridotClient)
 file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS src/launch/client/*.cpp)
@@ -203,6 +243,7 @@ target_precompile_headers(${PROJECT_NAME} PUBLIC src/pch.h)
 target_include_directories(${PROJECT_NAME} PUBLIC src src/launcher/client)
 target_link_libraries(${PROJECT_NAME} PUBLIC TridotCore)
 add_dependencies(${PROJECT_NAME} TridotWindow TridotEntity TridotDebugMenu TridotEngine TridotRender TridotPhysics TridotAnimation TridotParticleSystem TridotGameplay TridotAudio TridotNetwork)
+set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER ${SOLUTION_NAME})
 
 set(CMAKE_WIN32_EXECUTABLE false)
 project(TridotServer)
@@ -213,6 +254,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC src src/launcher/server)
 target_link_libraries(${PROJECT_NAME} PUBLIC TridotCore)
 set(CMAKE_WIN32_EXECUTABLE true)
 add_dependencies(${PROJECT_NAME} TridotWindow TridotEntity TridotEngine TridotPhysics TridotAnimation TridotParticleSystem TridotGameplay TridotAudio TridotNetwork)
+set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER ${SOLUTION_NAME})
 
 
 #Fat Game Binary
@@ -239,6 +281,7 @@ file(GLOB IMGUI_SOURCES CONFIGURE_DEPENDS extern/imgui/*.cpp extern/imgui/misc/c
 add_executable(${PROJECT_NAME} ${SOURCES} ${SOURCES2} ${IMGUI_SOURCES})
 target_precompile_headers(${PROJECT_NAME} PUBLIC src/pch.h)
 target_include_directories(${PROJECT_NAME} PUBLIC src src/core src/launche src/render src/window)
+set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER ${SOLUTION_NAME})
 
 if(WIN32)
     target_link_libraries(${PROJECT_NAME} glm glfw opengl32 glew_s yaml-cpp imm32)
@@ -260,7 +303,6 @@ endif()
 
 
 #folders
-set_target_properties(TridotCore TridotWindow TridotEntity TridotEngine TridotDebugMenu TridotRender TridotEditorModule TridotGameplay TridotParticleSystem TridotAnimation TridotAnimationEditor TridotAudio TridotNetwork TridotEditor TridotGame TridotHost TridotClient TridotServer TridotGameFull PROPERTIES FOLDER Tridot)
 set_target_properties(glfw uninstall PROPERTIES FOLDER Libs)
 
-project(Tridot)
+project(${SOLUTION_NAME})

@@ -2,6 +2,7 @@
 cmake-build-*/
 out*/
 build*/
+deploy*/
 
 #IDE directories
 .idea/

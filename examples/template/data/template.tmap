@@ -1,0 +1,79 @@
+Header:
+  Entity: 4
+  Camera: 1
+  EntityInfo: 4
+  AmbientLight: 1
+  DirectionalLight: 1
+  MeshComponent: 1
+  Transform: 4
+  ExampleComponent: 1
+Body:
+  - id: 0
+    active: true
+    Camera:
+      forward: [0.668658376, -0.495663673, -0.55426842]
+      up: [0.381605208, 0.868514538, -0.316322535]
+      right: [0.638179779, 0, 0.769887388]
+      eyePosition: [-2.5, 2, 2]
+      output:
+        {}
+      isPrimary: true
+      active: true
+      type: PERSPECTIVE
+      near: 0.00999999978
+      far: 1000
+      fieldOfView: 60
+      aspectRatio: 3.8312757
+    EntityInfo:
+      name: Camera
+      guid: 14eba7715f2adcd58be1234a67f25f97
+    Transform:
+      position: [-2.5, 2, 2]
+      scale: [1, 1, 1]
+      rotation: [-0.518598795, -0.878664672, 0]
+      parent: -1
+  - id: 1
+    active: true
+    EntityInfo:
+      name: AmbientLight
+      guid: 8627a45c633dae8db7ef91d923be0816
+    AmbientLight:
+      color: [255, 255, 255, 255]
+      intensity: 0.5
+    Transform:
+      position: [0, 0, 0]
+      scale: [1, 1, 1]
+      rotation: [0, 0, 0]
+      parent: -1
+  - id: 2
+    active: true
+    EntityInfo:
+      name: DirectionalLight
+      guid: ab06db80a661944099bee5f5030a5ea8
+    DirectionalLight:
+      color: [255, 255, 255, 255]
+      intensity: 1.5
+      shadows: true
+      shadowMap:
+        {}
+    Transform:
+      position: [0, 0, 0]
+      scale: [1, 1, 1]
+      rotation: [0.17453292, 0.436332315, -0.87266463]
+      parent: -1
+  - id: 3
+    active: true
+    EntityInfo:
+      name: Cube
+      guid: 81d7187ce0e78233a369a6914361b58e
+    MeshComponent:
+      mesh: models/cube.obj
+      material: ~
+      color: [238, 9, 9, 255]
+    Transform:
+      position: [0, 0, 0]
+      scale: [1, 1, 1]
+      rotation: [0, 0, 0]
+      parent: -1
+    ExampleComponent:
+      rotationSpeed: 1

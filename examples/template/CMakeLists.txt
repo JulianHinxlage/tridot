@@ -1,8 +1,10 @@
 cmake_minimum_required(VERSION 3.0)
 set(CMAKE_CXX_STANDARD 20)
 
-set(TRIDOT_DIRECTORY "../..")
+set(SOLUTION_NAME "template")
+set(ENGINE_DIR "../..")
 
+#general settings
 if(WIN32)
     set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
     set(LIBRARY_OUTPUT_PATH ${CMAKE_CURRENT_BINARY_DIR})
@@ -16,16 +18,18 @@ else()
     add_link_options(-no-pie)
 endif()
 
-add_subdirectory(${TRIDOT_DIRECTORY} ${CMAKE_CURRENT_BINARY_DIR}/tridot)
-
+add_subdirectory(${ENGINE_DIR} ${ENGINE_DIR}/../build)
 
 #Template
 project(Template)
 file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS src/*.cpp)
 add_library(${PROJECT_NAME} SHARED ${SOURCES})
-target_precompile_headers(${PROJECT_NAME} PUBLIC ${TRIDOT_DIRECTORY}/src/pch.h)
-target_include_directories(${PROJECT_NAME} PRIVATE ${TRIDOT_DIRECTORY}/src src)
-target_link_libraries(${PROJECT_NAME} PUBLIC TridotCore TridotEntity TridotEngine)
+target_include_directories(${PROJECT_NAME} PRIVATE src ../../src)
+target_link_libraries(${PROJECT_NAME} PUBLIC TridotCore TridotEntity TridotEngine TridotWindow)
+set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER ${SOLUTION_NAME})
 
-add_dependencies(TridotEditor ${PROJECT_NAME})
-add_dependencies(TridotGame ${PROJECT_NAME})
+set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT TridotEngine)
+set_property(TARGET TridotEngine PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/build/Debug")
+add_dependencies(TridotEngine Template)
+
+project(${SOLUTION_NAME})

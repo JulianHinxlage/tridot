@@ -2,9 +2,13 @@
 cmake-build-*/
 out*/
 build*/
+deploy*/
 
 #IDE directories
 .idea/
 .vs/
+
+#local files
+local/
 
 *.bak
